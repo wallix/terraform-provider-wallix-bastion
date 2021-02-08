@@ -27,6 +27,6 @@ The following arguments are supported in the `provider` block:
   It can also be sourced from the `WALLIX_BASTION_USER` environment variable.  
   Defaults to `admin`.
 
-* `version` - (Optional) This is the version of api used to call api.  
-  It can also be sourced from the `WALLIX_BASTION_VERSION` environment variable.  
+* `api_version` - (Optional) This is the version of api used to call api.  
+  It can also be sourced from the `WALLIX_BASTION_API_VERSION` environment variable.  
   Defaults to `v3.3`.

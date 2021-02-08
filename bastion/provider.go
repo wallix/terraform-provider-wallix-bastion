@@ -35,10 +35,10 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("WALLIX_BASTION_USER", "admin"),
 			},
-			"version": {
+			"api_version": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("WALLIX_BASTION_VERSION", "v3.3"),
+				DefaultFunc: schema.EnvDefaultFunc("WALLIX_BASTION_API_VERSION", "v3.3"),
 			},
 		},
 
@@ -53,11 +53,11 @@ func Provider() *schema.Provider {
 
 func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	config := Config{
-		bastionIP:      d.Get("ip").(string),
-		bastionPort:    d.Get("port").(int),
-		bastionToken:   d.Get("token").(string),
-		bastionVersion: d.Get("version").(string),
-		bastionUser:    d.Get("user").(string),
+		bastionIP:         d.Get("ip").(string),
+		bastionPort:       d.Get("port").(int),
+		bastionToken:      d.Get("token").(string),
+		bastionAPIVersion: d.Get("version").(string),
+		bastionUser:       d.Get("user").(string),
 	}
 
 	return config.Client()

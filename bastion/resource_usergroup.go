@@ -98,7 +98,7 @@ func resourveUserGroupVersionCheck(version string) error {
 
 func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveUserGroupVersionCheck(c.bastionVersion); err != nil {
+	if err := resourveUserGroupVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	_, ex, err := searchResourceUserGroup(ctx, d.Get("group_name").(string), m)
@@ -125,7 +125,7 @@ func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, m inte
 }
 func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveUserGroupVersionCheck(c.bastionVersion); err != nil {
+	if err := resourveUserGroupVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	config, err := readUserGroupOptions(ctx, d.Id(), m)
@@ -142,7 +142,7 @@ func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, m interf
 }
 func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveUserGroupVersionCheck(c.bastionVersion); err != nil {
+	if err := resourveUserGroupVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := updateUserGroup(ctx, d, m); err != nil {
@@ -153,7 +153,7 @@ func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, m inte
 }
 func resourceUserGroupDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveUserGroupVersionCheck(c.bastionVersion); err != nil {
+	if err := resourveUserGroupVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := deleteUserGroup(ctx, d, m); err != nil {
@@ -165,7 +165,7 @@ func resourceUserGroupDelete(ctx context.Context, d *schema.ResourceData, m inte
 func resourceUserGroupImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	ctx := context.Background()
 	c := m.(*Client)
-	if err := resourveUserGroupVersionCheck(c.bastionVersion); err != nil {
+	if err := resourveUserGroupVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
 	}
 	id, ex, err := searchResourceUserGroup(ctx, d.Id(), m)

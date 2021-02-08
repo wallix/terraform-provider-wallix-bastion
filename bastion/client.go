@@ -13,11 +13,11 @@ import (
 
 // Information to connect on Wallix bastion.
 type Client struct {
-	bastionPort    int
-	bastionIP      string
-	bastionToken   string
-	bastionUser    string
-	bastionVersion string
+	bastionPort       int
+	bastionAPIVersion string
+	bastionIP         string
+	bastionToken      string
+	bastionUser       string
 }
 
 func (c *Client) newRequest(ctx context.Context, uri string, method string, jsonBody interface{}) (string, int, error) {
@@ -27,7 +27,7 @@ func (c *Client) newRequest(ctx context.Context, uri string, method string, json
 		return "", http.StatusInternalServerError, err
 	}
 	log.Printf("body: %v", body.String())
-	url := "https://" + c.bastionIP + ":" + strconv.Itoa(c.bastionPort) + "/api/" + c.bastionVersion + "/" + uri
+	url := "https://" + c.bastionIP + ":" + strconv.Itoa(c.bastionPort) + "/api/" + c.bastionAPIVersion + "/" + uri
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	req.Header.Add("Content-Type", "application/json; charset=utf-8")
 	req.Header.Add("X-Auth-Key", c.bastionToken)
