@@ -1,12 +1,4 @@
----
-layout: "wallix-bastion"
-page_title: "Provider: wallix-bastion"
-sidebar_current: "docs-wallix-bastion-index"
-description: |-
-  The wallix-bastion provider
----
-
-# wallix-bastion provider
+# wallix-bastion Provider
 
 ## Argument Reference
 

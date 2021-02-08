@@ -1,12 +1,4 @@
----
-layout: "wallix-bastion"
-page_title: "wallix-bastion: wallix-bastion_user"
-sidebar_current: "docs-wallix-bastion-resource-user"
-description: |-
-  Create a user
----
-
-# wallix-bastion_user
+# wallix-bastion_user Resource
 
 Provides a user resource.
 

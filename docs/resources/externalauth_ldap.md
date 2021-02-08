@@ -1,12 +1,4 @@
----
-layout: "wallix-bastion"
-page_title: "wallix-bastion: wallix-bastion_externalauth_ldap"
-sidebar_current: "docs-wallix-bastion-resource-externalauth-ldap"
-description: |-
-  Create a LDAP externaulauth 
----
-
-# wallix-bastion_externalauth_ldap
+# wallix-bastion_externalauth_ldap Resource
 
 Provides a LDAP externaulauth resource.
 

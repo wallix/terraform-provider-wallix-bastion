@@ -1,12 +1,4 @@
----
-layout: "wallix-bastion"
-page_title: "wallix-bastion: wallix-bastion_usergroup"
-sidebar_current: "docs-wallix-bastion-resource-usergroup"
-description: |-
-  Create a usergroup
----
-
-# wallix-bastion_usergroup
+# wallix-bastion_usergroup Resource
 
 Provides a usergroup resource.
 
