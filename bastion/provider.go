@@ -44,6 +44,7 @@ func Provider() *schema.Provider {
 
 		ResourcesMap: map[string]*schema.Resource{
 			"wallix-bastion_user":              resourceUser(),
+			"wallix-bastion_usergroup":         resourceUserGroup(),
 		},
 		ConfigureContextFunc: configureProvider,
 	}
