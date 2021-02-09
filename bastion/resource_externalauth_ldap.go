@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 type jsonExternalAuthLdap struct {
@@ -273,7 +274,7 @@ func addExternalAuthLdap(ctx context.Context, d *schema.ResourceData, m interfac
 func updateExternalAuthLdap(ctx context.Context, d *schema.ResourceData, m interface{}) error {
 	c := m.(*Client)
 	json := prepareExternalAuthLdapJSON(d)
-	body, code, err := c.newRequest(ctx, "/externalauths/"+d.Get("authentication_name").(string), http.MethodPut, json)
+	body, code, err := c.newRequest(ctx, "/externalauths/"+d.Id(), http.MethodPut, json)
 	if err != nil {
 		return err
 	}
@@ -285,7 +286,7 @@ func updateExternalAuthLdap(ctx context.Context, d *schema.ResourceData, m inter
 }
 func deleteExternalAuthLdap(ctx context.Context, d *schema.ResourceData, m interface{}) error {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/externalauths/"+d.Get("authentication_name").(string), http.MethodDelete, nil)
+	body, code, err := c.newRequest(ctx, "/externalauths/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
 		return err
 	}
