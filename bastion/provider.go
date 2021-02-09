@@ -53,10 +53,10 @@ func Provider() *schema.Provider {
 
 func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	config := Config{
+		bastionAPIVersion: d.Get("api_version").(string),
 		bastionIP:         d.Get("ip").(string),
 		bastionPort:       d.Get("port").(int),
 		bastionToken:      d.Get("token").(string),
-		bastionAPIVersion: d.Get("version").(string),
 		bastionUser:       d.Get("user").(string),
 	}
 
