@@ -67,8 +67,9 @@ func resourceExternalAuthLdap() *schema.Resource {
 				Required: true,
 			},
 			"port": {
-				Type:     schema.TypeInt,
-				Required: true,
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntBetween(1, 65535),
 			},
 			"timeout": {
 				Type:     schema.TypeFloat,
