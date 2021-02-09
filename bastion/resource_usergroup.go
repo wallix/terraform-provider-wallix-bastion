@@ -227,7 +227,7 @@ func addUserGroup(ctx context.Context, d *schema.ResourceData, m interface{}) er
 func updateUserGroup(ctx context.Context, d *schema.ResourceData, m interface{}) error {
 	c := m.(*Client)
 	json := prepareUserGroupJSON(d, false)
-	body, code, err := c.newRequest(ctx, "/usergroups/"+d.Get("group_name").(string)+"?force=true", http.MethodPut, json)
+	body, code, err := c.newRequest(ctx, "/usergroups/"+d.Id()+"?force=true", http.MethodPut, json)
 	if err != nil {
 		return err
 	}
@@ -239,7 +239,7 @@ func updateUserGroup(ctx context.Context, d *schema.ResourceData, m interface{})
 }
 func deleteUserGroup(ctx context.Context, d *schema.ResourceData, m interface{}) error {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/usergroups/"+d.Get("group_name").(string), http.MethodDelete, nil)
+	body, code, err := c.newRequest(ctx, "/usergroups/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
 		return err
 	}
