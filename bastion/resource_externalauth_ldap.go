@@ -47,7 +47,6 @@ func resourceExternalAuthLdap() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"authentication_name": {
 				Type:     schema.TypeString,
-				ForceNew: true,
 				Required: true,
 			},
 			"cn_attribute": {
@@ -347,6 +346,9 @@ func readExternalAuthLdapOptions(
 }
 
 func fillExternalAuthLdap(d *schema.ResourceData, json jsonExternalAuthLdap) {
+	if tfErr := d.Set("authentication_name", json.AuthenticationName); tfErr != nil {
+		panic(tfErr)
+	}
 	if tfErr := d.Set("cn_attribute", json.CNAttribute); tfErr != nil {
 		panic(tfErr)
 	}
