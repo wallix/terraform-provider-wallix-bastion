@@ -38,7 +38,6 @@ func resourceUserGroup() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"group_name": {
 				Type:     schema.TypeString,
-				ForceNew: true,
 				Required: true,
 			},
 			"timeframes": {

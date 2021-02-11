@@ -6,7 +6,7 @@ Provides a usergroup resource.
 
 The following arguments are supported:
 
-* `group_name` - (Required, Forces new resource)(`String`) The group name.
+* `group_name` - (Required)(`String`) The group name.
 * `timeframes` - (Required)(`ListOfString`) The group timeframe(s).
 * `description` - (Optional)(`String`) The group description.
 * `profile` - (Optional)(`String`) The group profile.
