@@ -18,7 +18,7 @@ linters:
 linters-settings:
   gocyclo:
     # minimal code complexity to report, 30 by default
-    min-complexity: 90
+    min-complexity: 50
   gocognit:
     # minimal code complexity to report, 30 by default
-    min-complexity: 180
+    min-complexity: 50
