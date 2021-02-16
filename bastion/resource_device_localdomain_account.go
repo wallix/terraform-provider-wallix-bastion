@@ -177,6 +177,7 @@ func resourceDeviceLocalDomainAccountRead(ctx context.Context, d *schema.Resourc
 }
 func resourceDeviceLocalDomainAccountUpdate(ctx context.Context,
 	d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	d.Partial(true)
 	c := m.(*Client)
 	if err := resourveDeviceLocalDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -184,6 +185,7 @@ func resourceDeviceLocalDomainAccountUpdate(ctx context.Context,
 	if err := updateDeviceLocalDomainAccount(ctx, d, m); err != nil {
 		return diag.FromErr(err)
 	}
+	d.Partial(false)
 
 	return resourceDeviceLocalDomainAccountRead(ctx, d, m)
 }

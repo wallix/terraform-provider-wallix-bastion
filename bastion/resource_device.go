@@ -185,6 +185,7 @@ func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, m interface
 	return nil
 }
 func resourceDeviceUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	d.Partial(true)
 	c := m.(*Client)
 	if err := resourveDeviceVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -192,6 +193,7 @@ func resourceDeviceUpdate(ctx context.Context, d *schema.ResourceData, m interfa
 	if err := updateDevice(ctx, d, m); err != nil {
 		return diag.FromErr(err)
 	}
+	d.Partial(false)
 
 	return resourceDeviceRead(ctx, d, m)
 }

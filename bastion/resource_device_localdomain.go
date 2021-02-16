@@ -147,6 +147,7 @@ func resourceDeviceLocalDomainRead(ctx context.Context, d *schema.ResourceData, 
 	return nil
 }
 func resourceDeviceLocalDomainUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	d.Partial(true)
 	c := m.(*Client)
 	if err := resourveDeviceLocalDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -154,6 +155,7 @@ func resourceDeviceLocalDomainUpdate(ctx context.Context, d *schema.ResourceData
 	if err := updateDeviceLocalDomain(ctx, d, m); err != nil {
 		return diag.FromErr(err)
 	}
+	d.Partial(false)
 
 	return resourceDeviceLocalDomainRead(ctx, d, m)
 }
@@ -281,7 +283,9 @@ func prepareDeviceLocalDomainJSON(d *schema.ResourceData, newResource bool) json
 	json.Passphrase = d.Get("passphrase").(string)
 	json.PasswordChangePolicy = d.Get("password_change_policy").(string)
 	json.PasswordChangePlugin = d.Get("password_change_plugin").(string)
-	json.PasswordChangePluginParameters = d.Get("password_change_plugin_parameters").(string)
+	if d.Get("password_change_plugin_parameters").(string) != "" {
+		json.PasswordChangePluginParameters = d.Get("password_change_plugin_parameters").(string)
+	}
 
 	return json
 }

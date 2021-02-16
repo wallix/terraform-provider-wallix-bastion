@@ -151,6 +151,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	return nil
 }
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	d.Partial(true)
 	c := m.(*Client)
 	if err := resourveUserVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -158,6 +159,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	if err := updateUser(ctx, d, m); err != nil {
 		return diag.FromErr(err)
 	}
+	d.Partial(false)
 
 	return resourceUserRead(ctx, d, m)
 }

@@ -183,6 +183,7 @@ func resourceExternalAuthLdapRead(ctx context.Context, d *schema.ResourceData, m
 	return nil
 }
 func resourceExternalAuthLdapUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	d.Partial(true)
 	c := m.(*Client)
 	if err := resourveExternalAuthLdapVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -194,6 +195,7 @@ func resourceExternalAuthLdapUpdate(ctx context.Context, d *schema.ResourceData,
 	if err := updateExternalAuthLdap(ctx, d, m); err != nil {
 		return diag.FromErr(err)
 	}
+	d.Partial(false)
 
 	return resourceExternalAuthLdapRead(ctx, d, m)
 }

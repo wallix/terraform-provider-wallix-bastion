@@ -140,6 +140,7 @@ func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, m interf
 	return nil
 }
 func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	d.Partial(true)
 	c := m.(*Client)
 	if err := resourveUserGroupVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -147,6 +148,7 @@ func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, m inte
 	if err := updateUserGroup(ctx, d, m); err != nil {
 		return diag.FromErr(err)
 	}
+	d.Partial(false)
 
 	return resourceUserGroupRead(ctx, d, m)
 }

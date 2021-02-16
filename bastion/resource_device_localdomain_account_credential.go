@@ -160,6 +160,7 @@ func resourceDeviceLocalDomainAccountCredentialRead(ctx context.Context,
 }
 func resourceDeviceLocalDomainAccountCredentialUpdate(ctx context.Context,
 	d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	d.Partial(true)
 	c := m.(*Client)
 	if err := resourveDeviceLocalDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -167,6 +168,7 @@ func resourceDeviceLocalDomainAccountCredentialUpdate(ctx context.Context,
 	if err := updateDeviceLocalDomainAccountCredential(ctx, d, m); err != nil {
 		return diag.FromErr(err)
 	}
+	d.Partial(false)
 
 	return resourceDeviceLocalDomainAccountCredentialRead(ctx, d, m)
 }
