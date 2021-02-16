@@ -243,7 +243,7 @@ func searchResourceExternalAuthLdap(
 		return "", false, err
 	}
 	if code != http.StatusOK {
-		return "", false, fmt.Errorf("api return not OK : %d with body %s", code, body)
+		return "", false, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
 	}
 	var results []jsonExternalAuthLdap
 	err = json.Unmarshal([]byte(body), &results)
@@ -267,7 +267,7 @@ func addExternalAuthLdap(ctx context.Context, d *schema.ResourceData, m interfac
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api return not OK or NoContent : %d with body %s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
 	}
 
 	return nil
@@ -281,7 +281,7 @@ func updateExternalAuthLdap(ctx context.Context, d *schema.ResourceData, m inter
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api return not OK or NoContent : %d with body %s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
 	}
 
 	return nil
@@ -293,7 +293,7 @@ func deleteExternalAuthLdap(ctx context.Context, d *schema.ResourceData, m inter
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api return not OK or NoContent : %d with body %s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
 	}
 
 	return nil
@@ -336,7 +336,7 @@ func readExternalAuthLdapOptions(
 		return result, nil
 	}
 	if code != http.StatusOK {
-		return result, fmt.Errorf("api return not OK : %d with body %s", code, body)
+		return result, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
 	}
 
 	err = json.Unmarshal([]byte(body), &result)

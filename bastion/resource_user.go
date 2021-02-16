@@ -208,7 +208,7 @@ func checkResourceUserExists(ctx context.Context, userName string, m interface{}
 		return false, nil
 	}
 	if code != http.StatusOK {
-		return false, fmt.Errorf("api return not OK : %d with body %s", code, body)
+		return false, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
 	}
 
 	return true, nil
@@ -222,7 +222,7 @@ func addUser(ctx context.Context, d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api return not OK or NoContent : %d with body %s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
 	}
 
 	return nil
@@ -236,7 +236,7 @@ func updateUser(ctx context.Context, d *schema.ResourceData, m interface{}) erro
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api return not OK or NoContent : %d with body %s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
 	}
 
 	return nil
@@ -248,7 +248,7 @@ func deleteUser(ctx context.Context, d *schema.ResourceData, m interface{}) erro
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api return not OK or NoContent : %d with body %s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
 	}
 
 	return nil
@@ -306,7 +306,7 @@ func readUserOptions(ctx context.Context, userName string, m interface{}) (jsonU
 		return result, nil
 	}
 	if code != http.StatusOK {
-		return result, fmt.Errorf("api return not OK : %d with body %s", code, body)
+		return result, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
 	}
 
 	err = json.Unmarshal([]byte(body), &result)
