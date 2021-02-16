@@ -127,14 +127,14 @@ func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, m interf
 	if err := resourveUserGroupVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	config, err := readUserGroupOptions(ctx, d.Id(), m)
+	cfg, err := readUserGroupOptions(ctx, d.Id(), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	if config.ID == "" {
+	if cfg.ID == "" {
 		d.SetId("")
 	} else {
-		fillUserGroup(d, config)
+		fillUserGroup(d, cfg)
 	}
 
 	return nil
@@ -174,11 +174,11 @@ func resourceUserGroupImport(d *schema.ResourceData, m interface{}) ([]*schema.R
 	if !ex {
 		return nil, fmt.Errorf("don't find group_name with id %s (id must be <group_name>", d.Id())
 	}
-	config, err := readUserGroupOptions(ctx, id, m)
+	cfg, err := readUserGroupOptions(ctx, id, m)
 	if err != nil {
 		return nil, err
 	}
-	fillUserGroup(d, config)
+	fillUserGroup(d, cfg)
 	result := make([]*schema.ResourceData, 1)
 	d.SetId(id)
 	result[0] = d

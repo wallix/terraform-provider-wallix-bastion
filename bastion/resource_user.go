@@ -138,14 +138,14 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	if err := resourveUserVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	config, err := readUserOptions(ctx, d.Get("user_name").(string), m)
+	cfg, err := readUserOptions(ctx, d.Get("user_name").(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	if config.UserName == "" {
+	if cfg.UserName == "" {
 		d.SetId("")
 	} else {
-		fillUser(d, config)
+		fillUser(d, cfg)
 	}
 
 	return nil
@@ -185,11 +185,11 @@ func resourceUserImport(d *schema.ResourceData, m interface{}) ([]*schema.Resour
 	if !ex {
 		return nil, fmt.Errorf("don't find user_name with id %s (id must be <user_name>", d.Id())
 	}
-	config, err := readUserOptions(ctx, d.Id(), m)
+	cfg, err := readUserOptions(ctx, d.Id(), m)
 	if err != nil {
 		return nil, err
 	}
-	fillUser(d, config)
+	fillUser(d, cfg)
 	result := make([]*schema.ResourceData, 1)
 	result[0] = d
 

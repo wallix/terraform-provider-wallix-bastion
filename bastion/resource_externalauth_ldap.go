@@ -170,14 +170,14 @@ func resourceExternalAuthLdapRead(ctx context.Context, d *schema.ResourceData, m
 	if err := resourveExternalAuthLdapVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	config, err := readExternalAuthLdapOptions(ctx, d.Id(), m)
+	cfg, err := readExternalAuthLdapOptions(ctx, d.Id(), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	if config.ID == "" {
+	if cfg.ID == "" {
 		d.SetId("")
 	} else {
-		fillExternalAuthLdap(d, config)
+		fillExternalAuthLdap(d, cfg)
 	}
 
 	return nil
@@ -221,11 +221,11 @@ func resourceExternalAuthLdapImport(d *schema.ResourceData, m interface{}) ([]*s
 	if !ex {
 		return nil, fmt.Errorf("don't find authentication_name with id %s (id must be <authentication_name>", d.Id())
 	}
-	config, err := readExternalAuthLdapOptions(ctx, id, m)
+	cfg, err := readExternalAuthLdapOptions(ctx, id, m)
 	if err != nil {
 		return nil, err
 	}
-	fillExternalAuthLdap(d, config)
+	fillExternalAuthLdap(d, cfg)
 	result := make([]*schema.ResourceData, 1)
 	d.SetId(id)
 	result[0] = d
