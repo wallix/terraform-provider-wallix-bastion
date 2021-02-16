@@ -131,7 +131,7 @@ func resourveExternalAuthLdapVersionCheck(version string) error {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_externalauth_ldap not validate with api version %v", version)
+	return fmt.Errorf("resource wallix-bastion_externalauth_ldap not validate with api version %s", version)
 }
 
 func resourceExternalAuthLdapCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -144,11 +144,11 @@ func resourceExternalAuthLdapCreate(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(err)
 	}
 	if ex {
-		return diag.FromErr(fmt.Errorf("authentication_name %v already exists", d.Get("authentication_name").(string)))
+		return diag.FromErr(fmt.Errorf("authentication_name %s already exists", d.Get("authentication_name").(string)))
 	}
 	if !d.Get("is_anonymous_access").(bool) && (d.Get("login").(string) == "" || d.Get("password").(string) == "") {
 		return diag.FromErr(fmt.Errorf("missing 'login' and/or 'password' on "+
-			"externalauth_ldap %v", d.Get("authentication_name").(string)))
+			"externalauth_ldap %s", d.Get("authentication_name").(string)))
 	}
 	err = addExternalAuthLdap(ctx, d, m)
 	if err != nil {
@@ -159,7 +159,7 @@ func resourceExternalAuthLdapCreate(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(err)
 	}
 	if !ex {
-		return diag.FromErr(fmt.Errorf("authentication_name %v can't find after POST", d.Get("authentication_name").(string)))
+		return diag.FromErr(fmt.Errorf("authentication_name %s can't find after POST", d.Get("authentication_name").(string)))
 	}
 	d.SetId(id)
 
@@ -189,7 +189,7 @@ func resourceExternalAuthLdapUpdate(ctx context.Context, d *schema.ResourceData,
 	}
 	if !d.Get("is_anonymous_access").(bool) && (d.Get("login").(string) == "" || d.Get("password").(string) == "") {
 		return diag.FromErr(fmt.Errorf("missing 'login' and/or 'password' on "+
-			"externalauth_ldap %v", d.Get("authentication_name").(string)))
+			"externalauth_ldap %s", d.Get("authentication_name").(string)))
 	}
 	if err := updateExternalAuthLdap(ctx, d, m); err != nil {
 		return diag.FromErr(err)
@@ -219,7 +219,7 @@ func resourceExternalAuthLdapImport(d *schema.ResourceData, m interface{}) ([]*s
 		return nil, err
 	}
 	if !ex {
-		return nil, fmt.Errorf("don't find authentication_name with id %v (id must be <authentication_name>", d.Id())
+		return nil, fmt.Errorf("don't find authentication_name with id %s (id must be <authentication_name>", d.Id())
 	}
 	config, err := readExternalAuthLdapOptions(ctx, id, m)
 	if err != nil {

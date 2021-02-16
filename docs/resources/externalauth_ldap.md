@@ -27,6 +27,7 @@ The following arguments are supported:
 * `use_primary_auth_domain` - (Optional)(`Bool`) Use the primary auth domain.
 
 ## Attribute Reference
+
 * `id` - (`String`) Internal id of externalauth in bastion.
 
 ## Import

@@ -111,7 +111,7 @@ func resourveUserVersionCheck(version string) error {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_user not validate with api version %v", version)
+	return fmt.Errorf("resource wallix-bastion_user not validate with api version %s", version)
 }
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
@@ -123,7 +123,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface
 		return diag.FromErr(err)
 	}
 	if ex {
-		return diag.FromErr(fmt.Errorf("user_name %v already exists", d.Get("user_name").(string)))
+		return diag.FromErr(fmt.Errorf("user_name %s already exists", d.Get("user_name").(string)))
 	}
 	err = addUser(ctx, d, m)
 	if err != nil {
@@ -183,7 +183,7 @@ func resourceUserImport(d *schema.ResourceData, m interface{}) ([]*schema.Resour
 		return nil, err
 	}
 	if !ex {
-		return nil, fmt.Errorf("don't find user_name with id %v (id must be <user_name>", d.Id())
+		return nil, fmt.Errorf("don't find user_name with id %s (id must be <user_name>", d.Id())
 	}
 	config, err := readUserOptions(ctx, d.Id(), m)
 	if err != nil {

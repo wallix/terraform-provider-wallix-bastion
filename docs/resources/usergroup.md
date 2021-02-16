@@ -17,6 +17,7 @@ The following arguments are supported:
 * `users` - (Optional)(`ListOfString`) The users in the group. **It's a attributes when not set**
 
 ## Attribute Reference
+
 * `id` - (`String`) Internal id of usergroup in bastion.
 
 ## Import

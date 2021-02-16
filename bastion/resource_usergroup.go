@@ -92,7 +92,7 @@ func resourveUserGroupVersionCheck(version string) error {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_usergroup not validate with api version %v", version)
+	return fmt.Errorf("resource wallix-bastion_usergroup not validate with api version %s", version)
 }
 
 func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -105,7 +105,7 @@ func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, m inte
 		return diag.FromErr(err)
 	}
 	if ex {
-		return diag.FromErr(fmt.Errorf("group_name %v already exists", d.Get("group_name").(string)))
+		return diag.FromErr(fmt.Errorf("group_name %s already exists", d.Get("group_name").(string)))
 	}
 	err = addUserGroup(ctx, d, m)
 	if err != nil {
@@ -116,7 +116,7 @@ func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, m inte
 		return diag.FromErr(err)
 	}
 	if !ex {
-		return diag.FromErr(fmt.Errorf("group_name %v can't find after POST", d.Get("group_name").(string)))
+		return diag.FromErr(fmt.Errorf("group_name %s can't find after POST", d.Get("group_name").(string)))
 	}
 	d.SetId(id)
 
@@ -172,7 +172,7 @@ func resourceUserGroupImport(d *schema.ResourceData, m interface{}) ([]*schema.R
 		return nil, err
 	}
 	if !ex {
-		return nil, fmt.Errorf("don't find group_name with id %v (id must be <group_name>", d.Id())
+		return nil, fmt.Errorf("don't find group_name with id %s (id must be <group_name>", d.Id())
 	}
 	config, err := readUserGroupOptions(ctx, id, m)
 	if err != nil {
