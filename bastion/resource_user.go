@@ -71,7 +71,6 @@ func resourceUser() *schema.Resource {
 			"force_change_pwd": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
 			},
 			"groups": {
 				Type:     schema.TypeSet,
@@ -334,9 +333,6 @@ func fillUser(d *schema.ResourceData, json jsonUser) {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("expiration_date", json.ExpirationDate); tfErr != nil {
-		panic(tfErr)
-	}
-	if tfErr := d.Set("force_change_pwd", *json.ForceChangePwd); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("groups", json.Groups); tfErr != nil {
