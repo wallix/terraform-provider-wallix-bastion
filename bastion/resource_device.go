@@ -56,11 +56,11 @@ func resourceDevice() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"admin_account": {
+						"domain_name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"domain_name": {
+						"admin_account": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -85,8 +85,9 @@ func resourceDevice() *schema.Resource {
 							Computed: true,
 						},
 						"password_change_plugin_parameters": {
-							Type:     schema.TypeString,
+							Type:     schema.TypeMap,
 							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},

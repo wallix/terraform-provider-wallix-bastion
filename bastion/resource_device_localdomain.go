@@ -12,17 +12,17 @@ import (
 )
 
 type jsonDeviceLocalDomain struct {
-	EnablePasswordChange           bool   `json:"enable_password_change"`
-	ID                             string `json:"id,omitempty"`
-	DomainName                     string `json:"domain_name"`
-	AdminAccount                   string `json:"admin_account,omitempty"`
-	CAPrivateKey                   string `json:"ca_private_key,omitempty"`
-	CAPublicKey                    string `json:"ca_public_key,omitempty"`
-	Description                    string `json:"description"`
-	Passphrase                     string `json:"passphrase"`
-	PasswordChangePolicy           string `json:"password_change_policy,omitempty"`
-	PasswordChangePlugin           string `json:"password_change_plugin,omitempty"`
-	PasswordChangePluginParameters string `json:"password_change_plugin_parameters,omitempty"`
+	EnablePasswordChange           bool                   `json:"enable_password_change"`
+	ID                             string                 `json:"id,omitempty"`
+	DomainName                     string                 `json:"domain_name"`
+	AdminAccount                   string                 `json:"admin_account,omitempty"`
+	CAPrivateKey                   string                 `json:"ca_private_key,omitempty"`
+	CAPublicKey                    string                 `json:"ca_public_key,omitempty"`
+	Description                    string                 `json:"description"`
+	Passphrase                     string                 `json:"passphrase"`
+	PasswordChangePolicy           string                 `json:"password_change_policy,omitempty"`
+	PasswordChangePlugin           string                 `json:"password_change_plugin,omitempty"`
+	PasswordChangePluginParameters map[string]interface{} `json:"password_change_plugin_parameters,omitempty"`
 }
 
 func resourceDeviceLocalDomain() *schema.Resource {
@@ -79,8 +79,9 @@ func resourceDeviceLocalDomain() *schema.Resource {
 				Optional: true,
 			},
 			"password_change_plugin_parameters": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeMap,
 				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}
@@ -283,9 +284,7 @@ func prepareDeviceLocalDomainJSON(d *schema.ResourceData, newResource bool) json
 	json.Passphrase = d.Get("passphrase").(string)
 	json.PasswordChangePolicy = d.Get("password_change_policy").(string)
 	json.PasswordChangePlugin = d.Get("password_change_plugin").(string)
-	if d.Get("password_change_plugin_parameters").(string) != "" {
-		json.PasswordChangePluginParameters = d.Get("password_change_plugin_parameters").(string)
-	}
+	json.PasswordChangePluginParameters = d.Get("password_change_plugin_parameters").(map[string]interface{})
 
 	return json
 }
@@ -335,9 +334,6 @@ func fillDeviceLocalDomain(d *schema.ResourceData, json jsonDeviceLocalDomain) {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("password_change_plugin", json.PasswordChangePlugin); tfErr != nil {
-		panic(tfErr)
-	}
-	if tfErr := d.Set("password_change_plugin_parameters", json.PasswordChangePluginParameters); tfErr != nil {
 		panic(tfErr)
 	}
 }
