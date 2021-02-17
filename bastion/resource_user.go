@@ -310,7 +310,7 @@ func readUserOptions(ctx context.Context, userName string, m interface{}) (jsonU
 
 	err = json.Unmarshal([]byte(body), &result)
 	if err != nil {
-		return result, err
+		return result, fmt.Errorf("json.Unmarshal failed : %w", err)
 	}
 
 	return result, nil

@@ -201,7 +201,7 @@ func searchResourceDeviceService(ctx context.Context,
 	var results []jsonDeviceService
 	err = json.Unmarshal([]byte(body), &results)
 	if err != nil {
-		return "", false, err
+		return "", false, fmt.Errorf("json.Unmarshal failed : %w", err)
 	}
 	for _, v := range results {
 		if v.ServiceName == serviceName {
@@ -327,7 +327,7 @@ func readDeviceServiceOptions(
 	}
 	err = json.Unmarshal([]byte(body), &result)
 	if err != nil {
-		return result, err
+		return result, fmt.Errorf("json.Unmarshal failed : %w", err)
 	}
 
 	return result, nil
