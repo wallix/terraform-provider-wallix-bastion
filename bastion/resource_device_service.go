@@ -277,13 +277,6 @@ func prepareDeviceServiceJSON(d *schema.ResourceData, newResource bool) (jsonDev
 	}
 	json.ConnectionPolicy = d.Get("connection_policy").(string)
 	json.Port = d.Get("port").(int)
-	// if v := d.Get("global_domains").([]interface{}); len(v) > 0 {
-	// 	globalDomains := make([]string, 0)
-	// 	for _, v2 := range v {
-	// 		globalDomains = append(globalDomains, v2.(string))
-	// 	}
-	// 	json.GlobalDomains = &globalDomains
-	// }
 	for _, v := range d.Get("global_domains").([]interface{}) {
 		json.GlobalDomains = append(json.GlobalDomains, v.(string))
 	}
