@@ -12,18 +12,13 @@ import (
 )
 
 type jsonUserGroup struct {
-	Users        *[]string                    `json:"users,omitempty"`
-	ID           string                       `json:"id,omitempty"`
-	Description  string                       `json:"description"`
-	GroupName    string                       `json:"group_name"`
-	Profile      string                       `json:"profile"`
-	TimeFrames   []string                     `json:"timeframes"`
-	Restrictions *[]jsonUserGroupRestrictions `json:"restrictions,omitempty"`
-}
-type jsonUserGroupRestrictions struct {
-	Action      string `json:"action"`
-	Rules       string `json:"rules"`
-	SubProtocol string `json:"subprotocol"`
+	Users        *[]string         `json:"users,omitempty"`
+	ID           string            `json:"id,omitempty"`
+	Description  string            `json:"description"`
+	GroupName    string            `json:"group_name"`
+	Profile      string            `json:"profile"`
+	TimeFrames   []string          `json:"timeframes"`
+	Restrictions []jsonRestriction `json:"restrictions"`
 }
 
 func resourceUserGroup() *schema.Resource {
@@ -277,16 +272,16 @@ func prepareUserGroupJSON(d *schema.ResourceData, newResource bool) jsonUserGrou
 		group.TimeFrames = append(group.TimeFrames, v.(string))
 	}
 	if len(d.Get("restrictions").([]interface{})) > 0 {
-		groupRestrictions := make([]jsonUserGroupRestrictions, 0)
 		for _, v := range d.Get("restrictions").([]interface{}) {
 			r := v.(map[string]interface{})
-			groupRestrictions = append(groupRestrictions, jsonUserGroupRestrictions{
+			group.Restrictions = append(group.Restrictions, jsonRestriction{
 				Action:      r["action"].(string),
 				Rules:       r["rules"].(string),
 				SubProtocol: r["subprotocol"].(string),
 			})
 		}
-		group.Restrictions = &groupRestrictions
+	} else {
+		group.Restrictions = make([]jsonRestriction, 0)
 	}
 
 	return group
@@ -328,7 +323,7 @@ func fillUserGroup(d *schema.ResourceData, json jsonUserGroup) {
 		panic(tfErr)
 	}
 	restrictions := make([]map[string]interface{}, 0)
-	for _, v := range *json.Restrictions {
+	for _, v := range json.Restrictions {
 		restrictions = append(restrictions, map[string]interface{}{
 			"action":      v.Action,
 			"rules":       v.Rules,
