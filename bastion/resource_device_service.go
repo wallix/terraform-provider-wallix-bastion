@@ -19,7 +19,7 @@ type jsonDeviceService struct {
 	Port             int       `json:"port"`
 	SubProtocols     *[]string `json:"subprotocols,omitempty"`
 	ConnectionPolicy string    `json:"connection_policy"`
-	GlobalDomains    []string  `json:"global_domains,omitempty"`
+	GlobalDomains    []string  `json:"global_domains"`
 }
 
 func resourceDeviceService() *schema.Resource {
@@ -236,7 +236,7 @@ func updateDeviceService(ctx context.Context, d *schema.ResourceData, m interfac
 		return err
 	}
 	body, code, err := c.newRequest(ctx,
-		"/devices/"+d.Get("device_id").(string)+"/services/"+d.Id()+"?force=true", http.MethodPost, json)
+		"/devices/"+d.Get("device_id").(string)+"/services/"+d.Id()+"?force=true", http.MethodPut, json)
 	if err != nil {
 		return err
 	}
@@ -277,8 +277,12 @@ func prepareDeviceServiceJSON(d *schema.ResourceData, newResource bool) (jsonDev
 	}
 	json.ConnectionPolicy = d.Get("connection_policy").(string)
 	json.Port = d.Get("port").(int)
-	for _, v := range d.Get("global_domains").([]interface{}) {
-		json.GlobalDomains = append(json.GlobalDomains, v.(string))
+	if len(d.Get("global_domains").([]interface{})) > 0 {
+		for _, v := range d.Get("global_domains").([]interface{}) {
+			json.GlobalDomains = append(json.GlobalDomains, v.(string))
+		}
+	} else {
+		json.GlobalDomains = make([]string, 0)
 	}
 	if v := d.Get("subprotocols").([]interface{}); len(v) > 0 {
 		subProtocols := make([]string, 0)
