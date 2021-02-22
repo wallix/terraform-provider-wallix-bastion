@@ -21,7 +21,7 @@ type jsonDeviceLocalDomainAccount struct {
 	AutoChangeSSHKey     bool                                      `json:"auto_change_ssh_key"`
 	CheckoutPolicy       string                                    `json:"checkout_policy"`
 	CertificateValidity  string                                    `json:"certificate_validity,omitempty"`
-	Services             *[]string                                 `json:"services,omitempty"`
+	Services             []string                                  `json:"services"`
 	Credentials          *[]jsonDeviceLocalDomainAccountCredential `json:"credentials,omitempty"`
 }
 
@@ -318,11 +318,11 @@ func prepareDeviceLocalDomainAccountJSON(d *schema.ResourceData) jsonDeviceLocal
 	json.CertificateValidity = d.Get("certificate_validity").(string)
 	json.Description = d.Get("description").(string)
 	if len(d.Get("services").([]interface{})) > 0 {
-		services := make([]string, 0)
 		for _, v := range d.Get("services").([]interface{}) {
-			services = append(services, v.(string))
+			json.Services = append(json.Services, v.(string))
 		}
-		json.Services = &services
+	} else {
+		json.Services = make([]string, 0)
 	}
 
 	return json
@@ -386,7 +386,7 @@ func fillDeviceLocalDomainAccount(d *schema.ResourceData, json jsonDeviceLocalDo
 	if tfErr := d.Set("credentials", credentials); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("services", *json.Services); tfErr != nil {
+	if tfErr := d.Set("services", json.Services); tfErr != nil {
 		panic(tfErr)
 	}
 }
