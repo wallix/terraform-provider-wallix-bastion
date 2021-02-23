@@ -70,10 +70,6 @@ func resourceDeviceLocalDomainAccount() *schema.Resource {
 				Optional: true,
 				Default:  "default",
 			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 			"credentials": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -93,6 +89,14 @@ func resourceDeviceLocalDomainAccount() *schema.Resource {
 						},
 					},
 				},
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"domain_password_change": {
+				Type:     schema.TypeBool,
+				Computed: true,
 			},
 			"services": {
 				Type:     schema.TypeList,
@@ -372,9 +376,6 @@ func fillDeviceLocalDomainAccount(d *schema.ResourceData, jsonData jsonDeviceLoc
 	if tfErr := d.Set("certificate_validity", jsonData.CertificateValidity); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
-		panic(tfErr)
-	}
 	credentials := make([]map[string]interface{}, 0)
 	for _, v := range *jsonData.Credentials {
 		credentials = append(credentials, map[string]interface{}{
@@ -384,6 +385,12 @@ func fillDeviceLocalDomainAccount(d *schema.ResourceData, jsonData jsonDeviceLoc
 		})
 	}
 	if tfErr := d.Set("credentials", credentials); tfErr != nil {
+		panic(tfErr)
+	}
+	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+		panic(tfErr)
+	}
+	if tfErr := d.Set("domain_password_change", jsonData.DomainPasswordChange); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("services", jsonData.Services); tfErr != nil {

@@ -10,8 +10,8 @@ The following arguments are supported:
 * `domain_id` - (Required, Forces new resource)(`String`) ID of localdomain.
 * `account_name` - (Required)(`String`) The account name.
 * `account_login` - (Required)(`String`) The account login.
-* `auto_change_password` - (Optional)(`String`) Automatically change the password.
-* `auto_change_ssh_key` - (Optional)(`String`) Automatically change the ssh key.
+* `auto_change_password` - (Optional)(`Bool`) Automatically change the password.
+* `auto_change_ssh_key` - (Optional)(`Bool`) Automatically change the ssh key.
 * `certificate_validity` - (Optional)(`String`) The validity duration of the signed ssh public key in the case a Certificate Authority is defined for the account's domain.
 * `checkout_policy` - (Optional)(`String`) The account checkout policy.
 * `description` - (Optional)(`String`) The account description.
@@ -24,6 +24,8 @@ The following arguments are supported:
   * `id` - (`String`) Internal id of credential.
   * `public_key` - (`String`) The account public key.
   * `type` - (`String`) The credential type.
+* `domain_password_change` - (`Bool`) True if the password change is configured on the domain.
+
 
 ## Import
 
