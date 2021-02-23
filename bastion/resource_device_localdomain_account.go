@@ -99,7 +99,7 @@ func resourceDeviceLocalDomainAccount() *schema.Resource {
 				Computed: true,
 			},
 			"services": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -321,8 +321,8 @@ func prepareDeviceLocalDomainAccountJSON(d *schema.ResourceData) jsonDeviceLocal
 	jsonData.AutoChangeSSHKey = d.Get("auto_change_ssh_key").(bool)
 	jsonData.CertificateValidity = d.Get("certificate_validity").(string)
 	jsonData.Description = d.Get("description").(string)
-	if len(d.Get("services").([]interface{})) > 0 {
-		for _, v := range d.Get("services").([]interface{}) {
+	if len(d.Get("services").(*schema.Set).List()) > 0 {
+		for _, v := range d.Get("services").(*schema.Set).List() {
 			jsonData.Services = append(jsonData.Services, v.(string))
 		}
 	} else {

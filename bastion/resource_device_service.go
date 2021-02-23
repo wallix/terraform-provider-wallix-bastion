@@ -59,12 +59,12 @@ func resourceDeviceService() *schema.Resource {
 					"SSH", "RAWTCPIP", "RDP", "RLOGIN", "TELNET", "VNC"}, false),
 			},
 			"global_domains": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"subprotocols": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -277,14 +277,14 @@ func prepareDeviceServiceJSON(d *schema.ResourceData, newResource bool) (jsonDev
 	}
 	jsonData.ConnectionPolicy = d.Get("connection_policy").(string)
 	jsonData.Port = d.Get("port").(int)
-	if len(d.Get("global_domains").([]interface{})) > 0 {
-		for _, v := range d.Get("global_domains").([]interface{}) {
+	if len(d.Get("global_domains").(*schema.Set).List()) > 0 {
+		for _, v := range d.Get("global_domains").(*schema.Set).List() {
 			jsonData.GlobalDomains = append(jsonData.GlobalDomains, v.(string))
 		}
 	} else {
 		jsonData.GlobalDomains = make([]string, 0)
 	}
-	if v := d.Get("subprotocols").([]interface{}); len(v) > 0 {
+	if v := d.Get("subprotocols").(*schema.Set).List(); len(v) > 0 {
 		subProtocols := make([]string, 0)
 		for _, v2 := range v {
 			switch d.Get("protocol").(string) {

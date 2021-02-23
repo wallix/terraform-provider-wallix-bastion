@@ -36,7 +36,7 @@ func resourceUserGroup() *schema.Resource {
 				Required: true,
 			},
 			"timeframes": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -49,7 +49,7 @@ func resourceUserGroup() *schema.Resource {
 				Optional: true,
 			},
 			"restrictions": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -208,7 +208,7 @@ func searchResourceUserGroup(ctx context.Context, groupName string, m interface{
 
 func addUserGroup(ctx context.Context, d *schema.ResourceData, m interface{}) error {
 	c := m.(*Client)
-	jsonData := prepareUserGroupJSON(d, true)
+	jsonData := prepareUserGroupJSON(d)
 	body, code, err := c.newRequest(ctx, "/usergroups/", http.MethodPost, jsonData)
 	if err != nil {
 		return err
@@ -222,7 +222,7 @@ func addUserGroup(ctx context.Context, d *schema.ResourceData, m interface{}) er
 
 func updateUserGroup(ctx context.Context, d *schema.ResourceData, m interface{}) error {
 	c := m.(*Client)
-	jsonData := prepareUserGroupJSON(d, false)
+	jsonData := prepareUserGroupJSON(d)
 	body, code, err := c.newRequest(ctx, "/usergroups/"+d.Id()+"?force=true", http.MethodPut, jsonData)
 	if err != nil {
 		return err
@@ -246,20 +246,11 @@ func deleteUserGroup(ctx context.Context, d *schema.ResourceData, m interface{})
 	return nil
 }
 
-func prepareUserGroupJSON(d *schema.ResourceData, newResource bool) jsonUserGroup {
+func prepareUserGroupJSON(d *schema.ResourceData) jsonUserGroup {
 	jsonData := jsonUserGroup{
 		Description: d.Get("description").(string),
 		GroupName:   d.Get("group_name").(string),
 		Profile:     d.Get("profile").(string),
-	}
-	if newResource {
-		if d.Get("users") != nil {
-			users := make([]string, 0)
-			for _, v := range d.Get("users").(*schema.Set).List() {
-				users = append(users, v.(string))
-			}
-			jsonData.Users = &users
-		}
 	}
 	if d.HasChanges("users") {
 		users := make([]string, 0)
@@ -268,11 +259,11 @@ func prepareUserGroupJSON(d *schema.ResourceData, newResource bool) jsonUserGrou
 		}
 		jsonData.Users = &users
 	}
-	for _, v := range d.Get("timeframes").([]interface{}) {
+	for _, v := range d.Get("timeframes").(*schema.Set).List() {
 		jsonData.TimeFrames = append(jsonData.TimeFrames, v.(string))
 	}
-	if len(d.Get("restrictions").([]interface{})) > 0 {
-		for _, v := range d.Get("restrictions").([]interface{}) {
+	if len(d.Get("restrictions").(*schema.Set).List()) > 0 {
+		for _, v := range d.Get("restrictions").(*schema.Set).List() {
 			r := v.(map[string]interface{})
 			jsonData.Restrictions = append(jsonData.Restrictions, jsonRestriction{
 				Action:      r["action"].(string),
