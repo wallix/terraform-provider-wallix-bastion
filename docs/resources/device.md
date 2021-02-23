@@ -23,7 +23,7 @@ The following arguments are supported:
   * `enable_password_change` - (`Bool`) Enable the change of password on this domain.
   * `password_change_policy` - (`String`) The name of password change policy for this domain.
   * `password_change_plugin` - (`String`) The name of plugin used to change passwords on this domain.
-  * `password_change_plugin_parameters` - (`NestedBlock`) Parameters for the plugin used to change credentials.
+  * `password_change_plugin_parameters` - (`String`) Parameters for the plugin used to change credentials.
 * `services` - (`ListOfNestedBlock`) List of service
   * `id` - (`String`) Internal id of service in bastion.
   * `service_name` - (`String`) The service name.

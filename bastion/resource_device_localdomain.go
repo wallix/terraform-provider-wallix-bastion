@@ -9,20 +9,21 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 type jsonDeviceLocalDomain struct {
-	EnablePasswordChange           bool                   `json:"enable_password_change"`
-	ID                             string                 `json:"id,omitempty"`
-	DomainName                     string                 `json:"domain_name"`
-	AdminAccount                   string                 `json:"admin_account,omitempty"`
-	CAPrivateKey                   string                 `json:"ca_private_key,omitempty"`
-	CAPublicKey                    string                 `json:"ca_public_key,omitempty"`
-	Description                    string                 `json:"description"`
-	Passphrase                     string                 `json:"passphrase"`
-	PasswordChangePolicy           string                 `json:"password_change_policy,omitempty"`
-	PasswordChangePlugin           string                 `json:"password_change_plugin,omitempty"`
-	PasswordChangePluginParameters map[string]interface{} `json:"password_change_plugin_parameters,omitempty"`
+	EnablePasswordChange           bool                    `json:"enable_password_change"`
+	ID                             string                  `json:"id,omitempty"`
+	DomainName                     string                  `json:"domain_name"`
+	AdminAccount                   *string                 `json:"admin_account,omitempty"`
+	CAPrivateKey                   string                  `json:"ca_private_key,omitempty"`
+	CAPublicKey                    string                  `json:"ca_public_key,omitempty"`
+	Description                    string                  `json:"description"`
+	Passphrase                     string                  `json:"passphrase"`
+	PasswordChangePolicy           string                  `json:"password_change_policy,omitempty"`
+	PasswordChangePlugin           string                  `json:"password_change_plugin,omitempty"`
+	PasswordChangePluginParameters *map[string]interface{} `json:"password_change_plugin_parameters,omitempty"`
 }
 
 func resourceDeviceLocalDomain() *schema.Resource {
@@ -45,8 +46,9 @@ func resourceDeviceLocalDomain() *schema.Resource {
 				Required: true,
 			},
 			"admin_account": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"enable_password_change", "password_change_policy", "password_change_plugin"},
 			},
 			"ca_public_key": {
 				Type:     schema.TypeString,
@@ -62,8 +64,9 @@ func resourceDeviceLocalDomain() *schema.Resource {
 				Optional: true,
 			},
 			"enable_password_change": {
-				Type:     schema.TypeBool,
-				Optional: true,
+				Type:         schema.TypeBool,
+				Optional:     true,
+				RequiredWith: []string{"password_change_policy", "password_change_plugin"},
 			},
 			"passphrase": {
 				Type:      schema.TypeString,
@@ -71,17 +74,20 @@ func resourceDeviceLocalDomain() *schema.Resource {
 				Sensitive: true,
 			},
 			"password_change_policy": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"enable_password_change"},
 			},
 			"password_change_plugin": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"enable_password_change"},
 			},
 			"password_change_plugin_parameters": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"enable_password_change", "password_change_policy", "password_change_plugin"},
+				ValidateFunc: validation.StringIsJSON,
 			},
 		},
 	}
@@ -272,22 +278,34 @@ func deleteDeviceLocalDomain(ctx context.Context, d *schema.ResourceData, m inte
 }
 
 func prepareDeviceLocalDomainJSON(d *schema.ResourceData, newResource bool) jsonDeviceLocalDomain {
-	var json jsonDeviceLocalDomain
-	json.DomainName = d.Get("domain_name").(string)
+	var jsonData jsonDeviceLocalDomain
+	jsonData.DomainName = d.Get("domain_name").(string)
 	if newResource {
-		json.CAPrivateKey = d.Get("ca_private_key").(string)
+		jsonData.CAPrivateKey = d.Get("ca_private_key").(string)
 	} else if !strings.HasPrefix(d.Get("ca_private_key").(string), "generate:") {
-		json.CAPrivateKey = d.Get("ca_private_key").(string)
+		jsonData.CAPrivateKey = d.Get("ca_private_key").(string)
 	}
-	json.AdminAccount = d.Get("admin_account").(string)
-	json.Description = d.Get("description").(string)
-	json.EnablePasswordChange = d.Get("enable_password_change").(bool)
-	json.Passphrase = d.Get("passphrase").(string)
-	json.PasswordChangePolicy = d.Get("password_change_policy").(string)
-	json.PasswordChangePlugin = d.Get("password_change_plugin").(string)
-	json.PasswordChangePluginParameters = d.Get("password_change_plugin_parameters").(map[string]interface{})
+	jsonData.Description = d.Get("description").(string)
+	jsonData.Passphrase = d.Get("passphrase").(string)
+	if d.Get("enable_password_change").(bool) {
+		if !newResource {
+			adminAccount := d.Get("admin_account").(string)
+			jsonData.AdminAccount = &adminAccount
+		}
+		jsonData.EnablePasswordChange = d.Get("enable_password_change").(bool)
+		jsonData.PasswordChangePolicy = d.Get("password_change_policy").(string)
+		jsonData.PasswordChangePlugin = d.Get("password_change_plugin").(string)
+		var passChgPlug map[string]interface{}
+		if d.Get("password_change_plugin_parameters").(string) != "" {
+			_ = json.Unmarshal([]byte(d.Get("password_change_plugin_parameters").(string)),
+				&passChgPlug)
+		} else {
+			_ = json.Unmarshal([]byte(`{}`), &passChgPlug)
+		}
+		jsonData.PasswordChangePluginParameters = &passChgPlug
+	}
 
-	return json
+	return jsonData
 }
 
 func readDeviceLocalDomainOptions(

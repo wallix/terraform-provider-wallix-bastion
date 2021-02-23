@@ -14,7 +14,7 @@ type jsonDevice struct {
 	ID             string                   `json:"id,omitempty"`
 	Alias          string                   `json:"alias"`
 	Description    string                   `json:"description"`
-	DeviceName     string                   `json:"device_name,omitempty"`
+	DeviceName     string                   `json:"device_name"`
 	Host           string                   `json:"host"`
 	LastConnection string                   `json:"last_connection,omitempty"`
 	LocalDomains   *[]jsonDeviceLocalDomain `json:"local_domains,omitempty"`
@@ -85,9 +85,8 @@ func resourceDevice() *schema.Resource {
 							Computed: true,
 						},
 						"password_change_plugin_parameters": {
-							Type:     schema.TypeMap,
+							Type:     schema.TypeString,
 							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -345,16 +344,17 @@ func fillDevice(d *schema.ResourceData, jsonData jsonDevice) {
 	localDomains := make([]map[string]interface{}, 0)
 	for _, v := range *jsonData.LocalDomains {
 		localDomains = append(localDomains, map[string]interface{}{
-			"id":                                v.ID,
-			"admin_account":                     v.AdminAccount,
-			"domain_name":                       v.DomainName,
-			"ca_public_key":                     v.CAPublicKey,
-			"description":                       v.Description,
-			"enable_password_change":            v.EnablePasswordChange,
-			"password_change_policy":            v.PasswordChangePolicy,
-			"password_change_plugin":            v.PasswordChangePlugin,
-			"password_change_plugin_parameters": v.PasswordChangePluginParameters,
+			"id":                     v.ID,
+			"admin_account":          v.AdminAccount,
+			"domain_name":            v.DomainName,
+			"ca_public_key":          v.CAPublicKey,
+			"description":            v.Description,
+			"enable_password_change": v.EnablePasswordChange,
+			"password_change_policy": v.PasswordChangePolicy,
+			"password_change_plugin": v.PasswordChangePlugin,
 		})
+		pluginParameters, _ := json.Marshal(v.PasswordChangePluginParameters)
+		localDomains[len(localDomains)-1]["password_change_plugin_parameters"] = string(pluginParameters)
 	}
 	if tfErr := d.Set("local_domains", localDomains); tfErr != nil {
 		panic(tfErr)
