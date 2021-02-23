@@ -191,7 +191,8 @@ func resourceDeviceServiceImport(d *schema.ResourceData, m interface{}) ([]*sche
 func searchResourceDeviceService(ctx context.Context,
 	deviceID, serviceName string, m interface{}) (string, bool, error) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/devices/"+deviceID+"/services/", http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/devices/"+deviceID+
+		"/services/?fields=service_name,id&limit=-1", http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}

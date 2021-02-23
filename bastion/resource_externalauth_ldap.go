@@ -238,7 +238,7 @@ func resourceExternalAuthLdapImport(d *schema.ResourceData, m interface{}) ([]*s
 func searchResourceExternalAuthLdap(
 	ctx context.Context, authenticationName string, m interface{}) (string, bool, error) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/externalauths/", http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/externalauths/?fields=authentication_name,id&limit=-1", http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}

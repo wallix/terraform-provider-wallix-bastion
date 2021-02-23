@@ -228,7 +228,8 @@ func searchResourceDeviceLocalDomainAccountCredential(ctx context.Context,
 	deviceID, domainID, accountID, typeCred string, m interface{}) (string, bool, error) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
-		"/devices/"+deviceID+"/localdomains/"+domainID+"/accounts/"+accountID+"/credentials/", http.MethodGet, nil)
+		"/devices/"+deviceID+"/localdomains/"+domainID+"/accounts/"+accountID+
+			"/credentials/?fields=type,id&limit=-1", http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}

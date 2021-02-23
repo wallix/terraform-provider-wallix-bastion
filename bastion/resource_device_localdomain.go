@@ -212,7 +212,8 @@ func resourceDeviceLocalDomainImport(d *schema.ResourceData, m interface{}) ([]*
 func searchResourceDeviceLocalDomain(ctx context.Context,
 	deviceID, domainName string, m interface{}) (string, bool, error) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/devices/"+deviceID+"/localdomains/", http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/devices/"+deviceID+
+		"/localdomains/?fields=domain_name,id&limit=-1", http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}

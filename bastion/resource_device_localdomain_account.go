@@ -244,7 +244,8 @@ func resourceDeviceLocalDomainAccountImport(d *schema.ResourceData, m interface{
 func searchResourceDeviceLocalDomainAccount(ctx context.Context,
 	deviceID, domainID, accountName string, m interface{}) (string, bool, error) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/devices/"+deviceID+"/localdomains/"+domainID+"/accounts/", http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/devices/"+deviceID+"/localdomains/"+domainID+
+		"/accounts/?fields=account_name,id&limit=-1", http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}

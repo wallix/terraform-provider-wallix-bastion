@@ -185,7 +185,7 @@ func resourceUserGroupImport(d *schema.ResourceData, m interface{}) ([]*schema.R
 
 func searchResourceUserGroup(ctx context.Context, groupName string, m interface{}) (string, bool, error) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/usergroups/", http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/usergroups/?fields=group_name,id&limit=-1", http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}

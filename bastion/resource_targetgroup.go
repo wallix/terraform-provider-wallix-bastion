@@ -348,7 +348,7 @@ func resourceTargetGroupImport(d *schema.ResourceData, m interface{}) ([]*schema
 
 func searchResourceTargetGroup(ctx context.Context, groupName string, m interface{}) (string, bool, error) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/targetgroups/", http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/targetgroups/?fields=group_name,id&limit=-1", http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
