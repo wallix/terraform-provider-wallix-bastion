@@ -6,7 +6,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -26,7 +25,6 @@ func (c *Client) newRequest(ctx context.Context, uri string, method string, json
 	if err != nil {
 		return "", http.StatusInternalServerError, err
 	}
-	log.Printf("body: %v", body.String())
 	url := "https://" + c.bastionIP + ":" + strconv.Itoa(c.bastionPort) + "/api/" + c.bastionAPIVersion + "/" + uri
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	req.Header.Add("Content-Type", "application/json; charset=utf-8")
