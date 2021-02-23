@@ -263,10 +263,10 @@ func searchResourceDeviceLocalDomainAccount(ctx context.Context,
 
 func addDeviceLocalDomainAccount(ctx context.Context, d *schema.ResourceData, m interface{}) error {
 	c := m.(*Client)
-	json := prepareDeviceLocalDomainAccountJSON(d)
+	jsonData := prepareDeviceLocalDomainAccountJSON(d)
 	body, code, err := c.newRequest(ctx,
 		"/devices/"+d.Get("device_id").(string)+"/localdomains/"+d.Get("domain_id").(string)+
-			"/accounts/", http.MethodPost, json)
+			"/accounts/", http.MethodPost, jsonData)
 	if err != nil {
 		return err
 	}
@@ -279,10 +279,10 @@ func addDeviceLocalDomainAccount(ctx context.Context, d *schema.ResourceData, m 
 
 func updateDeviceLocalDomainAccount(ctx context.Context, d *schema.ResourceData, m interface{}) error {
 	c := m.(*Client)
-	json := prepareDeviceLocalDomainAccountJSON(d)
+	jsonData := prepareDeviceLocalDomainAccountJSON(d)
 	body, code, err := c.newRequest(ctx,
 		"/devices/"+d.Get("device_id").(string)+"/localdomains/"+d.Get("domain_id").(string)+
-			"/accounts/"+d.Id()+"?force=true", http.MethodPut, json)
+			"/accounts/"+d.Id()+"?force=true", http.MethodPut, jsonData)
 	if err != nil {
 		return err
 	}
@@ -309,23 +309,23 @@ func deleteDeviceLocalDomainAccount(ctx context.Context, d *schema.ResourceData,
 }
 
 func prepareDeviceLocalDomainAccountJSON(d *schema.ResourceData) jsonDeviceLocalDomainAccount {
-	var json jsonDeviceLocalDomainAccount
-	json.AccountName = d.Get("account_name").(string)
-	json.AccountLogin = d.Get("account_login").(string)
-	json.CheckoutPolicy = d.Get("checkout_policy").(string)
-	json.AutoChangePassword = d.Get("auto_change_password").(bool)
-	json.AutoChangeSSHKey = d.Get("auto_change_ssh_key").(bool)
-	json.CertificateValidity = d.Get("certificate_validity").(string)
-	json.Description = d.Get("description").(string)
+	var jsonData jsonDeviceLocalDomainAccount
+	jsonData.AccountName = d.Get("account_name").(string)
+	jsonData.AccountLogin = d.Get("account_login").(string)
+	jsonData.CheckoutPolicy = d.Get("checkout_policy").(string)
+	jsonData.AutoChangePassword = d.Get("auto_change_password").(bool)
+	jsonData.AutoChangeSSHKey = d.Get("auto_change_ssh_key").(bool)
+	jsonData.CertificateValidity = d.Get("certificate_validity").(string)
+	jsonData.Description = d.Get("description").(string)
 	if len(d.Get("services").([]interface{})) > 0 {
 		for _, v := range d.Get("services").([]interface{}) {
-			json.Services = append(json.Services, v.(string))
+			jsonData.Services = append(jsonData.Services, v.(string))
 		}
 	} else {
-		json.Services = make([]string, 0)
+		jsonData.Services = make([]string, 0)
 	}
 
-	return json
+	return jsonData
 }
 
 func readDeviceLocalDomainAccountOptions(
@@ -353,30 +353,30 @@ func readDeviceLocalDomainAccountOptions(
 	return result, nil
 }
 
-func fillDeviceLocalDomainAccount(d *schema.ResourceData, json jsonDeviceLocalDomainAccount) {
-	if tfErr := d.Set("account_name", json.AccountName); tfErr != nil {
+func fillDeviceLocalDomainAccount(d *schema.ResourceData, jsonData jsonDeviceLocalDomainAccount) {
+	if tfErr := d.Set("account_name", jsonData.AccountName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("account_login", json.AccountLogin); tfErr != nil {
+	if tfErr := d.Set("account_login", jsonData.AccountLogin); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("checkout_policy", json.CheckoutPolicy); tfErr != nil {
+	if tfErr := d.Set("checkout_policy", jsonData.CheckoutPolicy); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("auto_change_password", json.AutoChangePassword); tfErr != nil {
+	if tfErr := d.Set("auto_change_password", jsonData.AutoChangePassword); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("auto_change_ssh_key", json.AutoChangeSSHKey); tfErr != nil {
+	if tfErr := d.Set("auto_change_ssh_key", jsonData.AutoChangeSSHKey); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("certificate_validity", json.CertificateValidity); tfErr != nil {
+	if tfErr := d.Set("certificate_validity", jsonData.CertificateValidity); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", json.Description); tfErr != nil {
+	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
 	credentials := make([]map[string]interface{}, 0)
-	for _, v := range *json.Credentials {
+	for _, v := range *jsonData.Credentials {
 		credentials = append(credentials, map[string]interface{}{
 			"id":         v.ID,
 			"public_key": v.PublicKey,
@@ -386,7 +386,7 @@ func fillDeviceLocalDomainAccount(d *schema.ResourceData, json jsonDeviceLocalDo
 	if tfErr := d.Set("credentials", credentials); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("services", json.Services); tfErr != nil {
+	if tfErr := d.Set("services", jsonData.Services); tfErr != nil {
 		panic(tfErr)
 	}
 }

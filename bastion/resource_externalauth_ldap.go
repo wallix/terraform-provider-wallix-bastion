@@ -261,8 +261,8 @@ func searchResourceExternalAuthLdap(
 
 func addExternalAuthLdap(ctx context.Context, d *schema.ResourceData, m interface{}) error {
 	c := m.(*Client)
-	json := prepareExternalAuthLdapJSON(d)
-	body, code, err := c.newRequest(ctx, "/externalauths/", http.MethodPost, json)
+	jsonData := prepareExternalAuthLdapJSON(d)
+	body, code, err := c.newRequest(ctx, "/externalauths/", http.MethodPost, jsonData)
 	if err != nil {
 		return err
 	}
@@ -275,8 +275,8 @@ func addExternalAuthLdap(ctx context.Context, d *schema.ResourceData, m interfac
 
 func updateExternalAuthLdap(ctx context.Context, d *schema.ResourceData, m interface{}) error {
 	c := m.(*Client)
-	json := prepareExternalAuthLdapJSON(d)
-	body, code, err := c.newRequest(ctx, "/externalauths/"+d.Id(), http.MethodPut, json)
+	jsonData := prepareExternalAuthLdapJSON(d)
+	body, code, err := c.newRequest(ctx, "/externalauths/"+d.Id(), http.MethodPut, jsonData)
 	if err != nil {
 		return err
 	}
@@ -347,59 +347,59 @@ func readExternalAuthLdapOptions(
 	return result, nil
 }
 
-func fillExternalAuthLdap(d *schema.ResourceData, json jsonExternalAuthLdap) {
-	if tfErr := d.Set("authentication_name", json.AuthenticationName); tfErr != nil {
+func fillExternalAuthLdap(d *schema.ResourceData, jsonData jsonExternalAuthLdap) {
+	if tfErr := d.Set("authentication_name", jsonData.AuthenticationName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("cn_attribute", json.CNAttribute); tfErr != nil {
+	if tfErr := d.Set("cn_attribute", jsonData.CNAttribute); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("host", json.Host); tfErr != nil {
+	if tfErr := d.Set("host", jsonData.Host); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("ldap_base", json.LDAPBase); tfErr != nil {
+	if tfErr := d.Set("ldap_base", jsonData.LDAPBase); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("login", json.Login); tfErr != nil {
+	if tfErr := d.Set("login", jsonData.Login); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("login_attribute", json.LoginAttribute); tfErr != nil {
+	if tfErr := d.Set("login_attribute", jsonData.LoginAttribute); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("port", json.Port); tfErr != nil {
+	if tfErr := d.Set("port", jsonData.Port); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("timeout", json.Timeout); tfErr != nil {
+	if tfErr := d.Set("timeout", jsonData.Timeout); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("ca_certificate", json.CACertificate); tfErr != nil {
+	if tfErr := d.Set("ca_certificate", jsonData.CACertificate); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("certificate", json.Certificate); tfErr != nil {
+	if tfErr := d.Set("certificate", jsonData.Certificate); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", json.Description); tfErr != nil {
+	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("is_active_directory", json.IsActiveDirectory); tfErr != nil {
+	if tfErr := d.Set("is_active_directory", jsonData.IsActiveDirectory); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("is_anonymous_access", json.IsAnonymousAccess); tfErr != nil {
+	if tfErr := d.Set("is_anonymous_access", jsonData.IsAnonymousAccess); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("is_protected_user", json.IsProtectedUser); tfErr != nil {
+	if tfErr := d.Set("is_protected_user", jsonData.IsProtectedUser); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("is_ssl", json.IsSSL); tfErr != nil {
+	if tfErr := d.Set("is_ssl", jsonData.IsSSL); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("is_starttls", json.IsStartTLS); tfErr != nil {
+	if tfErr := d.Set("is_starttls", jsonData.IsStartTLS); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("private_key", json.PrivateKey); tfErr != nil {
+	if tfErr := d.Set("private_key", jsonData.PrivateKey); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("use_primary_auth_domain", json.UsePrimaryAuthDomain); tfErr != nil {
+	if tfErr := d.Set("use_primary_auth_domain", jsonData.UsePrimaryAuthDomain); tfErr != nil {
 		panic(tfErr)
 	}
 }

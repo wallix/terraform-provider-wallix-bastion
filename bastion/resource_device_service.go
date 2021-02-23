@@ -270,19 +270,19 @@ func rdpSubProtocolsValid() []string {
 		"RDP_COM_PORT", "RDP_DRIVE", "RDP_SMARTCARD", "RDP_AUDIO_OUTPUT"}
 }
 func prepareDeviceServiceJSON(d *schema.ResourceData, newResource bool) (jsonDeviceService, error) {
-	var json jsonDeviceService
+	var jsonData jsonDeviceService
 	if newResource {
-		json.ServiceName = d.Get("service_name").(string)
-		json.Protocol = d.Get("protocol").(string)
+		jsonData.ServiceName = d.Get("service_name").(string)
+		jsonData.Protocol = d.Get("protocol").(string)
 	}
-	json.ConnectionPolicy = d.Get("connection_policy").(string)
-	json.Port = d.Get("port").(int)
+	jsonData.ConnectionPolicy = d.Get("connection_policy").(string)
+	jsonData.Port = d.Get("port").(int)
 	if len(d.Get("global_domains").([]interface{})) > 0 {
 		for _, v := range d.Get("global_domains").([]interface{}) {
-			json.GlobalDomains = append(json.GlobalDomains, v.(string))
+			jsonData.GlobalDomains = append(jsonData.GlobalDomains, v.(string))
 		}
 	} else {
-		json.GlobalDomains = make([]string, 0)
+		jsonData.GlobalDomains = make([]string, 0)
 	}
 	if v := d.Get("subprotocols").([]interface{}); len(v) > 0 {
 		subProtocols := make([]string, 0)
@@ -290,22 +290,22 @@ func prepareDeviceServiceJSON(d *schema.ResourceData, newResource bool) (jsonDev
 			switch d.Get("protocol").(string) {
 			case "SSH":
 				if !stringInSlice(v2.(string), sshSubProtocolsValid()) {
-					return json, fmt.Errorf("subprotocols %s not valid for SSH service", v2)
+					return jsonData, fmt.Errorf("subprotocols %s not valid for SSH service", v2)
 				}
 				subProtocols = append(subProtocols, v2.(string))
 			case "RDP":
 				if !stringInSlice(v2.(string), rdpSubProtocolsValid()) {
-					return json, fmt.Errorf("subprotocols %s not valid for RDP service", v2)
+					return jsonData, fmt.Errorf("subprotocols %s not valid for RDP service", v2)
 				}
 				subProtocols = append(subProtocols, v2.(string))
 			default:
-				return json, fmt.Errorf("subprotocols need to not set for %s service", d.Get("protocol").(string))
+				return jsonData, fmt.Errorf("subprotocols need to not set for %s service", d.Get("protocol").(string))
 			}
 		}
-		json.SubProtocols = &subProtocols
+		jsonData.SubProtocols = &subProtocols
 	}
 
-	return json, nil
+	return jsonData, nil
 }
 
 func readDeviceServiceOptions(
@@ -330,23 +330,23 @@ func readDeviceServiceOptions(
 	return result, nil
 }
 
-func fillDeviceService(d *schema.ResourceData, json jsonDeviceService) {
-	if tfErr := d.Set("service_name", json.ServiceName); tfErr != nil {
+func fillDeviceService(d *schema.ResourceData, jsonData jsonDeviceService) {
+	if tfErr := d.Set("service_name", jsonData.ServiceName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("connection_policy", json.ConnectionPolicy); tfErr != nil {
+	if tfErr := d.Set("connection_policy", jsonData.ConnectionPolicy); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("port", json.Port); tfErr != nil {
+	if tfErr := d.Set("port", jsonData.Port); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("protocol", json.Protocol); tfErr != nil {
+	if tfErr := d.Set("protocol", jsonData.Protocol); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("global_domains", json.GlobalDomains); tfErr != nil {
+	if tfErr := d.Set("global_domains", jsonData.GlobalDomains); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("subprotocols", *json.SubProtocols); tfErr != nil {
+	if tfErr := d.Set("subprotocols", *jsonData.SubProtocols); tfErr != nil {
 		panic(tfErr)
 	}
 }

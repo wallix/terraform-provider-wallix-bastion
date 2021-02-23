@@ -229,8 +229,9 @@ func searchResourceDeviceLocalDomain(ctx context.Context,
 
 func addDeviceLocalDomain(ctx context.Context, d *schema.ResourceData, m interface{}) error {
 	c := m.(*Client)
-	json := prepareDeviceLocalDomainJSON(d, true)
-	body, code, err := c.newRequest(ctx, "/devices/"+d.Get("device_id").(string)+"/localdomains/", http.MethodPost, json)
+	jsonData := prepareDeviceLocalDomainJSON(d, true)
+	body, code, err := c.newRequest(ctx, "/devices/"+d.Get("device_id").(string)+"/localdomains/",
+		http.MethodPost, jsonData)
 	if err != nil {
 		return err
 	}
@@ -243,9 +244,9 @@ func addDeviceLocalDomain(ctx context.Context, d *schema.ResourceData, m interfa
 
 func updateDeviceLocalDomain(ctx context.Context, d *schema.ResourceData, m interface{}) error {
 	c := m.(*Client)
-	json := prepareDeviceLocalDomainJSON(d, false)
+	jsonData := prepareDeviceLocalDomainJSON(d, false)
 	body, code, err := c.newRequest(ctx,
-		"/devices/"+d.Get("device_id").(string)+"/localdomains/"+d.Id(), http.MethodPut, json)
+		"/devices/"+d.Get("device_id").(string)+"/localdomains/"+d.Id(), http.MethodPut, jsonData)
 	if err != nil {
 		return err
 	}
@@ -311,29 +312,29 @@ func readDeviceLocalDomainOptions(
 	return result, nil
 }
 
-func fillDeviceLocalDomain(d *schema.ResourceData, json jsonDeviceLocalDomain) {
-	if tfErr := d.Set("domain_name", json.DomainName); tfErr != nil {
+func fillDeviceLocalDomain(d *schema.ResourceData, jsonData jsonDeviceLocalDomain) {
+	if tfErr := d.Set("domain_name", jsonData.DomainName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("admin_account", json.AdminAccount); tfErr != nil {
+	if tfErr := d.Set("admin_account", jsonData.AdminAccount); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("ca_public_key", json.CAPublicKey); tfErr != nil {
+	if tfErr := d.Set("ca_public_key", jsonData.CAPublicKey); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", json.Description); tfErr != nil {
+	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("enable_password_change", json.EnablePasswordChange); tfErr != nil {
+	if tfErr := d.Set("enable_password_change", jsonData.EnablePasswordChange); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("passphrase", json.Passphrase); tfErr != nil {
+	if tfErr := d.Set("passphrase", jsonData.Passphrase); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("password_change_policy", json.PasswordChangePolicy); tfErr != nil {
+	if tfErr := d.Set("password_change_policy", jsonData.PasswordChangePolicy); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("password_change_plugin", json.PasswordChangePlugin); tfErr != nil {
+	if tfErr := d.Set("password_change_plugin", jsonData.PasswordChangePlugin); tfErr != nil {
 		panic(tfErr)
 	}
 }

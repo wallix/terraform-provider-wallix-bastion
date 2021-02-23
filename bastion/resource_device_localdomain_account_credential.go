@@ -251,10 +251,10 @@ func searchResourceDeviceLocalDomainAccountCredential(ctx context.Context,
 
 func addDeviceLocalDomainAccountCredential(ctx context.Context, d *schema.ResourceData, m interface{}) error {
 	c := m.(*Client)
-	json := prepareDeviceLocalDomainAccountCredentialJSON(d, true)
+	jsonData := prepareDeviceLocalDomainAccountCredentialJSON(d, true)
 	body, code, err := c.newRequest(ctx,
 		"/devices/"+d.Get("device_id").(string)+"/localdomains/"+d.Get("domain_id").(string)+
-			"/accounts/"+d.Get("account_id").(string)+"/credentials/", http.MethodPost, json)
+			"/accounts/"+d.Get("account_id").(string)+"/credentials/", http.MethodPost, jsonData)
 	if err != nil {
 		return err
 	}
@@ -267,10 +267,10 @@ func addDeviceLocalDomainAccountCredential(ctx context.Context, d *schema.Resour
 
 func updateDeviceLocalDomainAccountCredential(ctx context.Context, d *schema.ResourceData, m interface{}) error {
 	c := m.(*Client)
-	json := prepareDeviceLocalDomainAccountCredentialJSON(d, false)
+	jsonData := prepareDeviceLocalDomainAccountCredentialJSON(d, false)
 	body, code, err := c.newRequest(ctx,
 		"/devices/"+d.Get("device_id").(string)+"/localdomains/"+d.Get("domain_id").(string)+
-			"/accounts/"+d.Get("account_id").(string)+"/credentials/"+d.Id(), http.MethodPut, json)
+			"/accounts/"+d.Get("account_id").(string)+"/credentials/"+d.Id(), http.MethodPut, jsonData)
 	if err != nil {
 		return err
 	}
@@ -298,18 +298,18 @@ func deleteDeviceLocalDomainAccountCredential(ctx context.Context, d *schema.Res
 
 func prepareDeviceLocalDomainAccountCredentialJSON(
 	d *schema.ResourceData, newResource bool) jsonDeviceLocalDomainAccountCredential {
-	var json jsonDeviceLocalDomainAccountCredential
-	json.Type = d.Get("type").(string)
-	if json.Type == "password" {
-		json.Password = d.Get("password").(string)
-	} else if json.Type == "ssh_key" {
+	var jsonData jsonDeviceLocalDomainAccountCredential
+	jsonData.Type = d.Get("type").(string)
+	if jsonData.Type == "password" {
+		jsonData.Password = d.Get("password").(string)
+	} else if jsonData.Type == "ssh_key" {
 		if newResource || !strings.HasPrefix(d.Get("private_key").(string), "generate:") {
-			json.PrivateKey = d.Get("private_key").(string)
-			json.Passphrase = d.Get("passphrase").(string)
+			jsonData.PrivateKey = d.Get("private_key").(string)
+			jsonData.Passphrase = d.Get("passphrase").(string)
 		}
 	}
 
-	return json
+	return jsonData
 }
 
 func readDeviceLocalDomainAccountCredentialOptions(
@@ -337,11 +337,11 @@ func readDeviceLocalDomainAccountCredentialOptions(
 	return result, nil
 }
 
-func fillDeviceLocalDomainAccountCredential(d *schema.ResourceData, json jsonDeviceLocalDomainAccountCredential) {
-	if tfErr := d.Set("type", json.Type); tfErr != nil {
+func fillDeviceLocalDomainAccountCredential(d *schema.ResourceData, jsonData jsonDeviceLocalDomainAccountCredential) {
+	if tfErr := d.Set("type", jsonData.Type); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("public_key", json.PublicKey); tfErr != nil {
+	if tfErr := d.Set("public_key", jsonData.PublicKey); tfErr != nil {
 		panic(tfErr)
 	}
 }

@@ -208,8 +208,8 @@ func searchResourceUserGroup(ctx context.Context, groupName string, m interface{
 
 func addUserGroup(ctx context.Context, d *schema.ResourceData, m interface{}) error {
 	c := m.(*Client)
-	json := prepareUserGroupJSON(d, true)
-	body, code, err := c.newRequest(ctx, "/usergroups/", http.MethodPost, json)
+	jsonData := prepareUserGroupJSON(d, true)
+	body, code, err := c.newRequest(ctx, "/usergroups/", http.MethodPost, jsonData)
 	if err != nil {
 		return err
 	}
@@ -222,8 +222,8 @@ func addUserGroup(ctx context.Context, d *schema.ResourceData, m interface{}) er
 
 func updateUserGroup(ctx context.Context, d *schema.ResourceData, m interface{}) error {
 	c := m.(*Client)
-	json := prepareUserGroupJSON(d, false)
-	body, code, err := c.newRequest(ctx, "/usergroups/"+d.Id()+"?force=true", http.MethodPut, json)
+	jsonData := prepareUserGroupJSON(d, false)
+	body, code, err := c.newRequest(ctx, "/usergroups/"+d.Id()+"?force=true", http.MethodPut, jsonData)
 	if err != nil {
 		return err
 	}
@@ -247,7 +247,7 @@ func deleteUserGroup(ctx context.Context, d *schema.ResourceData, m interface{})
 }
 
 func prepareUserGroupJSON(d *schema.ResourceData, newResource bool) jsonUserGroup {
-	group := jsonUserGroup{
+	jsonData := jsonUserGroup{
 		Description: d.Get("description").(string),
 		GroupName:   d.Get("group_name").(string),
 		Profile:     d.Get("profile").(string),
@@ -258,7 +258,7 @@ func prepareUserGroupJSON(d *schema.ResourceData, newResource bool) jsonUserGrou
 			for _, v := range d.Get("users").(*schema.Set).List() {
 				users = append(users, v.(string))
 			}
-			group.Users = &users
+			jsonData.Users = &users
 		}
 	}
 	if d.HasChanges("users") {
@@ -266,25 +266,25 @@ func prepareUserGroupJSON(d *schema.ResourceData, newResource bool) jsonUserGrou
 		for _, v := range d.Get("users").(*schema.Set).List() {
 			users = append(users, v.(string))
 		}
-		group.Users = &users
+		jsonData.Users = &users
 	}
 	for _, v := range d.Get("timeframes").([]interface{}) {
-		group.TimeFrames = append(group.TimeFrames, v.(string))
+		jsonData.TimeFrames = append(jsonData.TimeFrames, v.(string))
 	}
 	if len(d.Get("restrictions").([]interface{})) > 0 {
 		for _, v := range d.Get("restrictions").([]interface{}) {
 			r := v.(map[string]interface{})
-			group.Restrictions = append(group.Restrictions, jsonRestriction{
+			jsonData.Restrictions = append(jsonData.Restrictions, jsonRestriction{
 				Action:      r["action"].(string),
 				Rules:       r["rules"].(string),
 				SubProtocol: r["subprotocol"].(string),
 			})
 		}
 	} else {
-		group.Restrictions = make([]jsonRestriction, 0)
+		jsonData.Restrictions = make([]jsonRestriction, 0)
 	}
 
-	return group
+	return jsonData
 }
 
 func readUserGroupOptions(
@@ -309,21 +309,21 @@ func readUserGroupOptions(
 	return result, nil
 }
 
-func fillUserGroup(d *schema.ResourceData, json jsonUserGroup) {
-	if tfErr := d.Set("group_name", json.GroupName); tfErr != nil {
+func fillUserGroup(d *schema.ResourceData, jsonData jsonUserGroup) {
+	if tfErr := d.Set("group_name", jsonData.GroupName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("timeframes", json.TimeFrames); tfErr != nil {
+	if tfErr := d.Set("timeframes", jsonData.TimeFrames); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", json.Description); tfErr != nil {
+	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("profile", json.Profile); tfErr != nil {
+	if tfErr := d.Set("profile", jsonData.Profile); tfErr != nil {
 		panic(tfErr)
 	}
 	restrictions := make([]map[string]interface{}, 0)
-	for _, v := range json.Restrictions {
+	for _, v := range jsonData.Restrictions {
 		restrictions = append(restrictions, map[string]interface{}{
 			"action":      v.Action,
 			"rules":       v.Rules,
@@ -333,7 +333,7 @@ func fillUserGroup(d *schema.ResourceData, json jsonUserGroup) {
 	if tfErr := d.Set("restrictions", restrictions); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("users", json.Users); tfErr != nil {
+	if tfErr := d.Set("users", jsonData.Users); tfErr != nil {
 		panic(tfErr)
 	}
 }

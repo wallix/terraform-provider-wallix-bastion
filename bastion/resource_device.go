@@ -259,8 +259,8 @@ func searchResourceDevice(ctx context.Context, deviceName string, m interface{})
 
 func addDevice(ctx context.Context, d *schema.ResourceData, m interface{}) error {
 	c := m.(*Client)
-	json := prepareDeviceJSON(d)
-	body, code, err := c.newRequest(ctx, "/devices/", http.MethodPost, json)
+	jsonData := prepareDeviceJSON(d)
+	body, code, err := c.newRequest(ctx, "/devices/", http.MethodPost, jsonData)
 	if err != nil {
 		return err
 	}
@@ -273,9 +273,8 @@ func addDevice(ctx context.Context, d *schema.ResourceData, m interface{}) error
 
 func updateDevice(ctx context.Context, d *schema.ResourceData, m interface{}) error {
 	c := m.(*Client)
-
-	json := prepareDeviceJSON(d)
-	body, code, err := c.newRequest(ctx, "/devices/"+d.Id(), http.MethodPut, json)
+	jsonData := prepareDeviceJSON(d)
+	body, code, err := c.newRequest(ctx, "/devices/"+d.Id(), http.MethodPut, jsonData)
 	if err != nil {
 		return err
 	}
@@ -330,21 +329,21 @@ func readDeviceOptions(
 	return result, nil
 }
 
-func fillDevice(d *schema.ResourceData, json jsonDevice) {
-	if tfErr := d.Set("device_name", json.DeviceName); tfErr != nil {
+func fillDevice(d *schema.ResourceData, jsonData jsonDevice) {
+	if tfErr := d.Set("device_name", jsonData.DeviceName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("host", json.Host); tfErr != nil {
+	if tfErr := d.Set("host", jsonData.Host); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("alias", json.Alias); tfErr != nil {
+	if tfErr := d.Set("alias", jsonData.Alias); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", json.Description); tfErr != nil {
+	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
 	localDomains := make([]map[string]interface{}, 0)
-	for _, v := range *json.LocalDomains {
+	for _, v := range *jsonData.LocalDomains {
 		localDomains = append(localDomains, map[string]interface{}{
 			"id":                                v.ID,
 			"admin_account":                     v.AdminAccount,
@@ -361,7 +360,7 @@ func fillDevice(d *schema.ResourceData, json jsonDevice) {
 		panic(tfErr)
 	}
 	services := make([]map[string]interface{}, 0)
-	for _, v := range *json.Services {
+	for _, v := range *jsonData.Services {
 		service := map[string]interface{}{
 			"id":                v.ID,
 			"service_name":      v.ServiceName,

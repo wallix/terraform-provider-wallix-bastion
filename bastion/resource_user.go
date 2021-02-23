@@ -215,8 +215,8 @@ func checkResourceUserExists(ctx context.Context, userName string, m interface{}
 
 func addUser(ctx context.Context, d *schema.ResourceData, m interface{}) error {
 	c := m.(*Client)
-	json := prepareUserJSON(d, true)
-	body, code, err := c.newRequest(ctx, "/users/", http.MethodPost, json)
+	jsonData := prepareUserJSON(d, true)
+	body, code, err := c.newRequest(ctx, "/users/", http.MethodPost, jsonData)
 	if err != nil {
 		return err
 	}
@@ -229,8 +229,8 @@ func addUser(ctx context.Context, d *schema.ResourceData, m interface{}) error {
 
 func updateUser(ctx context.Context, d *schema.ResourceData, m interface{}) error {
 	c := m.(*Client)
-	json := prepareUserJSON(d, false)
-	body, code, err := c.newRequest(ctx, "/users/"+d.Get("user_name").(string)+"?force=true", http.MethodPut, json)
+	jsonData := prepareUserJSON(d, false)
+	body, code, err := c.newRequest(ctx, "/users/"+d.Get("user_name").(string)+"?force=true", http.MethodPut, jsonData)
 	if err != nil {
 		return err
 	}
@@ -255,7 +255,7 @@ func deleteUser(ctx context.Context, d *schema.ResourceData, m interface{}) erro
 
 func prepareUserJSON(d *schema.ResourceData, newResource bool) jsonUser {
 	b := true
-	user := jsonUser{
+	jsonData := jsonUser{
 		UserName:       d.Get("user_name").(string),
 		DisplayName:    d.Get("display_name").(string),
 		Email:          d.Get("email").(string),
@@ -267,17 +267,17 @@ func prepareUserJSON(d *schema.ResourceData, newResource bool) jsonUser {
 		IsDisabled:     d.Get("is_disabled").(bool),
 	}
 	if newResource {
-		user.PreferredLanguage = d.Get("preferred_language").(string)
-		user.Password = d.Get("password").(string)
+		jsonData.PreferredLanguage = d.Get("preferred_language").(string)
+		jsonData.Password = d.Get("password").(string)
 		if d.Get("force_change_pwd").(bool) {
-			user.ForceChangePwd = &b
+			jsonData.ForceChangePwd = &b
 		}
 		if d.Get("groups") != nil {
 			groups := make([]string, 0)
 			for _, v := range d.Get("groups").(*schema.Set).List() {
 				groups = append(groups, v.(string))
 			}
-			user.Groups = &groups
+			jsonData.Groups = &groups
 		}
 	}
 	if d.HasChanges("groups") {
@@ -285,13 +285,13 @@ func prepareUserJSON(d *schema.ResourceData, newResource bool) jsonUser {
 		for _, v := range d.Get("groups").(*schema.Set).List() {
 			groups = append(groups, v.(string))
 		}
-		user.Groups = &groups
+		jsonData.Groups = &groups
 	}
 	for _, v := range d.Get("user_auths").(*schema.Set).List() {
-		user.UserAuths = append(user.UserAuths, v.(string))
+		jsonData.UserAuths = append(jsonData.UserAuths, v.(string))
 	}
 
-	return user
+	return jsonData
 }
 
 func readUserOptions(ctx context.Context, userName string, m interface{}) (jsonUser, error) {
@@ -316,38 +316,38 @@ func readUserOptions(ctx context.Context, userName string, m interface{}) (jsonU
 	return result, nil
 }
 
-func fillUser(d *schema.ResourceData, json jsonUser) {
-	if tfErr := d.Set("email", json.Email); tfErr != nil {
+func fillUser(d *schema.ResourceData, jsonData jsonUser) {
+	if tfErr := d.Set("email", jsonData.Email); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("profile", json.Profile); tfErr != nil {
+	if tfErr := d.Set("profile", jsonData.Profile); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("user_auths", json.UserAuths); tfErr != nil {
+	if tfErr := d.Set("user_auths", jsonData.UserAuths); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("certificate_dn", json.CertificateCN); tfErr != nil {
+	if tfErr := d.Set("certificate_dn", jsonData.CertificateCN); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("display_name", json.DisplayName); tfErr != nil {
+	if tfErr := d.Set("display_name", jsonData.DisplayName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("expiration_date", json.ExpirationDate); tfErr != nil {
+	if tfErr := d.Set("expiration_date", jsonData.ExpirationDate); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("groups", json.Groups); tfErr != nil {
+	if tfErr := d.Set("groups", jsonData.Groups); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("ip_source", json.IPSource); tfErr != nil {
+	if tfErr := d.Set("ip_source", jsonData.IPSource); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("is_disabled", json.IsDisabled); tfErr != nil {
+	if tfErr := d.Set("is_disabled", jsonData.IsDisabled); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("preferred_language", json.PreferredLanguage); tfErr != nil {
+	if tfErr := d.Set("preferred_language", jsonData.PreferredLanguage); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("ssh_public_key", json.SSHPublicKey); tfErr != nil {
+	if tfErr := d.Set("ssh_public_key", jsonData.SSHPublicKey); tfErr != nil {
 		panic(tfErr)
 	}
 }
