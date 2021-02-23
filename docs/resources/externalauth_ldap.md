@@ -6,7 +6,7 @@ Provides a LDAP externaulauth resource.
 
 The following arguments are supported:
 
-* `authentication_name` - (Required, Forces new resource)(`String`) The authentication name.
+* `authentication_name` - (Required)(`String`) The authentication name.
 * `cn_attribute` - (Required)(`String`) The username attribute.
 * `host` - (Required)(`String`) The host name.
 * `ldap_base` - (Required)(`String`) The LDAP base scheme.
@@ -27,6 +27,7 @@ The following arguments are supported:
 * `use_primary_auth_domain` - (Optional)(`Bool`) Use the primary auth domain.
 
 ## Attribute Reference
+
 * `id` - (`String`) Internal id of externalauth in bastion.
 
 ## Import

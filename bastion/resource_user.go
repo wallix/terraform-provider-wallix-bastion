@@ -71,7 +71,6 @@ func resourceUser() *schema.Resource {
 			"force_change_pwd": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
 			},
 			"groups": {
 				Type:     schema.TypeSet,
@@ -111,7 +110,7 @@ func resourveUserVersionCheck(version string) error {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_user not validate with api version %v", version)
+	return fmt.Errorf("resource wallix-bastion_user not validate with api version %s", version)
 }
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
@@ -123,7 +122,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface
 		return diag.FromErr(err)
 	}
 	if ex {
-		return diag.FromErr(fmt.Errorf("user_name %v already exists", d.Get("user_name").(string)))
+		return diag.FromErr(fmt.Errorf("user_name %s already exists", d.Get("user_name").(string)))
 	}
 	err = addUser(ctx, d, m)
 	if err != nil {
@@ -138,19 +137,20 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	if err := resourveUserVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	config, err := readUserOptions(ctx, d.Get("user_name").(string), m)
+	cfg, err := readUserOptions(ctx, d.Get("user_name").(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	if config.UserName == "" {
+	if cfg.UserName == "" {
 		d.SetId("")
 	} else {
-		fillUser(d, config)
+		fillUser(d, cfg)
 	}
 
 	return nil
 }
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	d.Partial(true)
 	c := m.(*Client)
 	if err := resourveUserVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -158,6 +158,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	if err := updateUser(ctx, d, m); err != nil {
 		return diag.FromErr(err)
 	}
+	d.Partial(false)
 
 	return resourceUserRead(ctx, d, m)
 }
@@ -183,13 +184,13 @@ func resourceUserImport(d *schema.ResourceData, m interface{}) ([]*schema.Resour
 		return nil, err
 	}
 	if !ex {
-		return nil, fmt.Errorf("don't find user_name with id %v (id must be <user_name>", d.Id())
+		return nil, fmt.Errorf("don't find user_name with id %s (id must be <user_name>", d.Id())
 	}
-	config, err := readUserOptions(ctx, d.Id(), m)
+	cfg, err := readUserOptions(ctx, d.Id(), m)
 	if err != nil {
 		return nil, err
 	}
-	fillUser(d, config)
+	fillUser(d, cfg)
 	result := make([]*schema.ResourceData, 1)
 	result[0] = d
 
@@ -206,7 +207,7 @@ func checkResourceUserExists(ctx context.Context, userName string, m interface{}
 		return false, nil
 	}
 	if code != http.StatusOK {
-		return false, fmt.Errorf("api return not OK : %d with body %s", code, body)
+		return false, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
 	}
 
 	return true, nil
@@ -214,13 +215,13 @@ func checkResourceUserExists(ctx context.Context, userName string, m interface{}
 
 func addUser(ctx context.Context, d *schema.ResourceData, m interface{}) error {
 	c := m.(*Client)
-	json := prepareUserJSON(d, true)
-	body, code, err := c.newRequest(ctx, "/users/", http.MethodPost, json)
+	jsonData := prepareUserJSON(d, true)
+	body, code, err := c.newRequest(ctx, "/users/", http.MethodPost, jsonData)
 	if err != nil {
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api return not OK or NoContent : %d with body %s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
 	}
 
 	return nil
@@ -228,13 +229,13 @@ func addUser(ctx context.Context, d *schema.ResourceData, m interface{}) error {
 
 func updateUser(ctx context.Context, d *schema.ResourceData, m interface{}) error {
 	c := m.(*Client)
-	json := prepareUserJSON(d, false)
-	body, code, err := c.newRequest(ctx, "/users/"+d.Get("user_name").(string)+"?force=true", http.MethodPut, json)
+	jsonData := prepareUserJSON(d, false)
+	body, code, err := c.newRequest(ctx, "/users/"+d.Get("user_name").(string)+"?force=true", http.MethodPut, jsonData)
 	if err != nil {
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api return not OK or NoContent : %d with body %s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
 	}
 
 	return nil
@@ -246,7 +247,7 @@ func deleteUser(ctx context.Context, d *schema.ResourceData, m interface{}) erro
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api return not OK or NoContent : %d with body %s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
 	}
 
 	return nil
@@ -254,7 +255,7 @@ func deleteUser(ctx context.Context, d *schema.ResourceData, m interface{}) erro
 
 func prepareUserJSON(d *schema.ResourceData, newResource bool) jsonUser {
 	b := true
-	user := jsonUser{
+	jsonData := jsonUser{
 		UserName:       d.Get("user_name").(string),
 		DisplayName:    d.Get("display_name").(string),
 		Email:          d.Get("email").(string),
@@ -266,17 +267,17 @@ func prepareUserJSON(d *schema.ResourceData, newResource bool) jsonUser {
 		IsDisabled:     d.Get("is_disabled").(bool),
 	}
 	if newResource {
-		user.PreferredLanguage = d.Get("preferred_language").(string)
-		user.Password = d.Get("password").(string)
+		jsonData.PreferredLanguage = d.Get("preferred_language").(string)
+		jsonData.Password = d.Get("password").(string)
 		if d.Get("force_change_pwd").(bool) {
-			user.ForceChangePwd = &b
+			jsonData.ForceChangePwd = &b
 		}
 		if d.Get("groups") != nil {
 			groups := make([]string, 0)
 			for _, v := range d.Get("groups").(*schema.Set).List() {
 				groups = append(groups, v.(string))
 			}
-			user.Groups = &groups
+			jsonData.Groups = &groups
 		}
 	}
 	if d.HasChanges("groups") {
@@ -284,13 +285,13 @@ func prepareUserJSON(d *schema.ResourceData, newResource bool) jsonUser {
 		for _, v := range d.Get("groups").(*schema.Set).List() {
 			groups = append(groups, v.(string))
 		}
-		user.Groups = &groups
+		jsonData.Groups = &groups
 	}
 	for _, v := range d.Get("user_auths").(*schema.Set).List() {
-		user.UserAuths = append(user.UserAuths, v.(string))
+		jsonData.UserAuths = append(jsonData.UserAuths, v.(string))
 	}
 
-	return user
+	return jsonData
 }
 
 func readUserOptions(ctx context.Context, userName string, m interface{}) (jsonUser, error) {
@@ -304,52 +305,49 @@ func readUserOptions(ctx context.Context, userName string, m interface{}) (jsonU
 		return result, nil
 	}
 	if code != http.StatusOK {
-		return result, fmt.Errorf("api return not OK : %d with body %s", code, body)
+		return result, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
 	}
 
 	err = json.Unmarshal([]byte(body), &result)
 	if err != nil {
-		return result, err
+		return result, fmt.Errorf("json.Unmarshal failed : %w", err)
 	}
 
 	return result, nil
 }
 
-func fillUser(d *schema.ResourceData, json jsonUser) {
-	if tfErr := d.Set("email", json.Email); tfErr != nil {
+func fillUser(d *schema.ResourceData, jsonData jsonUser) {
+	if tfErr := d.Set("email", jsonData.Email); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("profile", json.Profile); tfErr != nil {
+	if tfErr := d.Set("profile", jsonData.Profile); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("user_auths", json.UserAuths); tfErr != nil {
+	if tfErr := d.Set("user_auths", jsonData.UserAuths); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("certificate_dn", json.CertificateCN); tfErr != nil {
+	if tfErr := d.Set("certificate_dn", jsonData.CertificateCN); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("display_name", json.DisplayName); tfErr != nil {
+	if tfErr := d.Set("display_name", jsonData.DisplayName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("expiration_date", json.ExpirationDate); tfErr != nil {
+	if tfErr := d.Set("expiration_date", jsonData.ExpirationDate); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("force_change_pwd", *json.ForceChangePwd); tfErr != nil {
+	if tfErr := d.Set("groups", jsonData.Groups); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("groups", json.Groups); tfErr != nil {
+	if tfErr := d.Set("ip_source", jsonData.IPSource); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("ip_source", json.IPSource); tfErr != nil {
+	if tfErr := d.Set("is_disabled", jsonData.IsDisabled); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("is_disabled", json.IsDisabled); tfErr != nil {
+	if tfErr := d.Set("preferred_language", jsonData.PreferredLanguage); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("preferred_language", json.PreferredLanguage); tfErr != nil {
-		panic(tfErr)
-	}
-	if tfErr := d.Set("ssh_public_key", json.SSHPublicKey); tfErr != nil {
+	if tfErr := d.Set("ssh_public_key", jsonData.SSHPublicKey); tfErr != nil {
 		panic(tfErr)
 	}
 }
