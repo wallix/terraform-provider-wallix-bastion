@@ -346,7 +346,7 @@ func fillDeviceService(d *schema.ResourceData, jsonData jsonDeviceService) {
 	if tfErr := d.Set("global_domains", jsonData.GlobalDomains); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("subprotocols", *jsonData.SubProtocols); tfErr != nil {
+	if tfErr := d.Set("subprotocols", jsonData.SubProtocols); tfErr != nil {
 		panic(tfErr)
 	}
 }
