@@ -49,6 +49,7 @@ func Provider() *schema.Provider {
 			"wallix-bastion_device_localdomain_account_credential": resourceDeviceLocalDomainAccountCredential(),
 			"wallix-bastion_device_service":                        resourceDeviceService(),
 			"wallix-bastion_externalauth_ldap":                     resourceExternalAuthLdap(),
+			"wallix-bastion_targetgroup":                           resourceTargetGroup(),
 			"wallix-bastion_user":                                  resourceUser(),
 			"wallix-bastion_usergroup":                             resourceUserGroup(),
 		},
