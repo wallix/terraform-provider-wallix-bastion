@@ -1,12 +1,11 @@
-# wallix-bastion_device_localdomain_account Resource
+# wallix-bastion_domain_account Resource
 
-Provides a account linked to device_localdomain resource.
+Provides a account linked to domain resource.
 
 ## Argument Reference
 
 The following arguments are supported:
 
-* `device_id` - (Required, Forces new resource)(`String`) ID of device.
 * `domain_id` - (Required, Forces new resource)(`String`) ID of localdomain.
 * `account_name` - (Required)(`String`) The account name.
 * `account_login` - (Required)(`String`) The account login.
@@ -15,11 +14,11 @@ The following arguments are supported:
 * `certificate_validity` - (Optional)(`String`) The validity duration of the signed ssh public key in the case a Certificate Authority is defined for the account's domain.
 * `checkout_policy` - (Optional)(`String`) The account checkout policy.
 * `description` - (Optional)(`String`) The account description.
-* `services` - (Optional)(`ListOfString`) The account services. 
+* `resources` - (Optional)(`ListOfString`) The account resources. Format is device:service or application:APP.
 
 ## Attribute Reference
 
-* `id` - (`String`) Internal id of localdomain account in bastion.
+* `id` - (`String`) Internal id of domain account in bastion.
 * `credentials` - (`ListOfNestedBlock`) The account credentials.
   * `id` - (`String`) Internal id of credential.
   * `public_key` - (`String`) The account public key.
@@ -29,8 +28,8 @@ The following arguments are supported:
 
 ## Import
 
-Account linked to device_localdomain can be imported using an id made up of `<device_id>/<domain_id>/<account_name>`, e.g.
+Account linked to domain can be imported using an id made up of `<domain_id>/<account_name>`, e.g.
 
 ```
-$ terraform import wallix-bastion_device_localdomain_account.srv1adm xxxxxxxx/yyyyyyy/admin
+$ terraform import wallix-bastion_domain_account.dom1adm xxxxxxxx/admin
 ```

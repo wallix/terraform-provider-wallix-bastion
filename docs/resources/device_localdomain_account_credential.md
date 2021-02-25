@@ -16,7 +16,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-* `id` - (`String`) Internal id of local domain in bastion.
+* `id` - (`String`) Internal id of localdomain account credential in bastion.
 * `public_key` - (`String`) The account public key.
 
 ## Import
