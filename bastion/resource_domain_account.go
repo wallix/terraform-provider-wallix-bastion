@@ -214,7 +214,7 @@ func resourceDomainAccountImport(d *schema.ResourceData, m interface{}) ([]*sche
 	fillDomainAccount(d, cfg)
 	result := make([]*schema.ResourceData, 1)
 	d.SetId(id)
-	if tfErr := d.Set("domain_id", idSplit[1]); tfErr != nil {
+	if tfErr := d.Set("domain_id", idSplit[0]); tfErr != nil {
 		panic(tfErr)
 	}
 	result[0] = d
@@ -225,8 +225,8 @@ func resourceDomainAccountImport(d *schema.ResourceData, m interface{}) ([]*sche
 func searchResourceDomainAccount(ctx context.Context,
 	domainID, accountName string, m interface{}) (string, bool, error) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/domains/"+domainID+
-		"/accounts/?fields=account_name,id&limit=-1", http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx,
+		"/domains/"+domainID+"/accounts/?fields=account_name,id&limit=-1", http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
@@ -253,7 +253,8 @@ func addDomainAccount(ctx context.Context, d *schema.ResourceData, m interface{}
 	if err != nil {
 		return err
 	}
-	body, code, err := c.newRequest(ctx, "/domains/"+d.Get("domain_id").(string)+"/accounts/", http.MethodPost, jsonData)
+	body, code, err := c.newRequest(ctx,
+		"/domains/"+d.Get("domain_id").(string)+"/accounts/", http.MethodPost, jsonData)
 	if err != nil {
 		return err
 	}

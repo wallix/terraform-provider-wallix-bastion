@@ -6,7 +6,7 @@ Provides a account linked to domain resource.
 
 The following arguments are supported:
 
-* `domain_id` - (Required, Forces new resource)(`String`) ID of localdomain.
+* `domain_id` - (Required, Forces new resource)(`String`) ID of domain.
 * `account_name` - (Required)(`String`) The account name.
 * `account_login` - (Required)(`String`) The account login.
 * `auto_change_password` - (Optional)(`Bool`) Automatically change the password.
