@@ -213,7 +213,7 @@ func resourceDeviceLocalDomainAccountImport(d *schema.ResourceData, m interface{
 	}
 	idSplit := strings.Split(d.Id(), "/")
 	if len(idSplit) != 3 {
-		return nil, fmt.Errorf("id msut be <device_id>/<domain_id>/<account_name>")
+		return nil, fmt.Errorf("id must be <device_id>/<domain_id>/<account_name>")
 	}
 	id, ex, err := searchResourceDeviceLocalDomainAccount(ctx, idSplit[0], idSplit[1], idSplit[2], m)
 	if err != nil {

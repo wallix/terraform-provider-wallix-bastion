@@ -164,7 +164,7 @@ func resourceDeviceServiceImport(d *schema.ResourceData, m interface{}) ([]*sche
 	}
 	idSplit := strings.Split(d.Id(), "/")
 	if len(idSplit) != 2 {
-		return nil, fmt.Errorf("id msut be <device_id>/<service_name>")
+		return nil, fmt.Errorf("id must be <device_id>/<service_name>")
 	}
 	id, ex, err := searchResourceDeviceService(ctx, idSplit[0], idSplit[1], m)
 	if err != nil {
