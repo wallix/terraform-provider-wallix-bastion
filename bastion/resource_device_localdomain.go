@@ -88,6 +88,7 @@ func resourceDeviceLocalDomain() *schema.Resource {
 				Optional:     true,
 				RequiredWith: []string{"enable_password_change", "password_change_policy", "password_change_plugin"},
 				ValidateFunc: validation.StringIsJSON,
+				Sensitive:    true,
 			},
 		},
 	}
@@ -281,10 +282,13 @@ func deleteDeviceLocalDomain(ctx context.Context, d *schema.ResourceData, m inte
 func prepareDeviceLocalDomainJSON(d *schema.ResourceData, newResource bool) jsonDeviceLocalDomain {
 	var jsonData jsonDeviceLocalDomain
 	jsonData.DomainName = d.Get("domain_name").(string)
-	if newResource {
+	if !strings.HasPrefix(d.Get("ca_private_key").(string), "generate:") {
 		jsonData.CAPrivateKey = d.Get("ca_private_key").(string)
-	} else if !strings.HasPrefix(d.Get("ca_private_key").(string), "generate:") {
-		jsonData.CAPrivateKey = d.Get("ca_private_key").(string)
+	} else if d.HasChange("ca_private_key") {
+		oldKey, newKey := d.GetChange("ca_private_key")
+		if oldKey.(string) == "" {
+			jsonData.CAPrivateKey = newKey.(string)
+		}
 	}
 	jsonData.Description = d.Get("description").(string)
 	jsonData.Passphrase = d.Get("passphrase").(string)
@@ -297,8 +301,8 @@ func prepareDeviceLocalDomainJSON(d *schema.ResourceData, newResource bool) json
 		jsonData.PasswordChangePolicy = d.Get("password_change_policy").(string)
 		jsonData.PasswordChangePlugin = d.Get("password_change_plugin").(string)
 		var passChgPlug map[string]interface{}
-		if d.Get("password_change_plugin_parameters").(string) != "" {
-			_ = json.Unmarshal([]byte(d.Get("password_change_plugin_parameters").(string)),
+		if v := d.Get("password_change_plugin_parameters").(string); v != "" {
+			_ = json.Unmarshal([]byte(v),
 				&passChgPlug)
 		} else {
 			_ = json.Unmarshal([]byte(`{}`), &passChgPlug)
