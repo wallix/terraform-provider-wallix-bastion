@@ -12,10 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-type jsonDeviceLocalDomain struct {
+type jsonDomain struct {
 	EnablePasswordChange           bool                    `json:"enable_password_change"`
 	ID                             string                  `json:"id,omitempty"`
 	DomainName                     string                  `json:"domain_name"`
+	DomainRealName                 string                  `json:"domain_real_name"`
 	AdminAccount                   *string                 `json:"admin_account,omitempty"`
 	CAPrivateKey                   string                  `json:"ca_private_key,omitempty"`
 	CAPublicKey                    string                  `json:"ca_public_key,omitempty"`
@@ -24,26 +25,27 @@ type jsonDeviceLocalDomain struct {
 	PasswordChangePolicy           string                  `json:"password_change_policy,omitempty"`
 	PasswordChangePlugin           string                  `json:"password_change_plugin,omitempty"`
 	PasswordChangePluginParameters *map[string]interface{} `json:"password_change_plugin_parameters,omitempty"`
+	VaultPlugin                    string                  `json:"vault_plugin,omitempty"`
+	VaultPluginParameters          *map[string]interface{} `json:"vault_plugin_parameters,omitempty"`
 }
 
-func resourceDeviceLocalDomain() *schema.Resource {
+func resourceDomain() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceDeviceLocalDomainCreate,
-		ReadContext:   resourceDeviceLocalDomainRead,
-		UpdateContext: resourceDeviceLocalDomainUpdate,
-		DeleteContext: resourceDeviceLocalDomainDelete,
+		CreateContext: resourceDomainCreate,
+		ReadContext:   resourceDomainRead,
+		UpdateContext: resourceDomainUpdate,
+		DeleteContext: resourceDomainDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceDeviceLocalDomainImport,
+			State: resourceDomainImport,
 		},
 		Schema: map[string]*schema.Schema{
-			"device_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			"domain_name": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"domain_real_name": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"admin_account": {
 				Type:         schema.TypeString,
@@ -55,18 +57,20 @@ func resourceDeviceLocalDomain() *schema.Resource {
 				Computed: true,
 			},
 			"ca_private_key": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Sensitive:     true,
+				ConflictsWith: []string{"vault_plugin"},
 			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"enable_password_change": {
-				Type:         schema.TypeBool,
-				Optional:     true,
-				RequiredWith: []string{"password_change_policy", "password_change_plugin"},
+				Type:          schema.TypeBool,
+				Optional:      true,
+				RequiredWith:  []string{"password_change_policy", "password_change_plugin"},
+				ConflictsWith: []string{"vault_plugin"},
 			},
 			"passphrase": {
 				Type:      schema.TypeString,
@@ -90,138 +94,133 @@ func resourceDeviceLocalDomain() *schema.Resource {
 				ValidateFunc: validation.StringIsJSON,
 				Sensitive:    true,
 			},
+			"vault_plugin": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"enable_password_change", "ca_private_key"},
+			},
+			"vault_plugin_parameters": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"vault_plugin_parameters"},
+				ValidateFunc: validation.StringIsJSON,
+				Sensitive:    true,
+			},
 		},
 	}
 }
-func resourveDeviceLocalDomainVersionCheck(version string) error {
+func resourveDomainVersionCheck(version string) error {
 	if version == versionValidate3_3 {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_device_localdomain not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_domain not validate with api version %s", version)
 }
 
-func resourceDeviceLocalDomainCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveDeviceLocalDomainVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourveDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	cfgDevice, err := readDeviceOptions(ctx, d.Get("device_id").(string), m)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if cfgDevice.ID == "" {
-		return diag.FromErr(fmt.Errorf("device with ID %s doesn't exists", d.Get("device_id").(string)))
-	}
-	_, ex, err := searchResourceDeviceLocalDomain(ctx, d.Get("device_id").(string), d.Get("domain_name").(string), m)
+	_, ex, err := searchResourceDomain(ctx, d.Get("domain_name").(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if ex {
-		return diag.FromErr(fmt.Errorf("domain_name %s on device_id %s already exists",
-			d.Get("domain_name").(string), d.Get("device_id").(string)))
+		return diag.FromErr(fmt.Errorf("domain_name %s already exists", d.Get("domain_name").(string)))
 	}
-	err = addDeviceLocalDomain(ctx, d, m)
+	err = addDomain(ctx, d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceDeviceLocalDomain(ctx, d.Get("device_id").(string), d.Get("domain_name").(string), m)
+	id, ex, err := searchResourceDomain(ctx, d.Get("domain_name").(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if !ex {
-		return diag.FromErr(fmt.Errorf("domain_name %s on device_id %s can't find after POST",
-			d.Get("domain_name").(string), d.Get("device_id").(string)))
+		return diag.FromErr(fmt.Errorf("domain_name %s can't find after POST", d.Get("domain_name").(string)))
 	}
 	d.SetId(id)
 
-	return resourceDeviceLocalDomainRead(ctx, d, m)
+	return resourceDomainRead(ctx, d, m)
 }
-func resourceDeviceLocalDomainRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceDomainRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveDeviceLocalDomainVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourveDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	cfg, err := readDeviceLocalDomainOptions(ctx, d.Get("device_id").(string), d.Id(), m)
+	cfg, err := readDomainOptions(ctx, d.Id(), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if cfg.ID == "" {
 		d.SetId("")
 	} else {
-		fillDeviceLocalDomain(d, cfg)
+		fillDomain(d, cfg)
 	}
 
 	return nil
 }
-func resourceDeviceLocalDomainUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
-	if err := resourveDeviceLocalDomainVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourveDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := updateDeviceLocalDomain(ctx, d, m); err != nil {
+	if err := updateDomain(ctx, d, m); err != nil {
 		return diag.FromErr(err)
 	}
 	d.Partial(false)
 
-	return resourceDeviceLocalDomainRead(ctx, d, m)
+	return resourceDomainRead(ctx, d, m)
 }
-func resourceDeviceLocalDomainDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveDeviceLocalDomainVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourveDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := deleteDeviceLocalDomain(ctx, d, m); err != nil {
+	if err := deleteDomain(ctx, d, m); err != nil {
 		return diag.FromErr(err)
 	}
 
 	return nil
 }
-func resourceDeviceLocalDomainImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+func resourceDomainImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	ctx := context.Background()
 	c := m.(*Client)
-	if err := resourveDeviceLocalDomainVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourveDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
 	}
-	idSplit := strings.Split(d.Id(), "/")
-	if len(idSplit) != 2 {
-		return nil, fmt.Errorf("id must be <device_id>/<domain_name>")
-	}
-	id, ex, err := searchResourceDeviceLocalDomain(ctx, idSplit[0], idSplit[1], m)
+	id, ex, err := searchResourceDomain(ctx, d.Id(), m)
 	if err != nil {
 		return nil, err
 	}
 	if !ex {
-		return nil, fmt.Errorf("don't find domain_name with id %s (id must be <device_id>/<domain_name>", d.Id())
+		return nil, fmt.Errorf("don't find domain_name with id %s (id must be <domain_name>", d.Id())
 	}
-	cfg, err := readDeviceLocalDomainOptions(ctx, idSplit[0], id, m)
+	cfg, err := readDomainOptions(ctx, id, m)
 	if err != nil {
 		return nil, err
 	}
-	fillDeviceLocalDomain(d, cfg)
+	fillDomain(d, cfg)
 	result := make([]*schema.ResourceData, 1)
 	d.SetId(id)
-	if tfErr := d.Set("device_id", idSplit[0]); tfErr != nil {
-		panic(tfErr)
-	}
 	result[0] = d
 
 	return result, nil
 }
 
-func searchResourceDeviceLocalDomain(ctx context.Context,
-	deviceID, domainName string, m interface{}) (string, bool, error) {
+func searchResourceDomain(ctx context.Context, domainName string, m interface{}) (string, bool, error) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/devices/"+deviceID+
-		"/localdomains/?fields=domain_name,id&limit=-1", http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/domains/?fields=domain_name,id&limit=-1", http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
 	if code != http.StatusOK {
 		return "", false, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
 	}
-	var results []jsonDeviceLocalDomain
+	var results []jsonDomain
 	err = json.Unmarshal([]byte(body), &results)
 	if err != nil {
 		return "", false, fmt.Errorf("json.Unmarshal failed : %w", err)
@@ -235,11 +234,10 @@ func searchResourceDeviceLocalDomain(ctx context.Context,
 	return "", false, nil
 }
 
-func addDeviceLocalDomain(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addDomain(ctx context.Context, d *schema.ResourceData, m interface{}) error {
 	c := m.(*Client)
-	jsonData := prepareDeviceLocalDomainJSON(d, true)
-	body, code, err := c.newRequest(ctx, "/devices/"+d.Get("device_id").(string)+"/localdomains/",
-		http.MethodPost, jsonData)
+	jsonData := prepareDomainJSON(d, true)
+	body, code, err := c.newRequest(ctx, "/domains/", http.MethodPost, jsonData)
 	if err != nil {
 		return err
 	}
@@ -250,11 +248,10 @@ func addDeviceLocalDomain(ctx context.Context, d *schema.ResourceData, m interfa
 	return nil
 }
 
-func updateDeviceLocalDomain(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateDomain(ctx context.Context, d *schema.ResourceData, m interface{}) error {
 	c := m.(*Client)
-	jsonData := prepareDeviceLocalDomainJSON(d, false)
-	body, code, err := c.newRequest(ctx,
-		"/devices/"+d.Get("device_id").(string)+"/localdomains/"+d.Id(), http.MethodPut, jsonData)
+	jsonData := prepareDomainJSON(d, false)
+	body, code, err := c.newRequest(ctx, "/domains/"+d.Id(), http.MethodPut, jsonData)
 	if err != nil {
 		return err
 	}
@@ -265,10 +262,9 @@ func updateDeviceLocalDomain(ctx context.Context, d *schema.ResourceData, m inte
 	return nil
 }
 
-func deleteDeviceLocalDomain(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func deleteDomain(ctx context.Context, d *schema.ResourceData, m interface{}) error {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx,
-		"/devices/"+d.Get("device_id").(string)+"/localdomains/"+d.Id(), http.MethodDelete, nil)
+	body, code, err := c.newRequest(ctx, "/domains/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
 		return err
 	}
@@ -279,9 +275,10 @@ func deleteDeviceLocalDomain(ctx context.Context, d *schema.ResourceData, m inte
 	return nil
 }
 
-func prepareDeviceLocalDomainJSON(d *schema.ResourceData, newResource bool) jsonDeviceLocalDomain {
-	var jsonData jsonDeviceLocalDomain
+func prepareDomainJSON(d *schema.ResourceData, newResource bool) jsonDomain {
+	var jsonData jsonDomain
 	jsonData.DomainName = d.Get("domain_name").(string)
+	jsonData.DomainRealName = d.Get("domain_real_name").(string)
 	if !strings.HasPrefix(d.Get("ca_private_key").(string), "generate:") {
 		jsonData.CAPrivateKey = d.Get("ca_private_key").(string)
 	} else if d.HasChange("ca_private_key") {
@@ -292,6 +289,7 @@ func prepareDeviceLocalDomainJSON(d *schema.ResourceData, newResource bool) json
 	}
 	jsonData.Description = d.Get("description").(string)
 	jsonData.Passphrase = d.Get("passphrase").(string)
+
 	if d.Get("enable_password_change").(bool) {
 		if !newResource {
 			adminAccount := d.Get("admin_account").(string)
@@ -308,16 +306,26 @@ func prepareDeviceLocalDomainJSON(d *schema.ResourceData, newResource bool) json
 			_ = json.Unmarshal([]byte(`{}`), &passChgPlug)
 		}
 		jsonData.PasswordChangePluginParameters = &passChgPlug
+	} else if v := d.Get("vault_plugin").(string); v != "" {
+		jsonData.VaultPlugin = v
+		var vaultPlugParams map[string]interface{}
+		if v2 := d.Get("vault_plugin_parameters").(string); v2 != "" {
+			_ = json.Unmarshal([]byte(v2),
+				&vaultPlugParams)
+		} else {
+			_ = json.Unmarshal([]byte(`{}`), &vaultPlugParams)
+		}
+		jsonData.VaultPluginParameters = &vaultPlugParams
 	}
 
 	return jsonData
 }
 
-func readDeviceLocalDomainOptions(
-	ctx context.Context, deviceID, localDomainID string, m interface{}) (jsonDeviceLocalDomain, error) {
+func readDomainOptions(
+	ctx context.Context, domainID string, m interface{}) (jsonDomain, error) {
 	c := m.(*Client)
-	var result jsonDeviceLocalDomain
-	body, code, err := c.newRequest(ctx, "/devices/"+deviceID+"/localdomains/"+localDomainID, http.MethodGet, nil)
+	var result jsonDomain
+	body, code, err := c.newRequest(ctx, "/domains/"+domainID, http.MethodGet, nil)
 	if err != nil {
 		return result, err
 	}
@@ -335,8 +343,11 @@ func readDeviceLocalDomainOptions(
 	return result, nil
 }
 
-func fillDeviceLocalDomain(d *schema.ResourceData, jsonData jsonDeviceLocalDomain) {
+func fillDomain(d *schema.ResourceData, jsonData jsonDomain) {
 	if tfErr := d.Set("domain_name", jsonData.DomainName); tfErr != nil {
+		panic(tfErr)
+	}
+	if tfErr := d.Set("domain_real_name", jsonData.DomainRealName); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("admin_account", jsonData.AdminAccount); tfErr != nil {
@@ -358,6 +369,9 @@ func fillDeviceLocalDomain(d *schema.ResourceData, jsonData jsonDeviceLocalDomai
 		panic(tfErr)
 	}
 	if tfErr := d.Set("password_change_plugin", jsonData.PasswordChangePlugin); tfErr != nil {
+		panic(tfErr)
+	}
+	if tfErr := d.Set("vault_plugin", jsonData.VaultPlugin); tfErr != nil {
 		panic(tfErr)
 	}
 }

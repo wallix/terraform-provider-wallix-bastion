@@ -1,13 +1,12 @@
-# wallix-bastion_device_localdomain_account_credential Resource
+# wallix-bastion_domain_account_credential Resource
 
-Provides a credential linked to device_localdomain_account resource.
+Provides a credential linked to domain_account resource.
 
 ## Argument Reference
 
 The following arguments are supported:
 
-* `device_id` - (Required, Forces new resource)(`String`) ID of device.
-* `domain_id` - (Required, Forces new resource)(`String`) ID of localdomain.
+* `domain_id` - (Required, Forces new resource)(`String`) ID of domain.
 * `account_id` - (Required, Forces new resource)(`String`) ID of account.
 * `type` - (Required, Forces new resource)(`String`) The credential type. Need to be 'password' or 'ssh_key'.
 * `passphrase` - (Optional)(`String`) The passphrase for the private key (only for an encrypted private key). **Value can't refresh**
@@ -16,13 +15,13 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-* `id` - (`String`) Internal id of localdomain account credential in bastion.
+* `id` - (`String`) Internal id of domain account credential in bastion.
 * `public_key` - (`String`) The account public key.
 
 ## Import
 
-Credential linked to device_localdomain_account can be imported using an id made up of `<device_id>/<domain_id>/<account_id>/<type>`, e.g.
+Credential linked to domain_account can be imported using an id made up of `<domain_id>/<account_id>/<type>`, e.g.
 
 ```
-$ terraform import wallix-bastion_device_localdomain_account_credential.srv1admpass xxxxxxxx/yyyyyyy/zzzzz/password
+$ terraform import wallix-bastion_domain_account_credential.dom1admpass xxxxxxxx/yyyyyyy/password
 ```

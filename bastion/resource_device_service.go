@@ -59,12 +59,12 @@ func resourceDeviceService() *schema.Resource {
 					"SSH", "RAWTCPIP", "RDP", "RLOGIN", "TELNET", "VNC"}, false),
 			},
 			"global_domains": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"subprotocols": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -164,7 +164,7 @@ func resourceDeviceServiceImport(d *schema.ResourceData, m interface{}) ([]*sche
 	}
 	idSplit := strings.Split(d.Id(), "/")
 	if len(idSplit) != 2 {
-		return nil, fmt.Errorf("id msut be <device_id>/<service_name>")
+		return nil, fmt.Errorf("id must be <device_id>/<service_name>")
 	}
 	id, ex, err := searchResourceDeviceService(ctx, idSplit[0], idSplit[1], m)
 	if err != nil {
@@ -191,7 +191,8 @@ func resourceDeviceServiceImport(d *schema.ResourceData, m interface{}) ([]*sche
 func searchResourceDeviceService(ctx context.Context,
 	deviceID, serviceName string, m interface{}) (string, bool, error) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/devices/"+deviceID+"/services/", http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/devices/"+deviceID+
+		"/services/?fields=service_name,id&limit=-1", http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
@@ -277,14 +278,14 @@ func prepareDeviceServiceJSON(d *schema.ResourceData, newResource bool) (jsonDev
 	}
 	jsonData.ConnectionPolicy = d.Get("connection_policy").(string)
 	jsonData.Port = d.Get("port").(int)
-	if len(d.Get("global_domains").([]interface{})) > 0 {
-		for _, v := range d.Get("global_domains").([]interface{}) {
+	if len(d.Get("global_domains").(*schema.Set).List()) > 0 {
+		for _, v := range d.Get("global_domains").(*schema.Set).List() {
 			jsonData.GlobalDomains = append(jsonData.GlobalDomains, v.(string))
 		}
 	} else {
 		jsonData.GlobalDomains = make([]string, 0)
 	}
-	if v := d.Get("subprotocols").([]interface{}); len(v) > 0 {
+	if v := d.Get("subprotocols").(*schema.Set).List(); len(v) > 0 {
 		subProtocols := make([]string, 0)
 		for _, v2 := range v {
 			switch d.Get("protocol").(string) {

@@ -12,15 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-type jsonDeviceLocalDomainAccountCredential struct {
-	ID         string `json:"id,omitempty"`
-	Type       string `json:"type"`
-	Password   string `json:"password,omitempty"`
-	PrivateKey string `json:"private_key,omitempty"`
-	PublicKey  string `json:"public_key,omitempty"`
-	Passphrase string `json:"passphrase,omitempty"`
-}
-
 func resourceDeviceLocalDomainAccountCredential() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceDeviceLocalDomainAccountCredentialCreate,
@@ -79,7 +70,8 @@ func resourveDeviceLocalDomainAccountCredentialVersionCheck(version string) erro
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_device_localdomain not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_device_localdomain_account_credential "+
+		"not validate with api version %s", version)
 }
 
 func resourceDeviceLocalDomainAccountCredentialCreate(ctx context.Context,
@@ -193,7 +185,7 @@ func resourceDeviceLocalDomainAccountCredentialImport(
 	}
 	idSplit := strings.Split(d.Id(), "/")
 	if len(idSplit) != 4 {
-		return nil, fmt.Errorf("id msut be <device_id>/<domain_id>/<account_id>/<type>")
+		return nil, fmt.Errorf("id must be <device_id>/<domain_id>/<account_id>/<type>")
 	}
 	id, ex, err := searchResourceDeviceLocalDomainAccountCredential(ctx, idSplit[0], idSplit[1], idSplit[2], idSplit[3], m)
 	if err != nil {
@@ -228,14 +220,15 @@ func searchResourceDeviceLocalDomainAccountCredential(ctx context.Context,
 	deviceID, domainID, accountID, typeCred string, m interface{}) (string, bool, error) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
-		"/devices/"+deviceID+"/localdomains/"+domainID+"/accounts/"+accountID+"/credentials/", http.MethodGet, nil)
+		"/devices/"+deviceID+"/localdomains/"+domainID+"/accounts/"+accountID+
+			"/credentials/?fields=type,id&limit=-1", http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
 	if code != http.StatusOK {
 		return "", false, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
 	}
-	var results []jsonDeviceLocalDomainAccountCredential
+	var results []jsonCredential
 	err = json.Unmarshal([]byte(body), &results)
 	if err != nil {
 		return "", false, fmt.Errorf("json.Unmarshal failed : %w", err)
@@ -297,8 +290,8 @@ func deleteDeviceLocalDomainAccountCredential(ctx context.Context, d *schema.Res
 }
 
 func prepareDeviceLocalDomainAccountCredentialJSON(
-	d *schema.ResourceData, newResource bool) jsonDeviceLocalDomainAccountCredential {
-	var jsonData jsonDeviceLocalDomainAccountCredential
+	d *schema.ResourceData, newResource bool) jsonCredential {
+	var jsonData jsonCredential
 	jsonData.Type = d.Get("type").(string)
 	if jsonData.Type == "password" {
 		jsonData.Password = d.Get("password").(string)
@@ -314,9 +307,9 @@ func prepareDeviceLocalDomainAccountCredentialJSON(
 
 func readDeviceLocalDomainAccountCredentialOptions(
 	ctx context.Context, deviceID, localDomainID, accountID, credentialID string, m interface{}) (
-	jsonDeviceLocalDomainAccountCredential, error) {
+	jsonCredential, error) {
 	c := m.(*Client)
-	var result jsonDeviceLocalDomainAccountCredential
+	var result jsonCredential
 	body, code, err := c.newRequest(ctx,
 		"/devices/"+deviceID+"/localdomains/"+localDomainID+
 			"/accounts/"+accountID+"/credentials/"+credentialID, http.MethodGet, nil)
@@ -337,7 +330,7 @@ func readDeviceLocalDomainAccountCredentialOptions(
 	return result, nil
 }
 
-func fillDeviceLocalDomainAccountCredential(d *schema.ResourceData, jsonData jsonDeviceLocalDomainAccountCredential) {
+func fillDeviceLocalDomainAccountCredential(d *schema.ResourceData, jsonData jsonCredential) {
 	if tfErr := d.Set("type", jsonData.Type); tfErr != nil {
 		panic(tfErr)
 	}

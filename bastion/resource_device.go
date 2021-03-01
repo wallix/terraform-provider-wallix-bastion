@@ -235,7 +235,7 @@ func resourceDeviceImport(d *schema.ResourceData, m interface{}) ([]*schema.Reso
 
 func searchResourceDevice(ctx context.Context, deviceName string, m interface{}) (string, bool, error) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/devices/", http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/devices/?fields=device_name,id&limit=-1", http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}

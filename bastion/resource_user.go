@@ -272,13 +272,6 @@ func prepareUserJSON(d *schema.ResourceData, newResource bool) jsonUser {
 		if d.Get("force_change_pwd").(bool) {
 			jsonData.ForceChangePwd = &b
 		}
-		if d.Get("groups") != nil {
-			groups := make([]string, 0)
-			for _, v := range d.Get("groups").(*schema.Set).List() {
-				groups = append(groups, v.(string))
-			}
-			jsonData.Groups = &groups
-		}
 	}
 	if d.HasChanges("groups") {
 		groups := make([]string, 0)
