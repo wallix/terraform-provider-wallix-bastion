@@ -110,7 +110,7 @@ func resourceDomain() *schema.Resource {
 		},
 	}
 }
-func resourveDomainVersionCheck(version string) error {
+func resourceDomainVersionCheck(version string) error {
 	if version == versionValidate3_3 {
 		return nil
 	}
@@ -120,7 +120,7 @@ func resourveDomainVersionCheck(version string) error {
 
 func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveDomainVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	_, ex, err := searchResourceDomain(ctx, d.Get("domain_name").(string), m)
@@ -147,7 +147,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, m interfa
 }
 func resourceDomainRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveDomainVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	cfg, err := readDomainOptions(ctx, d.Id(), m)
@@ -165,7 +165,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, m interface
 func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
-	if err := resourveDomainVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := updateDomain(ctx, d, m); err != nil {
@@ -177,7 +177,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, m interfa
 }
 func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveDomainVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := deleteDomain(ctx, d, m); err != nil {
@@ -189,7 +189,7 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, m interfa
 func resourceDomainImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	ctx := context.Background()
 	c := m.(*Client)
-	if err := resourveDomainVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
 	}
 	id, ex, err := searchResourceDomain(ctx, d.Id(), m)

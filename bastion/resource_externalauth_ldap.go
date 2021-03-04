@@ -126,7 +126,7 @@ func resourceExternalAuthLdap() *schema.Resource {
 		},
 	}
 }
-func resourveExternalAuthLdapVersionCheck(version string) error {
+func resourceExternalAuthLdapVersionCheck(version string) error {
 	if version == versionValidate3_3 {
 		return nil
 	}
@@ -136,7 +136,7 @@ func resourveExternalAuthLdapVersionCheck(version string) error {
 
 func resourceExternalAuthLdapCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveExternalAuthLdapVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceExternalAuthLdapVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	_, ex, err := searchResourceExternalAuthLdap(ctx, d.Get("authentication_name").(string), m)
@@ -167,7 +167,7 @@ func resourceExternalAuthLdapCreate(ctx context.Context, d *schema.ResourceData,
 }
 func resourceExternalAuthLdapRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveExternalAuthLdapVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceExternalAuthLdapVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	cfg, err := readExternalAuthLdapOptions(ctx, d.Id(), m)
@@ -185,7 +185,7 @@ func resourceExternalAuthLdapRead(ctx context.Context, d *schema.ResourceData, m
 func resourceExternalAuthLdapUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
-	if err := resourveExternalAuthLdapVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceExternalAuthLdapVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	if !d.Get("is_anonymous_access").(bool) && (d.Get("login").(string) == "" || d.Get("password").(string) == "") {
@@ -201,7 +201,7 @@ func resourceExternalAuthLdapUpdate(ctx context.Context, d *schema.ResourceData,
 }
 func resourceExternalAuthLdapDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveExternalAuthLdapVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceExternalAuthLdapVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := deleteExternalAuthLdap(ctx, d, m); err != nil {
@@ -213,7 +213,7 @@ func resourceExternalAuthLdapDelete(ctx context.Context, d *schema.ResourceData,
 func resourceExternalAuthLdapImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	ctx := context.Background()
 	c := m.(*Client)
-	if err := resourveExternalAuthLdapVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceExternalAuthLdapVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
 	}
 	id, ex, err := searchResourceExternalAuthLdap(ctx, d.Id(), m)

@@ -245,7 +245,7 @@ func resourceTargetGroup() *schema.Resource {
 		},
 	}
 }
-func resourveTargetGroupVersionCheck(version string) error {
+func resourceTargetGroupVersionCheck(version string) error {
 	if version == versionValidate3_3 {
 		return nil
 	}
@@ -255,7 +255,7 @@ func resourveTargetGroupVersionCheck(version string) error {
 
 func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveTargetGroupVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceTargetGroupVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	_, ex, err := searchResourceTargetGroup(ctx, d.Get("group_name").(string), m)
@@ -282,7 +282,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, m in
 }
 func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveTargetGroupVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceTargetGroupVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	cfg, err := readTargetGroupOptions(ctx, d.Id(), m)
@@ -300,7 +300,7 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, m inte
 func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
-	if err := resourveTargetGroupVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceTargetGroupVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := updateTargetGroup(ctx, d, m); err != nil {
@@ -312,7 +312,7 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, m in
 }
 func resourceTargetGroupDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveTargetGroupVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceTargetGroupVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := deleteTargetGroup(ctx, d, m); err != nil {
@@ -324,7 +324,7 @@ func resourceTargetGroupDelete(ctx context.Context, d *schema.ResourceData, m in
 func resourceTargetGroupImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	ctx := context.Background()
 	c := m.(*Client)
-	if err := resourveTargetGroupVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceTargetGroupVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
 	}
 	id, ex, err := searchResourceTargetGroup(ctx, d.Id(), m)

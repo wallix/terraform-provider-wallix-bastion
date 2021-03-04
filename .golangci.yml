@@ -16,6 +16,7 @@ linters:
     - gci
     - wrapcheck
     - cyclop
+    - forcetypeassert
 linters-settings:
   gocyclo:
     # minimal code complexity to report, 30 by default

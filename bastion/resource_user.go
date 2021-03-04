@@ -105,7 +105,7 @@ func resourceUser() *schema.Resource {
 	}
 }
 
-func resourveUserVersionCheck(version string) error {
+func resourceUserVersionCheck(version string) error {
 	if version == versionValidate3_3 {
 		return nil
 	}
@@ -114,7 +114,7 @@ func resourveUserVersionCheck(version string) error {
 }
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveUserVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceUserVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	ex, err := checkResourceUserExists(ctx, d.Get("user_name").(string), m)
@@ -134,7 +134,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface
 }
 func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveUserVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceUserVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	cfg, err := readUserOptions(ctx, d.Get("user_name").(string), m)
@@ -152,7 +152,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
-	if err := resourveUserVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceUserVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := updateUser(ctx, d, m); err != nil {
@@ -164,7 +164,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 }
 func resourceUserDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveUserVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceUserVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := deleteUser(ctx, d, m); err != nil {
@@ -176,7 +176,7 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, m interface
 func resourceUserImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	ctx := context.Background()
 	c := m.(*Client)
-	if err := resourveUserVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceUserVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
 	}
 	ex, err := checkResourceUserExists(ctx, d.Id(), m)

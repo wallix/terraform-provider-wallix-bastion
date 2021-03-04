@@ -106,7 +106,7 @@ func resourceDeviceLocalDomainAccount() *schema.Resource {
 		},
 	}
 }
-func resourveDeviceLocalDomainAccountVersionCheck(version string) error {
+func resourceDeviceLocalDomainAccountVersionCheck(version string) error {
 	if version == versionValidate3_3 {
 		return nil
 	}
@@ -117,7 +117,7 @@ func resourveDeviceLocalDomainAccountVersionCheck(version string) error {
 func resourceDeviceLocalDomainAccountCreate(ctx context.Context,
 	d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveDeviceLocalDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDeviceLocalDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	cfgDevice, err := readDeviceOptions(ctx, d.Get("device_id").(string), m)
@@ -163,7 +163,7 @@ func resourceDeviceLocalDomainAccountCreate(ctx context.Context,
 }
 func resourceDeviceLocalDomainAccountRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveDeviceLocalDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDeviceLocalDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	cfg, err := readDeviceLocalDomainAccountOptions(ctx,
@@ -183,7 +183,7 @@ func resourceDeviceLocalDomainAccountUpdate(ctx context.Context,
 	d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
-	if err := resourveDeviceLocalDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDeviceLocalDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := updateDeviceLocalDomainAccount(ctx, d, m); err != nil {
@@ -196,7 +196,7 @@ func resourceDeviceLocalDomainAccountUpdate(ctx context.Context,
 func resourceDeviceLocalDomainAccountDelete(ctx context.Context,
 	d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveDeviceLocalDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDeviceLocalDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := deleteDeviceLocalDomainAccount(ctx, d, m); err != nil {
@@ -208,7 +208,7 @@ func resourceDeviceLocalDomainAccountDelete(ctx context.Context,
 func resourceDeviceLocalDomainAccountImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	ctx := context.Background()
 	c := m.(*Client)
-	if err := resourveDeviceLocalDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDeviceLocalDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
 	}
 	idSplit := strings.Split(d.Id(), "/")

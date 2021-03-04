@@ -132,7 +132,7 @@ func resourceDevice() *schema.Resource {
 		},
 	}
 }
-func resourveDeviceVersionCheck(version string) error {
+func resourceDeviceVersionCheck(version string) error {
 	if version == versionValidate3_3 {
 		return nil
 	}
@@ -142,7 +142,7 @@ func resourveDeviceVersionCheck(version string) error {
 
 func resourceDeviceCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveDeviceVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDeviceVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	_, ex, err := searchResourceDevice(ctx, d.Get("device_name").(string), m)
@@ -169,7 +169,7 @@ func resourceDeviceCreate(ctx context.Context, d *schema.ResourceData, m interfa
 }
 func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveDeviceVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDeviceVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	cfg, err := readDeviceOptions(ctx, d.Id(), m)
@@ -187,7 +187,7 @@ func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, m interface
 func resourceDeviceUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
-	if err := resourveDeviceVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDeviceVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := updateDevice(ctx, d, m); err != nil {
@@ -199,7 +199,7 @@ func resourceDeviceUpdate(ctx context.Context, d *schema.ResourceData, m interfa
 }
 func resourceDeviceDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveDeviceVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDeviceVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := deleteDevice(ctx, d, m); err != nil {
@@ -211,7 +211,7 @@ func resourceDeviceDelete(ctx context.Context, d *schema.ResourceData, m interfa
 func resourceDeviceImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	ctx := context.Background()
 	c := m.(*Client)
-	if err := resourveDeviceVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDeviceVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
 	}
 	id, ex, err := searchResourceDevice(ctx, d.Id(), m)

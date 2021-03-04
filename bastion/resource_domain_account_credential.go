@@ -60,7 +60,7 @@ func resourceDomainAccountCredential() *schema.Resource {
 		},
 	}
 }
-func resourveDomainAccountCredentialVersionCheck(version string) error {
+func resourceDomainAccountCredentialVersionCheck(version string) error {
 	if version == versionValidate3_3 {
 		return nil
 	}
@@ -71,7 +71,7 @@ func resourveDomainAccountCredentialVersionCheck(version string) error {
 func resourceDomainAccountCredentialCreate(ctx context.Context,
 	d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	cfgDomain, err := readDomainOptions(ctx, d.Get("domain_id").(string), m)
@@ -119,7 +119,7 @@ func resourceDomainAccountCredentialCreate(ctx context.Context,
 func resourceDomainAccountCredentialRead(ctx context.Context,
 	d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	cfg, err := readDomainAccountCredentialOptions(ctx,
@@ -139,7 +139,7 @@ func resourceDomainAccountCredentialUpdate(ctx context.Context,
 	d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
-	if err := resourveDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := updateDomainAccountCredential(ctx, d, m); err != nil {
@@ -152,7 +152,7 @@ func resourceDomainAccountCredentialUpdate(ctx context.Context,
 func resourceDomainAccountCredentialDelete(ctx context.Context,
 	d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := deleteDomainAccountCredential(ctx, d, m); err != nil {
@@ -165,7 +165,7 @@ func resourceDomainAccountCredentialImport(
 	d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	ctx := context.Background()
 	c := m.(*Client)
-	if err := resourveDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
 	}
 	idSplit := strings.Split(d.Id(), "/")
