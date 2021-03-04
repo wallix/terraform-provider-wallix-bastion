@@ -71,7 +71,7 @@ func resourceDeviceService() *schema.Resource {
 		},
 	}
 }
-func resourveDeviceServiceVersionCheck(version string) error {
+func resourceDeviceServiceVersionCheck(version string) error {
 	if version == versionValidate3_3 {
 		return nil
 	}
@@ -81,7 +81,7 @@ func resourveDeviceServiceVersionCheck(version string) error {
 
 func resourceDeviceServiceCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveDeviceServiceVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDeviceServiceVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	cfg, err := readDeviceOptions(ctx, d.Get("device_id").(string), m)
@@ -117,7 +117,7 @@ func resourceDeviceServiceCreate(ctx context.Context, d *schema.ResourceData, m 
 }
 func resourceDeviceServiceRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveDeviceServiceVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDeviceServiceVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	cfg, err := readDeviceServiceOptions(ctx, d.Get("device_id").(string), d.Id(), m)
@@ -135,7 +135,7 @@ func resourceDeviceServiceRead(ctx context.Context, d *schema.ResourceData, m in
 func resourceDeviceServiceUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
-	if err := resourveDeviceVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDeviceVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := updateDeviceService(ctx, d, m); err != nil {
@@ -147,7 +147,7 @@ func resourceDeviceServiceUpdate(ctx context.Context, d *schema.ResourceData, m 
 }
 func resourceDeviceServiceDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveDeviceServiceVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDeviceServiceVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := deleteDeviceService(ctx, d, m); err != nil {
@@ -159,7 +159,7 @@ func resourceDeviceServiceDelete(ctx context.Context, d *schema.ResourceData, m 
 func resourceDeviceServiceImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	ctx := context.Background()
 	c := m.(*Client)
-	if err := resourveDeviceServiceVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDeviceServiceVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
 	}
 	idSplit := strings.Split(d.Id(), "/")

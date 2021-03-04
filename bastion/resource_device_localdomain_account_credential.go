@@ -65,7 +65,7 @@ func resourceDeviceLocalDomainAccountCredential() *schema.Resource {
 		},
 	}
 }
-func resourveDeviceLocalDomainAccountCredentialVersionCheck(version string) error {
+func resourceDeviceLocalDomainAccountCredentialVersionCheck(version string) error {
 	if version == versionValidate3_3 {
 		return nil
 	}
@@ -77,7 +77,7 @@ func resourveDeviceLocalDomainAccountCredentialVersionCheck(version string) erro
 func resourceDeviceLocalDomainAccountCredentialCreate(ctx context.Context,
 	d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveDeviceLocalDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDeviceLocalDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	cfgDevice, err := readDeviceOptions(ctx, d.Get("device_id").(string), m)
@@ -134,7 +134,7 @@ func resourceDeviceLocalDomainAccountCredentialCreate(ctx context.Context,
 func resourceDeviceLocalDomainAccountCredentialRead(ctx context.Context,
 	d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveDeviceLocalDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDeviceLocalDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	cfg, err := readDeviceLocalDomainAccountCredentialOptions(ctx,
@@ -154,7 +154,7 @@ func resourceDeviceLocalDomainAccountCredentialUpdate(ctx context.Context,
 	d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
-	if err := resourveDeviceLocalDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDeviceLocalDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := updateDeviceLocalDomainAccountCredential(ctx, d, m); err != nil {
@@ -167,7 +167,7 @@ func resourceDeviceLocalDomainAccountCredentialUpdate(ctx context.Context,
 func resourceDeviceLocalDomainAccountCredentialDelete(ctx context.Context,
 	d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveDeviceLocalDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDeviceLocalDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := deleteDeviceLocalDomainAccountCredential(ctx, d, m); err != nil {
@@ -180,7 +180,7 @@ func resourceDeviceLocalDomainAccountCredentialImport(
 	d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	ctx := context.Background()
 	c := m.(*Client)
-	if err := resourveDeviceLocalDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDeviceLocalDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
 	}
 	idSplit := strings.Split(d.Id(), "/")

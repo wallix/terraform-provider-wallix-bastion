@@ -111,7 +111,7 @@ func resourceLdapDomain() *schema.Resource {
 		},
 	}
 }
-func resourveLdapDomainVersionCheck(version string) error {
+func resourceLdapDomainVersionCheck(version string) error {
 	if version == versionValidate3_3 {
 		return nil
 	}
@@ -121,7 +121,7 @@ func resourveLdapDomainVersionCheck(version string) error {
 
 func resourceLdapDomainCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveLdapDomainVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceLdapDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	ex, err := checkResourceLdapDomainExists(ctx, d.Get("domain_name").(string), m)
@@ -141,7 +141,7 @@ func resourceLdapDomainCreate(ctx context.Context, d *schema.ResourceData, m int
 }
 func resourceLdapDomainRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveLdapDomainVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceLdapDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	cfg, err := readLdapDomainOptions(ctx, d.Id(), m)
@@ -159,7 +159,7 @@ func resourceLdapDomainRead(ctx context.Context, d *schema.ResourceData, m inter
 func resourceLdapDomainUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
-	if err := resourveLdapDomainVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceLdapDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := updateLdapDomain(ctx, d, m); err != nil {
@@ -171,7 +171,7 @@ func resourceLdapDomainUpdate(ctx context.Context, d *schema.ResourceData, m int
 }
 func resourceLdapDomainDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveLdapDomainVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceLdapDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := deleteLdapDomain(ctx, d, m); err != nil {
@@ -183,7 +183,7 @@ func resourceLdapDomainDelete(ctx context.Context, d *schema.ResourceData, m int
 func resourceLdapDomainImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	ctx := context.Background()
 	c := m.(*Client)
-	if err := resourveLdapDomainVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceLdapDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
 	}
 	ex, err := checkResourceLdapDomainExists(ctx, d.Id(), m)

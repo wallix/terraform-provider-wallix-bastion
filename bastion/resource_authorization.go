@@ -141,7 +141,7 @@ func resourceAuthorization() *schema.Resource {
 		},
 	}
 }
-func resourveAuthorizationVersionCheck(version string) error {
+func resourceAuthorizationVersionCheck(version string) error {
 	if version == versionValidate3_3 {
 		return nil
 	}
@@ -151,7 +151,7 @@ func resourveAuthorizationVersionCheck(version string) error {
 
 func resourceAuthorizationCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveAuthorizationVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceAuthorizationVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	_, ex, err := searchResourceAuthorization(ctx, d.Get("authorization_name").(string), m)
@@ -178,7 +178,7 @@ func resourceAuthorizationCreate(ctx context.Context, d *schema.ResourceData, m 
 }
 func resourceAuthorizationRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveAuthorizationVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceAuthorizationVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	cfg, err := readAuthorizationOptions(ctx, d.Id(), m)
@@ -196,7 +196,7 @@ func resourceAuthorizationRead(ctx context.Context, d *schema.ResourceData, m in
 func resourceAuthorizationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
-	if err := resourveAuthorizationVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceAuthorizationVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := updateAuthorization(ctx, d, m); err != nil {
@@ -208,7 +208,7 @@ func resourceAuthorizationUpdate(ctx context.Context, d *schema.ResourceData, m 
 }
 func resourceAuthorizationDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveAuthorizationVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceAuthorizationVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := deleteAuthorization(ctx, d, m); err != nil {
@@ -220,7 +220,7 @@ func resourceAuthorizationDelete(ctx context.Context, d *schema.ResourceData, m 
 func resourceAuthorizationImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	ctx := context.Background()
 	c := m.(*Client)
-	if err := resourveAuthorizationVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceAuthorizationVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
 	}
 	id, ex, err := searchResourceAuthorization(ctx, d.Id(), m)

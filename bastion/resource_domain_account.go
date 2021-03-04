@@ -101,7 +101,7 @@ func resourceDomainAccount() *schema.Resource {
 		},
 	}
 }
-func resourveDomainAccountVersionCheck(version string) error {
+func resourceDomainAccountVersionCheck(version string) error {
 	if version == versionValidate3_3 {
 		return nil
 	}
@@ -112,7 +112,7 @@ func resourveDomainAccountVersionCheck(version string) error {
 func resourceDomainAccountCreate(ctx context.Context,
 	d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	cfgDomain, err := readDomainOptions(ctx, d.Get("domain_id").(string), m)
@@ -148,7 +148,7 @@ func resourceDomainAccountCreate(ctx context.Context,
 }
 func resourceDomainAccountRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	cfg, err := readDomainAccountOptions(ctx, d.Get("domain_id").(string), d.Id(), m)
@@ -167,7 +167,7 @@ func resourceDomainAccountUpdate(ctx context.Context,
 	d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
-	if err := resourveDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := updateDomainAccount(ctx, d, m); err != nil {
@@ -180,7 +180,7 @@ func resourceDomainAccountUpdate(ctx context.Context,
 func resourceDomainAccountDelete(ctx context.Context,
 	d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := deleteDomainAccount(ctx, d, m); err != nil {
@@ -192,7 +192,7 @@ func resourceDomainAccountDelete(ctx context.Context,
 func resourceDomainAccountImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	ctx := context.Background()
 	c := m.(*Client)
-	if err := resourveDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
 	}
 	idSplit := strings.Split(d.Id(), "/")
