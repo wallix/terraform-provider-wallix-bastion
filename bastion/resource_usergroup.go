@@ -12,18 +12,13 @@ import (
 )
 
 type jsonUserGroup struct {
-	Users        *[]string                    `json:"users,omitempty"`
-	ID           string                       `json:"id,omitempty"`
-	Description  string                       `json:"description"`
-	GroupName    string                       `json:"group_name"`
-	Profile      string                       `json:"profile"`
-	TimeFrames   []string                     `json:"timeframes"`
-	Restrictions *[]jsonUserGroupRestrictions `json:"restrictions,omitempty"`
-}
-type jsonUserGroupRestrictions struct {
-	Action      string `json:"action"`
-	Rules       string `json:"rules"`
-	SubProtocol string `json:"subprotocol"`
+	Users        *[]string         `json:"users,omitempty"`
+	ID           string            `json:"id,omitempty"`
+	Description  string            `json:"description"`
+	GroupName    string            `json:"group_name"`
+	Profile      string            `json:"profile"`
+	TimeFrames   []string          `json:"timeframes"`
+	Restrictions []jsonRestriction `json:"restrictions"`
 }
 
 func resourceUserGroup() *schema.Resource {
@@ -38,11 +33,10 @@ func resourceUserGroup() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"group_name": {
 				Type:     schema.TypeString,
-				ForceNew: true,
 				Required: true,
 			},
 			"timeframes": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -55,7 +49,7 @@ func resourceUserGroup() *schema.Resource {
 				Optional: true,
 			},
 			"restrictions": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -88,17 +82,17 @@ func resourceUserGroup() *schema.Resource {
 		},
 	}
 }
-func resourveUserGroupVersionCheck(version string) error {
+func resourceUserGroupVersionCheck(version string) error {
 	if version == versionValidate3_3 {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_usergroup not validate with api version %v", version)
+	return fmt.Errorf("resource wallix-bastion_usergroup not validate with api version %s", version)
 }
 
 func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveUserGroupVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceUserGroupVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	_, ex, err := searchResourceUserGroup(ctx, d.Get("group_name").(string), m)
@@ -106,7 +100,7 @@ func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, m inte
 		return diag.FromErr(err)
 	}
 	if ex {
-		return diag.FromErr(fmt.Errorf("group_name %v already exists", d.Get("group_name").(string)))
+		return diag.FromErr(fmt.Errorf("group_name %s already exists", d.Get("group_name").(string)))
 	}
 	err = addUserGroup(ctx, d, m)
 	if err != nil {
@@ -117,7 +111,7 @@ func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, m inte
 		return diag.FromErr(err)
 	}
 	if !ex {
-		return diag.FromErr(fmt.Errorf("group_name %v can't find after POST", d.Get("group_name").(string)))
+		return diag.FromErr(fmt.Errorf("group_name %s can't find after POST", d.Get("group_name").(string)))
 	}
 	d.SetId(id)
 
@@ -125,35 +119,37 @@ func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, m inte
 }
 func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveUserGroupVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceUserGroupVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	config, err := readUserGroupOptions(ctx, d.Id(), m)
+	cfg, err := readUserGroupOptions(ctx, d.Id(), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	if config.ID == "" {
+	if cfg.ID == "" {
 		d.SetId("")
 	} else {
-		fillUserGroup(d, config)
+		fillUserGroup(d, cfg)
 	}
 
 	return nil
 }
 func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	d.Partial(true)
 	c := m.(*Client)
-	if err := resourveUserGroupVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceUserGroupVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := updateUserGroup(ctx, d, m); err != nil {
 		return diag.FromErr(err)
 	}
+	d.Partial(false)
 
 	return resourceUserGroupRead(ctx, d, m)
 }
 func resourceUserGroupDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourveUserGroupVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceUserGroupVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := deleteUserGroup(ctx, d, m); err != nil {
@@ -165,7 +161,7 @@ func resourceUserGroupDelete(ctx context.Context, d *schema.ResourceData, m inte
 func resourceUserGroupImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	ctx := context.Background()
 	c := m.(*Client)
-	if err := resourveUserGroupVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceUserGroupVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
 	}
 	id, ex, err := searchResourceUserGroup(ctx, d.Id(), m)
@@ -173,13 +169,13 @@ func resourceUserGroupImport(d *schema.ResourceData, m interface{}) ([]*schema.R
 		return nil, err
 	}
 	if !ex {
-		return nil, fmt.Errorf("don't find group_name with id %v (id must be <group_name>", d.Id())
+		return nil, fmt.Errorf("don't find group_name with id %s (id must be <group_name>", d.Id())
 	}
-	config, err := readUserGroupOptions(ctx, id, m)
+	cfg, err := readUserGroupOptions(ctx, id, m)
 	if err != nil {
 		return nil, err
 	}
-	fillUserGroup(d, config)
+	fillUserGroup(d, cfg)
 	result := make([]*schema.ResourceData, 1)
 	d.SetId(id)
 	result[0] = d
@@ -189,17 +185,17 @@ func resourceUserGroupImport(d *schema.ResourceData, m interface{}) ([]*schema.R
 
 func searchResourceUserGroup(ctx context.Context, groupName string, m interface{}) (string, bool, error) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/usergroups/", http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/usergroups/?fields=group_name,id&limit=-1", http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
 	if code != http.StatusOK {
-		return "", false, fmt.Errorf("api return not OK : %d with body %s", code, body)
+		return "", false, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
 	}
 	var results []jsonUserGroup
 	err = json.Unmarshal([]byte(body), &results)
 	if err != nil {
-		return "", false, err
+		return "", false, fmt.Errorf("json.Unmarshal failed : %w", err)
 	}
 	for _, v := range results {
 		if v.GroupName == groupName {
@@ -212,13 +208,13 @@ func searchResourceUserGroup(ctx context.Context, groupName string, m interface{
 
 func addUserGroup(ctx context.Context, d *schema.ResourceData, m interface{}) error {
 	c := m.(*Client)
-	json := prepareUserGroupJSON(d, true)
-	body, code, err := c.newRequest(ctx, "/usergroups/", http.MethodPost, json)
+	jsonData := prepareUserGroupJSON(d)
+	body, code, err := c.newRequest(ctx, "/usergroups/", http.MethodPost, jsonData)
 	if err != nil {
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api return not OK or NoContent : %d with body %s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
 	}
 
 	return nil
@@ -226,13 +222,13 @@ func addUserGroup(ctx context.Context, d *schema.ResourceData, m interface{}) er
 
 func updateUserGroup(ctx context.Context, d *schema.ResourceData, m interface{}) error {
 	c := m.(*Client)
-	json := prepareUserGroupJSON(d, false)
-	body, code, err := c.newRequest(ctx, "/usergroups/"+d.Id()+"?force=true", http.MethodPut, json)
+	jsonData := prepareUserGroupJSON(d)
+	body, code, err := c.newRequest(ctx, "/usergroups/"+d.Id()+"?force=true", http.MethodPut, jsonData)
 	if err != nil {
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api return not OK or NoContent : %d with body %s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
 	}
 
 	return nil
@@ -244,51 +240,42 @@ func deleteUserGroup(ctx context.Context, d *schema.ResourceData, m interface{})
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api return not OK or NoContent : %d with body %s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
 	}
 
 	return nil
 }
 
-func prepareUserGroupJSON(d *schema.ResourceData, newResource bool) jsonUserGroup {
-	group := jsonUserGroup{
+func prepareUserGroupJSON(d *schema.ResourceData) jsonUserGroup {
+	jsonData := jsonUserGroup{
 		Description: d.Get("description").(string),
 		GroupName:   d.Get("group_name").(string),
 		Profile:     d.Get("profile").(string),
-	}
-	if newResource {
-		if d.Get("users") != nil {
-			users := make([]string, 0)
-			for _, v := range d.Get("users").(*schema.Set).List() {
-				users = append(users, v.(string))
-			}
-			group.Users = &users
-		}
 	}
 	if d.HasChanges("users") {
 		users := make([]string, 0)
 		for _, v := range d.Get("users").(*schema.Set).List() {
 			users = append(users, v.(string))
 		}
-		group.Users = &users
+		jsonData.Users = &users
 	}
-	for _, v := range d.Get("timeframes").([]interface{}) {
-		group.TimeFrames = append(group.TimeFrames, v.(string))
+	for _, v := range d.Get("timeframes").(*schema.Set).List() {
+		jsonData.TimeFrames = append(jsonData.TimeFrames, v.(string))
 	}
-	if len(d.Get("restrictions").([]interface{})) > 0 {
-		groupRestrictions := make([]jsonUserGroupRestrictions, 0)
-		for _, v := range d.Get("restrictions").([]interface{}) {
+	if len(d.Get("restrictions").(*schema.Set).List()) > 0 {
+		for _, v := range d.Get("restrictions").(*schema.Set).List() {
 			r := v.(map[string]interface{})
-			groupRestrictions = append(groupRestrictions, jsonUserGroupRestrictions{
+			jsonData.Restrictions = append(jsonData.Restrictions, jsonRestriction{
 				Action:      r["action"].(string),
 				Rules:       r["rules"].(string),
 				SubProtocol: r["subprotocol"].(string),
 			})
 		}
-		group.Restrictions = &groupRestrictions
+	} else {
+		jsonData.Restrictions = make([]jsonRestriction, 0)
 	}
 
-	return group
+	return jsonData
 }
 
 func readUserGroupOptions(
@@ -303,31 +290,31 @@ func readUserGroupOptions(
 		return result, nil
 	}
 	if code != http.StatusOK {
-		return result, fmt.Errorf("api return not OK : %d with body %s", code, body)
+		return result, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
 	}
 	err = json.Unmarshal([]byte(body), &result)
 	if err != nil {
-		return result, err
+		return result, fmt.Errorf("json.Unmarshal failed : %w", err)
 	}
 
 	return result, nil
 }
 
-func fillUserGroup(d *schema.ResourceData, json jsonUserGroup) {
-	if tfErr := d.Set("group_name", json.GroupName); tfErr != nil {
+func fillUserGroup(d *schema.ResourceData, jsonData jsonUserGroup) {
+	if tfErr := d.Set("group_name", jsonData.GroupName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("timeframes", json.TimeFrames); tfErr != nil {
+	if tfErr := d.Set("timeframes", jsonData.TimeFrames); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", json.Description); tfErr != nil {
+	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("profile", json.Profile); tfErr != nil {
+	if tfErr := d.Set("profile", jsonData.Profile); tfErr != nil {
 		panic(tfErr)
 	}
 	restrictions := make([]map[string]interface{}, 0)
-	for _, v := range *json.Restrictions {
+	for _, v := range jsonData.Restrictions {
 		restrictions = append(restrictions, map[string]interface{}{
 			"action":      v.Action,
 			"rules":       v.Rules,
@@ -337,7 +324,7 @@ func fillUserGroup(d *schema.ResourceData, json jsonUserGroup) {
 	if tfErr := d.Set("restrictions", restrictions); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("users", json.Users); tfErr != nil {
+	if tfErr := d.Set("users", jsonData.Users); tfErr != nil {
 		panic(tfErr)
 	}
 }

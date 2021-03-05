@@ -22,6 +22,7 @@ The following arguments are supported:
 * `ssh_public_key` - (Optional)(`String`) The SSH public key.
 
 ## Attribute Reference
+
 * `id` - (`String`) = `user_name`
 
 ## Import
