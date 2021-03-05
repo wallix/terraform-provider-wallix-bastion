@@ -20,7 +20,7 @@ The following arguments are supported:
 ## Attribute Reference
 
 * `id` - (`String`) Internal id of localdomain account in bastion.
-* `credentials` - (`ListOfNestedBlock`) The account credentials.
+* `credentials` - (`ListOfBlock`) The account credentials.
   * `id` - (`String`) Internal id of credential.
   * `public_key` - (`String`) The account public key.
   * `type` - (`String`) The credential type.
