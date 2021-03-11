@@ -44,6 +44,7 @@ func Provider() *schema.Provider {
 
 		ResourcesMap: map[string]*schema.Resource{
 			"wallix-bastion_application":                           resourceApplication(),
+			"wallix-bastion_application_localdomain":               resourceApplicationLocalDomain(),
 			"wallix-bastion_authorization":                         resourceAuthorization(),
 			"wallix-bastion_checkout_policy":                       resourceCheckoutPolicy(),
 			"wallix-bastion_cluster":                               resourceCluster(),
