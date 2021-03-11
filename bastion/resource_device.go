@@ -11,14 +11,13 @@ import (
 )
 
 type jsonDevice struct {
-	ID             string                   `json:"id,omitempty"`
-	Alias          string                   `json:"alias"`
-	Description    string                   `json:"description"`
-	DeviceName     string                   `json:"device_name"`
-	Host           string                   `json:"host"`
-	LastConnection string                   `json:"last_connection,omitempty"`
-	LocalDomains   *[]jsonDeviceLocalDomain `json:"local_domains,omitempty"`
-	Services       *[]jsonDeviceService     `json:"services,omitempty"`
+	ID           string                   `json:"id,omitempty"`
+	Alias        string                   `json:"alias"`
+	Description  string                   `json:"description"`
+	DeviceName   string                   `json:"device_name"`
+	Host         string                   `json:"host"`
+	LocalDomains *[]jsonDeviceLocalDomain `json:"local_domains,omitempty"`
+	Services     *[]jsonDeviceService     `json:"services,omitempty"`
 }
 
 func resourceDevice() *schema.Resource {
