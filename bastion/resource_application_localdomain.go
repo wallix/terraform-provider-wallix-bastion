@@ -3,6 +3,7 @@ package bastion
 type jsonApplicationLocalDomain struct {
 	EnablePasswordChange           bool                    `json:"enable_password_change"`
 	ID                             string                  `json:"id,omitempty"`
+	AdminAccount                   *string                 `json:"admin_account,omitempty"`
 	DomainName                     string                  `json:"domain_name"`
 	Description                    string                  `json:"description"`
 	PasswordChangePolicy           string                  `json:"password_change_policy,omitempty"`

@@ -92,6 +92,10 @@ func resourceApplication() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"admin_account": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"domain_name": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -370,6 +374,7 @@ func fillApplication(d *schema.ResourceData, jsonData jsonApplication) {
 	for _, v := range *jsonData.LocalDomains {
 		localDomains = append(localDomains, map[string]interface{}{
 			"id":                     v.ID,
+			"admin_account":          v.AdminAccount,
 			"domain_name":            v.DomainName,
 			"description":            v.Description,
 			"enable_password_change": v.EnablePasswordChange,
