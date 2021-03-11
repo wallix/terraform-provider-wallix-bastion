@@ -46,6 +46,7 @@ func Provider() *schema.Provider {
 			"wallix-bastion_authorization":                         resourceAuthorization(),
 			"wallix-bastion_checkout_policy":                       resourceCheckoutPolicy(),
 			"wallix-bastion_cluster":                               resourceCluster(),
+			"wallix-bastion_connection_policy":                     resourceConnectionPolicy(),
 			"wallix-bastion_device":                                resourceDevice(),
 			"wallix-bastion_device_localdomain":                    resourceDeviceLocalDomain(),
 			"wallix-bastion_device_localdomain_account":            resourceDeviceLocalDomainAccount(),
