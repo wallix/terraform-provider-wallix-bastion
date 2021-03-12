@@ -43,7 +43,12 @@ func Provider() *schema.Provider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
+			"wallix-bastion_application":                           resourceApplication(),
+			"wallix-bastion_application_localdomain":               resourceApplicationLocalDomain(),
 			"wallix-bastion_authorization":                         resourceAuthorization(),
+			"wallix-bastion_checkout_policy":                       resourceCheckoutPolicy(),
+			"wallix-bastion_cluster":                               resourceCluster(),
+			"wallix-bastion_connection_policy":                     resourceConnectionPolicy(),
 			"wallix-bastion_device":                                resourceDevice(),
 			"wallix-bastion_device_localdomain":                    resourceDeviceLocalDomain(),
 			"wallix-bastion_device_localdomain_account":            resourceDeviceLocalDomainAccount(),
@@ -55,6 +60,7 @@ func Provider() *schema.Provider {
 			"wallix-bastion_externalauth_ldap":                     resourceExternalAuthLdap(),
 			"wallix-bastion_ldapdomain":                            resourceLdapDomain(),
 			"wallix-bastion_ldapmapping":                           resourceLdapMapping(),
+			"wallix-bastion_profile":                               resourceProfile(),
 			"wallix-bastion_targetgroup":                           resourceTargetGroup(),
 			"wallix-bastion_user":                                  resourceUser(),
 			"wallix-bastion_usergroup":                             resourceUserGroup(),
