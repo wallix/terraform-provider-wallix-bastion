@@ -63,6 +63,7 @@ func Provider() *schema.Provider {
 			"wallix-bastion_ldapmapping":                           resourceLdapMapping(),
 			"wallix-bastion_profile":                               resourceProfile(),
 			"wallix-bastion_targetgroup":                           resourceTargetGroup(),
+			"wallix-bastion_timeframe":                             resourceTimeframe(),
 			"wallix-bastion_user":                                  resourceUser(),
 			"wallix-bastion_usergroup":                             resourceUserGroup(),
 		},
