@@ -25,5 +25,5 @@ The following arguments are supported:
 Usergroup can be imported using an id made up of `<group_name>`, e.g.
 
 ```
-$ terraform import wallix-bastion_user.staff staff
+$ terraform import wallix-bastion_usergroup.staff staff
 ```
