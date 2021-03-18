@@ -1,6 +1,6 @@
 # wallix-bastion_externalauth_tacacs Resource
 
-Provides a TACACS+ externaulauth resource.
+Provides a Tacacs+ externaulauth resource.
 
 ## Argument Reference
 
@@ -19,7 +19,7 @@ The following arguments are supported:
 
 ## Import
 
-TACACS+ externalauth can be imported using an id made up of `<authentication_name>`, e.g.
+Tacacs+ externalauth can be imported using an id made up of `<authentication_name>`, e.g.
 
 ```
 $ terraform import wallix-bastion_externalauth_tacacs.server1 server1

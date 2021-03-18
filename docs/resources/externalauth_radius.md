@@ -1,6 +1,6 @@
 # wallix-bastion_externalauth_radius Resource
 
-Provides a RADIUS externaulauth resource.
+Provides a Radius externaulauth resource.
 
 ## Argument Reference
 
@@ -10,7 +10,7 @@ The following arguments are supported:
 * `host` - (Required)(`String`) The host name.
 * `port` - (Required)(`Int`) The port number.
 * `secret` - (Optional)(`String`) The secret.
-* `timeout` - (Required)(`Int`) RADIUS timeout.
+* `timeout` - (Required)(`Int`) Radius timeout.
 * `description` - (Optional)(`String`) Description of the authentication.
 * `use_primary_auth_domain` - (Optional)(`Bool`) Use the primary auth domain.
 
@@ -20,7 +20,7 @@ The following arguments are supported:
 
 ## Import
 
-RADIUS externalauth can be imported using an id made up of `<authentication_name>`, e.g.
+Radius externalauth can be imported using an id made up of `<authentication_name>`, e.g.
 
 ```
 $ terraform import wallix-bastion_externalauth_radius.server1 server1
