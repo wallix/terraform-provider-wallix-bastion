@@ -58,6 +58,7 @@ func Provider() *schema.Provider {
 			"wallix-bastion_domain":                                resourceDomain(),
 			"wallix-bastion_domain_account":                        resourceDomainAccount(),
 			"wallix-bastion_domain_account_credential":             resourceDomainAccountCredential(),
+			"wallix-bastion_externalauth_kerberos":                 resourceExternalAuthKerberos(),
 			"wallix-bastion_externalauth_ldap":                     resourceExternalAuthLdap(),
 			"wallix-bastion_externalauth_radius":                   resourceExternalAuthRadius(),
 			"wallix-bastion_externalauth_tacacs":                   resourceExternalAuthTacacs(),
