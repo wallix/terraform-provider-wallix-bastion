@@ -35,5 +35,5 @@ The following arguments are supported:
 LDAP externalauth can be imported using an id made up of `<authentication_name>`, e.g.
 
 ```
-$ terraform import wallix-bastion_user.server1 server1
+$ terraform import wallix-bastion_externalauth_ldap.server1 server1
 ```
