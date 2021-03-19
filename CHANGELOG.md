@@ -1,3 +1,17 @@
+## 0.3.0 (March 19, 2021)
+FEATURES:
+* add `wallix-bastion_application` resource
+* add `wallix-bastion_application_localdomain` resource
+* add `wallix-bastion_application_localdomain_account` resource
+* add `wallix-bastion_checkout_policy` resource
+* add `wallix-bastion_cluster` resource
+* add `wallix-bastion_connection_policy` resource
+* add `wallix-bastion_externalauth_kerberos` resource
+* add `wallix-bastion_externalauth_radius` resource
+* add `wallix-bastion_externalauth_tacacs` resource
+* add `wallix-bastion_profile` resource
+* add `wallix-bastion_timeframe` resource
+
 ## 0.2.0 (March 5, 2021)
 FEATURES:
 * add `wallix-bastion_authorization` resource
