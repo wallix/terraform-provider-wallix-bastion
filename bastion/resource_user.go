@@ -14,7 +14,7 @@ import (
 type jsonUser struct {
 	ForceChangePwd    *bool     `json:"force_change_pwd,omitempty"`
 	IsDisabled        bool      `json:"is_disabled"`
-	UserName          string    `json:"user_name,"`
+	UserName          string    `json:"user_name"`
 	CertificateCN     string    `json:"certificate_dn"`
 	DisplayName       string    `json:"display_name"`
 	Email             string    `json:"email"`
@@ -310,6 +310,9 @@ func readUserOptions(ctx context.Context, userName string, m interface{}) (jsonU
 }
 
 func fillUser(d *schema.ResourceData, jsonData jsonUser) {
+	if tfErr := d.Set("user_name", jsonData.UserName); tfErr != nil {
+		panic(tfErr)
+	}
 	if tfErr := d.Set("email", jsonData.Email); tfErr != nil {
 		panic(tfErr)
 	}
