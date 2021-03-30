@@ -1,3 +1,7 @@
+## 0.3.1 (March 30, 2021)
+BUG FIXES:
+* fix import user resource
+
 ## 0.3.0 (March 19, 2021)
 FEATURES:
 * add `wallix-bastion_application` resource
