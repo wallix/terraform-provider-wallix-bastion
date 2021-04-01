@@ -468,20 +468,10 @@ func prepareTargetGroupJSON(d *schema.ResourceData) (jsonTargetGroup, error) { /
 		for _, v := range d.Get("session_accounts").(*schema.Set).List() {
 			sessAccounts := v.(map[string]interface{})
 			switch {
-			case sessAccounts["domain_type"].(string) == domainTypeGlobal:
-				if sessAccounts["device"].(string) != "" ||
-					sessAccounts["service"].(string) != "" ||
-					sessAccounts["application"].(string) != "" {
-					return jsonData, fmt.Errorf("bad session_accounts: " +
-						"device,service,application need to be null with domain_type=global")
-				}
-			case sessAccounts["domain_type"].(string) == domainTypeLocal:
-				if (sessAccounts["device"].(string) == "" ||
-					sessAccounts["service"].(string) == "") &&
-					sessAccounts["application"].(string) == "" {
-					return jsonData, fmt.Errorf("bad session_accounts: " +
-						"device/service or application need to be set with domain_type=local")
-				}
+			case (sessAccounts["device"].(string) == "" || sessAccounts["service"].(string) == "") &&
+				sessAccounts["application"].(string) == "":
+				return jsonData, fmt.Errorf("bad session_accounts: " +
+					"device/service or application need to be set")
 			case sessAccounts["device"].(string) != "" && sessAccounts["application"].(string) != "":
 				return jsonData, fmt.Errorf("bad session_accounts: " +
 					"device and application mutually exclusive")
