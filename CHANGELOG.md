@@ -1,7 +1,7 @@
 ## 0.3.2 (April 1, 2021)
 BUG FIXES:
 * fix `device`/`service` or `application` needed with `domain_type`="global" on `session_accounts` in `wallix-bastion_targetgroup` resource
-* fix `resources` argument can be an attribute in `wallix-bastion_domain_account`
+* fix `resources` argument can be an attribute in `wallix-bastion_domain_account` resource
 
 ## 0.3.1 (March 30, 2021)
 BUG FIXES:
