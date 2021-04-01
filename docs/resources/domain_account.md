@@ -14,7 +14,7 @@ The following arguments are supported:
 * `certificate_validity` - (Optional)(`String`) The validity duration of the signed ssh public key in the case a Certificate Authority is defined for the account's domain.
 * `checkout_policy` - (Optional)(`String`) The account checkout policy.
 * `description` - (Optional)(`String`) The account description.
-* `resources` - (Optional)(`ListOfString`) The account resources. Format is device:service or application:APP.
+* `resources` - (Optional)(`ListOfString`) The account resources. Format is device:service or application:APP. **It's a attributes when not set**
 
 ## Attribute Reference
 

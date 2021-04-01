@@ -21,7 +21,7 @@ type jsonDomainAccount struct {
 	AutoChangeSSHKey     bool              `json:"auto_change_ssh_key"`
 	CheckoutPolicy       string            `json:"checkout_policy"`
 	CertificateValidity  string            `json:"certificate_validity,omitempty"`
-	Resources            []string          `json:"resources"`
+	Resources            *[]string         `json:"resources,omitempty"`
 	Credentials          *[]jsonCredential `json:"credentials,omitempty"`
 }
 
@@ -96,6 +96,7 @@ func resourceDomainAccount() *schema.Resource {
 			"resources": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
@@ -306,16 +307,16 @@ func prepareDomainAccountJSON(d *schema.ResourceData) (jsonDomainAccount, error)
 	jsonData.AutoChangeSSHKey = d.Get("auto_change_ssh_key").(bool)
 	jsonData.CertificateValidity = d.Get("certificate_validity").(string)
 	jsonData.Description = d.Get("description").(string)
-	if len(d.Get("resources").(*schema.Set).List()) > 0 {
+	if d.HasChange("resources") {
+		resources := make([]string, 0)
 		for _, v := range d.Get("resources").(*schema.Set).List() {
 			vSplt := strings.Split(v.(string), ":")
 			if len(vSplt) != 2 {
 				return jsonData, fmt.Errorf("resource must have format device:service or application:APP")
 			}
-			jsonData.Resources = append(jsonData.Resources, v.(string))
+			resources = append(resources, v.(string))
 		}
-	} else {
-		jsonData.Resources = make([]string, 0)
+		jsonData.Resources = &resources
 	}
 
 	return jsonData, nil

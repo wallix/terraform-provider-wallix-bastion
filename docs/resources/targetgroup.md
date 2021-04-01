@@ -22,9 +22,9 @@ The following arguments are supported:
   * `account` - (Required)(`String`) The account name.
   * `domain` - (Required)(`String`) The domain name.
   * `domain_type` - (Required)(`String`) The domain type: local or global.
-  * `device` - (Optional)(`String`) The device name (null for an application or a global domain).
-  * `service` - (Optional)(`String`) The service name (null for an application or a global domain).
-  * `application` - (Optional)(`String`) The application name (null for a device or a global domain).
+  * `device` - (Optional)(`String`) The device name (null for an application).
+  * `service` - (Optional)(`String`) The service name (null for an application).
+  * `application` - (Optional)(`String`) The application name (null for a device).
 * `session_account_mappings` - (Optional)(`NestedBlock`) The devices/applications accounts mappings. The accounts must exist in the Bastion. Can be specified multiple times for each mapping to declare.
   * `device` - (Optional)(`String`) The device name (null for an application).
   * `service` - (Optional)(`String`) The service name (null for an application).
