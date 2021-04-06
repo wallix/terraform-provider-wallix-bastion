@@ -369,8 +369,10 @@ func fillDevice(d *schema.ResourceData, jsonData jsonDevice) {
 			"global_domains":    make([]string, 0),
 			"subprotocols":      make([]string, 0),
 		}
-		for _, v2 := range v.GlobalDomains {
-			service["global_domains"] = append(service["global_domains"].([]string), v2)
+		if v.GlobalDomains != nil {
+			for _, v2 := range *v.GlobalDomains {
+				service["global_domains"] = append(service["global_domains"].([]string), v2)
+			}
 		}
 		if v.SubProtocols != nil {
 			for _, v2 := range *v.SubProtocols {

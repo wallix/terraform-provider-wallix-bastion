@@ -13,13 +13,13 @@ import (
 )
 
 type jsonDeviceService struct {
-	ID               string    `json:"id,omitempty"`
-	ServiceName      string    `json:"service_name,omitempty"`
-	Protocol         string    `json:"protocol,omitempty"`
 	Port             int       `json:"port"`
-	SubProtocols     *[]string `json:"subprotocols,omitempty"`
+	ID               string    `json:"id,omitempty"`
 	ConnectionPolicy string    `json:"connection_policy"`
-	GlobalDomains    []string  `json:"global_domains"`
+	Protocol         string    `json:"protocol,omitempty"`
+	ServiceName      string    `json:"service_name,omitempty"`
+	GlobalDomains    *[]string `json:"global_domains,omitempty"`
+	SubProtocols     *[]string `json:"subprotocols,omitempty"`
 }
 
 func resourceDeviceService() *schema.Resource {
@@ -61,6 +61,7 @@ func resourceDeviceService() *schema.Resource {
 			"global_domains": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"subprotocols": {
@@ -278,12 +279,12 @@ func prepareDeviceServiceJSON(d *schema.ResourceData, newResource bool) (jsonDev
 	}
 	jsonData.ConnectionPolicy = d.Get("connection_policy").(string)
 	jsonData.Port = d.Get("port").(int)
-	if len(d.Get("global_domains").(*schema.Set).List()) > 0 {
+	if d.HasChange("global_domains") {
+		globalDomains := make([]string, 0)
 		for _, v := range d.Get("global_domains").(*schema.Set).List() {
-			jsonData.GlobalDomains = append(jsonData.GlobalDomains, v.(string))
+			globalDomains = append(globalDomains, v.(string))
 		}
-	} else {
-		jsonData.GlobalDomains = make([]string, 0)
+		jsonData.GlobalDomains = &globalDomains
 	}
 	if v := d.Get("subprotocols").(*schema.Set).List(); len(v) > 0 {
 		subProtocols := make([]string, 0)
