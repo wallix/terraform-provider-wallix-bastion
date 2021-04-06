@@ -11,7 +11,7 @@ The following arguments are supported:
 * `connection_policy` - (Required)(`String`) The connection policy name.
 * `port` - (Required)(`Int`) The port number.
 * `protocol` - (Required, Forces new resource)(`String`) The protocol. Need to be 'SSH', 'RAWTCPIP', 'RDP', 'RLOGIN', 'TELNET' or 'VNC'.
-* `global_domains` - (Optional)(`ListOfString`) The global domains names.
+* `global_domains` - (Optional)(`ListOfString`) The global domains names. **It's a attributes when not set**
 * `subprotocols` - (Optional)(`ListOfString`) The sub protocols for 'SSH', 'RDP' protocol.
 
 ## Attribute Reference
