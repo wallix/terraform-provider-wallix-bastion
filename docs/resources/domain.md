@@ -13,8 +13,8 @@ The following arguments are supported:
 * `description` - (Optional)(`String`) The domain description.
 * `enable_password_change` - (Optional)(`Bool`) Enable the change of password on this domain. RequiredWith arguments : `password_change_policy` and `password_change_plugin`. Conflict with `vault_plugin`.
 * `passphrase` - (Optional)(`String`) The passphrase that was used to encrypt the private key. If provided, it must be between 4 and 1024 characters long. **Value can't refresh**
-* `password_change_policy` - (Optional,Required)(`String`) The name of password change policy for this domain.  Need `enable_password_change` to true.
-* `password_change_plugin` - (Optional)(`String`) The name of plugin used to change passwords on this domain.  Need `enable_password_change` to true.
+* `password_change_policy` - (Optional)(`String`) The name of password change policy for this domain. Need `enable_password_change` to true.
+* `password_change_plugin` - (Optional)(`String`) The name of plugin used to change passwords on this domain. Need `enable_password_change` to true.
 * `password_change_plugin_parameters` - (Optional)(`String`) Parameters for the plugin used to change credentials. Need to be a valid JSON. Need `enable_password_change` to true. **Value can't refresh**  
 * `vault_plugin` - (Optional,ForceNew)(`String`) The name of vault plugin used to manage all accounts defined on this domain. Conflict with `enable_password_change`.
 * `vault_plugin_parameters` - (Optional)(`String`) Parameters for the vault plugin. Need to be a valid JSON. **Value can't refresh**  
