@@ -1,3 +1,7 @@
+## 0.4.0 (April 9, 2021)
+FEATURES:
+* add `wallix-bastion_domain` data source
+
 ## 0.3.3 (April 6, 2021)
 BUG FIXES:
 * fix `global_domains` argument can be an attribute in `wallix-bastion_device_service` resource
