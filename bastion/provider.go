@@ -41,7 +41,9 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.EnvDefaultFunc("WALLIX_BASTION_API_VERSION", "v3.3"),
 			},
 		},
-
+		DataSourcesMap: map[string]*schema.Resource{
+			"wallix-bastion_domain": dataSourceDomain(),
+		},
 		ResourcesMap: map[string]*schema.Resource{
 			"wallix-bastion_application":                           resourceApplication(),
 			"wallix-bastion_application_localdomain":               resourceApplicationLocalDomain(),
