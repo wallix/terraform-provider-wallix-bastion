@@ -6,22 +6,35 @@ Provides a checkout_policy resource.
 
 The following arguments are supported:
 
-* `checkout_policy_name` - (Required)(`String`) The checkout policy name.
-* `description` - (Optional)(`String`) The checkout policy description.
-* `enable_lock` - (Optional)(`Bool`) Lock on checkout.
-* `change_credentials_at_checkin` - (Optional)(`Bool`) Change credentials at check-in. `enable_lock` need to be set.
-* `duration` - (Optional)(`Int`) The checkout duration (in seconds). Required with `enable_lock`.
-* `extension` - (Optional)(`Int`) The extension duration (in seconds). `enable_lock` need to be set.
-* `max_duration` - (Optional)(`Int`) The max duration (in seconds). Required with `enable_lock`.
+- **checkout_policy_name** (Required, String)  
+  The checkout policy name.
+- **description** (Optional, String)  
+  The checkout policy description.
+- **enable_lock** (Optional, Boolean)  
+  Lock on checkout.
+  `duration` and `max_duration` need to be set.
+- **change_credentials_at_checkin** (Optional, Boolean)  
+  Change credentials at check-in.  
+  `enable_lock` need to be set.
+- **duration** (Optional, Number)  
+  The checkout duration (in seconds).  
+  `enable_lock` need to be set.
+- **extension** (Optional, Number)  
+  The extension duration (in seconds).  
+  `enable_lock` need to be set.
+- **max_duration** (Optional, Number)  
+  The max duration (in seconds).  
+  `enable_lock` need to be set.
 
 ## Attribute Reference
 
-* `id` - (`String`) Internal id of checkout policy in bastion.
+- **id** (String)  
+  Internal id of checkout policy in bastion.
 
 ## Import
 
 Checkout policy can be imported using an id made up of `<checkout_policy_name>`, e.g.
 
-```
-$ terraform import wallix-bastion_checkout_policy.pol example
+```shell
+terraform import wallix-bastion_checkout_policy.pol example
 ```
