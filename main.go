@@ -1,7 +1,7 @@
 package main
 
 import (
-	"terraform-provider-wallix-bastion/bastion"
+	"github.com/claranet/terraform-provider-wallix-bastion/bastion"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
 )
