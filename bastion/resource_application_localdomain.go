@@ -45,7 +45,7 @@ func resourceApplicationLocalDomain() *schema.Resource {
 			"admin_account": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				RequiredWith: []string{"enable_password_change", "password_change_policy", "password_change_plugin"},
+				RequiredWith: []string{"enable_password_change"},
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -54,7 +54,7 @@ func resourceApplicationLocalDomain() *schema.Resource {
 			"enable_password_change": {
 				Type:         schema.TypeBool,
 				Optional:     true,
-				RequiredWith: []string{"password_change_policy", "password_change_plugin"},
+				RequiredWith: []string{"password_change_policy", "password_change_plugin", "password_change_plugin_parameters"},
 			},
 			"password_change_policy": {
 				Type:         schema.TypeString,
@@ -69,7 +69,7 @@ func resourceApplicationLocalDomain() *schema.Resource {
 			"password_change_plugin_parameters": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				RequiredWith: []string{"enable_password_change", "password_change_policy", "password_change_plugin"},
+				RequiredWith: []string{"enable_password_change"},
 				ValidateFunc: validation.StringIsJSON,
 				Sensitive:    true,
 			},

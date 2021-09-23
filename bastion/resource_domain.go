@@ -69,7 +69,7 @@ func resourceDomain() *schema.Resource {
 			"enable_password_change": {
 				Type:          schema.TypeBool,
 				Optional:      true,
-				RequiredWith:  []string{"password_change_policy", "password_change_plugin"},
+				RequiredWith:  []string{"password_change_policy", "password_change_plugin", "password_change_plugin_parameters"},
 				ConflictsWith: []string{"vault_plugin"},
 			},
 			"passphrase": {
@@ -90,7 +90,7 @@ func resourceDomain() *schema.Resource {
 			"password_change_plugin_parameters": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				RequiredWith: []string{"enable_password_change", "password_change_policy", "password_change_plugin"},
+				RequiredWith: []string{"enable_password_change"},
 				ValidateFunc: validation.StringIsJSON,
 				Sensitive:    true,
 			},
@@ -99,11 +99,12 @@ func resourceDomain() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"enable_password_change", "ca_private_key"},
+				RequiredWith:  []string{"vault_plugin_parameters"},
 			},
 			"vault_plugin_parameters": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				RequiredWith: []string{"vault_plugin_parameters"},
+				RequiredWith: []string{"vault_plugin"},
 				ValidateFunc: validation.StringIsJSON,
 				Sensitive:    true,
 			},
