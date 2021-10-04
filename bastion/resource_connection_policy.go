@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	bchk "github.com/jeremmfr/go-utils/basiccheck"
 )
 
 type jsonConnectionPolicy struct {
@@ -238,7 +239,7 @@ func prepareConnectionPolicyJSON(d *schema.ResourceData) (jsonConnectionPolicy, 
 	jsonData.Protocol = d.Get("protocol").(string)
 	if len(d.Get("authentication_methods").([]interface{})) > 0 {
 		for _, v := range d.Get("authentication_methods").([]interface{}) {
-			if !stringInSlice(v.(string), validAuthenticationMethods()) {
+			if !bchk.StringInSlice(v.(string), validAuthenticationMethods()) {
 				return jsonData, fmt.Errorf("authentication_methods must be in %v", validAuthenticationMethods())
 			}
 			jsonData.AuthenticationMethods = append(jsonData.AuthenticationMethods, v.(string))

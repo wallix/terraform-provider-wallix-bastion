@@ -56,13 +56,3 @@ func (c *Client) newRequest(ctx context.Context, uri string, method string, json
 
 	return string(respBody), resp.StatusCode, nil
 }
-
-func stringInSlice(str string, list []string) bool {
-	for _, v := range list {
-		if v == str {
-			return true
-		}
-	}
-
-	return false
-}

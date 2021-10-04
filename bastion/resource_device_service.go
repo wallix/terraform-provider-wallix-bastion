@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	bchk "github.com/jeremmfr/go-utils/basiccheck"
 )
 
 type jsonDeviceService struct {
@@ -291,12 +292,12 @@ func prepareDeviceServiceJSON(d *schema.ResourceData, newResource bool) (jsonDev
 		for _, v2 := range v {
 			switch d.Get("protocol").(string) {
 			case "SSH":
-				if !stringInSlice(v2.(string), sshSubProtocolsValid()) {
+				if !bchk.StringInSlice(v2.(string), sshSubProtocolsValid()) {
 					return jsonData, fmt.Errorf("subprotocols %s not valid for SSH service", v2)
 				}
 				subProtocols = append(subProtocols, v2.(string))
 			case "RDP":
-				if !stringInSlice(v2.(string), rdpSubProtocolsValid()) {
+				if !bchk.StringInSlice(v2.(string), rdpSubProtocolsValid()) {
 					return jsonData, fmt.Errorf("subprotocols %s not valid for RDP service", v2)
 				}
 				subProtocols = append(subProtocols, v2.(string))
