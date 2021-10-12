@@ -71,10 +71,10 @@ The following arguments are supported:
   Target access.
 - **target_groups_limitation** (Optional, Block)  
   Activation of target groups limitation.
+  - **default_target_group** (Required, String)  
+    Default target group.
   - **target_groups** (Required, List of String)  
     Target groups.
-  - **default_target_group** (Optional, String)  
-    Default target group.
 - **user_groups_limitation** (Optional, Block)  
   Activation of user groups limitation.
   - **user_groups** (Required, List of String)  
