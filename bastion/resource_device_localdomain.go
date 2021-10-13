@@ -351,9 +351,6 @@ func fillDeviceLocalDomain(d *schema.ResourceData, jsonData jsonDeviceLocalDomai
 	if tfErr := d.Set("enable_password_change", jsonData.EnablePasswordChange); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("passphrase", jsonData.Passphrase); tfErr != nil {
-		panic(tfErr)
-	}
 	if tfErr := d.Set("password_change_policy", jsonData.PasswordChangePolicy); tfErr != nil {
 		panic(tfErr)
 	}
