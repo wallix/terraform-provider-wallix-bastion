@@ -2,6 +2,16 @@
 
 Provides a localdomain resource linked to device.
 
+## Example Usage
+
+```hcl
+# Configure a local domain on device
+resource wallix-bastion_device_localdomain srv1dom {
+  device_id   = "xxxxxxxx"
+  domain_name = "domlocal"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:

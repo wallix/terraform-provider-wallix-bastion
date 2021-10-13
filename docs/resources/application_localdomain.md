@@ -2,6 +2,16 @@
 
 Provides a localdomain resource linked to application.
 
+## Example Usage
+
+```hcl
+# Configure a local domain of application
+resource wallix-bastion_application_localdomain app1dom {
+  application_id = "xxxxxxxx"
+  domain_name    = "domlocal"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:

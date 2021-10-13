@@ -2,9 +2,33 @@
 
 Provides a authorization resource.
 
+## Example Usage
+
+```hcl
+# Configure an authorization
+resource wallix-bastion_authorization auth {
+  authorization_name = "authName"
+  user_group         = "userGroup"
+  target_group       = "targetGroup"
+  authorize_sessions = true
+  subprotocols = [
+    "RDP_CLIPBOARD_UP", "RDP_CLIPBOARD_DOWN", "RDP_PRINTER", "RDP_COM_PORT", "RDP_DRIVE", "RDP_SMARTCARD", "RDP_CLIPBOARD_FILE", "RDP_AUDIO_OUTPUT",
+    "SSH_SHELL_SESSION", "SSH_REMOTE_COMMAND", "SSH_SCP_UP", "SSH_SCP_DOWN", "SSH_X11", "SSH_DIRECT_TCPIP", "SSH_REVERSE_TCPIP", "SSH_AUTH_AGENT",
+    "SFTP_SESSION",
+    "RDP",
+    "VNC",
+    "TELNET",
+    "RLOGIN",
+    "RAWTCPIP",
+  ]
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
+
+-> **Note:** At least one of `authorize_password_retrieval` or `authorize_sessions` arguments is required.
 
 - **authorization_name** (Required, String)  
   The authorization name.
@@ -38,7 +62,7 @@ The following arguments are supported:
   The quorum for inactive periods (-1: approval workflow with automatic approval, 0: no connection allowed, > 0: quorum to reach).  
   Defaults to `-1`.
 - **approval_timeout** (Optional, Number)  
-  Set a timeout in minutes after which the approval will be automatically closed ifno connection has been initiated (i.e. the user won't be able to connect). 0: no timeout.
+  Set a timeout in minutes after which the approval will be automatically closed info connection has been initiated (i.e. the user won't be able to connect). 0: no timeout.
 - **has_comment** (Optional, Boolean)  
   Comment is allowed in approval.
 - **has_ticket** (Optional, Boolean)  

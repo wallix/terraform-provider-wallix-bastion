@@ -2,6 +2,16 @@
 
 Provides a usergroup resource.
 
+## Example Usage
+
+```hcl
+# Configure a group of users
+resource wallix-bastion_usergroup demo {
+  group_name = "demo"
+  timeframes = ["allthetime"]
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -38,5 +48,5 @@ The following arguments are supported:
 Usergroup can be imported using an id made up of `<group_name>`, e.g.
 
 ```shell
-terraform import wallix-bastion_usergroup.staff staff
+terraform import wallix-bastion_usergroup.demo demo
 ```

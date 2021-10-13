@@ -2,6 +2,22 @@
 
 Provides a application resource.
 
+## Example Usage
+
+```hcl
+# Configure an application
+resource wallix-bastion_application app1 {
+  application_name  = "app1"
+  connection_policy = "RDP"
+  paths {
+    target      = "Interactive@device:SSH"
+    program     = "application_path"
+    working_dir = "directory"
+  }
+  target = "cluster"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:

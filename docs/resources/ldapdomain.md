@@ -2,6 +2,19 @@
 
 Provides a ldapdomain resource.
 
+## Example Usage
+
+```hcl
+# Configure a LDAP domain
+resource wallix-bastion_ldapdomain example_com {
+  domain_name          = "example.com"
+  ldap_domain_name     = "example.com"
+  external_ldaps       = "server1"
+  default_language     = "fr"
+  default_email_domain = "example.com"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:

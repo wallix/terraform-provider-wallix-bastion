@@ -2,6 +2,23 @@
 
 Provides a LDAP externaulauth resource.
 
+## Example Usage
+
+```hcl
+# Configure a LDAP external authentication
+resource wallix-bastion_externalauth_ldap server1 {
+  authentication_name = "server1"
+  cn_attribute        = "sAMAccountName"
+  host                = "server1"
+  ldap_base           = "OU=FR,DC=test,DC=com"
+  login_attribute     = "sAMAccountName"
+  port                = 636
+  timeout             = 10
+  is_ssl              = true
+  is_anonymous_access = true
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:

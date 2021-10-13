@@ -2,6 +2,18 @@
 
 Provides a credential linked to domain_account resource.
 
+## Example Usage
+
+```hcl
+# Configure a credential on account of global domain
+resource wallix-bastion_domain_account dom1admpass {
+  domain_id  = "xxxxxxxx"
+  account_id = "yyyyyyy"
+  type       = "password"
+  password   = "aPassWord"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:

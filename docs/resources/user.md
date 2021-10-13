@@ -2,6 +2,21 @@
 
 Provides a user resource.
 
+## Example Usage
+
+```hcl
+# Configure an user
+resource wallix-bastion_user demo {
+  user_name          = "demo"
+  email              = "demo@none.none"
+  profile            = "user"
+  user_auths         = ["local_password"]
+  force_change_pwd   = true
+  preferred_language = "fr"
+  password           = "password++"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -48,5 +63,5 @@ The following arguments are supported:
 User can be imported using an id made up of `<user_name>`, e.g.
 
 ```shell
-terraform import wallix-bastion_user.toto toto
+terraform import wallix-bastion_user.demo demo
 ```

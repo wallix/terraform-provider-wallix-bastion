@@ -2,6 +2,22 @@
 
 Provides a targetgroup resource.
 
+## Example Usage
+
+```hcl
+# Configure a target group
+resource wallix-bastion_targetgroup group {
+  group_name = "groupName"
+  session_accounts {
+    account     = "admin"
+    domain      = "example.com"
+    domain_type = "global"
+    device      = "device1"
+    service     = "SSH"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:

@@ -2,6 +2,18 @@
 
 Provides a account linked to device_localdomain resource.
 
+## Example Usage
+
+```hcl
+# Configure a account into local domain of a device
+resource wallix-bastion_device_localdomain_account srv1adm {
+  device_id     = "xxxxxxxx"
+  domain_id     = "yyyyyyy"
+  account_name  = "admin"
+  account_login = "admin"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:

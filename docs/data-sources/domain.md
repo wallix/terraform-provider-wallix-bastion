@@ -2,6 +2,14 @@
 
 Get information on a global domain resource.
 
+## Example Usage
+
+```hcl
+data wallix-bastion_domain globDomain {
+  domain_name = "globDomain"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:

@@ -2,6 +2,20 @@
 
 Provides a service resource linked to device.
 
+## Example Usage
+
+```hcl
+# Configure a service on device
+resource wallix-bastion_device_service srv1svc {
+  device_id         = "xxxxxxxx"
+  service_name      = "svc"
+  connection_policy = "SSH"
+  port              = 22
+  protocol          = "SSH"
+  subprotocols      = ["SSH_SHELL_SESSION"]
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:

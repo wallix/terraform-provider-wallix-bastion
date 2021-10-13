@@ -2,6 +2,22 @@
 
 Provides a timeframe resource.
 
+## Example Usage
+
+```hcl
+# Configure a timeframe
+resource wallix-bastion_timeframe demo {
+  timeframe_name = "demo"
+  periods {
+    start_date = "2020-01-01"
+    end_date   = "2020-02-02"
+    start_time = "08:00"
+    end_time   = "12:00"
+    week_days  = ["monday"]
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -41,5 +57,5 @@ The following arguments are supported:
 Timeframe can be imported using an id made up of `<timeframe_name>`, e.g.
 
 ```shell
-terraform import wallix-bastion_timeframe.example example
+terraform import wallix-bastion_timeframe.demo demo
 ```

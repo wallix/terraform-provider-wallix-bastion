@@ -2,11 +2,23 @@
 
 Provides a global cluster resource.
 
+## Example Usage
+
+```hcl
+# Configure a cluster
+resource wallix-bastion_cluster example {
+  cluster_name = "example"
+  interactive_logins = [
+    "device1:RDP",
+  ]
+}
+```
+
 ## Argument Reference
 
--> **Note:** One of `accounts`, `account_mappings` or `interactive_logins` arguments is required.
-
 The following arguments are supported:
+
+-> **Note:** At least one of `accounts`, `account_mappings` or `interactive_logins` arguments is required.
 
 - **cluster_name**  (Required, String)  
   The cluster name.

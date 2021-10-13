@@ -2,6 +2,18 @@
 
 Provides a Tacacs+ externaulauth resource.
 
+## Example Usage
+
+```hcl
+# Configure a tacacs external authentication
+resource wallix-bastion_externalauth_tacacs server1 {
+  authentication_name = "server1"
+  host                = "server1"
+  port                = 49
+  secret              = "aSecret"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -12,7 +24,7 @@ The following arguments are supported:
   The host name.
 - **port** (Required, Number)  
   The port number.
-- **secret** (Optional, String, Sensitive)  
+- **secret** (Required, String, Sensitive)  
   The secret.
 - **description** (Optional, String)  
   Description of the authentication.

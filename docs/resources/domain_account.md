@@ -2,6 +2,17 @@
 
 Provides a account linked to domain resource.
 
+## Example Usage
+
+```hcl
+# Configure an account on global domain
+resource wallix-bastion_domain_account dom1adm {
+  domain_id     = "xxxxxxxx"
+  account_name  = "admin"
+  account_login = "admin"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:

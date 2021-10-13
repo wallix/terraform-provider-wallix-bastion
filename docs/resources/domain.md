@@ -2,6 +2,15 @@
 
 Provides a global domain resource.
 
+## Example Usage
+
+```hcl
+# Configure a global domain
+resource wallix-bastion_domain cmpdom {
+  domain_name = "globdom"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:

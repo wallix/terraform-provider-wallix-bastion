@@ -2,6 +2,15 @@
 
 Provides a checkout_policy resource.
 
+## Example Usage
+
+```hcl
+# Configure a checkout policy
+resource wallix-bastion_checkout_policy pol {
+  checkout_policy_name = "example"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:

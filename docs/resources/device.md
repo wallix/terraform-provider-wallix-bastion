@@ -2,6 +2,16 @@
 
 Provides a device resource.
 
+## Example Usage
+
+```hcl
+# Configure a device
+resource wallix-bastion_device server1 {
+  device_name = "server1"
+  host        = "server1"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:

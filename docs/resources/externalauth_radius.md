@@ -2,6 +2,19 @@
 
 Provides a Radius externaulauth resource.
 
+## Example Usage
+
+```hcl
+# Configure a radius external authentication
+resource wallix-bastion_externalauth_radius server1 {
+  authentication_name = "server1"
+  host                = "server1"
+  port                = 1813
+  secret              = "aSecret"
+  timeout             = 10
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -12,7 +25,7 @@ The following arguments are supported:
   The host name.
 - **port** (Required, Number)  
   The port number.
-- **secret** (Optional, String, Sensitive)  
+- **secret** (Required, String, Sensitive)  
   The secret.
 - **timeout** (Required, Number)  
   Radius timeout.

@@ -2,6 +2,35 @@
 
 Provides a profile resource.
 
+## Example Usage
+
+```hcl
+resource wallix-bastion_profile example {
+  profile_name = "example"
+  gui_features {
+    wab_audit      = "view"
+    approval       = "view"
+    authorizations = "view"
+    devices        = "view"
+    system_audit   = "view"
+    target_groups  = "view"
+    user_groups    = "view"
+    users          = "view"
+    wab_settings   = "view"
+  }
+  gui_transmission {
+    system_audit   = "view"
+    approval       = "view"
+    authorizations = "view"
+    devices        = "view"
+    target_groups  = "view"
+    user_groups    = "view"
+    users          = "view"
+    wab_settings   = "view"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
