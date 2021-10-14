@@ -43,16 +43,16 @@ func TestAccResourceDomain_basic(t *testing.T) {
 func testAccResourceDomainCreate() string {
 	return `
 resource wallix-bastion_domain testacc_Domain {
-  domain_name = "testacc_Domain"
+  domain_name      = "testacc_Domain"
   domain_real_name = "testacc.domain"
-  ca_private_key = "generate:RSA_4096"
+  ca_private_key   = "generate:RSA_4096"
 }
 resource wallix-bastion_domain testacc_Domain2 {
   domain_name = "testacc_Domain2"
 }
 resource wallix-bastion_domain_account testacc_Domain {
-  domain_id = wallix-bastion_domain.testacc_Domain.id
-  account_name = "testacc_Domain_Admin"
+  domain_id     = wallix-bastion_domain.testacc_Domain.id
+  account_name  = "testacc_Domain_Admin"
   account_login = "admin"
 }
 `
@@ -61,17 +61,17 @@ resource wallix-bastion_domain_account testacc_Domain {
 func testAccResourceDomainUpdate() string {
 	return `
 resource wallix-bastion_domain testacc_Domain {
-  domain_name = "testacc_Domain"
-  domain_real_name = "testacc.domain"
-  ca_private_key = tls_private_key.testacc_Domain.private_key_pem
-  passphrase = random_password.testacc_Domain.result
-  admin_account = "testacc_Domain_Admin"
-  description = "testacc Domain"
+  domain_name            = "testacc_Domain"
+  domain_real_name       = "testacc.domain"
+  ca_private_key         = tls_private_key.testacc_Domain.private_key_pem
+  passphrase             = random_password.testacc_Domain.result
+  admin_account          = "testacc_Domain_Admin"
+  description            = "testacc Domain"
   enable_password_change = true
   password_change_policy = "default"
   password_change_plugin = "Unix"
   password_change_plugin_parameters = jsonencode({
-    host: "192.0.2.1"
+    host : "192.0.2.1"
   })
 }
 resource wallix-bastion_domain testacc_Domain2 {
@@ -90,8 +90,8 @@ resource "random_password" "testacc_Domain" {
   min_special      = 1
 }
 resource wallix-bastion_domain_account testacc_Domain {
-  domain_id = wallix-bastion_domain.testacc_Domain.id
-  account_name = "testacc_Domain_Admin"
+  domain_id     = wallix-bastion_domain.testacc_Domain.id
+  account_name  = "testacc_Domain_Admin"
   account_login = "admin"
 }
 `

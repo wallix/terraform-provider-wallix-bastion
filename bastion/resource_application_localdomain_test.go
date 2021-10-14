@@ -146,8 +146,8 @@ resource wallix-bastion_application_localdomain testacc_AppLocalDom {
   password_change_policy = "default"
   password_change_plugin = "MySQL"
   password_change_plugin_parameters = jsonencode({
-	"host": "10.11.12.13",
-	"port": 3306
+    "host" : "10.11.12.13",
+    "port" : 3306
   })
 }
 `

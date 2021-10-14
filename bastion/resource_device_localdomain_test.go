@@ -81,15 +81,15 @@ resource wallix-bastion_device testacc_DeviceLocalDomain {
   host        = "testacc_localdomain.device"
 }
 resource wallix-bastion_device_localdomain testacc_DeviceLocalDomain {
-  device_id              = wallix-bastion_device.testacc_DeviceLocalDomain.id
-  domain_name            = "testacc_DeviceLocalDomain"
-  description            = "testacc DeviceLocalDomain"
-  ca_private_key         = tls_private_key.testacc_DeviceLocalDomain.private_key_pem
-  passphrase             = random_password.testacc_DeviceLocalDomain.result
-  admin_account          = "testacc_DeviceLocalDomain_admin"
-  enable_password_change = true
-  password_change_policy = "default"
-  password_change_plugin = "Unix"
+  device_id                         = wallix-bastion_device.testacc_DeviceLocalDomain.id
+  domain_name                       = "testacc_DeviceLocalDomain"
+  description                       = "testacc DeviceLocalDomain"
+  ca_private_key                    = tls_private_key.testacc_DeviceLocalDomain.private_key_pem
+  passphrase                        = random_password.testacc_DeviceLocalDomain.result
+  admin_account                     = "testacc_DeviceLocalDomain_admin"
+  enable_password_change            = true
+  password_change_policy            = "default"
+  password_change_plugin            = "Unix"
   password_change_plugin_parameters = jsonencode({})
 }
 resource wallix-bastion_device_localdomain_account testacc_DeviceLocalDomain {
