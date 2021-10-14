@@ -34,7 +34,10 @@ The following arguments are supported:
   The account password.  
 - **private_key** (Optional, String, Sensitive, **Value can't refresh**)  
   The account private key.  
-  Special values are allowed to automatically generate SSH key: `generate:RSA_1024`, `generate:RSA_2048`, `generate:RSA_4096`, `generate:RSA_8192`, `generate:DSA_1024`, `generate:ECDSA_256`, `generate:ECDSA_384`, `generate:ECDSA_521`, `generate:ED25519`.  
+  Special values are allowed to automatically generate SSH key:
+  `generate:RSA_1024`, `generate:RSA_2048`, `generate:RSA_4096`, `generate:RSA_8192`,
+  `generate:DSA_1024`, `generate:ECDSA_256`, `generate:ECDSA_384`, `generate:ECDSA_521`,
+  `generate:ED25519`.  
 
 ## Attribute Reference
 
@@ -45,7 +48,8 @@ The following arguments are supported:
 
 ## Import
 
-Credential linked to device_localdomain_account can be imported using an id made up of `<device_id>/<domain_id>/<account_id>/<type>`, e.g.
+Credential linked to device_localdomain_account can be imported using an id made up
+of `<device_id>/<domain_id>/<account_id>/<type>`, e.g.
 
 ```shell
 terraform import wallix-bastion_device_localdomain_account_credential.srv1admpass xxxxxxxx/yyyyyyy/zzzzz/password

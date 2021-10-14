@@ -28,7 +28,8 @@ The following arguments are supported:
 - **auto_change_ssh_key** (Optional, Boolean)  
   Automatically change the ssh key.
 - **certificate_validity** (Optional, String)  
-  The validity duration of the signed ssh public key in the case a Certificate Authority is defined for the account's domain.
+  The validity duration of the signed ssh public key in the case a Certificate Authority is defined
+  for the account's domain.
 - **checkout_policy** (Optional, String)  
   The account checkout policy.  
   Default to `default`.

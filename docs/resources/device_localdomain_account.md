@@ -31,7 +31,8 @@ The following arguments are supported:
 - **auto_change_ssh_key** (Optional, Boolean)  
   Automatically change the ssh key.
 - **certificate_validity** (Optional, String)  
-  The validity duration of the signed ssh public key in the case a Certificate Authority is defined for the account's domain.
+  The validity duration of the signed ssh public key in the case a Certificate Authority is defined
+  for the account's domain.
 - **checkout_policy** (Optional, String)  
   The account checkout policy.  
   Default to `default`.
@@ -57,7 +58,8 @@ The following arguments are supported:
 
 ## Import
 
-Account linked to device_localdomain can be imported using an id made up of `<device_id>/<domain_id>/<account_name>`, e.g.
+Account linked to device_localdomain can be imported using an id made up
+of `<device_id>/<domain_id>/<account_name>`, e.g.
 
 ```shell
 terraform import wallix-bastion_device_localdomain_account.srv1adm xxxxxxxx/yyyyyyy/admin

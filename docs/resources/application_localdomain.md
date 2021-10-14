@@ -27,7 +27,8 @@ The following arguments are supported:
   The domain description.
 - **enable_password_change** (Optional, Boolean)  
   Enable the change of password on this domain.  
-  `password_change_policy`, `password_change_plugin` and `password_change_plugin_parameters` need to be set.
+  `password_change_policy`, `password_change_plugin` and `password_change_plugin_parameters`
+  need to be set.
 - **password_change_policy** (Optional, String)  
   The name of password change policy for this domain.  
   Need `enable_password_change` to true.
@@ -46,7 +47,8 @@ The following arguments are supported:
 
 ## Import
 
-Localdomain linked to application can be imported using an id made up of `<application_id>/<domain_name>`, e.g.
+Localdomain linked to application can be imported using an id made up
+of `<application_id>/<domain_name>`, e.g.
 
 ```shell
 terraform import wallix-bastion_application_localdomain.app1dom xxxxxxxx/domlocal

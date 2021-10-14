@@ -26,12 +26,15 @@ The following arguments are supported:
 - **ca_private_key** (Optional, String, **Value can't refresh**)  
   CA certificate.  
   The ssh private key of the signing authority for the ssh keys for accounts in the domain.  
-  Special values are allowed to automatically generate SSH key: `generate:RSA_1024`, `generate:RSA_2048`, `generate:RSA_4096`, `generate:RSA_8192`, `generate:DSA_1024`, `generate:ECDSA_256`, `generate:ECDSA_384`, `generate:ECDSA_521`, `generate:ED25519`.
+  Special values are allowed to automatically generate SSH key:
+  `generate:RSA_1024`, `generate:RSA_2048`, `generate:RSA_4096`, `generate:RSA_8192`,
+  `generate:DSA_1024`, `generate:ECDSA_256`, `generate:ECDSA_384`, `generate:ECDSA_521`, `generate:ED25519`.
 - **description** (Optional, String)  
   The domain description.
 - **enable_password_change** (Optional, Boolean)  
   Enable the change of password on this domain.  
-  `password_change_policy`, `password_change_plugin` and `password_change_plugin_parameters` need to be set.
+  `password_change_policy`, `password_change_plugin` and `password_change_plugin_parameters` need to
+  be set.
 - **passphrase** (Optional, String, **Value can't refresh**)  
   The passphrase that was used to encrypt the private key.  
   If provided, it must be between 4 and 1024 characters long.

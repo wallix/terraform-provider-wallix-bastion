@@ -45,7 +45,8 @@ The following arguments are supported:
 
 ## Import
 
-Account linked to application_localdomain can be imported using an id made up of `<application_id>/<domain_id>/<account_name>`, e.g.
+Account linked to application_localdomain can be imported using an id made up
+of `<application_id>/<domain_id>/<account_name>`, e.g.
 
 ```shell
 terraform import wallix-bastion_application_localdomain_account.app1adm xxxxxxxx/yyyyyyy/admin

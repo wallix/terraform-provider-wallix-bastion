@@ -56,13 +56,16 @@ The following arguments are supported:
   The approvers user groups.  
   `approval_required` need to be set.
 - **active_quorum** (Optional, Number)  
-  The quorum for active periods (-1: approval workflow with automatic approval, 0: no approval workflow (direct connection), > 0: quorum to reach).  
+  The quorum for active periods (-1: approval workflow with automatic approval,
+  0: no approval workflow (direct connection), > 0: quorum to reach).  
   Defaults to `-1`.
 - **inactive_quorum** (Optional, Number)  
-  The quorum for inactive periods (-1: approval workflow with automatic approval, 0: no connection allowed, > 0: quorum to reach).  
+  The quorum for inactive periods (-1: approval workflow with automatic approval,
+  0: no connection allowed, > 0: quorum to reach).  
   Defaults to `-1`.
 - **approval_timeout** (Optional, Number)  
-  Set a timeout in minutes after which the approval will be automatically closed info connection has been initiated (i.e. the user won't be able to connect). 0: no timeout.
+  Set a timeout in minutes after which the approval will be automatically closed info connection has
+  been initiated (i.e. the user won't be able to connect). 0: no timeout.
 - **has_comment** (Optional, Boolean)  
   Comment is allowed in approval.
 - **has_ticket** (Optional, Boolean)  
@@ -72,7 +75,8 @@ The following arguments are supported:
 - **mandatory_ticket** (Optional, Boolean)  
   Ticket is mandatory in approval.
 - **single_connection** (Optional, Boolean)  
-  Limit to one single connection during the approval period (i.e. if the user disconnects, he will not be allowed to start a new session during the original requested time).
+  Limit to one single connection during the approval period (i.e. if the user disconnects, he will
+  not be allowed to start a new session during the original requested time).
 
 ## Attribute Reference
 

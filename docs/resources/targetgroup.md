@@ -51,7 +51,8 @@ The following arguments are supported:
     The restriction rules.
   - **subprotocol** (Required, String)  
     The restriction subprotocol.  
-    Need to be `SSH_SHELL_SESSION`, `SSH_REMOTE_COMMAND`, `SSH_SCP_UP`, `SSH_SCP_DOWN`, `SFTP_SESSION`, `RLOGIN`, `TELNET` or `RDP`.
+    Need to be `SSH_SHELL_SESSION`, `SSH_REMOTE_COMMAND`, `SSH_SCP_UP`,
+    `SSH_SCP_DOWN`, `SFTP_SESSION`, `RLOGIN`, `TELNET` or `RDP`.
 - **session_accounts** (Optional, Set of Block)  
   The devices and applications accounts.  
   The accounts must exist in the Bastion.  

@@ -34,7 +34,8 @@ The following arguments are supported:
   The restriction rules.
   - **subprotocol** (Required, String)  
   The restriction subprotocol.  
-  Need to be `SSH_SHELL_SESSION`, `SSH_REMOTE_COMMAND`, `SSH_SCP_UP`, `SSH_SCP_DOWN`, `SFTP_SESSION`, `RLOGIN`, `TELNET` or `RDP`.
+  Need to be `SSH_SHELL_SESSION`, `SSH_REMOTE_COMMAND`, `SSH_SCP_UP`, `SSH_SCP_DOWN`,
+  `SFTP_SESSION`, `RLOGIN`, `TELNET` or `RDP`.
 - **users** (Optional, List of String`, **It's a attributes when not set**)  
   The users in the group.
 
