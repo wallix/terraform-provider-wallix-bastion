@@ -1,6 +1,20 @@
 <!-- markdownlint-disable-file MD013 MD041 -->
 # changelog
 
+ENHANCEMENTS:
+
+* [docs] reformat arguments/attributes, add example usage & minor fix
+
+BUG FIXES:
+
+* fix the potential double slash in url when calling Wallix API
+* fix missing sensitive options for few arguments
+* resource/**wallix-bastion_application_localdomain**, **wallix-bastion_device_localdomain**, **wallix-bastion_domain**: fix arguments requirement
+* resource/**wallix-bastion_application**: fix panic with `global_domains`
+* resource/**wallix-bastion_profile**: fix `default_target_group` is required in `target_groups_limitation` block
+* resource/**wallix-bastion_domain**: fix `passphrase` can't refresh
+* resource/**wallix-bastion_device_localdomain**: fix `passphrase` can't refresh
+
 ## 0.4.0 (April 9, 2021)
 
 FEATURES:
