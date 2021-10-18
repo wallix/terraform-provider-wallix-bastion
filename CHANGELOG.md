@@ -1,6 +1,8 @@
 <!-- markdownlint-disable-file MD013 MD041 -->
 # changelog
 
+## 0.4.1 (October 18, 2021)
+
 ENHANCEMENTS:
 
 * [docs] reformat arguments/attributes, add example usage & minor fix
