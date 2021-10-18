@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 // Information to connect on Wallix bastion.
@@ -25,7 +26,12 @@ func (c *Client) newRequest(ctx context.Context, uri string, method string, json
 	if err != nil {
 		return "", http.StatusInternalServerError, err
 	}
-	url := "https://" + c.bastionIP + ":" + strconv.Itoa(c.bastionPort) + "/api/" + c.bastionAPIVersion + "/" + uri
+	url := "https://" + c.bastionIP + ":" + strconv.Itoa(c.bastionPort) + "/api/" + c.bastionAPIVersion
+	if strings.HasPrefix(uri, "/") {
+		url += uri
+	} else {
+		url += "/" + uri
+	}
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	req.Header.Add("Content-Type", "application/json; charset=utf-8")
 	req.Header.Add("X-Auth-Key", c.bastionToken)
@@ -49,14 +55,4 @@ func (c *Client) newRequest(ctx context.Context, uri string, method string, json
 	}
 
 	return string(respBody), resp.StatusCode, nil
-}
-
-func stringInSlice(str string, list []string) bool {
-	for _, v := range list {
-		if v == str {
-			return true
-		}
-	}
-
-	return false
 }

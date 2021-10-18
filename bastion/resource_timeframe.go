@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	bchk "github.com/jeremmfr/go-utils/basiccheck"
 )
 
 type jsonTimeframe struct {
@@ -268,7 +269,7 @@ func prepareTimeframeJSON(d *schema.ResourceData) (jsonTimeframe, error) {
 				EndTime:   period["end_time"].(string),
 			}
 			for _, d := range period["week_days"].(*schema.Set).List() {
-				if !stringInSlice(d.(string), []string{
+				if !bchk.StringInSlice(d.(string), []string{
 					"monday",
 					"tuesday",
 					"wednesday",

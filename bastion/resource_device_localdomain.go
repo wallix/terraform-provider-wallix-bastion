@@ -66,7 +66,7 @@ func resourceDeviceLocalDomain() *schema.Resource {
 			"enable_password_change": {
 				Type:         schema.TypeBool,
 				Optional:     true,
-				RequiredWith: []string{"password_change_policy", "password_change_plugin"},
+				RequiredWith: []string{"password_change_policy", "password_change_plugin", "password_change_plugin_parameters"},
 			},
 			"passphrase": {
 				Type:      schema.TypeString,
@@ -86,7 +86,7 @@ func resourceDeviceLocalDomain() *schema.Resource {
 			"password_change_plugin_parameters": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				RequiredWith: []string{"enable_password_change", "password_change_policy", "password_change_plugin"},
+				RequiredWith: []string{"enable_password_change"},
 				ValidateFunc: validation.StringIsJSON,
 				Sensitive:    true,
 			},
@@ -349,9 +349,6 @@ func fillDeviceLocalDomain(d *schema.ResourceData, jsonData jsonDeviceLocalDomai
 		panic(tfErr)
 	}
 	if tfErr := d.Set("enable_password_change", jsonData.EnablePasswordChange); tfErr != nil {
-		panic(tfErr)
-	}
-	if tfErr := d.Set("passphrase", jsonData.Passphrase); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("password_change_policy", jsonData.PasswordChangePolicy); tfErr != nil {

@@ -308,7 +308,7 @@ func prepareApplicationJSON(d *schema.ResourceData) jsonApplication {
 		})
 	}
 	if len(d.Get("global_domains").(*schema.Set).List()) > 0 {
-		for _, v := range d.Get("global_domains").([]interface{}) {
+		for _, v := range d.Get("global_domains").(*schema.Set).List() {
 			jsonData.GlobalDomains = append(jsonData.GlobalDomains, v.(string))
 		}
 	} else {

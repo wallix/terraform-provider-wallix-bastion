@@ -46,8 +46,9 @@ func resourceExternalAuthTacacs() *schema.Resource {
 				ValidateFunc: validation.IntBetween(1, 65535),
 			},
 			"secret": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:      schema.TypeString,
+				Required:  true,
+				Sensitive: true,
 			},
 			"description": {
 				Type:     schema.TypeString,

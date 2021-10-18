@@ -48,8 +48,8 @@ type jsonProfile struct {
 	} `json:"gui_transmission"`
 	TargetGroupsLimitation struct {
 		Enabled            bool         `json:"enabled"`
-		TargetGroups       *[]string    `json:"target_groups,omitempty"`
 		DefaultTargetGroup *interface{} `json:"default_target_group,omitempty"`
+		TargetGroups       *[]string    `json:"target_groups,omitempty"`
 	} `json:"target_groups_limitation"`
 	UserGroupsLimitation struct {
 		Enabled    bool      `json:"enabled"`
@@ -233,14 +233,14 @@ func resourceProfile() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"default_target_group": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
 						"target_groups": {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"default_target_group": {
-							Type:     schema.TypeString,
-							Optional: true,
 						},
 					},
 				},
@@ -624,8 +624,8 @@ func fillProfile(d *schema.ResourceData, jsonData jsonProfile) {
 	if jsonData.TargetGroupsLimitation.Enabled {
 		targetGroupsLimitation := make([]map[string]interface{}, 0)
 		targetGroupsLimitation = append(targetGroupsLimitation, map[string]interface{}{
-			"target_groups":        *jsonData.TargetGroupsLimitation.TargetGroups,
 			"default_target_group": *jsonData.TargetGroupsLimitation.DefaultTargetGroup,
+			"target_groups":        *jsonData.TargetGroupsLimitation.TargetGroups,
 		})
 		if tfErr := d.Set("target_groups_limitation", targetGroupsLimitation); tfErr != nil {
 			panic(tfErr)
