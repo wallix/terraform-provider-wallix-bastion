@@ -46,7 +46,7 @@ func resourceConnectionPolicy() *schema.Resource {
 				Optional: true,
 			},
 			"authentication_methods": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -237,12 +237,12 @@ func prepareConnectionPolicyJSON(d *schema.ResourceData) (jsonConnectionPolicy, 
 	jsonData.ConnectionPolicyName = d.Get("connection_policy_name").(string)
 	jsonData.Description = d.Get("description").(string)
 	jsonData.Protocol = d.Get("protocol").(string)
-	if len(d.Get("authentication_methods").([]interface{})) > 0 {
-		for _, v := range d.Get("authentication_methods").([]interface{}) {
-			if !bchk.StringInSlice(v.(string), validAuthenticationMethods()) {
+	if v := d.Get("authentication_methods").(*schema.Set).List(); len(v) > 0 {
+		for _, vv := range v {
+			if !bchk.StringInSlice(vv.(string), validAuthenticationMethods()) {
 				return jsonData, fmt.Errorf("authentication_methods must be in %v", validAuthenticationMethods())
 			}
-			jsonData.AuthenticationMethods = append(jsonData.AuthenticationMethods, v.(string))
+			jsonData.AuthenticationMethods = append(jsonData.AuthenticationMethods, vv.(string))
 		}
 	} else {
 		jsonData.AuthenticationMethods = make([]string, 0)

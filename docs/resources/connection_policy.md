@@ -26,7 +26,7 @@ The following arguments are supported:
   Need to be `SSH`, `RAWTCPIP`, `RDP`, `RLOGIN`, `TELNET` or `VNC`.
 - **description** (Optional, String)  
   The connection policy description.
-- **authentication_methods** (Optional, List of String)  
+- **authentication_methods** (Optional, Set of String)  
   The allowed authentication methods.
 - **options** (Optional, String)  
   Options for the connection policy.  

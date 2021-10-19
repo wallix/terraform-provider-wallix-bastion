@@ -1,6 +1,8 @@
 <!-- markdownlint-disable-file MD013 MD041 -->
 # changelog
 
+* resource/**connection_policy**: `authentication_methods` is now unordered
+
 ## 0.4.1 (October 18, 2021)
 
 ENHANCEMENTS:
