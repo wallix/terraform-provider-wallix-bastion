@@ -1,6 +1,14 @@
 <!-- markdownlint-disable-file MD013 MD041 -->
 # changelog
 
+## 0.4.2 (December 9, 2021)
+
+BUG FIXES:
+
+* resource/**wallix-bastion_connection_policy**: to avoid unnecessary update of resource, `authentication_methods` is now unordered
+* resource/**wallix-bastion_application**: avoid large update plan output with unmodified `path` blocks in block set
+* resource/**wallix-bastion_targetgroup**: avoid large update plan output with unmodified blocks in block sets
+
 ## 0.4.1 (October 18, 2021)
 
 ENHANCEMENTS:
