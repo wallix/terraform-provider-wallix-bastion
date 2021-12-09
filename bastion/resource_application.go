@@ -62,6 +62,7 @@ func resourceApplication() *schema.Resource {
 						"working_dir": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Default:  "",
 						},
 					},
 				},
