@@ -107,10 +107,12 @@ func resourceTargetGroup() *schema.Resource {
 						"device": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Default:  "",
 						},
 						"application": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Default:  "",
 						},
 					},
 				},
@@ -161,14 +163,17 @@ func resourceTargetGroup() *schema.Resource {
 						"device": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Default:  "",
 						},
 						"service": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Default:  "",
 						},
 						"application": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Default:  "",
 						},
 					},
 				},
@@ -181,14 +186,17 @@ func resourceTargetGroup() *schema.Resource {
 						"device": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Default:  "",
 						},
 						"service": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Default:  "",
 						},
 						"application": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Default:  "",
 						},
 					},
 				},
@@ -201,14 +209,17 @@ func resourceTargetGroup() *schema.Resource {
 						"device": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Default:  "",
 						},
 						"service": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Default:  "",
 						},
 						"application": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Default:  "",
 						},
 					},
 				},
@@ -234,10 +245,12 @@ func resourceTargetGroup() *schema.Resource {
 						"device": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Default:  "",
 						},
 						"application": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Default:  "",
 						},
 					},
 				},

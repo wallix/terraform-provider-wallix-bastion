@@ -3,6 +3,7 @@
 
 * resource/**wallix-bastion_connection_policy**: `authentication_methods` is now unordered
 * resource/**wallix-bastion_application**: avoid large update plan output with unmodified `path` blocks in block set
+* resource/**wallix-bastion_targetgroup**: avoid large update plan output with unmodified blocks in block sets
 
 ## 0.4.1 (October 18, 2021)
 
