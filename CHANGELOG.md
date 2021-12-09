@@ -1,6 +1,12 @@
 <!-- markdownlint-disable-file MD013 MD041 -->
 # changelog
 
+## 0.5.0 (December 9, 2021)
+
+NOTES:
+
+* upgrade golang version to release, so now requires macOS 10.13 High Sierra or later; Older macOS versions are no longer supported.
+
 ## 0.4.2 (December 9, 2021)
 
 BUG FIXES:
