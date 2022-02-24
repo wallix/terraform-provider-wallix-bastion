@@ -272,9 +272,6 @@ func fillExternalAuthTacacs(d *schema.ResourceData, jsonData jsonExternalAuthTac
 	if tfErr := d.Set("port", jsonData.Port); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("secret", jsonData.Secret); tfErr != nil {
-		panic(tfErr)
-	}
 	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}

@@ -12,6 +12,8 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/**wallix-bastion_externalauth_radius**: `secret` argument can't be refresh in latest version of WAB
+* resource/**wallix-bastion_externalauth_tacacs**: `secret` argument can't be refresh in latest version of WAB
+
 ## 0.5.0 (December 9, 2021)
 
 NOTES:
