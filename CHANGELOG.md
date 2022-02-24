@@ -9,6 +9,9 @@ ENHANCEMENTS:
 
 * allow use `v3.6` to `api_version` provider argument
 
+BUG FIXES:
+
+* resource/**wallix-bastion_externalauth_radius**: `secret` argument can't be refresh in latest version of WAB
 ## 0.5.0 (December 9, 2021)
 
 NOTES:

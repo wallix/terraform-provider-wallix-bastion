@@ -278,9 +278,6 @@ func fillExternalAuthRadius(d *schema.ResourceData, jsonData jsonExternalAuthRad
 	if tfErr := d.Set("port", jsonData.Port); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("secret", jsonData.Secret); tfErr != nil {
-		panic(tfErr)
-	}
 	if tfErr := d.Set("timeout", jsonData.Timeout); tfErr != nil {
 		panic(tfErr)
 	}
