@@ -11,6 +11,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/**wallix-bastion_externalauth_kerberos**: add `keytab` argument required in latest version of WAB
 * resource/**wallix-bastion_externalauth_radius**: `secret` argument can't be refresh in latest version of WAB
 * resource/**wallix-bastion_externalauth_tacacs**: `secret` argument can't be refresh in latest version of WAB
 
