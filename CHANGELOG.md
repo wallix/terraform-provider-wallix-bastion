@@ -5,6 +5,10 @@ FEATURES:
 
 * add `wallix-bastion_version` data source
 
+ENHANCEMENTS:
+
+* allow use `v3.6` to `api_version` provider argument
+
 ## 0.5.0 (December 9, 2021)
 
 NOTES:

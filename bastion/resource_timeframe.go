@@ -91,7 +91,7 @@ func resourceTimeframe() *schema.Resource {
 	}
 }
 func resourceTimeframeVersionCheck(version string) error {
-	if version == versionValidate3_3 {
+	if bchk.StringInSlice(version, defaultVersionsValid()) {
 		return nil
 	}
 

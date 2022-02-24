@@ -9,7 +9,15 @@ import (
 
 const (
 	versionValidate3_3 = "v3.3"
+	versionValidate3_6 = "v3.6"
 )
+
+func defaultVersionsValid() []string {
+	return []string{
+		versionValidate3_3,
+		versionValidate3_6,
+	}
+}
 
 // Provider wallix-bastion for terraform.
 func Provider() *schema.Provider {

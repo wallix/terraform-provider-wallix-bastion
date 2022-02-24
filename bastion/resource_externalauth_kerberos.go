@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	bchk "github.com/jeremmfr/go-utils/basiccheck"
 )
 
 type jsonExternalAuthKerberos struct {
@@ -71,7 +72,7 @@ func resourceExternalAuthKerberos() *schema.Resource {
 	}
 }
 func resourceExternalAuthKerberosVersionCheck(version string) error {
-	if version == versionValidate3_3 {
+	if bchk.StringInSlice(version, defaultVersionsValid()) {
 		return nil
 	}
 

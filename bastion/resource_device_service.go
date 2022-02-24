@@ -74,7 +74,7 @@ func resourceDeviceService() *schema.Resource {
 	}
 }
 func resourceDeviceServiceVersionCheck(version string) error {
-	if version == versionValidate3_3 {
+	if bchk.StringInSlice(version, defaultVersionsValid()) {
 		return nil
 	}
 
