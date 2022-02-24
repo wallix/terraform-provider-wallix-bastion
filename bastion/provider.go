@@ -42,7 +42,8 @@ func Provider() *schema.Provider {
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"wallix-bastion_domain": dataSourceDomain(),
+			"wallix-bastion_domain":  dataSourceDomain(),
+			"wallix-bastion_version": dataSourceVersion(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"wallix-bastion_application":                           resourceApplication(),
