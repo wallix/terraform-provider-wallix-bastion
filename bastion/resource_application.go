@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	bchk "github.com/jeremmfr/go-utils/basiccheck"
 )
 
 type jsonApplication struct {
@@ -128,7 +129,7 @@ func resourceApplication() *schema.Resource {
 	}
 }
 func resourceApplicationVersionCheck(version string) error {
-	if version == versionValidate3_3 {
+	if bchk.StringInSlice(version, defaultVersionsValid()) {
 		return nil
 	}
 
@@ -382,7 +383,7 @@ func fillApplication(d *schema.ResourceData, jsonData jsonApplication) {
 			"password_change_policy": v.PasswordChangePolicy,
 			"password_change_plugin": v.PasswordChangePlugin,
 		})
-		pluginParameters, _ := json.Marshal(v.PasswordChangePluginParameters)
+		pluginParameters, _ := json.Marshal(v.PasswordChangePluginParameters) // nolint: errchkjson
 		localDomains[len(localDomains)-1]["password_change_plugin_parameters"] = string(pluginParameters)
 	}
 	if tfErr := d.Set("local_domains", localDomains); tfErr != nil {

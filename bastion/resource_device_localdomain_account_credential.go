@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	bchk "github.com/jeremmfr/go-utils/basiccheck"
 )
 
 func resourceDeviceLocalDomainAccountCredential() *schema.Resource {
@@ -66,7 +67,7 @@ func resourceDeviceLocalDomainAccountCredential() *schema.Resource {
 	}
 }
 func resourceDeviceLocalDomainAccountCredentialVersionCheck(version string) error {
-	if version == versionValidate3_3 {
+	if bchk.StringInSlice(version, defaultVersionsValid()) {
 		return nil
 	}
 

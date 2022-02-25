@@ -3,9 +3,10 @@ run:
 linters:
   enable-all: true
   disable:
-    - interfacer # deprecated
-    - maligned # deprecated
-    - scopelint # deprecated
+    # maligned # deprecated 1.38 but govet-fieldalignment not usuable
+    - scopelint # deprecated 1.38
+    - interfacer # deprecated 1.39
+    - golint # deprecated 1.41
     - funlen
     - gochecknoglobals
     - dupl
@@ -23,10 +24,16 @@ linters:
     - tagliatelle
     - gomoddirectives
     - varnamelen
+    - maintidx
 linters-settings:
-  gocyclo:
-    # minimal code complexity to report, 30 by default
-    min-complexity: 50
+  govet:
+    enable-all: true
+    disable:
+      - fieldalignment
   gocognit:
     # minimal code complexity to report, 30 by default
     min-complexity: 100
+  gocyclo:
+    # minimal code complexity to report, 30 by default
+    min-complexity: 50
+  

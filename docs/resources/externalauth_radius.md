@@ -25,7 +25,7 @@ The following arguments are supported:
   The host name.
 - **port** (Required, Number)  
   The port number.
-- **secret** (Required, String, Sensitive)  
+- **secret** (Required, String, Sensitive, **Value can't refresh**)  
   The secret.
 - **timeout** (Required, Number)  
   Radius timeout.
