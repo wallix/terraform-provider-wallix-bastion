@@ -1,6 +1,8 @@
 <!-- markdownlint-disable-file MD013 MD041 -->
 # changelog
 
+## 0.6.0 (February 25, 2022)
+
 FEATURES:
 
 * add `wallix-bastion_version` data source
