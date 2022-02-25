@@ -1,12 +1,16 @@
 package bastion_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccResourceExternalAuthKerberos_basic(t *testing.T) {
+	if os.Getenv("TESTACC_NO_KERBEROS") != "" {
+		return
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,

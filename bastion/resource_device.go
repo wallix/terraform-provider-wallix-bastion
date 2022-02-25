@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	bchk "github.com/jeremmfr/go-utils/basiccheck"
 )
 
 type jsonDevice struct {
@@ -132,7 +133,7 @@ func resourceDevice() *schema.Resource {
 	}
 }
 func resourceDeviceVersionCheck(version string) error {
-	if version == versionValidate3_3 {
+	if bchk.StringInSlice(version, defaultVersionsValid()) {
 		return nil
 	}
 

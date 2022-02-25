@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	bchk "github.com/jeremmfr/go-utils/basiccheck"
 )
 
 type jsonExternalAuthKerberos struct {
@@ -19,6 +20,7 @@ type jsonExternalAuthKerberos struct {
 	Description          string `json:"description"`
 	Host                 string `json:"host"`
 	KerDomController     string `json:"ker_dom_controller"`
+	KeyTab               string `json:"keytab,omitempty"`
 	LoginAttribute       string `json:"login_attribute"`
 	Type                 string `json:"type"`
 }
@@ -59,6 +61,10 @@ func resourceExternalAuthKerberos() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"keytab": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"login_attribute": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -71,7 +77,7 @@ func resourceExternalAuthKerberos() *schema.Resource {
 	}
 }
 func resourceExternalAuthKerberosVersionCheck(version string) error {
-	if version == versionValidate3_3 {
+	if bchk.StringInSlice(version, defaultVersionsValid()) {
 		return nil
 	}
 
@@ -242,6 +248,7 @@ func prepareExternalAuthKerberosJSON(d *schema.ResourceData) jsonExternalAuthKer
 		KerDomController:     d.Get("ker_dom_controller").(string),
 		Port:                 d.Get("port").(int),
 		Description:          d.Get("description").(string),
+		KeyTab:               d.Get("keytab").(string),
 		LoginAttribute:       d.Get("login_attribute").(string),
 		UsePrimaryAuthDomain: d.Get("use_primary_auth_domain").(bool),
 		Type:                 "KERBEROS",
