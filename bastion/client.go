@@ -34,6 +34,7 @@ func (c *Client) newRequest(ctx context.Context, uri string, method string, json
 	}
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	req.Header.Add("Content-Type", "application/json; charset=utf-8")
+	req.Header.Add("User-Agent", "terraform-provider-wallix-bastion")
 	req.Header.Add("X-Auth-Key", c.bastionToken)
 	req.Header.Add("X-Auth-User", c.bastionUser)
 	if err != nil {

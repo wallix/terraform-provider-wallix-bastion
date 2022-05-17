@@ -176,7 +176,7 @@ resource wallix-bastion_connection_policy testacc_ConnectionPolicy2 {
   description            = "testacc ConnectionPolicy2"
   protocol               = "SSH"
   authentication_methods = ["PASSWORD_VAULT"]
-  options                = jsonencode(split(".", data.wallix-bastion_version.v.wab_version)[0] == 8 ? local.optionsv8 : local.optionsv9)
+  options                = split(".", data.wallix-bastion_version.v.wab_version)[0] == "8" ? jsonencode(local.optionsv8) : jsonencode(local.optionsv9)
 }
 `
 }
@@ -318,7 +318,7 @@ resource wallix-bastion_connection_policy testacc_ConnectionPolicy2 {
   description            = "testacc ConnectionPolicy2"
   protocol               = "SSH"
   authentication_methods = ["PASSWORD_VAULT", "PASSWORD_MAPPING"]
-  options                = jsonencode(split(".", data.wallix-bastion_version.v.wab_version)[0] == 8 ? local.optionsv8 : local.optionsv9)
+  options                = split(".", data.wallix-bastion_version.v.wab_version)[0] == "8" ? jsonencode(local.optionsv8) : jsonencode(local.optionsv9)
 }
 `
 }
