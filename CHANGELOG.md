@@ -1,6 +1,13 @@
 <!-- markdownlint-disable-file MD013 MD041 -->
 # changelog
 
+## 0.6.1 (May 17, 2022)
+
+NOTES:
+
+* use custom User-Agent when request API
+* deps: bump terraform-plugin-sdk to v2.16.0
+
 ## 0.6.0 (February 25, 2022)
 
 FEATURES:
