@@ -119,7 +119,7 @@ func resourceTimeframeCreate(ctx context.Context, d *schema.ResourceData, m inte
 		return diag.FromErr(err)
 	}
 	if !ex {
-		return diag.FromErr(fmt.Errorf("timeframe_name %s can't find after POST", d.Get("timeframe_name").(string)))
+		return diag.FromErr(fmt.Errorf("timeframe_name %s not found after POST", d.Get("timeframe_name").(string)))
 	}
 	d.SetId(d.Get("timeframe_name").(string))
 

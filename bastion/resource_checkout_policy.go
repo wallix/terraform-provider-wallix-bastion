@@ -97,7 +97,7 @@ func resourceCheckoutPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(err)
 	}
 	if !ex {
-		return diag.FromErr(fmt.Errorf("checkout_policy_name %s can't find after POST",
+		return diag.FromErr(fmt.Errorf("checkout_policy_name %s not found after POST",
 			d.Get("checkout_policy_name").(string)))
 	}
 	d.SetId(id)

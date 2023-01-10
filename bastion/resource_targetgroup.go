@@ -288,7 +288,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, m in
 		return diag.FromErr(err)
 	}
 	if !ex {
-		return diag.FromErr(fmt.Errorf("group_name %s can't find after POST", d.Get("group_name").(string)))
+		return diag.FromErr(fmt.Errorf("group_name %s not found after POST", d.Get("group_name").(string)))
 	}
 	d.SetId(id)
 

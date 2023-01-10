@@ -116,7 +116,7 @@ func resourceApplicationLocalDomainCreate(ctx context.Context, d *schema.Resourc
 		return diag.FromErr(err)
 	}
 	if !ex {
-		return diag.FromErr(fmt.Errorf("domain_name %s on application_id %s can't find after POST",
+		return diag.FromErr(fmt.Errorf("domain_name %s on application_id %s not found after POST",
 			d.Get("domain_name").(string), d.Get("application_id").(string)))
 	}
 	d.SetId(id)

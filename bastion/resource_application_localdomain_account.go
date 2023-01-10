@@ -125,7 +125,7 @@ func resourceApplicationLocalDomainAccountCreate(ctx context.Context,
 		return diag.FromErr(err)
 	}
 	if !ex {
-		return diag.FromErr(fmt.Errorf("account_name %s on domain_id %s, application_id %s can't find after POST",
+		return diag.FromErr(fmt.Errorf("account_name %s on domain_id %s, application_id %s not found after POST",
 			d.Get("account_name").(string), d.Get("domain_id").(string), d.Get("application_id").(string)))
 	}
 	d.SetId(id)

@@ -87,7 +87,7 @@ func resourceConnectionPolicyCreate(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(err)
 	}
 	if !ex {
-		return diag.FromErr(fmt.Errorf("connection_policy_name %s can't find after POST",
+		return diag.FromErr(fmt.Errorf("connection_policy_name %s not found after POST",
 			d.Get("connection_policy_name").(string)))
 	}
 	d.SetId(id)

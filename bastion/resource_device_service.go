@@ -110,7 +110,7 @@ func resourceDeviceServiceCreate(ctx context.Context, d *schema.ResourceData, m 
 		return diag.FromErr(err)
 	}
 	if !ex {
-		return diag.FromErr(fmt.Errorf("service_name %s on device_id %s can't find after POST",
+		return diag.FromErr(fmt.Errorf("service_name %s on device_id %s not found after POST",
 			d.Get("service_name").(string), d.Get("device_id").(string)))
 	}
 	d.SetId(id)

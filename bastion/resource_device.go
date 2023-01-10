@@ -161,7 +161,7 @@ func resourceDeviceCreate(ctx context.Context, d *schema.ResourceData, m interfa
 		return diag.FromErr(err)
 	}
 	if !ex {
-		return diag.FromErr(fmt.Errorf("device_name %s can't find after POST", d.Get("device_name").(string)))
+		return diag.FromErr(fmt.Errorf("device_name %s not found after POST", d.Get("device_name").(string)))
 	}
 	d.SetId(id)
 

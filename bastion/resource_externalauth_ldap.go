@@ -160,7 +160,7 @@ func resourceExternalAuthLdapCreate(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(err)
 	}
 	if !ex {
-		return diag.FromErr(fmt.Errorf("authentication_name %s can't find after POST", d.Get("authentication_name").(string)))
+		return diag.FromErr(fmt.Errorf("authentication_name %s not found after POST", d.Get("authentication_name").(string)))
 	}
 	d.SetId(id)
 

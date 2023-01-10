@@ -171,7 +171,7 @@ func resourceAuthorizationCreate(ctx context.Context, d *schema.ResourceData, m 
 		return diag.FromErr(err)
 	}
 	if !ex {
-		return diag.FromErr(fmt.Errorf("authorization_name %s can't find after POST", d.Get("authorization_name").(string)))
+		return diag.FromErr(fmt.Errorf("authorization_name %s not found after POST", d.Get("authorization_name").(string)))
 	}
 	d.SetId(id)
 
