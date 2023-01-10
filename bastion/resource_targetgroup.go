@@ -429,7 +429,7 @@ func deleteTargetGroup(ctx context.Context, d *schema.ResourceData, m interface{
 	return nil
 }
 
-func prepareTargetGroupJSON(d *schema.ResourceData) (jsonTargetGroup, error) { // nolint: gocognit, gocyclo
+func prepareTargetGroupJSON(d *schema.ResourceData) (jsonTargetGroup, error) { //nolint: gocognit, gocyclo
 	jsonData := jsonTargetGroup{
 		Description: d.Get("description").(string),
 		GroupName:   d.Get("group_name").(string),

@@ -8,14 +8,14 @@ import (
 )
 
 const (
-	versionValidate3_3 = "v3.3"
-	versionValidate3_6 = "v3.6"
+	versionValidate33 = "v3.3"
+	versionValidate36 = "v3.6"
 )
 
 func defaultVersionsValid() []string {
 	return []string{
-		versionValidate3_3,
-		versionValidate3_6,
+		versionValidate33,
+		versionValidate36,
 	}
 }
 

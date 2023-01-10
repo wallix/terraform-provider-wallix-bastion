@@ -383,7 +383,7 @@ func fillApplication(d *schema.ResourceData, jsonData jsonApplication) {
 			"password_change_policy": v.PasswordChangePolicy,
 			"password_change_plugin": v.PasswordChangePlugin,
 		})
-		pluginParameters, _ := json.Marshal(v.PasswordChangePluginParameters) // nolint: errchkjson
+		pluginParameters, _ := json.Marshal(v.PasswordChangePluginParameters) //nolint: errchkjson
 		localDomains[len(localDomains)-1]["password_change_plugin_parameters"] = string(pluginParameters)
 	}
 	if tfErr := d.Set("local_domains", localDomains); tfErr != nil {

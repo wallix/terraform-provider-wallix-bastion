@@ -50,7 +50,7 @@ func TestAccResourceApplicationLocalDomainAccount_basic(t *testing.T) {
 	})
 }
 
-// nolint: lll
+// nolint: lll, nolintlint
 func testAccResourceApplicationLocalDomainAccountCreate() string {
 	return `
 resource wallix-bastion_device testacc_AppLocalDomAccount {
@@ -99,7 +99,7 @@ resource wallix-bastion_application_localdomain_account testacc_AppLocalDomAccou
 `
 }
 
-// nolint: lll
+// nolint: lll, nolintlint
 func testAccResourceApplicationLocalDomainAccountUpdate() string {
 	return `
 resource wallix-bastion_device testacc_AppLocalDomAccount {

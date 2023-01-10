@@ -5,7 +5,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -41,7 +41,7 @@ func (c *Client) newRequest(ctx context.Context, uri string, method string, json
 		return "", http.StatusInternalServerError, err
 	}
 	tr := &http.Transport{
-		TLSClientConfig:   &tls.Config{InsecureSkipVerify: true}, // nolint: gosec
+		TLSClientConfig:   &tls.Config{InsecureSkipVerify: true}, //nolint: gosec
 		DisableKeepAlives: true,
 	}
 	httpClient := &http.Client{Transport: tr}
@@ -50,7 +50,7 @@ func (c *Client) newRequest(ctx context.Context, uri string, method string, json
 		return "", http.StatusInternalServerError, err
 	}
 	defer resp.Body.Close()
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", http.StatusInternalServerError, err
 	}

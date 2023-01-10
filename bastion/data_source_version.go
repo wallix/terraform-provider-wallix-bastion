@@ -5,7 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 
@@ -82,7 +82,7 @@ func readVersionOptions(ctx context.Context, m interface{}) (jsonVersion, error)
 		return result, err
 	}
 	tr := &http.Transport{
-		TLSClientConfig:   &tls.Config{InsecureSkipVerify: true}, // nolint: gosec
+		TLSClientConfig:   &tls.Config{InsecureSkipVerify: true}, //nolint: gosec
 		DisableKeepAlives: true,
 	}
 	httpClient := &http.Client{Transport: tr}
@@ -91,7 +91,7 @@ func readVersionOptions(ctx context.Context, m interface{}) (jsonVersion, error)
 		return result, err
 	}
 	defer resp.Body.Close()
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return result, err
 	}

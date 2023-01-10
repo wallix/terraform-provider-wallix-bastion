@@ -46,7 +46,7 @@ func TestAccResourceApplicationLocalDomain_basic(t *testing.T) {
 	})
 }
 
-// nolint: lll
+// nolint: lll, nolintlint
 func testAccResourceApplicationLocalDomainCreate() string {
 	return `
 resource wallix-bastion_device testacc_AppLocalDom {
@@ -95,7 +95,7 @@ resource wallix-bastion_application_localdomain testacc_AppLocalDom {
 `
 }
 
-// nolint: lll
+// nolint: lll, nolintlint
 func testAccResourceApplicationLocalDomainUpdate() string {
 	return `
 resource wallix-bastion_device testacc_AppLocalDom {

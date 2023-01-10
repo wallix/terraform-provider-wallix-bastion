@@ -32,7 +32,7 @@ func TestAccResourceConnectionPolicy_basic(t *testing.T) {
 	})
 }
 
-// nolint: lll
+// nolint: lll, nolintlint
 func testAccResourceConnectionPolicyCreate() string {
 	return `
 resource wallix-bastion_connection_policy testacc_ConnectionPolicy {
@@ -181,7 +181,7 @@ resource wallix-bastion_connection_policy testacc_ConnectionPolicy2 {
 `
 }
 
-// nolint: lll
+// nolint: lll, nolintlint
 func testAccResourceConnectionPolicyUpdate() string {
 	return `
 locals {

@@ -32,7 +32,7 @@ func TestAccResourceCluster_basic(t *testing.T) {
 	})
 }
 
-// nolint: lll
+// nolint: lll, nolintlint
 func testAccResourceClusterCreate() string {
 	return `
 resource wallix-bastion_device testacc_Cluster {
@@ -58,7 +58,7 @@ resource wallix-bastion_cluster testacc_Cluster {
 `
 }
 
-// nolint: lll
+// nolint: lll, nolintlint
 func testAccResourceClusterUpdate() string {
 	return `
 resource wallix-bastion_device testacc_Cluster {

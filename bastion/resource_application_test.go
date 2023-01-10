@@ -32,7 +32,7 @@ func TestAccResourceApplication_basic(t *testing.T) {
 	})
 }
 
-// nolint: lll
+// nolint: lll, nolintlint
 func testAccResourceApplicationCreate() string {
 	return `
 resource wallix-bastion_device testacc_App {
@@ -69,7 +69,7 @@ resource wallix-bastion_application testacc_Appli {
 `
 }
 
-// nolint: lll
+// nolint: lll, nolintlint
 func testAccResourceApplicationUpdate() string {
 	return `
 resource wallix-bastion_device testacc_App {

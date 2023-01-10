@@ -303,7 +303,7 @@ func fillConnectionPolicy(d *schema.ResourceData, jsonData jsonConnectionPolicy)
 	if tfErr := d.Set("authentication_methods", jsonData.AuthenticationMethods); tfErr != nil {
 		panic(tfErr)
 	}
-	options, _ := json.Marshal(jsonData.Options) // nolint: errchkjson
+	options, _ := json.Marshal(jsonData.Options) //nolint: errchkjson
 	if tfErr := d.Set("options", string(options)); tfErr != nil {
 		panic(tfErr)
 	}

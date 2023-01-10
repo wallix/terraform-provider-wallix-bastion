@@ -32,7 +32,7 @@ func TestAccResourceAuthorization_basic(t *testing.T) {
 	})
 }
 
-// nolint: lll
+// nolint: lll, nolintlint
 func testAccResourceAuthorizationCreate() string {
 	return `
 resource wallix-bastion_authorization testacc_Authorization {
@@ -61,7 +61,7 @@ resource wallix-bastion_targetgroup testacc_Authorization {
 `
 }
 
-// nolint: lll
+// nolint: lll, nolintlint
 func testAccResourceAuthorizationUpdate() string {
 	return `
 resource wallix-bastion_authorization testacc_Authorization {

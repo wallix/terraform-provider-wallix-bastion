@@ -11,10 +11,10 @@ import (
 )
 
 var (
-	testAccProviders = map[string]*schema.Provider{ // nolint: gochecknoglobals
+	testAccProviders = map[string]*schema.Provider{ //nolint: gochecknoglobals
 		"wallix-bastion": testAccProvider,
 	}
-	testAccProvider = bastion.Provider() // nolint: gochecknoglobals
+	testAccProvider = bastion.Provider() //nolint: gochecknoglobals
 )
 
 func TestProvider(t *testing.T) {
