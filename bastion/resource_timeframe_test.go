@@ -34,7 +34,7 @@ func TestAccResourceTimeframe_basic(t *testing.T) {
 
 func testAccResourceTimeframeCreate() string {
 	return `
-resource wallix-bastion_timeframe testacc_Timeframe {
+resource "wallix-bastion_timeframe" "testacc_Timeframe" {
   timeframe_name = "testacc_Timeframe"
   periods {
     start_date = "2020-01-01"
@@ -44,7 +44,7 @@ resource wallix-bastion_timeframe testacc_Timeframe {
     week_days  = ["monday"]
   }
 }
-resource wallix-bastion_timeframe testacc_Timeframe2 {
+resource "wallix-bastion_timeframe" "testacc_Timeframe2" {
   timeframe_name = "testacc_Timeframe2"
 }
 `
@@ -52,7 +52,7 @@ resource wallix-bastion_timeframe testacc_Timeframe2 {
 
 func testAccResourceTimeframeUpdate() string {
 	return `
-resource wallix-bastion_timeframe testacc_Timeframe {
+resource "wallix-bastion_timeframe" "testacc_Timeframe" {
   timeframe_name = "testacc_Timeframe"
   description    = "testacc Timeframe"
   is_overtimable = true

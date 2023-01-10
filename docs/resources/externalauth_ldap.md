@@ -6,7 +6,7 @@ Provides a LDAP externaulauth resource.
 
 ```hcl
 # Configure a LDAP external authentication
-resource wallix-bastion_externalauth_ldap server1 {
+resource "wallix-bastion_externalauth_ldap" "server1" {
   authentication_name = "server1"
   cn_attribute        = "sAMAccountName"
   host                = "server1"

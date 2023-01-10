@@ -35,12 +35,12 @@ func TestAccResourceApplication_basic(t *testing.T) {
 // nolint: lll, nolintlint
 func testAccResourceApplicationCreate() string {
 	return `
-resource wallix-bastion_device testacc_App {
+resource "wallix-bastion_device" "testacc_App" {
   device_name = "testacc_App"
   host        = "testacc_App"
 }
 
-resource wallix-bastion_device_service testacc_App {
+resource "wallix-bastion_device_service" "testacc_App" {
   device_id         = wallix-bastion_device.testacc_App.id
   service_name      = "testacc_App"
   connection_policy = "RDP"
@@ -49,14 +49,14 @@ resource wallix-bastion_device_service testacc_App {
   subprotocols      = ["RDP_CLIPBOARD_UP", "RDP_CLIPBOARD_DOWN", "RDP_PRINTER", "RDP_COM_PORT", "RDP_DRIVE", "RDP_SMARTCARD", "RDP_CLIPBOARD_FILE", "RDP_AUDIO_OUTPUT"]
 }
 
-resource wallix-bastion_cluster testacc_App {
+resource "wallix-bastion_cluster" "testacc_App" {
   cluster_name = "testacc_App"
   interactive_logins = [
     "${wallix-bastion_device.testacc_App.device_name}:${wallix-bastion_device_service.testacc_App.service_name}",
   ]
 }
 
-resource wallix-bastion_application testacc_Appli {
+resource "wallix-bastion_application" "testacc_Appli" {
   application_name  = "testacc_Appli"
   connection_policy = "RDP"
   paths {
@@ -72,12 +72,12 @@ resource wallix-bastion_application testacc_Appli {
 // nolint: lll, nolintlint
 func testAccResourceApplicationUpdate() string {
 	return `
-resource wallix-bastion_device testacc_App {
+resource "wallix-bastion_device" "testacc_App" {
   device_name = "testacc_App"
   host        = "testacc_App"
 }
 
-resource wallix-bastion_device_service testacc_App {
+resource "wallix-bastion_device_service" "testacc_App" {
   device_id         = wallix-bastion_device.testacc_App.id
   service_name      = "testacc_App"
   connection_policy = "RDP"
@@ -86,18 +86,18 @@ resource wallix-bastion_device_service testacc_App {
   subprotocols      = ["RDP_CLIPBOARD_UP", "RDP_CLIPBOARD_DOWN", "RDP_PRINTER", "RDP_COM_PORT", "RDP_DRIVE", "RDP_SMARTCARD", "RDP_CLIPBOARD_FILE", "RDP_AUDIO_OUTPUT"]
 }
 
-resource wallix-bastion_cluster testacc_App {
+resource "wallix-bastion_cluster" "testacc_App" {
   cluster_name = "testacc_App"
   interactive_logins = [
     "${wallix-bastion_device.testacc_App.device_name}:${wallix-bastion_device_service.testacc_App.service_name}",
   ]
 }
 
-resource wallix-bastion_domain testacc_App {
+resource "wallix-bastion_domain" "testacc_App" {
   domain_name = "testacc_App"
 }
 
-resource wallix-bastion_application testacc_Appli {
+resource "wallix-bastion_application" "testacc_Appli" {
   application_name  = "testacc_Appli"
   connection_policy = "RDP"
   paths {

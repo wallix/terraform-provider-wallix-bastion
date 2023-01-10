@@ -6,7 +6,7 @@ Provides a Kerberos externaulauth resource.
 
 ```hcl
 # Configure a tacacs external authentication
-resource wallix-bastion_externalauth_kerberos server1 {
+resource "wallix-bastion_externalauth_kerberos" "server1" {
   authentication_name = "server1"
   host                = "server1"
   ker_dom_controller  = "controller"

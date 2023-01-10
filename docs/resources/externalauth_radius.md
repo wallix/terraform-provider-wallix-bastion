@@ -6,7 +6,7 @@ Provides a Radius externaulauth resource.
 
 ```hcl
 # Configure a radius external authentication
-resource wallix-bastion_externalauth_radius server1 {
+resource "wallix-bastion_externalauth_radius" "server1" {
   authentication_name = "server1"
   host                = "server1"
   port                = 1813

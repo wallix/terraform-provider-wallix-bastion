@@ -6,7 +6,7 @@ Provides a ldapmapping resource.
 
 ```hcl
 # Configure a ldapmapping
-resource wallix-bastion_ldapmapping "test" {
+resource "wallix-bastion_ldapmapping" "test" {
   domain     = "domain.local"
   user_group = "group1"
   ldap_group = "CN=Test,OU=Group,DC=domain,DC=local"

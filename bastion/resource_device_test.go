@@ -42,15 +42,15 @@ func TestAccResourceDevice_basic(t *testing.T) {
 
 func testAccResourceDeviceCreate() string {
 	return `
-resource wallix-bastion_device testacc_Device {
+resource "wallix-bastion_device" "testacc_Device" {
   device_name = "testacc_Device"
   host        = "testacc.device"
 }
-resource wallix-bastion_device_localdomain testacc_Device {
+resource "wallix-bastion_device_localdomain" "testacc_Device" {
   device_id   = wallix-bastion_device.testacc_Device.id
   domain_name = "testacc_Device"
 }
-resource wallix-bastion_device_service testacc_Device {
+resource "wallix-bastion_device_service" "testacc_Device" {
   device_id         = wallix-bastion_device.testacc_Device.id
   service_name      = "testacc_Device"
   connection_policy = "SSH"
@@ -63,17 +63,17 @@ resource wallix-bastion_device_service testacc_Device {
 
 func testAccResourceDeviceUpdate() string {
 	return `
-resource wallix-bastion_device testacc_Device {
+resource "wallix-bastion_device" "testacc_Device" {
   device_name = "testacc_Device"
   host        = "testacc.device"
   alias       = "testacc-Device"
   description = "testacc Device"
 }
-resource wallix-bastion_device_localdomain testacc_Device {
+resource "wallix-bastion_device_localdomain" "testacc_Device" {
   device_id   = wallix-bastion_device.testacc_Device.id
   domain_name = "testacc_Device"
 }
-resource wallix-bastion_device_service testacc_Device {
+resource "wallix-bastion_device_service" "testacc_Device" {
   device_id         = wallix-bastion_device.testacc_Device.id
   service_name      = "testacc_Device"
   connection_policy = "SSH"

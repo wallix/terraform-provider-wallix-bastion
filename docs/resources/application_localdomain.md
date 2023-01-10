@@ -6,7 +6,7 @@ Provides a localdomain resource linked to application.
 
 ```hcl
 # Configure a local domain of application
-resource wallix-bastion_application_localdomain app1dom {
+resource "wallix-bastion_application_localdomain" "app1dom" {
   application_id = "xxxxxxxx"
   domain_name    = "domlocal"
 }

@@ -34,7 +34,7 @@ func TestAccResourceExternalAuthTacacs_basic(t *testing.T) {
 
 func testAccResourceExternalAuthTacacsCreate() string {
 	return `
-resource wallix-bastion_externalauth_tacacs testacc_ExternalAuthTacacs {
+resource "wallix-bastion_externalauth_tacacs" "testacc_ExternalAuthTacacs" {
   authentication_name = "testacc_ExternalAuthTacacs"
   host                = "server1"
   port                = 49
@@ -45,7 +45,7 @@ resource wallix-bastion_externalauth_tacacs testacc_ExternalAuthTacacs {
 
 func testAccResourceExternalAuthTacacsUpdate() string {
 	return `
-resource wallix-bastion_externalauth_tacacs testacc_ExternalAuthTacacs {
+resource "wallix-bastion_externalauth_tacacs" "testacc_ExternalAuthTacacs" {
   authentication_name     = "testacc_ExternalAuthTacacs"
   host                    = "server1"
   port                    = 1813

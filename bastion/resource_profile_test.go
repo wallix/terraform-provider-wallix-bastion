@@ -34,7 +34,7 @@ func TestAccResourceProfile_basic(t *testing.T) {
 
 func testAccResourceProfileCreate() string {
 	return `
-resource wallix-bastion_profile testacc_Profile {
+resource "wallix-bastion_profile" "testacc_Profile" {
   profile_name = "testacc_Profile"
   gui_features {
     wab_audit      = "view"
@@ -63,7 +63,7 @@ resource wallix-bastion_profile testacc_Profile {
 
 func testAccResourceProfileUpdate() string {
 	return `
-resource wallix-bastion_profile testacc_Profile {
+resource "wallix-bastion_profile" "testacc_Profile" {
   profile_name  = "testacc_Profile"
   description   = "testacc Profile"
   ip_limitation = "127.0.0.1"
@@ -98,11 +98,11 @@ resource wallix-bastion_profile testacc_Profile {
     target_groups        = [wallix-bastion_targetgroup.testacc_Profile.group_name]
   }
 }
-resource wallix-bastion_usergroup testacc_Profile {
+resource "wallix-bastion_usergroup" "testacc_Profile" {
   group_name = "testacc_Profile"
   timeframes = ["allthetime"]
 }
-resource wallix-bastion_targetgroup testacc_Profile {
+resource "wallix-bastion_targetgroup" "testacc_Profile" {
   group_name = "testacc_Profile"
 }
 `

@@ -25,6 +25,6 @@ func TestAccDataSourceVersion_basic(t *testing.T) {
 
 func testAccDataSourceVersionData() string {
 	return `
-data wallix-bastion_version testacc_version {}
+data "wallix-bastion_version" "testacc_version" {}
 `
 }

@@ -42,15 +42,15 @@ func TestAccResourceDomain_basic(t *testing.T) {
 
 func testAccResourceDomainCreate() string {
 	return `
-resource wallix-bastion_domain testacc_Domain {
+resource "wallix-bastion_domain" "testacc_Domain" {
   domain_name      = "testacc_Domain"
   domain_real_name = "testacc.domain"
   ca_private_key   = "generate:RSA_4096"
 }
-resource wallix-bastion_domain testacc_Domain2 {
+resource "wallix-bastion_domain" "testacc_Domain2" {
   domain_name = "testacc_Domain2"
 }
-resource wallix-bastion_domain_account testacc_Domain {
+resource "wallix-bastion_domain_account" "testacc_Domain" {
   domain_id     = wallix-bastion_domain.testacc_Domain.id
   account_name  = "testacc_Domain_Admin"
   account_login = "admin"
@@ -60,7 +60,7 @@ resource wallix-bastion_domain_account testacc_Domain {
 
 func testAccResourceDomainUpdate() string {
 	return `
-resource wallix-bastion_domain testacc_Domain {
+resource "wallix-bastion_domain" "testacc_Domain" {
   domain_name            = "testacc_Domain"
   domain_real_name       = "testacc.domain"
   ca_private_key         = tls_private_key.testacc_Domain.private_key_pem
@@ -74,7 +74,7 @@ resource wallix-bastion_domain testacc_Domain {
     host : "192.0.2.1"
   })
 }
-resource wallix-bastion_domain testacc_Domain2 {
+resource "wallix-bastion_domain" "testacc_Domain2" {
   domain_name = "testacc_Domain2"
 }
 resource "tls_private_key" "testacc_Domain" {
@@ -89,7 +89,7 @@ resource "random_password" "testacc_Domain" {
   min_numeric      = 1
   min_special      = 1
 }
-resource wallix-bastion_domain_account testacc_Domain {
+resource "wallix-bastion_domain_account" "testacc_Domain" {
   domain_id     = wallix-bastion_domain.testacc_Domain.id
   account_name  = "testacc_Domain_Admin"
   account_login = "admin"

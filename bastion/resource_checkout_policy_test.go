@@ -34,7 +34,7 @@ func TestAccResourceCheckoutPolicy_basic(t *testing.T) {
 
 func testAccResourceCheckoutPolicyCreate() string {
 	return `
-resource wallix-bastion_checkout_policy testacc_CheckoutPolicy {
+resource "wallix-bastion_checkout_policy" "testacc_CheckoutPolicy" {
   checkout_policy_name = "testacc_CheckoutPolicy"
 }
 `
@@ -42,7 +42,7 @@ resource wallix-bastion_checkout_policy testacc_CheckoutPolicy {
 
 func testAccResourceCheckoutPolicyUpdate() string {
 	return `
-resource wallix-bastion_checkout_policy testacc_CheckoutPolicy {
+resource "wallix-bastion_checkout_policy" "testacc_CheckoutPolicy" {
   checkout_policy_name          = "testacc_CheckoutPolicy"
   description                   = "testacc CheckoutPolicy"
   enable_lock                   = true

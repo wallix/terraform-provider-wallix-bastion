@@ -56,16 +56,16 @@ func TestAccResourceDeviceLocalDomain_basic(t *testing.T) {
 
 func testAccResourceDeviceLocalDomainCreate() string {
 	return `
-resource wallix-bastion_device testacc_DeviceLocalDomain {
+resource "wallix-bastion_device" "testacc_DeviceLocalDomain" {
   device_name = "testacc_DeviceLocalDomain"
   host        = "testacc_localdomain.device"
 }
-resource wallix-bastion_device_localdomain testacc_DeviceLocalDomain {
+resource "wallix-bastion_device_localdomain" "testacc_DeviceLocalDomain" {
   device_id      = wallix-bastion_device.testacc_DeviceLocalDomain.id
   domain_name    = "testacc_DeviceLocalDomain"
   ca_private_key = "generate:RSA_4096"
 }
-resource wallix-bastion_device_localdomain_account testacc_DeviceLocalDomain {
+resource "wallix-bastion_device_localdomain_account" "testacc_DeviceLocalDomain" {
   device_id     = wallix-bastion_device.testacc_DeviceLocalDomain.id
   domain_id     = wallix-bastion_device_localdomain.testacc_DeviceLocalDomain.id
   account_name  = "testacc_DeviceLocalDomain_admin"
@@ -76,11 +76,11 @@ resource wallix-bastion_device_localdomain_account testacc_DeviceLocalDomain {
 
 func testAccResourceDeviceLocalDomainUpdate() string {
 	return `
-resource wallix-bastion_device testacc_DeviceLocalDomain {
+resource "wallix-bastion_device" "testacc_DeviceLocalDomain" {
   device_name = "testacc_DeviceLocalDomain"
   host        = "testacc_localdomain.device"
 }
-resource wallix-bastion_device_localdomain testacc_DeviceLocalDomain {
+resource "wallix-bastion_device_localdomain" "testacc_DeviceLocalDomain" {
   device_id                         = wallix-bastion_device.testacc_DeviceLocalDomain.id
   domain_name                       = "testacc_DeviceLocalDomain"
   description                       = "testacc DeviceLocalDomain"
@@ -92,7 +92,7 @@ resource wallix-bastion_device_localdomain testacc_DeviceLocalDomain {
   password_change_plugin            = "Unix"
   password_change_plugin_parameters = jsonencode({})
 }
-resource wallix-bastion_device_localdomain_account testacc_DeviceLocalDomain {
+resource "wallix-bastion_device_localdomain_account" "testacc_DeviceLocalDomain" {
   device_id     = wallix-bastion_device.testacc_DeviceLocalDomain.id
   domain_id     = wallix-bastion_device_localdomain.testacc_DeviceLocalDomain.id
   account_name  = "testacc_DeviceLocalDomain_admin"

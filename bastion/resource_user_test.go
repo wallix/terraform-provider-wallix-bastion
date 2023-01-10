@@ -42,7 +42,7 @@ func TestAccResourceUser_basic(t *testing.T) {
 
 func testAccResourceUserCreate() string {
 	return `
-resource wallix-bastion_usergroup testacc_User {
+resource "wallix-bastion_usergroup" "testacc_User" {
   group_name = "testacc_User"
   timeframes = ["allthetime"]
 }
@@ -55,7 +55,7 @@ resource "random_password" "testacc_User" {
   min_special      = 1
 }
 
-resource wallix-bastion_user testacc_User {
+resource "wallix-bastion_user" "testacc_User" {
   user_name  = "testacc_User"
   email      = "testacc-user@none.none"
   profile    = "user"
@@ -72,7 +72,7 @@ resource wallix-bastion_user testacc_User {
 
 func testAccResourceUserUpdate() string {
 	return `
-resource wallix-bastion_usergroup testacc_User {
+resource "wallix-bastion_usergroup" "testacc_User" {
   group_name = "testacc_User"
   timeframes = ["allthetime"]
 }
@@ -82,7 +82,7 @@ resource "tls_private_key" "testacc_User" {
   rsa_bits  = 4096
 }
 
-resource wallix-bastion_user testacc_User {
+resource "wallix-bastion_user" "testacc_User" {
   user_name  = "testacc_User"
   email      = "testacc-user@none.none"
   profile    = "user"

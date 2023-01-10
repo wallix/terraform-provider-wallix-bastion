@@ -31,14 +31,14 @@ func TestAccResourceLDAPMapping_basic(t *testing.T) {
 
 func testAccResourceLDAPMappingCreate() string {
 	return `
-resource wallix-bastion_ldapdomain testacc_LDAPMapping {
+resource "wallix-bastion_ldapdomain" "testacc_LDAPMapping" {
   domain_name          = "testacc_LDAPMapping"
   ldap_domain_name     = "test.com"
   external_ldaps       = [wallix-bastion_externalauth_ldap.testacc_LDAPMapping.authentication_name]
   default_language     = "fr"
   default_email_domain = "test.com"
 }
-resource wallix-bastion_externalauth_ldap testacc_LDAPMapping {
+resource "wallix-bastion_externalauth_ldap" "testacc_LDAPMapping" {
   authentication_name = "testacc_LDAPMapping"
   cn_attribute        = "sAMAccountName"
   host                = "server1"
@@ -49,12 +49,12 @@ resource wallix-bastion_externalauth_ldap testacc_LDAPMapping {
   is_ssl              = true
   is_anonymous_access = true
 }
-resource wallix-bastion_usergroup testacc_LDAPMapping {
+resource "wallix-bastion_usergroup" "testacc_LDAPMapping" {
   group_name = "testacc_LDAPMapping"
   timeframes = ["allthetime"]
   profile    = "user"
 }
-resource wallix-bastion_ldapmapping testacc_LDAPMapping {
+resource "wallix-bastion_ldapmapping" "testacc_LDAPMapping" {
   domain     = wallix-bastion_ldapdomain.testacc_LDAPMapping.domain_name
   user_group = wallix-bastion_usergroup.testacc_LDAPMapping.group_name
   ldap_group = "CN=testacc,OU=FR,DC=test,DC=com"

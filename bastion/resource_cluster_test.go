@@ -35,12 +35,12 @@ func TestAccResourceCluster_basic(t *testing.T) {
 // nolint: lll, nolintlint
 func testAccResourceClusterCreate() string {
 	return `
-resource wallix-bastion_device testacc_Cluster {
+resource "wallix-bastion_device" "testacc_Cluster" {
   device_name = "testacc_Cluster"
   host        = "testacc_Cluster"
 }
 
-resource wallix-bastion_device_service testacc_Cluster {
+resource "wallix-bastion_device_service" "testacc_Cluster" {
   device_id         = wallix-bastion_device.testacc_Cluster.id
   service_name      = "testacc_Cluster"
   connection_policy = "RDP"
@@ -49,7 +49,7 @@ resource wallix-bastion_device_service testacc_Cluster {
   subprotocols      = ["RDP_CLIPBOARD_UP", "RDP_CLIPBOARD_DOWN"]
 }
 
-resource wallix-bastion_cluster testacc_Cluster {
+resource "wallix-bastion_cluster" "testacc_Cluster" {
   cluster_name = "testacc_Cluster"
   interactive_logins = [
     "${wallix-bastion_device.testacc_Cluster.device_name}:${wallix-bastion_device_service.testacc_Cluster.service_name}",
@@ -61,12 +61,12 @@ resource wallix-bastion_cluster testacc_Cluster {
 // nolint: lll, nolintlint
 func testAccResourceClusterUpdate() string {
 	return `
-resource wallix-bastion_device testacc_Cluster {
+resource "wallix-bastion_device" "testacc_Cluster" {
   device_name = "testacc_Cluster"
   host        = "testacc_Cluster"
 }
 
-resource wallix-bastion_device_service testacc_Cluster {
+resource "wallix-bastion_device_service" "testacc_Cluster" {
   device_id         = wallix-bastion_device.testacc_Cluster.id
   service_name      = "testacc_Cluster"
   connection_policy = "RDP"
@@ -74,11 +74,11 @@ resource wallix-bastion_device_service testacc_Cluster {
   protocol          = "RDP"
   subprotocols      = ["RDP_CLIPBOARD_UP", "RDP_CLIPBOARD_DOWN"]
 }
-resource wallix-bastion_device_localdomain testacc_Cluster {
+resource "wallix-bastion_device_localdomain" "testacc_Cluster" {
   device_id   = wallix-bastion_device.testacc_Cluster.id
   domain_name = "testacc_Cluster"
 }
-resource wallix-bastion_device_localdomain_account testacc_Cluster {
+resource "wallix-bastion_device_localdomain_account" "testacc_Cluster" {
   device_id     = wallix-bastion_device.testacc_Cluster.id
   domain_id     = wallix-bastion_device_localdomain.testacc_Cluster.id
   account_name  = "testacc_Cluster_admin"
@@ -86,7 +86,7 @@ resource wallix-bastion_device_localdomain_account testacc_Cluster {
   services      = [wallix-bastion_device_service.testacc_Cluster.service_name]
 }
 
-resource wallix-bastion_cluster testacc_Cluster {
+resource "wallix-bastion_cluster" "testacc_Cluster" {
   cluster_name = "testacc_Cluster"
   description  = "testacc Cluster"
   accounts = [

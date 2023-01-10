@@ -6,7 +6,7 @@ Provides a timeframe resource.
 
 ```hcl
 # Configure a timeframe
-resource wallix-bastion_timeframe demo {
+resource "wallix-bastion_timeframe" "demo" {
   timeframe_name = "demo"
   periods {
     start_date = "2020-01-01"

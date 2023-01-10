@@ -47,14 +47,14 @@ resource "random_password" "testacc_Usergroup" {
   min_numeric      = 1
   min_special      = 1
 }
-resource wallix-bastion_user testacc_Usergroup {
+resource "wallix-bastion_user" "testacc_Usergroup" {
   user_name  = "testacc_Usergroup"
   email      = "testacc-usergroup@none.none"
   profile    = "user"
   user_auths = ["local_password"]
   password   = random_password.testacc_Usergroup.result
 }
-resource wallix-bastion_usergroup testacc_Usergroup {
+resource "wallix-bastion_usergroup" "testacc_Usergroup" {
   group_name = "testacc_Usergroup"
   timeframes = ["allthetime"]
   users = [
@@ -74,14 +74,14 @@ resource "random_password" "testacc_Usergroup" {
   min_numeric      = 1
   min_special      = 1
 }
-resource wallix-bastion_user testacc_Usergroup {
+resource "wallix-bastion_user" "testacc_Usergroup" {
   user_name  = "testacc_Usergroup"
   email      = "testacc-usergroup@none.none"
   profile    = "user"
   user_auths = ["local_password"]
   password   = random_password.testacc_Usergroup.result
 }
-resource wallix-bastion_usergroup testacc_Usergroup {
+resource "wallix-bastion_usergroup" "testacc_Usergroup" {
   group_name  = "testacc_Usergroup"
   timeframes  = ["allthetime"]
   description = "testacc User Group"

@@ -6,7 +6,7 @@ Provides a ldapdomain resource.
 
 ```hcl
 # Configure a LDAP domain
-resource wallix-bastion_ldapdomain example_com {
+resource "wallix-bastion_ldapdomain" "example_com" {
   domain_name          = "example.com"
   ldap_domain_name     = "example.com"
   external_ldaps       = "server1"

@@ -34,7 +34,7 @@ func TestAccResourceExternalAuthRadius_basic(t *testing.T) {
 
 func testAccResourceExternalAuthRadiusCreate() string {
 	return `
-resource wallix-bastion_externalauth_radius testacc_ExternalAuthRadius {
+resource "wallix-bastion_externalauth_radius" "testacc_ExternalAuthRadius" {
   authentication_name = "testacc_ExternalAuthRadius"
   host                = "server1"
   port                = 1813
@@ -46,7 +46,7 @@ resource wallix-bastion_externalauth_radius testacc_ExternalAuthRadius {
 
 func testAccResourceExternalAuthRadiusUpdate() string {
 	return `
-resource wallix-bastion_externalauth_radius testacc_ExternalAuthRadius {
+resource "wallix-bastion_externalauth_radius" "testacc_ExternalAuthRadius" {
   authentication_name     = "testacc_ExternalAuthRadius"
   host                    = "server1"
   port                    = 1813

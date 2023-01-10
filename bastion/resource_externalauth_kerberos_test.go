@@ -38,7 +38,7 @@ func TestAccResourceExternalAuthKerberos_basic(t *testing.T) {
 
 func testAccResourceExternalAuthKerberosCreate() string {
 	return `
-resource wallix-bastion_externalauth_kerberos testacc_ExternalAuthKerberos {
+resource "wallix-bastion_externalauth_kerberos" "testacc_ExternalAuthKerberos" {
   authentication_name = "testacc_ExternalAuthKerberos"
   host                = "server1"
   ker_dom_controller  = "controller"
@@ -49,7 +49,7 @@ resource wallix-bastion_externalauth_kerberos testacc_ExternalAuthKerberos {
 
 func testAccResourceExternalAuthKerberosUpdate() string {
 	return `
-resource wallix-bastion_externalauth_kerberos testacc_ExternalAuthKerberos {
+resource "wallix-bastion_externalauth_kerberos" "testacc_ExternalAuthKerberos" {
   authentication_name     = "testacc_ExternalAuthKerberos"
   host                    = "server1"
   ker_dom_controller      = "controller"

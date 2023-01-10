@@ -35,7 +35,7 @@ func TestAccResourceAuthorization_basic(t *testing.T) {
 // nolint: lll, nolintlint
 func testAccResourceAuthorizationCreate() string {
 	return `
-resource wallix-bastion_authorization testacc_Authorization {
+resource "wallix-bastion_authorization" "testacc_Authorization" {
   authorization_name = "testacc_Authorization"
   user_group         = wallix-bastion_usergroup.testacc_Authorization.group_name
   target_group       = wallix-bastion_targetgroup.testacc_Authorization.group_name
@@ -51,11 +51,11 @@ resource wallix-bastion_authorization testacc_Authorization {
     "RAWTCPIP",
   ]
 }
-resource wallix-bastion_usergroup testacc_Authorization {
+resource "wallix-bastion_usergroup" "testacc_Authorization" {
   group_name = "testacc_Authorization"
   timeframes = ["allthetime"]
 }
-resource wallix-bastion_targetgroup testacc_Authorization {
+resource "wallix-bastion_targetgroup" "testacc_Authorization" {
   group_name = "testacc_Authorization"
 }
 `
@@ -64,7 +64,7 @@ resource wallix-bastion_targetgroup testacc_Authorization {
 // nolint: lll, nolintlint
 func testAccResourceAuthorizationUpdate() string {
 	return `
-resource wallix-bastion_authorization testacc_Authorization {
+resource "wallix-bastion_authorization" "testacc_Authorization" {
   authorization_name           = "testacc_Authorization"
   user_group                   = wallix-bastion_usergroup.testacc_Authorization.group_name
   target_group                 = wallix-bastion_targetgroup.testacc_Authorization.group_name
@@ -93,15 +93,15 @@ resource wallix-bastion_authorization testacc_Authorization {
   mandatory_ticket  = true
   single_connection = true
 }
-resource wallix-bastion_usergroup testacc_Authorization {
+resource "wallix-bastion_usergroup" "testacc_Authorization" {
   group_name = "testacc_Authorization"
   timeframes = ["allthetime"]
 }
-resource wallix-bastion_usergroup testacc_Authorization2 {
+resource "wallix-bastion_usergroup" "testacc_Authorization2" {
   group_name = "testacc_Authorization2"
   timeframes = ["allthetime"]
 }
-resource wallix-bastion_targetgroup testacc_Authorization {
+resource "wallix-bastion_targetgroup" "testacc_Authorization" {
   group_name = "testacc_Authorization"
 }
 `

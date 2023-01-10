@@ -6,7 +6,7 @@ Provides a credential linked to device_localdomain_account resource.
 
 ```hcl
 # Configure a credential on account of a local domain of a device
-resource wallix-bastion_device_localdomain_account_credential srv1admpass {
+resource "wallix-bastion_device_localdomain_account_credential" "srv1admpass" {
   device_id  = "xxxxxxxx"
   domain_id  = "yyyyyyy"
   account_id = "zzzzz"

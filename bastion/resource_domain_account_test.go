@@ -48,10 +48,10 @@ func TestAccResourceDomainAccount_basic(t *testing.T) {
 
 func testAccResourceDomainAccountCreate() string {
 	return `
-resource wallix-bastion_domain testacc_DomainAccount {
+resource "wallix-bastion_domain" "testacc_DomainAccount" {
   domain_name = "testacc_DomainAccount"
 }
-resource wallix-bastion_domain_account testacc_DomainAccount {
+resource "wallix-bastion_domain_account" "testacc_DomainAccount" {
   domain_id     = wallix-bastion_domain.testacc_DomainAccount.id
   account_name  = "testacc_DomainAccount_Admin"
   account_login = "admin"
@@ -61,10 +61,10 @@ resource wallix-bastion_domain_account testacc_DomainAccount {
 
 func testAccResourceDomainAccountUpdate() string {
 	return `
-resource wallix-bastion_domain testacc_DomainAccount {
+resource "wallix-bastion_domain" "testacc_DomainAccount" {
   domain_name = "testacc_DomainAccount"
 }
-resource wallix-bastion_domain_account testacc_DomainAccount {
+resource "wallix-bastion_domain_account" "testacc_DomainAccount" {
   domain_id            = wallix-bastion_domain.testacc_DomainAccount.id
   account_name         = "testacc_DomainAccount_Admin"
   account_login        = "admin"

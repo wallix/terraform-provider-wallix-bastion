@@ -6,7 +6,7 @@ Provides a account linked to application_localdomain resource.
 
 ```hcl
 # Configure a account in local domain of application
-resource wallix-bastion_application_localdomain_account app1adm {
+resource "wallix-bastion_application_localdomain_account" "app1adm" {
   application_id = "xxxxxxxx"
   domain_id      = "yyyyyyy"
   account_name   = "admin"

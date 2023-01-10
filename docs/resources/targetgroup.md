@@ -6,7 +6,7 @@ Provides a targetgroup resource.
 
 ```hcl
 # Configure a target group
-resource wallix-bastion_targetgroup group {
+resource "wallix-bastion_targetgroup" "group" {
   group_name = "groupName"
   session_accounts {
     account     = "admin"

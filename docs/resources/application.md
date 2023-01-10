@@ -6,7 +6,7 @@ Provides a application resource.
 
 ```hcl
 # Configure an application
-resource wallix-bastion_application app1 {
+resource "wallix-bastion_application" "app1" {
   application_name  = "app1"
   connection_policy = "RDP"
   paths {

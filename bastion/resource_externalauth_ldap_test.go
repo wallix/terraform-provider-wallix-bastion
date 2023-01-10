@@ -34,7 +34,7 @@ func TestAccResourceExternalAuthLDAP_basic(t *testing.T) {
 
 func testAccResourceExternalAuthLDAPCreate() string {
 	return `
-resource wallix-bastion_externalauth_ldap testacc_ExternalAuthLDAP {
+resource "wallix-bastion_externalauth_ldap" "testacc_ExternalAuthLDAP" {
   authentication_name = "testacc_ExternalAuthLDAP"
   cn_attribute        = "sAMAccountName"
   host                = "server1"
@@ -50,7 +50,7 @@ resource wallix-bastion_externalauth_ldap testacc_ExternalAuthLDAP {
 
 func testAccResourceExternalAuthLDAPUpdate() string {
 	return `
-resource wallix-bastion_externalauth_ldap testacc_ExternalAuthLDAP {
+resource "wallix-bastion_externalauth_ldap" "testacc_ExternalAuthLDAP" {
   authentication_name = "testacc_ExternalAuthLDAP"
   cn_attribute        = "sAMAccountName"
   host                = "server1"

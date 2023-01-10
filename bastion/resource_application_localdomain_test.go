@@ -49,12 +49,12 @@ func TestAccResourceApplicationLocalDomain_basic(t *testing.T) {
 // nolint: lll, nolintlint
 func testAccResourceApplicationLocalDomainCreate() string {
 	return `
-resource wallix-bastion_device testacc_AppLocalDom {
+resource "wallix-bastion_device" "testacc_AppLocalDom" {
   device_name = "testacc_AppLocalDom"
   host        = "testacc_AppLocalDom"
 }
 
-resource wallix-bastion_device_service testacc_AppLocalDom {
+resource "wallix-bastion_device_service" "testacc_AppLocalDom" {
   device_id         = wallix-bastion_device.testacc_AppLocalDom.id
   service_name      = "testacc_AppLocalDom"
   connection_policy = "RDP"
@@ -63,14 +63,14 @@ resource wallix-bastion_device_service testacc_AppLocalDom {
   subprotocols      = ["RDP_CLIPBOARD_UP", "RDP_CLIPBOARD_DOWN", "RDP_PRINTER", "RDP_COM_PORT", "RDP_DRIVE", "RDP_SMARTCARD", "RDP_CLIPBOARD_FILE", "RDP_AUDIO_OUTPUT"]
 }
 
-resource wallix-bastion_cluster testacc_AppLocalDom {
+resource "wallix-bastion_cluster" "testacc_AppLocalDom" {
   cluster_name = "testacc_AppLocalDom"
   interactive_logins = [
     "${wallix-bastion_device.testacc_AppLocalDom.device_name}:${wallix-bastion_device_service.testacc_AppLocalDom.service_name}",
   ]
 }
 
-resource wallix-bastion_application testacc_AppLocalDom {
+resource "wallix-bastion_application" "testacc_AppLocalDom" {
   application_name  = "testacc_AppLocalDom_application"
   connection_policy = "RDP"
   paths {
@@ -81,14 +81,14 @@ resource wallix-bastion_application testacc_AppLocalDom {
   target = wallix-bastion_cluster.testacc_AppLocalDom.cluster_name
 }
 
-resource wallix-bastion_application_localdomain_account testacc_AppLocalDom {
+resource "wallix-bastion_application_localdomain_account" "testacc_AppLocalDom" {
   application_id = wallix-bastion_application.testacc_AppLocalDom.id
   domain_id      = wallix-bastion_application_localdomain.testacc_AppLocalDom.id
   account_name   = "testacc_AppLocalDom"
   account_login  = "testacc_AppLocalDom"
 }
 
-resource wallix-bastion_application_localdomain testacc_AppLocalDom {
+resource "wallix-bastion_application_localdomain" "testacc_AppLocalDom" {
   application_id = wallix-bastion_application.testacc_AppLocalDom.id
   domain_name    = "testacc_AppLocalDom"
 }
@@ -98,12 +98,12 @@ resource wallix-bastion_application_localdomain testacc_AppLocalDom {
 // nolint: lll, nolintlint
 func testAccResourceApplicationLocalDomainUpdate() string {
 	return `
-resource wallix-bastion_device testacc_AppLocalDom {
+resource "wallix-bastion_device" "testacc_AppLocalDom" {
   device_name = "testacc_AppLocalDom"
   host        = "testacc_AppLocalDom"
 }
 
-resource wallix-bastion_device_service testacc_AppLocalDom {
+resource "wallix-bastion_device_service" "testacc_AppLocalDom" {
   device_id         = wallix-bastion_device.testacc_AppLocalDom.id
   service_name      = "testacc_AppLocalDom"
   connection_policy = "RDP"
@@ -112,14 +112,14 @@ resource wallix-bastion_device_service testacc_AppLocalDom {
   subprotocols      = ["RDP_CLIPBOARD_UP", "RDP_CLIPBOARD_DOWN", "RDP_PRINTER", "RDP_COM_PORT", "RDP_DRIVE", "RDP_SMARTCARD", "RDP_CLIPBOARD_FILE", "RDP_AUDIO_OUTPUT"]
 }
 
-resource wallix-bastion_cluster testacc_AppLocalDom {
+resource "wallix-bastion_cluster" "testacc_AppLocalDom" {
   cluster_name = "testacc_AppLocalDom"
   interactive_logins = [
     "${wallix-bastion_device.testacc_AppLocalDom.device_name}:${wallix-bastion_device_service.testacc_AppLocalDom.service_name}",
   ]
 }
 
-resource wallix-bastion_application testacc_AppLocalDom {
+resource "wallix-bastion_application" "testacc_AppLocalDom" {
   application_name  = "testacc_AppLocalDom_application"
   connection_policy = "RDP"
   paths {
@@ -130,14 +130,14 @@ resource wallix-bastion_application testacc_AppLocalDom {
   target = wallix-bastion_cluster.testacc_AppLocalDom.cluster_name
 }
 
-resource wallix-bastion_application_localdomain_account testacc_AppLocalDom {
+resource "wallix-bastion_application_localdomain_account" "testacc_AppLocalDom" {
   application_id = wallix-bastion_application.testacc_AppLocalDom.id
   domain_id      = wallix-bastion_application_localdomain.testacc_AppLocalDom.id
   account_name   = "testacc_AppLocalDom"
   account_login  = "testacc_AppLocalDom"
 }
 
-resource wallix-bastion_application_localdomain testacc_AppLocalDom {
+resource "wallix-bastion_application_localdomain" "testacc_AppLocalDom" {
   application_id         = wallix-bastion_application.testacc_AppLocalDom.id
   domain_name            = "testacc_AppLocalDom"
   description            = "test"
