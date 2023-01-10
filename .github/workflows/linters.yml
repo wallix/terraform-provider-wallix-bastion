@@ -5,10 +5,19 @@ jobs:
     name: golangci-lint
     runs-on: ubuntu-latest
     steps:
+      - name: Set up Go 1.19
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+          check-latest: true
+        id: go
+      - name: Disable cgo
+        run: |
+          echo "CGO_ENABLED=0" >> $GITHUB_ENV
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v2
+        uses: golangci/golangci-lint-action@v3
         with:
           version: v1.50
           args: -c .golangci.yml -v
@@ -18,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Check out code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Markdown files linting
       uses: avto-dev/markdown-lint@v1
@@ -30,31 +39,35 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go 1.19
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: 1.19
+          check-latest: true
         id: go
       - name: Show version
         run: go version
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Check out terrafmt code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: katbyte/terrafmt
-          ref: v0.3.0
+          ref: v0.5.2
           path: terrafmt
       - name: Build terrafmt bin
         run: cd terrafmt && go install ./... && cd ${GITHUB_WORKSPACE}
-      - name: Terrafmt diff on html.markdown
-        run: find . | egrep "html.markdown" | sort | while read f; do terrafmt diff $f; done >> /tmp/results.html.markdown
+      - name: Detect resource/data-source blocks without double quote on type and name (blocks not detected by terrafmt)
+        run: |
+          ! egrep -i '((resource|data)\s+[-a-z0-9_"]+)\s+[-a-z0-9_"]+\s+\{' bastion/*_test.go docs/*.md docs/*/*.md | egrep -i -v '((resource|data)\s+"[-a-z0-9_]+")\s+"[-a-z0-9_]+"\s+\{'
+      - name: Terrafmt diff on docs markdown
+        run: find docs | egrep "md$" | sort | while read f; do terrafmt diff $f; done >> /tmp/results.md
       - name: Terrafmt diff on _test.go
-        run: find . | egrep "_test.go" | sort | while read f; do terrafmt diff $f; done >> /tmp/results.test.go
+        run: find bastion | egrep "_test.go" | sort | while read f; do terrafmt diff $f; done >> /tmp/results.test.go
       - name: Generate error if results not empty
         run: |
-          if [[ -s /tmp/results.html.markdown || -s /tmp/results.test.go ]] ; then 
-            cat /tmp/results.html.markdown
+          if [[ -s /tmp/results.md || -s /tmp/results.test.go ]] ; then 
+            cat /tmp/results.md
             cat /tmp/results.test.go
-            echo "terraform blocks in website/test-go files not being properly formatted"
+            echo "terraform blocks in docs/test-go files not being properly formatted"
             exit 1
           fi
