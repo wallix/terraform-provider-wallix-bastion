@@ -73,7 +73,7 @@ func resourceCheckoutPolicyVersionCheck(version string) error {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_checkout_policy not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_checkout_policy not available with api version %s", version)
 }
 
 func resourceCheckoutPolicyCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

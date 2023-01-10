@@ -67,7 +67,7 @@ func resourceExternalAuthTacacsVersionCheck(version string) error {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_externalauth_tacacs not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_externalauth_tacacs not available with api version %s", version)
 }
 
 func resourceExternalAuthTacacsCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

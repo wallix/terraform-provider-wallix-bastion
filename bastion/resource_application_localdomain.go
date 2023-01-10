@@ -82,7 +82,7 @@ func resourceApplicationLocalDomainVersionCheck(version string) error {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_application_localdomain not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_application_localdomain not available with api version %s", version)
 }
 
 func resourceApplicationLocalDomainCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

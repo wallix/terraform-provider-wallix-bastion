@@ -117,7 +117,7 @@ func resourceDomainVersionCheck(version string) error {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_domain not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_domain not available with api version %s", version)
 }
 
 func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

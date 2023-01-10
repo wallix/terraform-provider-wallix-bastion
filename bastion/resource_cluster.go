@@ -64,7 +64,7 @@ func resourceClusterVersionCheck(version string) error {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_cluster not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_cluster not available with api version %s", version)
 }
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

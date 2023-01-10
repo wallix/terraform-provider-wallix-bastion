@@ -50,7 +50,7 @@ func resourceLdapMappingVersionCheck(version string) error {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_ldapmapping not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_ldapmapping not available with api version %s", version)
 }
 
 func resourceLdapMappingCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

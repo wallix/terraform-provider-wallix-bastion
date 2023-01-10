@@ -268,7 +268,7 @@ func resourceProfileVersionCheck(version string) error {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_profile not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_profile not available with api version %s", version)
 }
 
 func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

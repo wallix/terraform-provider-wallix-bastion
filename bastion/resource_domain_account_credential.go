@@ -66,7 +66,7 @@ func resourceDomainAccountCredentialVersionCheck(version string) error {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_domain_account_credential not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_domain_account_credential not available with api version %s", version)
 }
 
 func resourceDomainAccountCredentialCreate(ctx context.Context,

@@ -133,7 +133,7 @@ func resourceApplicationVersionCheck(version string) error {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_application not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_application not available with api version %s", version)
 }
 
 func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

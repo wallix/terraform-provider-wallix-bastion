@@ -72,7 +72,7 @@ func resourceExternalAuthRadiusVersionCheck(version string) error {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_externalauth_radius not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_externalauth_radius not available with api version %s", version)
 }
 
 func resourceExternalAuthRadiusCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

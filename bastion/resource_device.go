@@ -137,7 +137,7 @@ func resourceDeviceVersionCheck(version string) error {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_device not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_device not available with api version %s", version)
 }
 
 func resourceDeviceCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

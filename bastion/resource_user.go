@@ -111,7 +111,7 @@ func resourceUserVersionCheck(version string) error {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_user not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_user not available with api version %s", version)
 }
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)

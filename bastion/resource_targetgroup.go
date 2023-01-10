@@ -264,7 +264,7 @@ func resourceTargetGroupVersionCheck(version string) error {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_targetgroup not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_targetgroup not available with api version %s", version)
 }
 
 func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

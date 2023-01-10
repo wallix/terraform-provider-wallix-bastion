@@ -63,7 +63,7 @@ func resourceConnectionPolicyVersionCheck(version string) error {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_connection_policy not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_connection_policy not available with api version %s", version)
 }
 
 func resourceConnectionPolicyCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

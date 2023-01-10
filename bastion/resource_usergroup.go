@@ -88,7 +88,7 @@ func resourceUserGroupVersionCheck(version string) error {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_usergroup not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_usergroup not available with api version %s", version)
 }
 
 func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

@@ -72,7 +72,7 @@ func resourceDeviceLocalDomainAccountCredentialVersionCheck(version string) erro
 	}
 
 	return fmt.Errorf("resource wallix-bastion_device_localdomain_account_credential "+
-		"not validate with api version %s", version)
+		"not available with api version %s", version)
 }
 
 func resourceDeviceLocalDomainAccountCredentialCreate(ctx context.Context,

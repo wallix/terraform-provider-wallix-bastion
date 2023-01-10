@@ -147,7 +147,7 @@ func resourceAuthorizationVersionCheck(version string) error {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_authorization not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_authorization not available with api version %s", version)
 }
 
 func resourceAuthorizationCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

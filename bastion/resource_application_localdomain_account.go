@@ -81,7 +81,7 @@ func resourceApplicationLocalDomainAccountVersionCheck(version string) error {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_application_localdomain_account not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_application_localdomain_account not available with api version %s", version)
 }
 
 func resourceApplicationLocalDomainAccountCreate(ctx context.Context,
