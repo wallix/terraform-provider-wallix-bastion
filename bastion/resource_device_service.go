@@ -74,7 +74,7 @@ func resourceDeviceService() *schema.Resource {
 	}
 }
 func resourceDeviceServiceVersionCheck(version string) error {
-	if bchk.StringInSlice(version, defaultVersionsValid()) {
+	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
 	}
 
@@ -292,12 +292,12 @@ func prepareDeviceServiceJSON(d *schema.ResourceData, newResource bool) (jsonDev
 		for _, v2 := range v {
 			switch d.Get("protocol").(string) {
 			case "SSH":
-				if !bchk.StringInSlice(v2.(string), sshSubProtocolsValid()) {
+				if !bchk.InSlice(v2.(string), sshSubProtocolsValid()) {
 					return jsonData, fmt.Errorf("subprotocols %s not valid for SSH service", v2)
 				}
 				subProtocols = append(subProtocols, v2.(string))
 			case "RDP":
-				if !bchk.StringInSlice(v2.(string), rdpSubProtocolsValid()) {
+				if !bchk.InSlice(v2.(string), rdpSubProtocolsValid()) {
 					return jsonData, fmt.Errorf("subprotocols %s not valid for RDP service", v2)
 				}
 				subProtocols = append(subProtocols, v2.(string))

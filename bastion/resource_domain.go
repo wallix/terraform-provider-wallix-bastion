@@ -113,7 +113,7 @@ func resourceDomain() *schema.Resource {
 	}
 }
 func resourceDomainVersionCheck(version string) error {
-	if bchk.StringInSlice(version, defaultVersionsValid()) {
+	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
 	}
 

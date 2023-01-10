@@ -91,7 +91,7 @@ func resourceTimeframe() *schema.Resource {
 	}
 }
 func resourceTimeframeVersionCheck(version string) error {
-	if bchk.StringInSlice(version, defaultVersionsValid()) {
+	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
 	}
 
@@ -269,7 +269,7 @@ func prepareTimeframeJSON(d *schema.ResourceData) (jsonTimeframe, error) {
 				EndTime:   period["end_time"].(string),
 			}
 			for _, d := range period["week_days"].(*schema.Set).List() {
-				if !bchk.StringInSlice(d.(string), []string{
+				if !bchk.InSlice(d.(string), []string{
 					"monday",
 					"tuesday",
 					"wednesday",

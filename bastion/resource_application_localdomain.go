@@ -78,7 +78,7 @@ func resourceApplicationLocalDomain() *schema.Resource {
 	}
 }
 func resourceApplicationLocalDomainVersionCheck(version string) error {
-	if bchk.StringInSlice(version, defaultVersionsValid()) {
+	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
 	}
 

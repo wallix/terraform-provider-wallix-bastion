@@ -59,7 +59,7 @@ func resourceConnectionPolicy() *schema.Resource {
 	}
 }
 func resourceConnectionPolicyVersionCheck(version string) error {
-	if bchk.StringInSlice(version, defaultVersionsValid()) {
+	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
 	}
 
@@ -239,7 +239,7 @@ func prepareConnectionPolicyJSON(d *schema.ResourceData) (jsonConnectionPolicy, 
 	jsonData.Protocol = d.Get("protocol").(string)
 	if v := d.Get("authentication_methods").(*schema.Set).List(); len(v) > 0 {
 		for _, vv := range v {
-			if !bchk.StringInSlice(vv.(string), validAuthenticationMethods()) {
+			if !bchk.InSlice(vv.(string), validAuthenticationMethods()) {
 				return jsonData, fmt.Errorf("authentication_methods must be in %v", validAuthenticationMethods())
 			}
 			jsonData.AuthenticationMethods = append(jsonData.AuthenticationMethods, vv.(string))
