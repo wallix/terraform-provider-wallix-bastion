@@ -29,10 +29,10 @@ jobs:
     name: terrafmt
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go 1.17
+      - name: Set up Go 1.19
         uses: actions/setup-go@v2
         with:
-          go-version: 1.17
+          go-version: 1.19
         id: go
       - name: Show version
         run: go version
@@ -63,10 +63,10 @@ jobs:
     name: tfproviderlint
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go 1.17
+      - name: Set up Go 1.19
         uses: actions/setup-go@v2
         with:
-          go-version: 1.17
+          go-version: 1.19
         id: go
       - name: Show version
         run: go version
