@@ -6,6 +6,10 @@ ENHANCEMENTS:
 * release now with golang 1.19
 * optimize resource search when checking if it already exists before create or when importing
 
+BUG FIXES:
+
+* resource/**wallix-bastion_externalauth_kerberos**: fix missing sensitive option on `keytab`
+
 ## 0.6.1 (May 17, 2022)
 
 NOTES:

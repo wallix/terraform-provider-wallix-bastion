@@ -62,8 +62,9 @@ func resourceExternalAuthKerberos() *schema.Resource {
 				Optional: true,
 			},
 			"keytab": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 			"login_attribute": {
 				Type:     schema.TypeString,
