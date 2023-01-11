@@ -235,7 +235,7 @@ func resourceDeviceImport(d *schema.ResourceData, m interface{}) ([]*schema.Reso
 
 func searchResourceDevice(ctx context.Context, deviceName string, m interface{}) (string, bool, error) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/devices/?fields=device_name,id&limit=-1", http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/devices/?q=device_name="+deviceName, http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
@@ -247,10 +247,8 @@ func searchResourceDevice(ctx context.Context, deviceName string, m interface{})
 	if err != nil {
 		return "", false, fmt.Errorf("json.Unmarshal failed : %w", err)
 	}
-	for _, v := range results {
-		if v.DeviceName == deviceName {
-			return v.ID, true, nil
-		}
+	if len(results) == 1 {
+		return results[0].ID, true, nil
 	}
 
 	return "", false, nil

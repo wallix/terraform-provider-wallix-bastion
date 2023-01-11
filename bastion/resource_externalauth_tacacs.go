@@ -166,7 +166,7 @@ func resourceExternalAuthTacacsImport(d *schema.ResourceData, m interface{}) ([]
 func searchResourceExternalAuthTacacs(
 	ctx context.Context, authenticationName string, m interface{}) (string, bool, error) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/externalauths/?fields=authentication_name,id&limit=-1", http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/externalauths/?q=authentication_name="+authenticationName, http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
@@ -178,10 +178,8 @@ func searchResourceExternalAuthTacacs(
 	if err != nil {
 		return "", false, fmt.Errorf("json.Unmarshal failed : %w", err)
 	}
-	for _, v := range results {
-		if v.AuthenticationName == authenticationName {
-			return v.ID, true, nil
-		}
+	if len(results) == 1 {
+		return results[0].ID, true, nil
 	}
 
 	return "", false, nil

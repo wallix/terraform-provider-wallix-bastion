@@ -186,7 +186,7 @@ func resourceUserGroupImport(d *schema.ResourceData, m interface{}) ([]*schema.R
 
 func searchResourceUserGroup(ctx context.Context, groupName string, m interface{}) (string, bool, error) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/usergroups/?fields=group_name,id&limit=-1", http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/usergroups/?q=group_name="+groupName, http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
@@ -198,10 +198,8 @@ func searchResourceUserGroup(ctx context.Context, groupName string, m interface{
 	if err != nil {
 		return "", false, fmt.Errorf("json.Unmarshal failed : %w", err)
 	}
-	for _, v := range results {
-		if v.GroupName == groupName {
-			return v.ID, true, nil
-		}
+	if len(results) == 1 {
+		return results[0].ID, true, nil
 	}
 
 	return "", false, nil

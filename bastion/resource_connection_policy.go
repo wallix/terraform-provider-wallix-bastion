@@ -164,7 +164,7 @@ func searchResourceConnectionPolicy(ctx context.Context,
 	connectionPolicyName string, m interface{}) (string, bool, error) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
-		"/connectionpolicies/?fields=connection_policy_name,id&limit=-1", http.MethodGet, nil)
+		"/connectionpolicies/?q=connection_policy_name="+connectionPolicyName, http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
@@ -176,10 +176,8 @@ func searchResourceConnectionPolicy(ctx context.Context,
 	if err != nil {
 		return "", false, fmt.Errorf("json.Unmarshal failed : %w", err)
 	}
-	for _, v := range results {
-		if v.ConnectionPolicyName == connectionPolicyName {
-			return v.ID, true, nil
-		}
+	if len(results) == 1 {
+		return results[0].ID, true, nil
 	}
 
 	return "", false, nil

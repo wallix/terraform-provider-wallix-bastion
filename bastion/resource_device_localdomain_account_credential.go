@@ -222,7 +222,7 @@ func searchResourceDeviceLocalDomainAccountCredential(ctx context.Context,
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
 		"/devices/"+deviceID+"/localdomains/"+domainID+"/accounts/"+accountID+
-			"/credentials/?fields=type,id&limit=-1", http.MethodGet, nil)
+			"/credentials/", http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}

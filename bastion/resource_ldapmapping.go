@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -135,7 +136,8 @@ func resourceLdapMappingImport(d *schema.ResourceData, m interface{}) ([]*schema
 func checkResourceLdapMappingExists(ctx context.Context,
 	domain, userGroup, ldapGroup string, m interface{}) (bool, error) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/ldapmappings/?limit=-1", http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx,
+		"/ldapmappings/?q=domain="+domain+url.QueryEscape("&&")+"user_group="+userGroup, http.MethodGet, nil)
 	if err != nil {
 		return false, err
 	}
@@ -147,12 +149,8 @@ func checkResourceLdapMappingExists(ctx context.Context,
 	if err != nil {
 		return false, fmt.Errorf("json.Unmarshal failed : %w", err)
 	}
-	for _, v := range results {
-		if v.Domain == domain &&
-			v.UserGroup == userGroup &&
-			v.LdapGroup == ldapGroup {
-			return true, nil
-		}
+	if len(results) == 1 && results[0].LdapGroup == ldapGroup {
+		return true, nil
 	}
 
 	return false, nil

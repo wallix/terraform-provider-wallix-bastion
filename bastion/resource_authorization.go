@@ -245,7 +245,7 @@ func resourceAuthorizationImport(d *schema.ResourceData, m interface{}) ([]*sche
 
 func searchResourceAuthorization(ctx context.Context, authorizationName string, m interface{}) (string, bool, error) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/authorizations/?fields=authorization_name,id&limit=-1", http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/authorizations/?q=authorization_name="+authorizationName, http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
@@ -257,10 +257,8 @@ func searchResourceAuthorization(ctx context.Context, authorizationName string, 
 	if err != nil {
 		return "", false, fmt.Errorf("json.Unmarshal failed : %w", err)
 	}
-	for _, v := range results {
-		if v.AuthorizationName == authorizationName {
-			return v.ID, true, nil
-		}
+	if len(results) == 1 {
+		return results[0].ID, true, nil
 	}
 
 	return "", false, nil

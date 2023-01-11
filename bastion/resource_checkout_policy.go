@@ -172,7 +172,8 @@ func resourceCheckoutPolicyImport(d *schema.ResourceData, m interface{}) ([]*sch
 
 func searchResourceCheckoutPolicy(ctx context.Context, checkoutPolicyName string, m interface{}) (string, bool, error) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/checkoutpolicies/?fields=checkout_policy_name,id&limit=-1", http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx,
+		"/checkoutpolicies/?q=checkout_policy_name="+checkoutPolicyName, http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
@@ -184,10 +185,8 @@ func searchResourceCheckoutPolicy(ctx context.Context, checkoutPolicyName string
 	if err != nil {
 		return "", false, fmt.Errorf("json.Unmarshal failed : %w", err)
 	}
-	for _, v := range results {
-		if v.CheckoutPolicyName == checkoutPolicyName {
-			return v.ID, true, nil
-		}
+	if len(results) == 1 {
+		return results[0].ID, true, nil
 	}
 
 	return "", false, nil
