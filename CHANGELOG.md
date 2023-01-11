@@ -5,10 +5,12 @@ ENHANCEMENTS:
 
 * release now with golang 1.19
 * optimize resource search when checking if it already exists before create or when importing
+* resource/**wallix-bastion_externalauth_ldap**: add `passphrase` argument
 
 BUG FIXES:
 
 * resource/**wallix-bastion_externalauth_kerberos**: fix missing sensitive option on `keytab`
+* resource/**wallix-bastion_externalauth_ldap**: fix missing sensitive option on `certificate` and `private_key` and can't be refresh
 
 ## 0.6.1 (May 17, 2022)
 

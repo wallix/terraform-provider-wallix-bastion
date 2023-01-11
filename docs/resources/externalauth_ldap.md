@@ -39,7 +39,7 @@ The following arguments are supported:
   LDAP timeout.
 - **ca_certificate** (Optional, String)  
   CA certificate.
-- **certificate** (Optional, String)  
+- **certificate** (Optional, String, Sensitive, **Value can't refresh**)  
   Client certificate.
 - **description** (Optional, String)  
   Description of the authentication.
@@ -56,10 +56,12 @@ The following arguments are supported:
 - **login** (Optional, String)  
   The login.  
   Required if `is_anonymous_access` = `false`.
+- **passphrase** (Optional, String, Sensitive, **Value can't refresh**)  
+  The Passphrase for the private key (only for an encrypted private key).
 - **password** (Optional, String, Sensitive, **Value can't refresh**)  
   The password.  
   Required if `is_anonymous_access` = `false`.
-- **private_key** (Optional, String)  
+- **private_key** (Optional, String, Sensitive, **Value can't refresh**)  
   Client key.
 - **use_primary_auth_domain** (Optional, Boolean)  
   Use the primary auth domain.

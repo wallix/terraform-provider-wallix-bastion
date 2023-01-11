@@ -31,6 +31,7 @@ type jsonExternalAuthLdap struct {
 	Login                string  `json:"login,omitempty"`
 	LoginAttribute       string  `json:"login_attribute"`
 	Host                 string  `json:"host"`
+	Passphrase           string  `json:"passphrase,omitempty"`
 	Password             string  `json:"password,omitempty"`
 	PrivateKey           string  `json:"private_key"`
 	Type                 string  `json:"type"`
@@ -80,8 +81,9 @@ func resourceExternalAuthLdap() *schema.Resource {
 				Optional: true,
 			},
 			"certificate": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -111,14 +113,21 @@ func resourceExternalAuthLdap() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"passphrase": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				RequiredWith: []string{"private_key"},
+			},
 			"password": {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
 			},
 			"private_key": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 			"use_primary_auth_domain": {
 				Type:     schema.TypeBool,
@@ -317,6 +326,7 @@ func prepareExternalAuthLdapJSON(d *schema.ResourceData) jsonExternalAuthLdap {
 		LoginAttribute:       d.Get("login_attribute").(string),
 		Host:                 d.Get("host").(string),
 		Password:             d.Get("password").(string),
+		Passphrase:           d.Get("passphrase").(string),
 		Port:                 d.Get("port").(int),
 		PrivateKey:           d.Get("private_key").(string),
 		Type:                 "LDAP",
@@ -374,9 +384,6 @@ func fillExternalAuthLdap(d *schema.ResourceData, jsonData jsonExternalAuthLdap)
 	if tfErr := d.Set("ca_certificate", jsonData.CACertificate); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("certificate", jsonData.Certificate); tfErr != nil {
-		panic(tfErr)
-	}
 	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
@@ -393,9 +400,6 @@ func fillExternalAuthLdap(d *schema.ResourceData, jsonData jsonExternalAuthLdap)
 		panic(tfErr)
 	}
 	if tfErr := d.Set("is_starttls", jsonData.IsStartTLS); tfErr != nil {
-		panic(tfErr)
-	}
-	if tfErr := d.Set("private_key", jsonData.PrivateKey); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("use_primary_auth_domain", jsonData.UsePrimaryAuthDomain); tfErr != nil {
