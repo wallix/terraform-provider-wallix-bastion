@@ -11,6 +11,7 @@ resource "wallix-bastion_externalauth_kerberos" "server1" {
   host                = "server1"
   ker_dom_controller  = "controller"
   port                = 88
+  keytab              = filebase64("keytab")
 }
 ```
 
