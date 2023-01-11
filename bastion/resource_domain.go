@@ -74,9 +74,10 @@ func resourceDomain() *schema.Resource {
 				ConflictsWith: []string{"vault_plugin"},
 			},
 			"passphrase": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				RequiredWith: []string{"ca_private_key"},
 			},
 			"password_change_policy": {
 				Type:         schema.TypeString,

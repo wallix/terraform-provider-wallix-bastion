@@ -70,9 +70,10 @@ func resourceDeviceLocalDomain() *schema.Resource {
 				RequiredWith: []string{"password_change_policy", "password_change_plugin", "password_change_plugin_parameters"},
 			},
 			"passphrase": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				RequiredWith: []string{"ca_private_key"},
 			},
 			"password_change_policy": {
 				Type:         schema.TypeString,

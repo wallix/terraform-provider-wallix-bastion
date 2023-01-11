@@ -11,6 +11,7 @@ BUG FIXES:
 
 * resource/**wallix-bastion_externalauth_kerberos**: fix missing sensitive option on `keytab`
 * resource/**wallix-bastion_externalauth_ldap**: fix missing sensitive option on `certificate` and `private_key` and can't be refresh
+* resource/**wallix-bastion_\*domain** & resource/**wallix-bastion_\*credential**: fix missing requirement of `private_key` with `passphrase` argument
 
 ## 0.6.1 (May 17, 2022)
 

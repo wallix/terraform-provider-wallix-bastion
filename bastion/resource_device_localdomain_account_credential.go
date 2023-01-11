@@ -45,9 +45,10 @@ func resourceDeviceLocalDomainAccountCredential() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"password", "ssh_key"}, false),
 			},
 			"passphrase": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				RequiredWith: []string{"private_key"},
 			},
 			"password": {
 				Type:      schema.TypeString,
