@@ -464,7 +464,7 @@ func deleteTargetGroup(
 	return nil
 }
 
-func prepareTargetGroupJSON(d *schema.ResourceData) (jsonTargetGroup, error) { //nolint: gocognit, gocyclo
+func prepareTargetGroupJSON(d *schema.ResourceData) (jsonTargetGroup, error) { //nolint: gocognit,gocyclo,maintidx
 	jsonData := jsonTargetGroup{
 		Description: d.Get("description").(string),
 		GroupName:   d.Get("group_name").(string),

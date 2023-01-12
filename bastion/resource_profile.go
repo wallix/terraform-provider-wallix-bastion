@@ -456,7 +456,7 @@ func deleteProfile(
 	return nil
 }
 
-func prepareProfileJSON(d *schema.ResourceData, newResource bool) jsonProfile {
+func prepareProfileJSON(d *schema.ResourceData, newResource bool) jsonProfile { //nolint: gocognit,gocyclo
 	var jsonData jsonProfile
 	if newResource {
 		jsonData.ProfileName = d.Get("profile_name").(string)
