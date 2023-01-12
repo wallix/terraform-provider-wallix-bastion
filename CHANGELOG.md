@@ -5,6 +5,7 @@ FEATURES:
 
 * add `wallix-bastion_externalauth_saml` resource
 * add `wallix-bastion_authdomain_ldap` resource
+* add `wallix-bastion_authdomain_mapping` resource
 
 ENHANCEMENTS:
 
