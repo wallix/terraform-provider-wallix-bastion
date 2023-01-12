@@ -59,6 +59,7 @@ func Provider() *schema.Provider {
 			"wallix-bastion_application":                           resourceApplication(),
 			"wallix-bastion_application_localdomain":               resourceApplicationLocalDomain(),
 			"wallix-bastion_application_localdomain_account":       resourceApplicationLocalDomainAccount(),
+			"wallix-bastion_authdomain_ad":                         resourceAuthDomainAD(),
 			"wallix-bastion_authdomain_ldap":                       resourceAuthDomainLdap(),
 			"wallix-bastion_authdomain_mapping":                    resourceAuthDomainMapping(),
 			"wallix-bastion_authorization":                         resourceAuthorization(),
