@@ -1,17 +1,15 @@
-# wallix-bastion_ldapdomain Resource
+# wallix-bastion_authdomain_ldap Resource
 
-Provides a ldapdomain resource.
-
--> **Note:** Since version `v3.8` of the API, use the `wallix-bastion_authdomain_ldap` resource instead
+Provides a LDAP auth domain resource.
 
 ## Example Usage
 
 ```hcl
-# Configure a LDAP domain
-resource "wallix-bastion_ldapdomain" "example_com" {
+# Configure a LDAP auth domain
+resource "wallix-bastion_authdomain_ldap" "example_com" {
   domain_name          = "example.com"
-  ldap_domain_name     = "example.com"
-  external_ldaps       = "server1"
+  auth_domain_name     = "example.com"
+  external_auths       = "server1"
   default_language     = "fr"
   default_email_domain = "example.com"
 }
@@ -23,17 +21,15 @@ The following arguments are supported:
 
 - **domain_name** (Required, String, Forces new resource)  
   The domain name.
-- **ldap_domain_name** (Required, String)  
-  The LDAP domain name.
-- **external_ldaps** (Required, List of String)  
-  The LDAP external authentications.
+- **auth_domain_name** (Required, String)  
+  The auth domain name.
+- **default_email_domain** (Required, String)  
+  The default email domain.
 - **default_language** (Required, String)  
   The default language.  
   Need to be `de`, `en`, `es`, `fr` or `ru`.
-- **default_email_domain** (Required, String)  
-  The default email domain.
-- **secondary_auth** (Optional, List of String)  
-  The secondary authentications methods for the LDAP domain.
+- **external_auths** (Required, List of String)  
+  The external authentications.
 - **description** (Optional, String)  
   The domain description.
 - **check_x509_san_email** (Optional, Boolean)  
@@ -48,8 +44,12 @@ The following arguments are supported:
   The domain is used by default.
 - **language_attribute** (Optional, String)  
   The language attribute.
+- **pubkey_attribute** (Optional, String)  
+  The SSH public key attribute.
 - **san_domain_name** (Optional, String)  
   The domain name to match SAN email (only for AD server).
+- **secondary_auth** (Optional, List of String)  
+  The secondary authentications methods for the auth domain
 - **x509_condition** (Optional, String)  
   Condition to match a LDAP domain with the X509 certificate variables (only for LDAP server).
 - **x509_search_filter** (Optional, String)  
@@ -58,12 +58,12 @@ The following arguments are supported:
 ## Attribute Reference
 
 - **id** (String)  
-  ID of resource = `domain_name`
+  Internal id of auth domain in bastion.
 
 ## Import
 
-Ldapdomain can be imported using an id made up of `<domain_name>`, e.g.
+LDAP auth domain can be imported using an id made up of `<domain_name>`, e.g.
 
 ```shell
-terraform import wallix-bastion_ldapdomain.example_com example.com
+terraform import wallix-bastion_authdomain_ldap.example_com example.com
 ```
