@@ -1,6 +1,10 @@
 <!-- markdownlint-disable-file MD013 MD041 -->
 # changelog
 
+FEATURES:
+
+* add `wallix-bastion_externalauth_saml` resource
+
 ENHANCEMENTS:
 
 * release now with golang 1.19
