@@ -128,6 +128,7 @@ func resourceApplication() *schema.Resource {
 		},
 	}
 }
+
 func resourceApplicationVersionCheck(version string) error {
 	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
@@ -136,7 +137,9 @@ func resourceApplicationVersionCheck(version string) error {
 	return fmt.Errorf("resource wallix-bastion_application not available with api version %s", version)
 }
 
-func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceApplicationCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceApplicationVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -163,7 +166,10 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, m in
 
 	return resourceApplicationRead(ctx, d, m)
 }
-func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceApplicationRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceApplicationVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -180,7 +186,10 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, m inte
 
 	return nil
 }
-func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceApplicationUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceApplicationVersionCheck(c.bastionAPIVersion); err != nil {
@@ -193,7 +202,10 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, m in
 
 	return resourceApplicationRead(ctx, d, m)
 }
-func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceApplicationDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceApplicationVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -204,7 +216,12 @@ func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, m in
 
 	return nil
 }
-func resourceApplicationImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+func resourceApplicationImport(
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceApplicationVersionCheck(c.bastionAPIVersion); err != nil {
@@ -229,7 +246,11 @@ func resourceApplicationImport(d *schema.ResourceData, m interface{}) ([]*schema
 	return result, nil
 }
 
-func searchResourceApplication(ctx context.Context, applicationName string, m interface{}) (string, bool, error) {
+func searchResourceApplication(
+	ctx context.Context, applicationName string, m interface{},
+) (
+	string, bool, error,
+) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/applications/?q=application_name="+applicationName, http.MethodGet, nil)
 	if err != nil {
@@ -250,7 +271,9 @@ func searchResourceApplication(ctx context.Context, applicationName string, m in
 	return "", false, nil
 }
 
-func addApplication(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addApplication(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareApplicationJSON(d)
 	body, code, err := c.newRequest(ctx, "/applications/", http.MethodPost, jsonData)
@@ -264,7 +287,9 @@ func addApplication(ctx context.Context, d *schema.ResourceData, m interface{}) 
 	return nil
 }
 
-func updateApplication(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateApplication(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareApplicationJSON(d)
 	body, code, err := c.newRequest(ctx, "/applications/"+d.Id()+"?force=true", http.MethodPut, jsonData)
@@ -278,7 +303,9 @@ func updateApplication(ctx context.Context, d *schema.ResourceData, m interface{
 	return nil
 }
 
-func deleteApplication(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func deleteApplication(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/applications/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
@@ -319,7 +346,10 @@ func prepareApplicationJSON(d *schema.ResourceData) jsonApplication {
 }
 
 func readApplicationOptions(
-	ctx context.Context, applicationID string, m interface{}) (jsonApplication, error) {
+	ctx context.Context, applicationID string, m interface{},
+) (
+	jsonApplication, error,
+) {
 	c := m.(*Client)
 	var result jsonApplication
 	body, code, err := c.newRequest(ctx, "/applications/"+applicationID, http.MethodGet, nil)

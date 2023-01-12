@@ -90,7 +90,11 @@ func Provider() *schema.Provider {
 	}
 }
 
-func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+func configureProvider(
+	ctx context.Context, d *schema.ResourceData,
+) (
+	interface{}, diag.Diagnostics,
+) {
 	config := Config{
 		bastionAPIVersion: d.Get("api_version").(string),
 		bastionIP:         d.Get("ip").(string),

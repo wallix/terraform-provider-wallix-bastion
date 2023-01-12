@@ -136,6 +136,7 @@ func resourceExternalAuthLdap() *schema.Resource {
 		},
 	}
 }
+
 func resourceExternalAuthLdapVersionCheck(version string) error {
 	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
@@ -144,7 +145,9 @@ func resourceExternalAuthLdapVersionCheck(version string) error {
 	return fmt.Errorf("resource wallix-bastion_externalauth_ldap not available with api version %s", version)
 }
 
-func resourceExternalAuthLdapCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceExternalAuthLdapCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceExternalAuthLdapVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -175,7 +178,10 @@ func resourceExternalAuthLdapCreate(ctx context.Context, d *schema.ResourceData,
 
 	return resourceExternalAuthLdapRead(ctx, d, m)
 }
-func resourceExternalAuthLdapRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceExternalAuthLdapRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceExternalAuthLdapVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -192,7 +198,10 @@ func resourceExternalAuthLdapRead(ctx context.Context, d *schema.ResourceData, m
 
 	return nil
 }
-func resourceExternalAuthLdapUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceExternalAuthLdapUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceExternalAuthLdapVersionCheck(c.bastionAPIVersion); err != nil {
@@ -209,7 +218,10 @@ func resourceExternalAuthLdapUpdate(ctx context.Context, d *schema.ResourceData,
 
 	return resourceExternalAuthLdapRead(ctx, d, m)
 }
-func resourceExternalAuthLdapDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceExternalAuthLdapDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceExternalAuthLdapVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -220,7 +232,12 @@ func resourceExternalAuthLdapDelete(ctx context.Context, d *schema.ResourceData,
 
 	return nil
 }
-func resourceExternalAuthLdapImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+func resourceExternalAuthLdapImport(
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceExternalAuthLdapVersionCheck(c.bastionAPIVersion); err != nil {
@@ -246,7 +263,10 @@ func resourceExternalAuthLdapImport(d *schema.ResourceData, m interface{}) ([]*s
 }
 
 func searchResourceExternalAuthLdap(
-	ctx context.Context, authenticationName string, m interface{}) (string, bool, error) {
+	ctx context.Context, authenticationName string, m interface{},
+) (
+	string, bool, error,
+) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/externalauths/?q=authentication_name="+authenticationName, http.MethodGet, nil)
 	if err != nil {
@@ -267,7 +287,9 @@ func searchResourceExternalAuthLdap(
 	return "", false, nil
 }
 
-func addExternalAuthLdap(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addExternalAuthLdap(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareExternalAuthLdapJSON(d)
 	body, code, err := c.newRequest(ctx, "/externalauths/", http.MethodPost, jsonData)
@@ -281,7 +303,9 @@ func addExternalAuthLdap(ctx context.Context, d *schema.ResourceData, m interfac
 	return nil
 }
 
-func updateExternalAuthLdap(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateExternalAuthLdap(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareExternalAuthLdapJSON(d)
 	body, code, err := c.newRequest(ctx, "/externalauths/"+d.Id(), http.MethodPut, jsonData)
@@ -294,7 +318,10 @@ func updateExternalAuthLdap(ctx context.Context, d *schema.ResourceData, m inter
 
 	return nil
 }
-func deleteExternalAuthLdap(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+
+func deleteExternalAuthLdap(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/externalauths/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
@@ -334,7 +361,10 @@ func prepareExternalAuthLdapJSON(d *schema.ResourceData) jsonExternalAuthLdap {
 }
 
 func readExternalAuthLdapOptions(
-	ctx context.Context, authenticationID string, m interface{}) (jsonExternalAuthLdap, error) {
+	ctx context.Context, authenticationID string, m interface{},
+) (
+	jsonExternalAuthLdap, error,
+) {
 	c := m.(*Client)
 	var result jsonExternalAuthLdap
 	body, code, err := c.newRequest(ctx, "/externalauths/"+authenticationID, http.MethodGet, nil)

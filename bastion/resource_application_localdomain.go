@@ -77,6 +77,7 @@ func resourceApplicationLocalDomain() *schema.Resource {
 		},
 	}
 }
+
 func resourceApplicationLocalDomainVersionCheck(version string) error {
 	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
@@ -85,7 +86,9 @@ func resourceApplicationLocalDomainVersionCheck(version string) error {
 	return fmt.Errorf("resource wallix-bastion_application_localdomain not available with api version %s", version)
 }
 
-func resourceApplicationLocalDomainCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceApplicationLocalDomainCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceApplicationLocalDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -123,7 +126,10 @@ func resourceApplicationLocalDomainCreate(ctx context.Context, d *schema.Resourc
 
 	return resourceApplicationLocalDomainRead(ctx, d, m)
 }
-func resourceApplicationLocalDomainRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceApplicationLocalDomainRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceApplicationLocalDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -140,7 +146,10 @@ func resourceApplicationLocalDomainRead(ctx context.Context, d *schema.ResourceD
 
 	return nil
 }
-func resourceApplicationLocalDomainUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceApplicationLocalDomainUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceApplicationLocalDomainVersionCheck(c.bastionAPIVersion); err != nil {
@@ -153,7 +162,10 @@ func resourceApplicationLocalDomainUpdate(ctx context.Context, d *schema.Resourc
 
 	return resourceApplicationLocalDomainRead(ctx, d, m)
 }
-func resourceApplicationLocalDomainDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceApplicationLocalDomainDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceApplicationLocalDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -164,7 +176,12 @@ func resourceApplicationLocalDomainDelete(ctx context.Context, d *schema.Resourc
 
 	return nil
 }
-func resourceApplicationLocalDomainImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+func resourceApplicationLocalDomainImport(
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceApplicationLocalDomainVersionCheck(c.bastionAPIVersion); err != nil {
@@ -196,8 +213,11 @@ func resourceApplicationLocalDomainImport(d *schema.ResourceData, m interface{})
 	return result, nil
 }
 
-func searchResourceApplicationLocalDomain(ctx context.Context,
-	applicationID, domainName string, m interface{}) (string, bool, error) {
+func searchResourceApplicationLocalDomain(
+	ctx context.Context, applicationID, domainName string, m interface{},
+) (
+	string, bool, error,
+) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/applications/"+applicationID+
 		"/localdomains/?q=domain_name="+domainName, http.MethodGet, nil)
@@ -219,7 +239,9 @@ func searchResourceApplicationLocalDomain(ctx context.Context,
 	return "", false, nil
 }
 
-func addApplicationLocalDomain(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addApplicationLocalDomain(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareApplicationLocalDomainJSON(d, true)
 	body, code, err := c.newRequest(ctx, "/applications/"+d.Get("application_id").(string)+"/localdomains/",
@@ -234,7 +256,9 @@ func addApplicationLocalDomain(ctx context.Context, d *schema.ResourceData, m in
 	return nil
 }
 
-func updateApplicationLocalDomain(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateApplicationLocalDomain(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareApplicationLocalDomainJSON(d, false)
 	body, code, err := c.newRequest(ctx,
@@ -249,7 +273,9 @@ func updateApplicationLocalDomain(ctx context.Context, d *schema.ResourceData, m
 	return nil
 }
 
-func deleteApplicationLocalDomain(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func deleteApplicationLocalDomain(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
 		"/applications/"+d.Get("application_id").(string)+"/localdomains/"+d.Id(), http.MethodDelete, nil)
@@ -289,7 +315,10 @@ func prepareApplicationLocalDomainJSON(d *schema.ResourceData, newResource bool)
 }
 
 func readApplicationLocalDomainOptions(
-	ctx context.Context, applicationID, localDomainID string, m interface{}) (jsonApplicationLocalDomain, error) {
+	ctx context.Context, applicationID, localDomainID string, m interface{},
+) (
+	jsonApplicationLocalDomain, error,
+) {
 	c := m.(*Client)
 	var result jsonApplicationLocalDomain
 	body, code, err := c.newRequest(ctx,

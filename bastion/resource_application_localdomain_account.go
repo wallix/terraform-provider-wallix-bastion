@@ -76,6 +76,7 @@ func resourceApplicationLocalDomainAccount() *schema.Resource {
 		},
 	}
 }
+
 func resourceApplicationLocalDomainAccountVersionCheck(version string) error {
 	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
@@ -84,8 +85,9 @@ func resourceApplicationLocalDomainAccountVersionCheck(version string) error {
 	return fmt.Errorf("resource wallix-bastion_application_localdomain_account not available with api version %s", version)
 }
 
-func resourceApplicationLocalDomainAccountCreate(ctx context.Context,
-	d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceApplicationLocalDomainAccountCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceApplicationLocalDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -132,8 +134,10 @@ func resourceApplicationLocalDomainAccountCreate(ctx context.Context,
 
 	return resourceApplicationLocalDomainAccountRead(ctx, d, m)
 }
-func resourceApplicationLocalDomainAccountRead(ctx context.Context,
-	d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceApplicationLocalDomainAccountRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceApplicationLocalDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -151,8 +155,10 @@ func resourceApplicationLocalDomainAccountRead(ctx context.Context,
 
 	return nil
 }
-func resourceApplicationLocalDomainAccountUpdate(ctx context.Context,
-	d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceApplicationLocalDomainAccountUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceApplicationLocalDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
@@ -165,8 +171,10 @@ func resourceApplicationLocalDomainAccountUpdate(ctx context.Context,
 
 	return resourceApplicationLocalDomainAccountRead(ctx, d, m)
 }
-func resourceApplicationLocalDomainAccountDelete(ctx context.Context,
-	d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceApplicationLocalDomainAccountDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceApplicationLocalDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -177,8 +185,13 @@ func resourceApplicationLocalDomainAccountDelete(ctx context.Context,
 
 	return nil
 }
+
 func resourceApplicationLocalDomainAccountImport(
-	d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData,
+	error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceApplicationLocalDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
@@ -214,8 +227,11 @@ func resourceApplicationLocalDomainAccountImport(
 	return result, nil
 }
 
-func searchResourceApplicationLocalDomainAccount(ctx context.Context,
-	applicationID, domainID, accountName string, m interface{}) (string, bool, error) {
+func searchResourceApplicationLocalDomainAccount(
+	ctx context.Context, applicationID, domainID, accountName string, m interface{},
+) (
+	string, bool, error,
+) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/applications/"+applicationID+"/localdomains/"+domainID+
 		"/accounts/?q=account_name="+accountName, http.MethodGet, nil)
@@ -237,7 +253,9 @@ func searchResourceApplicationLocalDomainAccount(ctx context.Context,
 	return "", false, nil
 }
 
-func addApplicationLocalDomainAccount(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addApplicationLocalDomainAccount(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareApplicationLocalDomainAccountJSON(d)
 	body, code, err := c.newRequest(ctx,
@@ -253,7 +271,9 @@ func addApplicationLocalDomainAccount(ctx context.Context, d *schema.ResourceDat
 	return nil
 }
 
-func updateApplicationLocalDomainAccount(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateApplicationLocalDomainAccount(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareApplicationLocalDomainAccountJSON(d)
 	body, code, err := c.newRequest(ctx,
@@ -269,7 +289,9 @@ func updateApplicationLocalDomainAccount(ctx context.Context, d *schema.Resource
 	return nil
 }
 
-func deleteApplicationLocalDomainAccount(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func deleteApplicationLocalDomainAccount(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
 		"/applications/"+d.Get("application_id").(string)+"/localdomains/"+d.Get("domain_id").(string)+
@@ -304,8 +326,10 @@ func prepareApplicationLocalDomainAccountJSON(d *schema.ResourceData) jsonApplic
 }
 
 func readApplicationLocalDomainAccountOptions(
-	ctx context.Context, applicationID, localDomainID, accountID string, m interface{}) (
-	jsonApplicationLocalDomainAccount, error) {
+	ctx context.Context, applicationID, localDomainID, accountID string, m interface{},
+) (
+	jsonApplicationLocalDomainAccount, error,
+) {
 	c := m.(*Client)
 	var result jsonApplicationLocalDomainAccount
 	body, code, err := c.newRequest(ctx,

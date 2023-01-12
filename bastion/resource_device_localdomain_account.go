@@ -107,6 +107,7 @@ func resourceDeviceLocalDomainAccount() *schema.Resource {
 		},
 	}
 }
+
 func resourceDeviceLocalDomainAccountVersionCheck(version string) error {
 	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
@@ -115,8 +116,9 @@ func resourceDeviceLocalDomainAccountVersionCheck(version string) error {
 	return fmt.Errorf("resource wallix-bastion_device_localdomain_account not available with api version %s", version)
 }
 
-func resourceDeviceLocalDomainAccountCreate(ctx context.Context,
-	d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceDeviceLocalDomainAccountCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceDeviceLocalDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -162,7 +164,10 @@ func resourceDeviceLocalDomainAccountCreate(ctx context.Context,
 
 	return resourceDeviceLocalDomainAccountRead(ctx, d, m)
 }
-func resourceDeviceLocalDomainAccountRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceDeviceLocalDomainAccountRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceDeviceLocalDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -180,8 +185,10 @@ func resourceDeviceLocalDomainAccountRead(ctx context.Context, d *schema.Resourc
 
 	return nil
 }
-func resourceDeviceLocalDomainAccountUpdate(ctx context.Context,
-	d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceDeviceLocalDomainAccountUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceDeviceLocalDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
@@ -194,8 +201,10 @@ func resourceDeviceLocalDomainAccountUpdate(ctx context.Context,
 
 	return resourceDeviceLocalDomainAccountRead(ctx, d, m)
 }
-func resourceDeviceLocalDomainAccountDelete(ctx context.Context,
-	d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceDeviceLocalDomainAccountDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceDeviceLocalDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -206,7 +215,12 @@ func resourceDeviceLocalDomainAccountDelete(ctx context.Context,
 
 	return nil
 }
-func resourceDeviceLocalDomainAccountImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+func resourceDeviceLocalDomainAccountImport(
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceDeviceLocalDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
@@ -242,8 +256,11 @@ func resourceDeviceLocalDomainAccountImport(d *schema.ResourceData, m interface{
 	return result, nil
 }
 
-func searchResourceDeviceLocalDomainAccount(ctx context.Context,
-	deviceID, domainID, accountName string, m interface{}) (string, bool, error) {
+func searchResourceDeviceLocalDomainAccount(
+	ctx context.Context, deviceID, domainID, accountName string, m interface{},
+) (
+	string, bool, error,
+) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/devices/"+deviceID+"/localdomains/"+domainID+
 		"/accounts/?q=account_name="+accountName, http.MethodGet, nil)
@@ -265,7 +282,9 @@ func searchResourceDeviceLocalDomainAccount(ctx context.Context,
 	return "", false, nil
 }
 
-func addDeviceLocalDomainAccount(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addDeviceLocalDomainAccount(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareDeviceLocalDomainAccountJSON(d)
 	body, code, err := c.newRequest(ctx,
@@ -281,7 +300,9 @@ func addDeviceLocalDomainAccount(ctx context.Context, d *schema.ResourceData, m 
 	return nil
 }
 
-func updateDeviceLocalDomainAccount(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateDeviceLocalDomainAccount(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareDeviceLocalDomainAccountJSON(d)
 	body, code, err := c.newRequest(ctx,
@@ -297,7 +318,9 @@ func updateDeviceLocalDomainAccount(ctx context.Context, d *schema.ResourceData,
 	return nil
 }
 
-func deleteDeviceLocalDomainAccount(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func deleteDeviceLocalDomainAccount(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
 		"/devices/"+d.Get("device_id").(string)+"/localdomains/"+d.Get("domain_id").(string)+
@@ -333,8 +356,10 @@ func prepareDeviceLocalDomainAccountJSON(d *schema.ResourceData) jsonDeviceLocal
 }
 
 func readDeviceLocalDomainAccountOptions(
-	ctx context.Context, deviceID, localDomainID, accountID string, m interface{}) (
-	jsonDeviceLocalDomainAccount, error) {
+	ctx context.Context, deviceID, localDomainID, accountID string, m interface{},
+) (
+	jsonDeviceLocalDomainAccount, error,
+) {
 	c := m.(*Client)
 	var result jsonDeviceLocalDomainAccount
 	body, code, err := c.newRequest(ctx,

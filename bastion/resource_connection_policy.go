@@ -38,8 +38,10 @@ func resourceConnectionPolicy() *schema.Resource {
 			"protocol": {
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"SSH", "RAWTCPIP", "RDP", "RLOGIN", "TELNET", "VNC"}, false),
+				ValidateFunc: validation.StringInSlice(
+					[]string{"SSH", "RAWTCPIP", "RDP", "RLOGIN", "TELNET", "VNC"},
+					false,
+				),
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -58,6 +60,7 @@ func resourceConnectionPolicy() *schema.Resource {
 		},
 	}
 }
+
 func resourceConnectionPolicyVersionCheck(version string) error {
 	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
@@ -66,7 +69,9 @@ func resourceConnectionPolicyVersionCheck(version string) error {
 	return fmt.Errorf("resource wallix-bastion_connection_policy not available with api version %s", version)
 }
 
-func resourceConnectionPolicyCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceConnectionPolicyCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceConnectionPolicyVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -94,7 +99,10 @@ func resourceConnectionPolicyCreate(ctx context.Context, d *schema.ResourceData,
 
 	return resourceConnectionPolicyRead(ctx, d, m)
 }
-func resourceConnectionPolicyRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceConnectionPolicyRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceConnectionPolicyVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -111,7 +119,10 @@ func resourceConnectionPolicyRead(ctx context.Context, d *schema.ResourceData, m
 
 	return nil
 }
-func resourceConnectionPolicyUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceConnectionPolicyUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceConnectionPolicyVersionCheck(c.bastionAPIVersion); err != nil {
@@ -124,7 +135,10 @@ func resourceConnectionPolicyUpdate(ctx context.Context, d *schema.ResourceData,
 
 	return resourceConnectionPolicyRead(ctx, d, m)
 }
-func resourceConnectionPolicyDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceConnectionPolicyDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceConnectionPolicyVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -135,7 +149,12 @@ func resourceConnectionPolicyDelete(ctx context.Context, d *schema.ResourceData,
 
 	return nil
 }
-func resourceConnectionPolicyImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+func resourceConnectionPolicyImport(
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceConnectionPolicyVersionCheck(c.bastionAPIVersion); err != nil {
@@ -160,8 +179,11 @@ func resourceConnectionPolicyImport(d *schema.ResourceData, m interface{}) ([]*s
 	return result, nil
 }
 
-func searchResourceConnectionPolicy(ctx context.Context,
-	connectionPolicyName string, m interface{}) (string, bool, error) {
+func searchResourceConnectionPolicy(
+	ctx context.Context, connectionPolicyName string, m interface{},
+) (
+	string, bool, error,
+) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
 		"/connectionpolicies/?q=connection_policy_name="+connectionPolicyName, http.MethodGet, nil)
@@ -183,7 +205,9 @@ func searchResourceConnectionPolicy(ctx context.Context,
 	return "", false, nil
 }
 
-func addConnectionPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addConnectionPolicy(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData, err := prepareConnectionPolicyJSON(d)
 	if err != nil {
@@ -200,7 +224,9 @@ func addConnectionPolicy(ctx context.Context, d *schema.ResourceData, m interfac
 	return nil
 }
 
-func updateConnectionPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateConnectionPolicy(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData, err := prepareConnectionPolicyJSON(d)
 	if err != nil {
@@ -217,7 +243,9 @@ func updateConnectionPolicy(ctx context.Context, d *schema.ResourceData, m inter
 	return nil
 }
 
-func deleteConnectionPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func deleteConnectionPolicy(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/connectionpolicies/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
@@ -255,6 +283,7 @@ func prepareConnectionPolicyJSON(d *schema.ResourceData) (jsonConnectionPolicy, 
 
 	return jsonData, nil
 }
+
 func validAuthenticationMethods() []string {
 	return []string{
 		"KERBEROS_FORWARDING",
@@ -267,7 +296,10 @@ func validAuthenticationMethods() []string {
 }
 
 func readConnectionPolicyOptions(
-	ctx context.Context, connectionPolicyID string, m interface{}) (jsonConnectionPolicy, error) {
+	ctx context.Context, connectionPolicyID string, m interface{},
+) (
+	jsonConnectionPolicy, error,
+) {
 	c := m.(*Client)
 	var result jsonConnectionPolicy
 	body, code, err := c.newRequest(ctx, "/connectionpolicies/"+connectionPolicyID, http.MethodGet, nil)

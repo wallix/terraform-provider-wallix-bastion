@@ -95,6 +95,7 @@ func resourceDeviceLocalDomain() *schema.Resource {
 		},
 	}
 }
+
 func resourceDeviceLocalDomainVersionCheck(version string) error {
 	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
@@ -103,7 +104,9 @@ func resourceDeviceLocalDomainVersionCheck(version string) error {
 	return fmt.Errorf("resource wallix-bastion_device_localdomain not available with api version %s", version)
 }
 
-func resourceDeviceLocalDomainCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceDeviceLocalDomainCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceDeviceLocalDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -139,7 +142,10 @@ func resourceDeviceLocalDomainCreate(ctx context.Context, d *schema.ResourceData
 
 	return resourceDeviceLocalDomainRead(ctx, d, m)
 }
-func resourceDeviceLocalDomainRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceDeviceLocalDomainRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceDeviceLocalDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -156,7 +162,10 @@ func resourceDeviceLocalDomainRead(ctx context.Context, d *schema.ResourceData, 
 
 	return nil
 }
-func resourceDeviceLocalDomainUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceDeviceLocalDomainUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceDeviceLocalDomainVersionCheck(c.bastionAPIVersion); err != nil {
@@ -169,7 +178,10 @@ func resourceDeviceLocalDomainUpdate(ctx context.Context, d *schema.ResourceData
 
 	return resourceDeviceLocalDomainRead(ctx, d, m)
 }
-func resourceDeviceLocalDomainDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceDeviceLocalDomainDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceDeviceLocalDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -180,7 +192,12 @@ func resourceDeviceLocalDomainDelete(ctx context.Context, d *schema.ResourceData
 
 	return nil
 }
-func resourceDeviceLocalDomainImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+func resourceDeviceLocalDomainImport(
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceDeviceLocalDomainVersionCheck(c.bastionAPIVersion); err != nil {
@@ -212,8 +229,11 @@ func resourceDeviceLocalDomainImport(d *schema.ResourceData, m interface{}) ([]*
 	return result, nil
 }
 
-func searchResourceDeviceLocalDomain(ctx context.Context,
-	deviceID, domainName string, m interface{}) (string, bool, error) {
+func searchResourceDeviceLocalDomain(
+	ctx context.Context, deviceID, domainName string, m interface{},
+) (
+	string, bool, error,
+) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/devices/"+deviceID+
 		"/localdomains/?q=domain_name="+domainName, http.MethodGet, nil)
@@ -235,7 +255,9 @@ func searchResourceDeviceLocalDomain(ctx context.Context,
 	return "", false, nil
 }
 
-func addDeviceLocalDomain(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addDeviceLocalDomain(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareDeviceLocalDomainJSON(d, true)
 	body, code, err := c.newRequest(ctx, "/devices/"+d.Get("device_id").(string)+"/localdomains/",
@@ -250,7 +272,9 @@ func addDeviceLocalDomain(ctx context.Context, d *schema.ResourceData, m interfa
 	return nil
 }
 
-func updateDeviceLocalDomain(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateDeviceLocalDomain(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareDeviceLocalDomainJSON(d, false)
 	body, code, err := c.newRequest(ctx,
@@ -265,7 +289,9 @@ func updateDeviceLocalDomain(ctx context.Context, d *schema.ResourceData, m inte
 	return nil
 }
 
-func deleteDeviceLocalDomain(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func deleteDeviceLocalDomain(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
 		"/devices/"+d.Get("device_id").(string)+"/localdomains/"+d.Id(), http.MethodDelete, nil)
@@ -314,7 +340,10 @@ func prepareDeviceLocalDomainJSON(d *schema.ResourceData, newResource bool) json
 }
 
 func readDeviceLocalDomainOptions(
-	ctx context.Context, deviceID, localDomainID string, m interface{}) (jsonDeviceLocalDomain, error) {
+	ctx context.Context, deviceID, localDomainID string, m interface{},
+) (
+	jsonDeviceLocalDomain, error,
+) {
 	c := m.(*Client)
 	var result jsonDeviceLocalDomain
 	body, code, err := c.newRequest(ctx, "/devices/"+deviceID+"/localdomains/"+localDomainID, http.MethodGet, nil)

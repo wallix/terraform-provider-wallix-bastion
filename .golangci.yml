@@ -15,7 +15,6 @@ linters:
     - gomnd
     - goerr113 
     - nestif
-    - gofumpt
     - exhaustruct
     - paralleltest
     - gci

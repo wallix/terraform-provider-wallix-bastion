@@ -113,7 +113,10 @@ func resourceUserVersionCheck(version string) error {
 
 	return fmt.Errorf("resource wallix-bastion_user not available with api version %s", version)
 }
-func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceUserCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceUserVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -133,7 +136,10 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface
 
 	return resourceUserRead(ctx, d, m)
 }
-func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceUserRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceUserVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -150,7 +156,10 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 
 	return nil
 }
-func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceUserUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceUserVersionCheck(c.bastionAPIVersion); err != nil {
@@ -163,7 +172,10 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 
 	return resourceUserRead(ctx, d, m)
 }
-func resourceUserDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceUserDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceUserVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -174,7 +186,12 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, m interface
 
 	return nil
 }
-func resourceUserImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+func resourceUserImport(
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceUserVersionCheck(c.bastionAPIVersion); err != nil {
@@ -198,7 +215,11 @@ func resourceUserImport(d *schema.ResourceData, m interface{}) ([]*schema.Resour
 	return result, nil
 }
 
-func checkResourceUserExists(ctx context.Context, userName string, m interface{}) (bool, error) {
+func checkResourceUserExists(
+	ctx context.Context, userName string, m interface{},
+) (
+	bool, error,
+) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/users/"+userName, http.MethodGet, nil)
 	if err != nil {
@@ -214,7 +235,9 @@ func checkResourceUserExists(ctx context.Context, userName string, m interface{}
 	return true, nil
 }
 
-func addUser(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addUser(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareUserJSON(d, true)
 	body, code, err := c.newRequest(ctx, "/users/", http.MethodPost, jsonData)
@@ -228,7 +251,9 @@ func addUser(ctx context.Context, d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func updateUser(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateUser(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareUserJSON(d, false)
 	body, code, err := c.newRequest(ctx, "/users/"+d.Get("user_name").(string)+"?force=true", http.MethodPut, jsonData)
@@ -241,7 +266,10 @@ func updateUser(ctx context.Context, d *schema.ResourceData, m interface{}) erro
 
 	return nil
 }
-func deleteUser(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+
+func deleteUser(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/users/"+d.Get("user_name").(string), http.MethodDelete, nil)
 	if err != nil {
@@ -288,7 +316,11 @@ func prepareUserJSON(d *schema.ResourceData, newResource bool) jsonUser {
 	return jsonData
 }
 
-func readUserOptions(ctx context.Context, userName string, m interface{}) (jsonUser, error) {
+func readUserOptions(
+	ctx context.Context, userName string, m interface{},
+) (
+	jsonUser, error,
+) {
 	c := m.(*Client)
 	var result jsonUser
 	body, code, err := c.newRequest(ctx, "/users/"+userName, http.MethodGet, nil)

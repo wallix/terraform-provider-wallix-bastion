@@ -103,6 +103,7 @@ func resourceDomainAccount() *schema.Resource {
 		},
 	}
 }
+
 func resourceDomainAccountVersionCheck(version string) error {
 	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
@@ -111,8 +112,9 @@ func resourceDomainAccountVersionCheck(version string) error {
 	return fmt.Errorf("resource wallix-bastion_domain_account not available with api version %s", version)
 }
 
-func resourceDomainAccountCreate(ctx context.Context,
-	d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceDomainAccountCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -148,7 +150,10 @@ func resourceDomainAccountCreate(ctx context.Context,
 
 	return resourceDomainAccountRead(ctx, d, m)
 }
-func resourceDomainAccountRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceDomainAccountRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -165,8 +170,10 @@ func resourceDomainAccountRead(ctx context.Context, d *schema.ResourceData, m in
 
 	return nil
 }
-func resourceDomainAccountUpdate(ctx context.Context,
-	d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceDomainAccountUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
@@ -179,8 +186,10 @@ func resourceDomainAccountUpdate(ctx context.Context,
 
 	return resourceDomainAccountRead(ctx, d, m)
 }
-func resourceDomainAccountDelete(ctx context.Context,
-	d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceDomainAccountDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -191,7 +200,12 @@ func resourceDomainAccountDelete(ctx context.Context,
 
 	return nil
 }
-func resourceDomainAccountImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+func resourceDomainAccountImport(
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
@@ -224,8 +238,11 @@ func resourceDomainAccountImport(d *schema.ResourceData, m interface{}) ([]*sche
 	return result, nil
 }
 
-func searchResourceDomainAccount(ctx context.Context,
-	domainID, accountName string, m interface{}) (string, bool, error) {
+func searchResourceDomainAccount(
+	ctx context.Context, domainID, accountName string, m interface{},
+) (
+	string, bool, error,
+) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
 		"/domains/"+domainID+"/accounts/?q=account_name="+accountName, http.MethodGet, nil)
@@ -247,7 +264,9 @@ func searchResourceDomainAccount(ctx context.Context,
 	return "", false, nil
 }
 
-func addDomainAccount(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addDomainAccount(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData, err := prepareDomainAccountJSON(d)
 	if err != nil {
@@ -265,7 +284,9 @@ func addDomainAccount(ctx context.Context, d *schema.ResourceData, m interface{}
 	return nil
 }
 
-func updateDomainAccount(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateDomainAccount(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData, err := prepareDomainAccountJSON(d)
 	if err != nil {
@@ -283,7 +304,9 @@ func updateDomainAccount(ctx context.Context, d *schema.ResourceData, m interfac
 	return nil
 }
 
-func deleteDomainAccount(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func deleteDomainAccount(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
 		"/domains/"+d.Get("domain_id").(string)+"/accounts/"+d.Id(), http.MethodDelete, nil)
@@ -322,8 +345,10 @@ func prepareDomainAccountJSON(d *schema.ResourceData) (jsonDomainAccount, error)
 }
 
 func readDomainAccountOptions(
-	ctx context.Context, localDomainID, accountID string, m interface{}) (
-	jsonDomainAccount, error) {
+	ctx context.Context, localDomainID, accountID string, m interface{},
+) (
+	jsonDomainAccount, error,
+) {
 	c := m.(*Client)
 	var result jsonDomainAccount
 	body, code, err := c.newRequest(ctx, "/domains/"+localDomainID+"/accounts/"+accountID, http.MethodGet, nil)

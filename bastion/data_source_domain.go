@@ -52,7 +52,9 @@ func dataSourceDomain() *schema.Resource {
 	}
 }
 
-func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceDomainRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)

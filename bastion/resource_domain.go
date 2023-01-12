@@ -113,6 +113,7 @@ func resourceDomain() *schema.Resource {
 		},
 	}
 }
+
 func resourceDomainVersionCheck(version string) error {
 	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
@@ -121,7 +122,9 @@ func resourceDomainVersionCheck(version string) error {
 	return fmt.Errorf("resource wallix-bastion_domain not available with api version %s", version)
 }
 
-func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceDomainCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -148,7 +151,10 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, m interfa
 
 	return resourceDomainRead(ctx, d, m)
 }
-func resourceDomainRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceDomainRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -165,7 +171,10 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, m interface
 
 	return nil
 }
-func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceDomainUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceDomainVersionCheck(c.bastionAPIVersion); err != nil {
@@ -178,7 +187,10 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, m interfa
 
 	return resourceDomainRead(ctx, d, m)
 }
-func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceDomainDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -189,7 +201,12 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, m interfa
 
 	return nil
 }
-func resourceDomainImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+func resourceDomainImport(
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceDomainVersionCheck(c.bastionAPIVersion); err != nil {
@@ -214,7 +231,11 @@ func resourceDomainImport(d *schema.ResourceData, m interface{}) ([]*schema.Reso
 	return result, nil
 }
 
-func searchResourceDomain(ctx context.Context, domainName string, m interface{}) (string, bool, error) {
+func searchResourceDomain(
+	ctx context.Context, domainName string, m interface{},
+) (
+	string, bool, error,
+) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/domains/?q=domain_name="+domainName, http.MethodGet, nil)
 	if err != nil {
@@ -235,7 +256,9 @@ func searchResourceDomain(ctx context.Context, domainName string, m interface{})
 	return "", false, nil
 }
 
-func addDomain(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addDomain(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareDomainJSON(d, true)
 	body, code, err := c.newRequest(ctx, "/domains/", http.MethodPost, jsonData)
@@ -249,7 +272,9 @@ func addDomain(ctx context.Context, d *schema.ResourceData, m interface{}) error
 	return nil
 }
 
-func updateDomain(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateDomain(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareDomainJSON(d, false)
 	body, code, err := c.newRequest(ctx, "/domains/"+d.Id(), http.MethodPut, jsonData)
@@ -263,7 +288,9 @@ func updateDomain(ctx context.Context, d *schema.ResourceData, m interface{}) er
 	return nil
 }
 
-func deleteDomain(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func deleteDomain(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/domains/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
@@ -323,7 +350,10 @@ func prepareDomainJSON(d *schema.ResourceData, newResource bool) jsonDomain {
 }
 
 func readDomainOptions(
-	ctx context.Context, domainID string, m interface{}) (jsonDomain, error) {
+	ctx context.Context, domainID string, m interface{},
+) (
+	jsonDomain, error,
+) {
 	c := m.(*Client)
 	var result jsonDomain
 	body, code, err := c.newRequest(ctx, "/domains/"+domainID, http.MethodGet, nil)

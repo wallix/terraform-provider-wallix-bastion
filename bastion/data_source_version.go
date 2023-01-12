@@ -59,7 +59,9 @@ func dataSourceVersion() *schema.Resource {
 	}
 }
 
-func dataSourceVersionRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceVersionRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	cfg, err := readVersionOptions(ctx, m)
 	if err != nil {
 		return diag.FromErr(err)
@@ -70,7 +72,11 @@ func dataSourceVersionRead(ctx context.Context, d *schema.ResourceData, m interf
 	return nil
 }
 
-func readVersionOptions(ctx context.Context, m interface{}) (jsonVersion, error) {
+func readVersionOptions(
+	ctx context.Context, m interface{},
+) (
+	jsonVersion, error,
+) {
 	c := m.(*Client)
 	var result jsonVersion
 	url := "https://" + c.bastionIP + ":" + strconv.Itoa(c.bastionPort) + "/api/version"

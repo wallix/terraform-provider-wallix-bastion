@@ -142,6 +142,7 @@ func resourceAuthorization() *schema.Resource {
 		},
 	}
 }
+
 func resourceAuthorizationVersionCheck(version string) error {
 	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
@@ -150,7 +151,9 @@ func resourceAuthorizationVersionCheck(version string) error {
 	return fmt.Errorf("resource wallix-bastion_authorization not available with api version %s", version)
 }
 
-func resourceAuthorizationCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceAuthorizationCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceAuthorizationVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -177,7 +180,10 @@ func resourceAuthorizationCreate(ctx context.Context, d *schema.ResourceData, m 
 
 	return resourceAuthorizationRead(ctx, d, m)
 }
-func resourceAuthorizationRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceAuthorizationRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceAuthorizationVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -194,7 +200,10 @@ func resourceAuthorizationRead(ctx context.Context, d *schema.ResourceData, m in
 
 	return nil
 }
-func resourceAuthorizationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceAuthorizationUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceAuthorizationVersionCheck(c.bastionAPIVersion); err != nil {
@@ -207,7 +216,10 @@ func resourceAuthorizationUpdate(ctx context.Context, d *schema.ResourceData, m 
 
 	return resourceAuthorizationRead(ctx, d, m)
 }
-func resourceAuthorizationDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceAuthorizationDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceAuthorizationVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -218,7 +230,12 @@ func resourceAuthorizationDelete(ctx context.Context, d *schema.ResourceData, m 
 
 	return nil
 }
-func resourceAuthorizationImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+func resourceAuthorizationImport(
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceAuthorizationVersionCheck(c.bastionAPIVersion); err != nil {
@@ -243,7 +260,11 @@ func resourceAuthorizationImport(d *schema.ResourceData, m interface{}) ([]*sche
 	return result, nil
 }
 
-func searchResourceAuthorization(ctx context.Context, authorizationName string, m interface{}) (string, bool, error) {
+func searchResourceAuthorization(
+	ctx context.Context, authorizationName string, m interface{},
+) (
+	string, bool, error,
+) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/authorizations/?q=authorization_name="+authorizationName, http.MethodGet, nil)
 	if err != nil {
@@ -264,7 +285,9 @@ func searchResourceAuthorization(ctx context.Context, authorizationName string, 
 	return "", false, nil
 }
 
-func addAuthorization(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addAuthorization(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareAuthorizationJSON(d, true)
 	body, code, err := c.newRequest(ctx, "/authorizations/", http.MethodPost, jsonData)
@@ -278,7 +301,9 @@ func addAuthorization(ctx context.Context, d *schema.ResourceData, m interface{}
 	return nil
 }
 
-func updateAuthorization(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateAuthorization(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareAuthorizationJSON(d, false)
 	body, code, err := c.newRequest(ctx, "/authorizations/"+d.Id()+"?force=true", http.MethodPut, jsonData)
@@ -292,7 +317,9 @@ func updateAuthorization(ctx context.Context, d *schema.ResourceData, m interfac
 	return nil
 }
 
-func deleteAuthorization(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func deleteAuthorization(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/authorizations/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
@@ -354,7 +381,10 @@ func prepareAuthorizationJSON(d *schema.ResourceData, newResource bool) jsonAuth
 }
 
 func readAuthorizationOptions(
-	ctx context.Context, authorizationID string, m interface{}) (jsonAuthorization, error) {
+	ctx context.Context, authorizationID string, m interface{},
+) (
+	jsonAuthorization, error,
+) {
 	c := m.(*Client)
 	var result jsonAuthorization
 	body, code, err := c.newRequest(ctx, "/authorizations/"+authorizationID, http.MethodGet, nil)

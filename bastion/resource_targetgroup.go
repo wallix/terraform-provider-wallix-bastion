@@ -135,10 +135,19 @@ func resourceTargetGroup() *schema.Resource {
 						"subprotocol": {
 							Type:     schema.TypeString,
 							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"SSH_SHELL_SESSION", "SSH_REMOTE_COMMAND", "SSH_SCP_UP", "SSH_SCP_DOWN",
-								"SFTP_SESSION", "RLOGIN", "TELNET", "RDP"},
-								false),
+							ValidateFunc: validation.StringInSlice(
+								[]string{
+									"SSH_SHELL_SESSION",
+									"SSH_REMOTE_COMMAND",
+									"SSH_SCP_UP",
+									"SSH_SCP_DOWN",
+									"SFTP_SESSION",
+									"RLOGIN",
+									"TELNET",
+									"RDP",
+								},
+								false,
+							),
 						},
 					},
 				},
@@ -259,6 +268,7 @@ func resourceTargetGroup() *schema.Resource {
 		},
 	}
 }
+
 func resourceTargetGroupVersionCheck(version string) error {
 	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
@@ -267,7 +277,9 @@ func resourceTargetGroupVersionCheck(version string) error {
 	return fmt.Errorf("resource wallix-bastion_targetgroup not available with api version %s", version)
 }
 
-func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceTargetGroupCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceTargetGroupVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -294,7 +306,10 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, m in
 
 	return resourceTargetGroupRead(ctx, d, m)
 }
-func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceTargetGroupRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceTargetGroupVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -311,7 +326,10 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, m inte
 
 	return nil
 }
-func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceTargetGroupUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceTargetGroupVersionCheck(c.bastionAPIVersion); err != nil {
@@ -324,7 +342,10 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, m in
 
 	return resourceTargetGroupRead(ctx, d, m)
 }
-func resourceTargetGroupDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceTargetGroupDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceTargetGroupVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -335,7 +356,12 @@ func resourceTargetGroupDelete(ctx context.Context, d *schema.ResourceData, m in
 
 	return nil
 }
-func resourceTargetGroupImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+func resourceTargetGroupImport(
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceTargetGroupVersionCheck(c.bastionAPIVersion); err != nil {
@@ -360,7 +386,11 @@ func resourceTargetGroupImport(d *schema.ResourceData, m interface{}) ([]*schema
 	return result, nil
 }
 
-func searchResourceTargetGroup(ctx context.Context, groupName string, m interface{}) (string, bool, error) {
+func searchResourceTargetGroup(
+	ctx context.Context, groupName string, m interface{},
+) (
+	string, bool, error,
+) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/targetgroups/?q=group_name="+groupName, http.MethodGet, nil)
 	if err != nil {
@@ -381,7 +411,9 @@ func searchResourceTargetGroup(ctx context.Context, groupName string, m interfac
 	return "", false, nil
 }
 
-func addTargetGroup(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addTargetGroup(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	json, err := prepareTargetGroupJSON(d)
 	if err != nil {
@@ -398,7 +430,9 @@ func addTargetGroup(ctx context.Context, d *schema.ResourceData, m interface{}) 
 	return nil
 }
 
-func updateTargetGroup(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateTargetGroup(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	json, err := prepareTargetGroupJSON(d)
 	if err != nil {
@@ -414,7 +448,10 @@ func updateTargetGroup(ctx context.Context, d *schema.ResourceData, m interface{
 
 	return nil
 }
-func deleteTargetGroup(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+
+func deleteTargetGroup(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/targetgroups/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
@@ -601,7 +638,10 @@ func prepareTargetGroupJSON(d *schema.ResourceData) (jsonTargetGroup, error) { /
 }
 
 func readTargetGroupOptions(
-	ctx context.Context, groupID string, m interface{}) (jsonTargetGroup, error) {
+	ctx context.Context, groupID string, m interface{},
+) (
+	jsonTargetGroup, error,
+) {
 	c := m.(*Client)
 	var result jsonTargetGroup
 	body, code, err := c.newRequest(ctx, "/targetgroups/"+groupID, http.MethodGet, nil)

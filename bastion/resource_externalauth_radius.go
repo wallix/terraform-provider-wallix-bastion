@@ -67,6 +67,7 @@ func resourceExternalAuthRadius() *schema.Resource {
 		},
 	}
 }
+
 func resourceExternalAuthRadiusVersionCheck(version string) error {
 	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
@@ -75,7 +76,9 @@ func resourceExternalAuthRadiusVersionCheck(version string) error {
 	return fmt.Errorf("resource wallix-bastion_externalauth_radius not available with api version %s", version)
 }
 
-func resourceExternalAuthRadiusCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceExternalAuthRadiusCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceExternalAuthRadiusVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -102,7 +105,10 @@ func resourceExternalAuthRadiusCreate(ctx context.Context, d *schema.ResourceDat
 
 	return resourceExternalAuthRadiusRead(ctx, d, m)
 }
-func resourceExternalAuthRadiusRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceExternalAuthRadiusRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceExternalAuthRadiusVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -119,7 +125,10 @@ func resourceExternalAuthRadiusRead(ctx context.Context, d *schema.ResourceData,
 
 	return nil
 }
-func resourceExternalAuthRadiusUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceExternalAuthRadiusUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceExternalAuthRadiusVersionCheck(c.bastionAPIVersion); err != nil {
@@ -132,7 +141,10 @@ func resourceExternalAuthRadiusUpdate(ctx context.Context, d *schema.ResourceDat
 
 	return resourceExternalAuthRadiusRead(ctx, d, m)
 }
-func resourceExternalAuthRadiusDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceExternalAuthRadiusDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceExternalAuthRadiusVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -143,7 +155,12 @@ func resourceExternalAuthRadiusDelete(ctx context.Context, d *schema.ResourceDat
 
 	return nil
 }
-func resourceExternalAuthRadiusImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+func resourceExternalAuthRadiusImport(
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceExternalAuthRadiusVersionCheck(c.bastionAPIVersion); err != nil {
@@ -169,7 +186,10 @@ func resourceExternalAuthRadiusImport(d *schema.ResourceData, m interface{}) ([]
 }
 
 func searchResourceExternalAuthRadius(
-	ctx context.Context, authenticationName string, m interface{}) (string, bool, error) {
+	ctx context.Context, authenticationName string, m interface{},
+) (
+	string, bool, error,
+) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/externalauths/?q=authentication_name="+authenticationName, http.MethodGet, nil)
 	if err != nil {
@@ -190,7 +210,9 @@ func searchResourceExternalAuthRadius(
 	return "", false, nil
 }
 
-func addExternalAuthRadius(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addExternalAuthRadius(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareExternalAuthRadiusJSON(d)
 	body, code, err := c.newRequest(ctx, "/externalauths/", http.MethodPost, jsonData)
@@ -204,7 +226,9 @@ func addExternalAuthRadius(ctx context.Context, d *schema.ResourceData, m interf
 	return nil
 }
 
-func updateExternalAuthRadius(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateExternalAuthRadius(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareExternalAuthRadiusJSON(d)
 	body, code, err := c.newRequest(ctx, "/externalauths/"+d.Id(), http.MethodPut, jsonData)
@@ -217,7 +241,10 @@ func updateExternalAuthRadius(ctx context.Context, d *schema.ResourceData, m int
 
 	return nil
 }
-func deleteExternalAuthRadius(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+
+func deleteExternalAuthRadius(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/externalauths/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
@@ -244,7 +271,10 @@ func prepareExternalAuthRadiusJSON(d *schema.ResourceData) jsonExternalAuthRadiu
 }
 
 func readExternalAuthRadiusOptions(
-	ctx context.Context, authenticationID string, m interface{}) (jsonExternalAuthRadius, error) {
+	ctx context.Context, authenticationID string, m interface{},
+) (
+	jsonExternalAuthRadius, error,
+) {
 	c := m.(*Client)
 	var result jsonExternalAuthRadius
 	body, code, err := c.newRequest(ctx, "/externalauths/"+authenticationID, http.MethodGet, nil)

@@ -132,6 +132,7 @@ func resourceDevice() *schema.Resource {
 		},
 	}
 }
+
 func resourceDeviceVersionCheck(version string) error {
 	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
@@ -140,7 +141,9 @@ func resourceDeviceVersionCheck(version string) error {
 	return fmt.Errorf("resource wallix-bastion_device not available with api version %s", version)
 }
 
-func resourceDeviceCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceDeviceCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceDeviceVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -167,7 +170,10 @@ func resourceDeviceCreate(ctx context.Context, d *schema.ResourceData, m interfa
 
 	return resourceDeviceRead(ctx, d, m)
 }
-func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceDeviceRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceDeviceVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -184,7 +190,10 @@ func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, m interface
 
 	return nil
 }
-func resourceDeviceUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceDeviceUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceDeviceVersionCheck(c.bastionAPIVersion); err != nil {
@@ -197,7 +206,10 @@ func resourceDeviceUpdate(ctx context.Context, d *schema.ResourceData, m interfa
 
 	return resourceDeviceRead(ctx, d, m)
 }
-func resourceDeviceDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceDeviceDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceDeviceVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -208,7 +220,12 @@ func resourceDeviceDelete(ctx context.Context, d *schema.ResourceData, m interfa
 
 	return nil
 }
-func resourceDeviceImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+func resourceDeviceImport(
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceDeviceVersionCheck(c.bastionAPIVersion); err != nil {
@@ -233,7 +250,11 @@ func resourceDeviceImport(d *schema.ResourceData, m interface{}) ([]*schema.Reso
 	return result, nil
 }
 
-func searchResourceDevice(ctx context.Context, deviceName string, m interface{}) (string, bool, error) {
+func searchResourceDevice(
+	ctx context.Context, deviceName string, m interface{},
+) (
+	string, bool, error,
+) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/devices/?q=device_name="+deviceName, http.MethodGet, nil)
 	if err != nil {
@@ -254,7 +275,9 @@ func searchResourceDevice(ctx context.Context, deviceName string, m interface{})
 	return "", false, nil
 }
 
-func addDevice(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addDevice(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareDeviceJSON(d)
 	body, code, err := c.newRequest(ctx, "/devices/", http.MethodPost, jsonData)
@@ -268,7 +291,9 @@ func addDevice(ctx context.Context, d *schema.ResourceData, m interface{}) error
 	return nil
 }
 
-func updateDevice(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateDevice(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareDeviceJSON(d)
 	body, code, err := c.newRequest(ctx, "/devices/"+d.Id(), http.MethodPut, jsonData)
@@ -282,7 +307,9 @@ func updateDevice(ctx context.Context, d *schema.ResourceData, m interface{}) er
 	return nil
 }
 
-func deleteDevice(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func deleteDevice(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/devices/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
@@ -305,7 +332,10 @@ func prepareDeviceJSON(d *schema.ResourceData) jsonDevice {
 }
 
 func readDeviceOptions(
-	ctx context.Context, deviceID string, m interface{}) (jsonDevice, error) {
+	ctx context.Context, deviceID string, m interface{},
+) (
+	jsonDevice, error,
+) {
 	c := m.(*Client)
 	var result jsonDevice
 	body, code, err := c.newRequest(ctx, "/devices/"+deviceID, http.MethodGet, nil)

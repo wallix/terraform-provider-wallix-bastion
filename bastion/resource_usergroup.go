@@ -66,10 +66,19 @@ func resourceUserGroup() *schema.Resource {
 						"subprotocol": {
 							Type:     schema.TypeString,
 							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"SSH_SHELL_SESSION", "SSH_REMOTE_COMMAND", "SSH_SCP_UP", "SSH_SCP_DOWN",
-								"SFTP_SESSION", "RLOGIN", "TELNET", "RDP"},
-								false),
+							ValidateFunc: validation.StringInSlice(
+								[]string{
+									"SSH_SHELL_SESSION",
+									"SSH_REMOTE_COMMAND",
+									"SSH_SCP_UP",
+									"SSH_SCP_DOWN",
+									"SFTP_SESSION",
+									"RLOGIN",
+									"TELNET",
+									"RDP",
+								},
+								false,
+							),
 						},
 					},
 				},
@@ -83,6 +92,7 @@ func resourceUserGroup() *schema.Resource {
 		},
 	}
 }
+
 func resourceUserGroupVersionCheck(version string) error {
 	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
@@ -91,7 +101,9 @@ func resourceUserGroupVersionCheck(version string) error {
 	return fmt.Errorf("resource wallix-bastion_usergroup not available with api version %s", version)
 }
 
-func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceUserGroupCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceUserGroupVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -118,7 +130,10 @@ func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, m inte
 
 	return resourceUserGroupRead(ctx, d, m)
 }
-func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceUserGroupRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceUserGroupVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -135,7 +150,10 @@ func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, m interf
 
 	return nil
 }
-func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceUserGroupUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceUserGroupVersionCheck(c.bastionAPIVersion); err != nil {
@@ -148,7 +166,10 @@ func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, m inte
 
 	return resourceUserGroupRead(ctx, d, m)
 }
-func resourceUserGroupDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceUserGroupDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceUserGroupVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -159,7 +180,12 @@ func resourceUserGroupDelete(ctx context.Context, d *schema.ResourceData, m inte
 
 	return nil
 }
-func resourceUserGroupImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+func resourceUserGroupImport(
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceUserGroupVersionCheck(c.bastionAPIVersion); err != nil {
@@ -184,7 +210,11 @@ func resourceUserGroupImport(d *schema.ResourceData, m interface{}) ([]*schema.R
 	return result, nil
 }
 
-func searchResourceUserGroup(ctx context.Context, groupName string, m interface{}) (string, bool, error) {
+func searchResourceUserGroup(
+	ctx context.Context, groupName string, m interface{},
+) (
+	string, bool, error,
+) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/usergroups/?q=group_name="+groupName, http.MethodGet, nil)
 	if err != nil {
@@ -205,7 +235,9 @@ func searchResourceUserGroup(ctx context.Context, groupName string, m interface{
 	return "", false, nil
 }
 
-func addUserGroup(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addUserGroup(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareUserGroupJSON(d)
 	body, code, err := c.newRequest(ctx, "/usergroups/", http.MethodPost, jsonData)
@@ -219,7 +251,9 @@ func addUserGroup(ctx context.Context, d *schema.ResourceData, m interface{}) er
 	return nil
 }
 
-func updateUserGroup(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateUserGroup(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareUserGroupJSON(d)
 	body, code, err := c.newRequest(ctx, "/usergroups/"+d.Id()+"?force=true", http.MethodPut, jsonData)
@@ -232,7 +266,10 @@ func updateUserGroup(ctx context.Context, d *schema.ResourceData, m interface{})
 
 	return nil
 }
-func deleteUserGroup(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+
+func deleteUserGroup(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/usergroups/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
@@ -278,7 +315,10 @@ func prepareUserGroupJSON(d *schema.ResourceData) jsonUserGroup {
 }
 
 func readUserGroupOptions(
-	ctx context.Context, groupID string, m interface{}) (jsonUserGroup, error) {
+	ctx context.Context, groupID string, m interface{},
+) (
+	jsonUserGroup, error,
+) {
 	c := m.(*Client)
 	var result jsonUserGroup
 	body, code, err := c.newRequest(ctx, "/usergroups/"+groupID, http.MethodGet, nil)

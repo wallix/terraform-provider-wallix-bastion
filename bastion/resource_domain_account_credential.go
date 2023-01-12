@@ -62,6 +62,7 @@ func resourceDomainAccountCredential() *schema.Resource {
 		},
 	}
 }
+
 func resourceDomainAccountCredentialVersionCheck(version string) error {
 	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
@@ -70,8 +71,9 @@ func resourceDomainAccountCredentialVersionCheck(version string) error {
 	return fmt.Errorf("resource wallix-bastion_domain_account_credential not available with api version %s", version)
 }
 
-func resourceDomainAccountCredentialCreate(ctx context.Context,
-	d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceDomainAccountCredentialCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -118,8 +120,10 @@ func resourceDomainAccountCredentialCreate(ctx context.Context,
 
 	return resourceDomainAccountCredentialRead(ctx, d, m)
 }
-func resourceDomainAccountCredentialRead(ctx context.Context,
-	d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceDomainAccountCredentialRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -137,8 +141,10 @@ func resourceDomainAccountCredentialRead(ctx context.Context,
 
 	return nil
 }
-func resourceDomainAccountCredentialUpdate(ctx context.Context,
-	d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceDomainAccountCredentialUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
@@ -151,8 +157,10 @@ func resourceDomainAccountCredentialUpdate(ctx context.Context,
 
 	return resourceDomainAccountCredentialRead(ctx, d, m)
 }
-func resourceDomainAccountCredentialDelete(ctx context.Context,
-	d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceDomainAccountCredentialDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -163,8 +171,12 @@ func resourceDomainAccountCredentialDelete(ctx context.Context,
 
 	return nil
 }
+
 func resourceDomainAccountCredentialImport(
-	d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
@@ -200,8 +212,11 @@ func resourceDomainAccountCredentialImport(
 	return result, nil
 }
 
-func searchResourceDomainAccountCredential(ctx context.Context,
-	domainID, accountID, typeCred string, m interface{}) (string, bool, error) {
+func searchResourceDomainAccountCredential(
+	ctx context.Context, domainID, accountID, typeCred string, m interface{},
+) (
+	string, bool, error,
+) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
 		"/domains/"+domainID+"/accounts/"+accountID+
@@ -226,7 +241,9 @@ func searchResourceDomainAccountCredential(ctx context.Context,
 	return "", false, nil
 }
 
-func addDomainAccountCredential(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addDomainAccountCredential(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareDomainAccountCredentialJSON(d, true)
 	body, code, err := c.newRequest(ctx,
@@ -242,7 +259,9 @@ func addDomainAccountCredential(ctx context.Context, d *schema.ResourceData, m i
 	return nil
 }
 
-func updateDomainAccountCredential(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateDomainAccountCredential(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareDomainAccountCredentialJSON(d, false)
 	body, code, err := c.newRequest(ctx,
@@ -258,7 +277,9 @@ func updateDomainAccountCredential(ctx context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func deleteDomainAccountCredential(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func deleteDomainAccountCredential(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
 		"/domains/"+d.Get("domain_id").(string)+"/accounts/"+d.Get("account_id").(string)+"/credentials/"+d.Id(),
@@ -274,7 +295,8 @@ func deleteDomainAccountCredential(ctx context.Context, d *schema.ResourceData, 
 }
 
 func prepareDomainAccountCredentialJSON(
-	d *schema.ResourceData, newResource bool) jsonCredential {
+	d *schema.ResourceData, newResource bool,
+) jsonCredential {
 	var jsonData jsonCredential
 	jsonData.Type = d.Get("type").(string)
 	if jsonData.Type == "password" {
@@ -290,8 +312,10 @@ func prepareDomainAccountCredentialJSON(
 }
 
 func readDomainAccountCredentialOptions(
-	ctx context.Context, localDomainID, accountID, credentialID string, m interface{}) (
-	jsonCredential, error) {
+	ctx context.Context, localDomainID, accountID, credentialID string, m interface{},
+) (
+	jsonCredential, error,
+) {
 	c := m.(*Client)
 	var result jsonCredential
 	body, code, err := c.newRequest(ctx,

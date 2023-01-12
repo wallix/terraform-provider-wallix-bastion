@@ -59,6 +59,7 @@ func resourceCluster() *schema.Resource {
 		},
 	}
 }
+
 func resourceClusterVersionCheck(version string) error {
 	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
@@ -67,7 +68,9 @@ func resourceClusterVersionCheck(version string) error {
 	return fmt.Errorf("resource wallix-bastion_cluster not available with api version %s", version)
 }
 
-func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceClusterCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceClusterVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -94,7 +97,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interf
 
 	return resourceClusterRead(ctx, d, m)
 }
-func resourceClusterRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceClusterRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceClusterVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -111,7 +117,10 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, m interfac
 
 	return nil
 }
-func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceClusterUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceClusterVersionCheck(c.bastionAPIVersion); err != nil {
@@ -124,7 +133,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, m interf
 
 	return resourceClusterRead(ctx, d, m)
 }
-func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceClusterDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceClusterVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -135,7 +147,12 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, m interf
 
 	return nil
 }
-func resourceClusterImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+func resourceClusterImport(
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceClusterVersionCheck(c.bastionAPIVersion); err != nil {
@@ -160,7 +177,11 @@ func resourceClusterImport(d *schema.ResourceData, m interface{}) ([]*schema.Res
 	return result, nil
 }
 
-func searchResourceCluster(ctx context.Context, clusterName string, m interface{}) (string, bool, error) {
+func searchResourceCluster(
+	ctx context.Context, clusterName string, m interface{},
+) (
+	string, bool, error,
+) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/clusters/?q=cluster_name="+clusterName, http.MethodGet, nil)
 	if err != nil {
@@ -181,7 +202,9 @@ func searchResourceCluster(ctx context.Context, clusterName string, m interface{
 	return "", false, nil
 }
 
-func addCluster(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addCluster(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareClusterJSON(d)
 	body, code, err := c.newRequest(ctx, "/clusters/", http.MethodPost, jsonData)
@@ -195,7 +218,9 @@ func addCluster(ctx context.Context, d *schema.ResourceData, m interface{}) erro
 	return nil
 }
 
-func updateCluster(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateCluster(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareClusterJSON(d)
 	body, code, err := c.newRequest(ctx, "/clusters/"+d.Id()+"?force=true", http.MethodPut, jsonData)
@@ -209,7 +234,9 @@ func updateCluster(ctx context.Context, d *schema.ResourceData, m interface{}) e
 	return nil
 }
 
-func deleteCluster(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func deleteCluster(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/clusters/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
@@ -252,7 +279,10 @@ func prepareClusterJSON(d *schema.ResourceData) jsonCluster {
 }
 
 func readClusterOptions(
-	ctx context.Context, clusterID string, m interface{}) (jsonCluster, error) {
+	ctx context.Context, clusterID string, m interface{},
+) (
+	jsonCluster, error,
+) {
 	c := m.(*Client)
 	var result jsonCluster
 	body, code, err := c.newRequest(ctx, "/clusters/"+clusterID, http.MethodGet, nil)

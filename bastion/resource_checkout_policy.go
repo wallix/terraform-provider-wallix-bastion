@@ -68,6 +68,7 @@ func resourceCheckoutPolicy() *schema.Resource {
 		},
 	}
 }
+
 func resourceCheckoutPolicyVersionCheck(version string) error {
 	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
@@ -76,7 +77,9 @@ func resourceCheckoutPolicyVersionCheck(version string) error {
 	return fmt.Errorf("resource wallix-bastion_checkout_policy not available with api version %s", version)
 }
 
-func resourceCheckoutPolicyCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceCheckoutPolicyCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceCheckoutPolicyVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -104,7 +107,10 @@ func resourceCheckoutPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 
 	return resourceCheckoutPolicyRead(ctx, d, m)
 }
-func resourceCheckoutPolicyRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceCheckoutPolicyRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceCheckoutPolicyVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -121,7 +127,10 @@ func resourceCheckoutPolicyRead(ctx context.Context, d *schema.ResourceData, m i
 
 	return nil
 }
-func resourceCheckoutPolicyUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceCheckoutPolicyUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceCheckoutPolicyVersionCheck(c.bastionAPIVersion); err != nil {
@@ -134,7 +143,10 @@ func resourceCheckoutPolicyUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	return resourceCheckoutPolicyRead(ctx, d, m)
 }
-func resourceCheckoutPolicyDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceCheckoutPolicyDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceCheckoutPolicyVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -145,7 +157,12 @@ func resourceCheckoutPolicyDelete(ctx context.Context, d *schema.ResourceData, m
 
 	return nil
 }
-func resourceCheckoutPolicyImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+func resourceCheckoutPolicyImport(
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceCheckoutPolicyVersionCheck(c.bastionAPIVersion); err != nil {
@@ -170,7 +187,11 @@ func resourceCheckoutPolicyImport(d *schema.ResourceData, m interface{}) ([]*sch
 	return result, nil
 }
 
-func searchResourceCheckoutPolicy(ctx context.Context, checkoutPolicyName string, m interface{}) (string, bool, error) {
+func searchResourceCheckoutPolicy(
+	ctx context.Context, checkoutPolicyName string, m interface{},
+) (
+	string, bool, error,
+) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
 		"/checkoutpolicies/?q=checkout_policy_name="+checkoutPolicyName, http.MethodGet, nil)
@@ -192,7 +213,9 @@ func searchResourceCheckoutPolicy(ctx context.Context, checkoutPolicyName string
 	return "", false, nil
 }
 
-func addCheckoutPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addCheckoutPolicy(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareCheckoutPolicyJSON(d)
 	body, code, err := c.newRequest(ctx, "/checkoutpolicies/", http.MethodPost, jsonData)
@@ -206,7 +229,9 @@ func addCheckoutPolicy(ctx context.Context, d *schema.ResourceData, m interface{
 	return nil
 }
 
-func updateCheckoutPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateCheckoutPolicy(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareCheckoutPolicyJSON(d)
 	body, code, err := c.newRequest(ctx, "/checkoutpolicies/"+d.Id(), http.MethodPut, jsonData)
@@ -220,7 +245,9 @@ func updateCheckoutPolicy(ctx context.Context, d *schema.ResourceData, m interfa
 	return nil
 }
 
-func deleteCheckoutPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func deleteCheckoutPolicy(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/checkoutpolicies/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
@@ -247,7 +274,10 @@ func prepareCheckoutPolicyJSON(d *schema.ResourceData) jsonCheckoutPolicy {
 }
 
 func readCheckoutPolicyOptions(
-	ctx context.Context, checkoutPolicyID string, m interface{}) (jsonCheckoutPolicy, error) {
+	ctx context.Context, checkoutPolicyID string, m interface{},
+) (
+	jsonCheckoutPolicy, error,
+) {
 	c := m.(*Client)
 	var result jsonCheckoutPolicy
 	body, code, err := c.newRequest(ctx, "/checkoutpolicies/"+checkoutPolicyID, http.MethodGet, nil)

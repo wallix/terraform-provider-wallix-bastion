@@ -62,6 +62,7 @@ func resourceExternalAuthTacacs() *schema.Resource {
 		},
 	}
 }
+
 func resourceExternalAuthTacacsVersionCheck(version string) error {
 	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
@@ -70,7 +71,9 @@ func resourceExternalAuthTacacsVersionCheck(version string) error {
 	return fmt.Errorf("resource wallix-bastion_externalauth_tacacs not available with api version %s", version)
 }
 
-func resourceExternalAuthTacacsCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceExternalAuthTacacsCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceExternalAuthTacacsVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -97,7 +100,10 @@ func resourceExternalAuthTacacsCreate(ctx context.Context, d *schema.ResourceDat
 
 	return resourceExternalAuthTacacsRead(ctx, d, m)
 }
-func resourceExternalAuthTacacsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceExternalAuthTacacsRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceExternalAuthTacacsVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -114,7 +120,10 @@ func resourceExternalAuthTacacsRead(ctx context.Context, d *schema.ResourceData,
 
 	return nil
 }
-func resourceExternalAuthTacacsUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceExternalAuthTacacsUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceExternalAuthTacacsVersionCheck(c.bastionAPIVersion); err != nil {
@@ -127,7 +136,10 @@ func resourceExternalAuthTacacsUpdate(ctx context.Context, d *schema.ResourceDat
 
 	return resourceExternalAuthTacacsRead(ctx, d, m)
 }
-func resourceExternalAuthTacacsDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceExternalAuthTacacsDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceExternalAuthTacacsVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -138,7 +150,12 @@ func resourceExternalAuthTacacsDelete(ctx context.Context, d *schema.ResourceDat
 
 	return nil
 }
-func resourceExternalAuthTacacsImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+func resourceExternalAuthTacacsImport(
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceExternalAuthTacacsVersionCheck(c.bastionAPIVersion); err != nil {
@@ -164,7 +181,10 @@ func resourceExternalAuthTacacsImport(d *schema.ResourceData, m interface{}) ([]
 }
 
 func searchResourceExternalAuthTacacs(
-	ctx context.Context, authenticationName string, m interface{}) (string, bool, error) {
+	ctx context.Context, authenticationName string, m interface{},
+) (
+	string, bool, error,
+) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/externalauths/?q=authentication_name="+authenticationName, http.MethodGet, nil)
 	if err != nil {
@@ -185,7 +205,9 @@ func searchResourceExternalAuthTacacs(
 	return "", false, nil
 }
 
-func addExternalAuthTacacs(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addExternalAuthTacacs(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareExternalAuthTacacsJSON(d)
 	body, code, err := c.newRequest(ctx, "/externalauths/", http.MethodPost, jsonData)
@@ -199,7 +221,9 @@ func addExternalAuthTacacs(ctx context.Context, d *schema.ResourceData, m interf
 	return nil
 }
 
-func updateExternalAuthTacacs(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateExternalAuthTacacs(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareExternalAuthTacacsJSON(d)
 	body, code, err := c.newRequest(ctx, "/externalauths/"+d.Id(), http.MethodPut, jsonData)
@@ -212,7 +236,10 @@ func updateExternalAuthTacacs(ctx context.Context, d *schema.ResourceData, m int
 
 	return nil
 }
-func deleteExternalAuthTacacs(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+
+func deleteExternalAuthTacacs(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/externalauths/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
@@ -238,7 +265,10 @@ func prepareExternalAuthTacacsJSON(d *schema.ResourceData) jsonExternalAuthTacac
 }
 
 func readExternalAuthTacacsOptions(
-	ctx context.Context, authenticationID string, m interface{}) (jsonExternalAuthTacacs, error) {
+	ctx context.Context, authenticationID string, m interface{},
+) (
+	jsonExternalAuthTacacs, error,
+) {
 	c := m.(*Client)
 	var result jsonExternalAuthTacacs
 	body, code, err := c.newRequest(ctx, "/externalauths/"+authenticationID, http.MethodGet, nil)

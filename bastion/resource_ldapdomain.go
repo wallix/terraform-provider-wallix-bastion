@@ -113,6 +113,7 @@ func resourceLdapDomain() *schema.Resource {
 		},
 	}
 }
+
 func resourceLdapDomainVersionCheck(version string) error {
 	if bchk.InSlice(version, []string{VersionWallixAPI33, VersionWallixAPI36}) {
 		return nil
@@ -130,7 +131,9 @@ func resourceLdapDomainVersionCheck(version string) error {
 	return fmt.Errorf("resource wallix-bastion_ldapdomain not available with api version %s", version)
 }
 
-func resourceLdapDomainCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceLdapDomainCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceLdapDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -150,7 +153,10 @@ func resourceLdapDomainCreate(ctx context.Context, d *schema.ResourceData, m int
 
 	return resourceLdapDomainRead(ctx, d, m)
 }
-func resourceLdapDomainRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceLdapDomainRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceLdapDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -167,7 +173,10 @@ func resourceLdapDomainRead(ctx context.Context, d *schema.ResourceData, m inter
 
 	return nil
 }
-func resourceLdapDomainUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceLdapDomainUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceLdapDomainVersionCheck(c.bastionAPIVersion); err != nil {
@@ -180,7 +189,10 @@ func resourceLdapDomainUpdate(ctx context.Context, d *schema.ResourceData, m int
 
 	return resourceLdapDomainRead(ctx, d, m)
 }
-func resourceLdapDomainDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceLdapDomainDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceLdapDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -191,7 +203,12 @@ func resourceLdapDomainDelete(ctx context.Context, d *schema.ResourceData, m int
 
 	return nil
 }
-func resourceLdapDomainImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+func resourceLdapDomainImport(
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceLdapDomainVersionCheck(c.bastionAPIVersion); err != nil {
@@ -215,7 +232,11 @@ func resourceLdapDomainImport(d *schema.ResourceData, m interface{}) ([]*schema.
 	return result, nil
 }
 
-func checkResourceLdapDomainExists(ctx context.Context, domainName string, m interface{}) (bool, error) {
+func checkResourceLdapDomainExists(
+	ctx context.Context, domainName string, m interface{},
+) (
+	bool, error,
+) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/ldapdomains/"+domainName, http.MethodGet, nil)
 	if err != nil {
@@ -231,7 +252,9 @@ func checkResourceLdapDomainExists(ctx context.Context, domainName string, m int
 	return true, nil
 }
 
-func addLdapDomain(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addLdapDomain(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareLdapDomainJSON(d, true)
 	body, code, err := c.newRequest(ctx, "/ldapdomains/", http.MethodPost, jsonData)
@@ -245,7 +268,9 @@ func addLdapDomain(ctx context.Context, d *schema.ResourceData, m interface{}) e
 	return nil
 }
 
-func updateLdapDomain(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateLdapDomain(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareLdapDomainJSON(d, false)
 	body, code, err := c.newRequest(ctx, "/ldapdomains/"+d.Id()+"?force=true", http.MethodPut, jsonData)
@@ -259,7 +284,9 @@ func updateLdapDomain(ctx context.Context, d *schema.ResourceData, m interface{}
 	return nil
 }
 
-func deleteLdapDomain(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func deleteLdapDomain(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/ldapdomains/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
@@ -303,7 +330,10 @@ func prepareLdapDomainJSON(d *schema.ResourceData, newResource bool) jsonLdapDom
 }
 
 func readLdapDomainOptions(
-	ctx context.Context, domainName string, m interface{}) (jsonLdapDomain, error) {
+	ctx context.Context, domainName string, m interface{},
+) (
+	jsonLdapDomain, error,
+) {
 	c := m.(*Client)
 	var result jsonLdapDomain
 	body, code, err := c.newRequest(ctx, "/ldapdomains/"+domainName, http.MethodGet, nil)
