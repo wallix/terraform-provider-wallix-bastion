@@ -221,12 +221,12 @@ func searchResourceUserGroup(
 		return "", false, err
 	}
 	if code != http.StatusOK {
-		return "", false, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return "", false, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 	var results []jsonUserGroup
 	err = json.Unmarshal([]byte(body), &results)
 	if err != nil {
-		return "", false, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return "", false, fmt.Errorf("unmarshaling json: %w", err)
 	}
 	if len(results) == 1 {
 		return results[0].ID, true, nil
@@ -245,7 +245,7 @@ func addUserGroup(
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
@@ -261,7 +261,7 @@ func updateUserGroup(
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
@@ -276,7 +276,7 @@ func deleteUserGroup(
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
@@ -329,11 +329,11 @@ func readUserGroupOptions(
 		return result, nil
 	}
 	if code != http.StatusOK {
-		return result, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return result, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 	err = json.Unmarshal([]byte(body), &result)
 	if err != nil {
-		return result, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return result, fmt.Errorf("unmarshaling json: %w", err)
 	}
 
 	return result, nil

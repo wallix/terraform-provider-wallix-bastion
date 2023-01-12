@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -24,7 +25,7 @@ func (c *Client) newRequest(ctx context.Context, uri string, method string, json
 	body := new(bytes.Buffer)
 	err := json.NewEncoder(body).Encode(jsonBody)
 	if err != nil {
-		return "", http.StatusInternalServerError, err
+		return "", http.StatusInternalServerError, fmt.Errorf("decoding json: %w", err)
 	}
 	url := "https://" + c.bastionIP + ":" + strconv.Itoa(c.bastionPort) + "/api/" + c.bastionAPIVersion
 	if strings.HasPrefix(uri, "/") {
@@ -38,7 +39,7 @@ func (c *Client) newRequest(ctx context.Context, uri string, method string, json
 	req.Header.Add("X-Auth-Key", c.bastionToken)
 	req.Header.Add("X-Auth-User", c.bastionUser)
 	if err != nil {
-		return "", http.StatusInternalServerError, err
+		return "", http.StatusInternalServerError, fmt.Errorf("preparing http request: %w", err)
 	}
 	tr := &http.Transport{
 		TLSClientConfig:   &tls.Config{InsecureSkipVerify: true}, //nolint: gosec
@@ -47,12 +48,12 @@ func (c *Client) newRequest(ctx context.Context, uri string, method string, json
 	httpClient := &http.Client{Transport: tr}
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		return "", http.StatusInternalServerError, err
+		return "", http.StatusInternalServerError, fmt.Errorf("sending http request: %w", err)
 	}
 	defer resp.Body.Close()
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", http.StatusInternalServerError, err
+		return "", http.StatusInternalServerError, fmt.Errorf("reading http response: %w", err)
 	}
 
 	return string(respBody), resp.StatusCode, nil

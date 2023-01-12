@@ -229,7 +229,7 @@ func checkResourceUserExists(
 		return false, nil
 	}
 	if code != http.StatusOK {
-		return false, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return false, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 
 	return true, nil
@@ -245,7 +245,7 @@ func addUser(
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
@@ -261,7 +261,7 @@ func updateUser(
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
@@ -276,7 +276,7 @@ func deleteUser(
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
@@ -331,12 +331,12 @@ func readUserOptions(
 		return result, nil
 	}
 	if code != http.StatusOK {
-		return result, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return result, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 
 	err = json.Unmarshal([]byte(body), &result)
 	if err != nil {
-		return result, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return result, fmt.Errorf("unmarshaling json: %w", err)
 	}
 
 	return result, nil

@@ -64,7 +64,7 @@ func dataSourceDomainRead(
 		return diag.FromErr(err)
 	}
 	if !ex {
-		return diag.FromErr(fmt.Errorf("don't find domain_name %s", d.Get("domain_name").(string)))
+		return diag.FromErr(fmt.Errorf("domain_name %s doesn't exists", d.Get("domain_name").(string)))
 	}
 	cfg, err := readDomainOptions(ctx, id, m)
 	if err != nil {

@@ -85,7 +85,7 @@ func readVersionOptions(
 	req.Header.Add("X-Auth-Key", c.bastionToken)
 	req.Header.Add("X-Auth-User", c.bastionUser)
 	if err != nil {
-		return result, err
+		return result, fmt.Errorf("preparing http request: %w", err)
 	}
 	tr := &http.Transport{
 		TLSClientConfig:   &tls.Config{InsecureSkipVerify: true}, //nolint: gosec
@@ -94,20 +94,20 @@ func readVersionOptions(
 	httpClient := &http.Client{Transport: tr}
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		return result, err
+		return result, fmt.Errorf("sending http request: %w", err)
 	}
 	defer resp.Body.Close()
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return result, err
+		return result, fmt.Errorf("reading http response: %w", err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return result, fmt.Errorf("api doesn't return OK : %d with body :\n%s", resp.StatusCode, string(respBody))
+		return result, fmt.Errorf("api doesn't return OK: %d with body:\n%s", resp.StatusCode, string(respBody))
 	}
 	err = json.Unmarshal(respBody, &result)
 	if err != nil {
-		return result, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return result, fmt.Errorf("unmarshaling json: %w", err)
 	}
 
 	return result, nil

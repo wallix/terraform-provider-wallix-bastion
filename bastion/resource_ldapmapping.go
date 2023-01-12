@@ -168,12 +168,12 @@ func checkResourceLdapMappingExists(
 		return false, err
 	}
 	if code != http.StatusOK {
-		return false, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return false, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 	var results []jsonLdapMapping
 	err = json.Unmarshal([]byte(body), &results)
 	if err != nil {
-		return false, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return false, fmt.Errorf("unmarshaling json: %w", err)
 	}
 	if len(results) == 1 && results[0].LdapGroup == ldapGroup {
 		return true, nil
@@ -192,7 +192,7 @@ func addLdapMapping(
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
@@ -211,7 +211,7 @@ func deleteLdapMapping(
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
