@@ -7,6 +7,7 @@ FEATURES:
 * add `wallix-bastion_authdomain_ldap` resource
 * add `wallix-bastion_authdomain_mapping` resource
 * add `wallix-bastion_authdomain_ad` resource
+* add `wallix-bastion_authdomain_azuread` resource
 
 ENHANCEMENTS:
 
