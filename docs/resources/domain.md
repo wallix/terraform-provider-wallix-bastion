@@ -6,7 +6,7 @@ Provides a global domain resource.
 
 ```hcl
 # Configure a global domain
-resource wallix-bastion_domain cmpdom {
+resource "wallix-bastion_domain" "cmpdom" {
   domain_name = "globdom"
 }
 ```

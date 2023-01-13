@@ -5,7 +5,7 @@ Provides a profile resource.
 ## Example Usage
 
 ```hcl
-resource wallix-bastion_profile example {
+resource "wallix-bastion_profile" "example" {
   profile_name = "example"
   gui_features {
     wab_audit      = "view"

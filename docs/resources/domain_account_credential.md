@@ -6,7 +6,7 @@ Provides a credential linked to domain_account resource.
 
 ```hcl
 # Configure a credential on account of global domain
-resource wallix-bastion_domain_account dom1admpass {
+resource "wallix-bastion_domain_account" "dom1admpass" {
   domain_id  = "xxxxxxxx"
   account_id = "yyyyyyy"
   type       = "password"

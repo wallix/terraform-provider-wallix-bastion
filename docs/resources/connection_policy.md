@@ -6,7 +6,7 @@ Provides a connection_policy resource.
 
 ```hcl
 # Configure a connection policy
-resource wallix-bastion_connection_policy pol {
+resource "wallix-bastion_connection_policy" "pol" {
   connection_policy_name = "example"
   protocol               = "RAWTCPIP"
   options = jsonencode({

@@ -60,15 +60,15 @@ func TestAccResourceDomainAccountCred_basic(t *testing.T) {
 
 func testAccResourceDomainAccountCredCreate() string {
 	return `
-resource wallix-bastion_domain testacc_DomainAccountCred {
+resource "wallix-bastion_domain" "testacc_DomainAccountCred" {
   domain_name = "testacc_DomainAccountCred"
 }
-resource wallix-bastion_domain_account testacc_DomainAccountCred {
+resource "wallix-bastion_domain_account" "testacc_DomainAccountCred" {
   domain_id     = wallix-bastion_domain.testacc_DomainAccountCred.id
   account_name  = "testacc_DomainAccountCred_Admin"
   account_login = "admin"
 }
-resource wallix-bastion_domain_account_credential testacc_DomainAccountCred {
+resource "wallix-bastion_domain_account_credential" "testacc_DomainAccountCred" {
   domain_id  = wallix-bastion_domain.testacc_DomainAccountCred.id
   account_id = wallix-bastion_domain_account.testacc_DomainAccountCred.id
   type       = "password"
@@ -82,7 +82,7 @@ resource "random_password" "testacc_DomainAccountCred" {
   min_numeric      = 1
   min_special      = 1
 }
-resource wallix-bastion_domain_account_credential testacc_DomainAccountCred2 {
+resource "wallix-bastion_domain_account_credential" "testacc_DomainAccountCred2" {
   domain_id   = wallix-bastion_domain.testacc_DomainAccountCred.id
   account_id  = wallix-bastion_domain_account.testacc_DomainAccountCred.id
   type        = "ssh_key"
@@ -94,16 +94,16 @@ resource wallix-bastion_domain_account_credential testacc_DomainAccountCred2 {
 
 func testAccResourceDomainAccountCredUpdate() string {
 	return `
-resource wallix-bastion_domain testacc_DomainAccountCred {
+resource "wallix-bastion_domain" "testacc_DomainAccountCred" {
   domain_name = "testacc_DomainAccountCred"
 }
-resource wallix-bastion_domain_account testacc_DomainAccountCred {
+resource "wallix-bastion_domain_account" "testacc_DomainAccountCred" {
   domain_id     = wallix-bastion_domain.testacc_DomainAccountCred.id
   account_name  = "testacc_DomainAccountCred_Admin"
   account_login = "admin"
 }
 
-resource wallix-bastion_domain_account_credential testacc_DomainAccountCred2 {
+resource "wallix-bastion_domain_account_credential" "testacc_DomainAccountCred2" {
   domain_id   = wallix-bastion_domain.testacc_DomainAccountCred.id
   account_id  = wallix-bastion_domain_account.testacc_DomainAccountCred.id
   type        = "ssh_key"

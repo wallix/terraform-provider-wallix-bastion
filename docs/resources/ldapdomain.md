@@ -2,11 +2,13 @@
 
 Provides a ldapdomain resource.
 
+-> **Note:** Since version `v3.8` of the API, use the `wallix-bastion_authdomain_ldap` resource instead
+
 ## Example Usage
 
 ```hcl
 # Configure a LDAP domain
-resource wallix-bastion_ldapdomain example_com {
+resource "wallix-bastion_ldapdomain" "example_com" {
   domain_name          = "example.com"
   ldap_domain_name     = "example.com"
   external_ldaps       = "server1"

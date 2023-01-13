@@ -52,15 +52,15 @@ func TestAccResourceDeviceLocalDomainAccount_basic(t *testing.T) {
 
 func testAccResourceDeviceLocalDomainAccountCreate() string {
 	return `
-resource wallix-bastion_device testacc_DeviceLocalDomainAccount {
+resource "wallix-bastion_device" "testacc_DeviceLocalDomainAccount" {
   device_name = "testacc_DeviceLocalDomainAccount"
   host        = "testacc_localdomain_account.device"
 }
-resource wallix-bastion_device_localdomain testacc_DeviceLocalDomainAccount {
+resource "wallix-bastion_device_localdomain" "testacc_DeviceLocalDomainAccount" {
   device_id   = wallix-bastion_device.testacc_DeviceLocalDomainAccount.id
   domain_name = "testacc_DeviceLocalDomainAccount"
 }
-resource wallix-bastion_device_localdomain_account testacc_DeviceLocalDomainAccount {
+resource "wallix-bastion_device_localdomain_account" "testacc_DeviceLocalDomainAccount" {
   device_id     = wallix-bastion_device.testacc_DeviceLocalDomainAccount.id
   domain_id     = wallix-bastion_device_localdomain.testacc_DeviceLocalDomainAccount.id
   account_name  = "testacc_DeviceLocalDomainAccount_admin"
@@ -71,15 +71,15 @@ resource wallix-bastion_device_localdomain_account testacc_DeviceLocalDomainAcco
 
 func testAccResourceDeviceLocalDomainAccountUpdate() string {
 	return `
-resource wallix-bastion_device testacc_DeviceLocalDomainAccount {
+resource "wallix-bastion_device" "testacc_DeviceLocalDomainAccount" {
   device_name = "testacc_DeviceLocalDomainAccount"
   host        = "testacc_localdomain_account.device"
 }
-resource wallix-bastion_device_localdomain testacc_DeviceLocalDomainAccount {
+resource "wallix-bastion_device_localdomain" "testacc_DeviceLocalDomainAccount" {
   device_id   = wallix-bastion_device.testacc_DeviceLocalDomainAccount.id
   domain_name = "testacc_DeviceLocalDomainAccount"
 }
-resource wallix-bastion_device_service testacc_DeviceLocalDomainAccount {
+resource "wallix-bastion_device_service" "testacc_DeviceLocalDomainAccount" {
   device_id         = wallix-bastion_device.testacc_DeviceLocalDomainAccount.id
   service_name      = "testacc_DeviceLocalDomainAccount"
   connection_policy = "SSH"
@@ -87,7 +87,7 @@ resource wallix-bastion_device_service testacc_DeviceLocalDomainAccount {
   protocol          = "SSH"
   subprotocols      = ["SSH_SHELL_SESSION"]
 }
-resource wallix-bastion_device_localdomain_account testacc_DeviceLocalDomainAccount {
+resource "wallix-bastion_device_localdomain_account" "testacc_DeviceLocalDomainAccount" {
   device_id            = wallix-bastion_device.testacc_DeviceLocalDomainAccount.id
   domain_id            = wallix-bastion_device_localdomain.testacc_DeviceLocalDomainAccount.id
   account_name         = "testacc_DeviceLocalDomainAccount_admin"

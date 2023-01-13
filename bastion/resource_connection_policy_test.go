@@ -32,10 +32,10 @@ func TestAccResourceConnectionPolicy_basic(t *testing.T) {
 	})
 }
 
-// nolint: lll
+// nolint: lll, nolintlint
 func testAccResourceConnectionPolicyCreate() string {
 	return `
-resource wallix-bastion_connection_policy testacc_ConnectionPolicy {
+resource "wallix-bastion_connection_policy" "testacc_ConnectionPolicy" {
   connection_policy_name = "testacc_ConnectionPolicy"
   protocol               = "RAWTCPIP"
   options = jsonencode({
@@ -170,8 +170,8 @@ locals {
   }
 }
 
-data wallix-bastion_version v {}
-resource wallix-bastion_connection_policy testacc_ConnectionPolicy2 {
+data "wallix-bastion_version" "v" {}
+resource "wallix-bastion_connection_policy" "testacc_ConnectionPolicy2" {
   connection_policy_name = "testacc_ConnectionPolicy2"
   description            = "testacc ConnectionPolicy2"
   protocol               = "SSH"
@@ -181,7 +181,7 @@ resource wallix-bastion_connection_policy testacc_ConnectionPolicy2 {
 `
 }
 
-// nolint: lll
+// nolint: lll, nolintlint
 func testAccResourceConnectionPolicyUpdate() string {
 	return `
 locals {
@@ -312,8 +312,8 @@ locals {
   }
 }
 
-data wallix-bastion_version v {}
-resource wallix-bastion_connection_policy testacc_ConnectionPolicy2 {
+data "wallix-bastion_version" "v" {}
+resource "wallix-bastion_connection_policy" "testacc_ConnectionPolicy2" {
   connection_policy_name = "testacc_ConnectionPolicy2"
   description            = "testacc ConnectionPolicy2"
   protocol               = "SSH"

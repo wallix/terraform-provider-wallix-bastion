@@ -62,15 +62,18 @@ func resourceExternalAuthTacacs() *schema.Resource {
 		},
 	}
 }
+
 func resourceExternalAuthTacacsVersionCheck(version string) error {
-	if bchk.StringInSlice(version, defaultVersionsValid()) {
+	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_externalauth_tacacs not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_externalauth_tacacs not available with api version %s", version)
 }
 
-func resourceExternalAuthTacacsCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceExternalAuthTacacsCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceExternalAuthTacacsVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -91,13 +94,16 @@ func resourceExternalAuthTacacsCreate(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 	if !ex {
-		return diag.FromErr(fmt.Errorf("authentication_name %s can't find after POST", d.Get("authentication_name").(string)))
+		return diag.FromErr(fmt.Errorf("authentication_name %s not found after POST", d.Get("authentication_name").(string)))
 	}
 	d.SetId(id)
 
 	return resourceExternalAuthTacacsRead(ctx, d, m)
 }
-func resourceExternalAuthTacacsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceExternalAuthTacacsRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceExternalAuthTacacsVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -114,7 +120,10 @@ func resourceExternalAuthTacacsRead(ctx context.Context, d *schema.ResourceData,
 
 	return nil
 }
-func resourceExternalAuthTacacsUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceExternalAuthTacacsUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceExternalAuthTacacsVersionCheck(c.bastionAPIVersion); err != nil {
@@ -127,7 +136,10 @@ func resourceExternalAuthTacacsUpdate(ctx context.Context, d *schema.ResourceDat
 
 	return resourceExternalAuthTacacsRead(ctx, d, m)
 }
-func resourceExternalAuthTacacsDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceExternalAuthTacacsDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceExternalAuthTacacsVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -138,7 +150,12 @@ func resourceExternalAuthTacacsDelete(ctx context.Context, d *schema.ResourceDat
 
 	return nil
 }
-func resourceExternalAuthTacacsImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+func resourceExternalAuthTacacsImport(
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceExternalAuthTacacsVersionCheck(c.bastionAPIVersion); err != nil {
@@ -164,30 +181,33 @@ func resourceExternalAuthTacacsImport(d *schema.ResourceData, m interface{}) ([]
 }
 
 func searchResourceExternalAuthTacacs(
-	ctx context.Context, authenticationName string, m interface{}) (string, bool, error) {
+	ctx context.Context, authenticationName string, m interface{},
+) (
+	string, bool, error,
+) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/externalauths/?fields=authentication_name,id&limit=-1", http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/externalauths/?q=authentication_name="+authenticationName, http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
 	if code != http.StatusOK {
-		return "", false, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return "", false, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 	var results []jsonExternalAuthTacacs
 	err = json.Unmarshal([]byte(body), &results)
 	if err != nil {
-		return "", false, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return "", false, fmt.Errorf("unmarshaling json: %w", err)
 	}
-	for _, v := range results {
-		if v.AuthenticationName == authenticationName {
-			return v.ID, true, nil
-		}
+	if len(results) == 1 {
+		return results[0].ID, true, nil
 	}
 
 	return "", false, nil
 }
 
-func addExternalAuthTacacs(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addExternalAuthTacacs(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareExternalAuthTacacsJSON(d)
 	body, code, err := c.newRequest(ctx, "/externalauths/", http.MethodPost, jsonData)
@@ -195,13 +215,15 @@ func addExternalAuthTacacs(ctx context.Context, d *schema.ResourceData, m interf
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
 
-func updateExternalAuthTacacs(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateExternalAuthTacacs(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareExternalAuthTacacsJSON(d)
 	body, code, err := c.newRequest(ctx, "/externalauths/"+d.Id(), http.MethodPut, jsonData)
@@ -209,19 +231,22 @@ func updateExternalAuthTacacs(ctx context.Context, d *schema.ResourceData, m int
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
-func deleteExternalAuthTacacs(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+
+func deleteExternalAuthTacacs(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/externalauths/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
@@ -240,7 +265,10 @@ func prepareExternalAuthTacacsJSON(d *schema.ResourceData) jsonExternalAuthTacac
 }
 
 func readExternalAuthTacacsOptions(
-	ctx context.Context, authenticationID string, m interface{}) (jsonExternalAuthTacacs, error) {
+	ctx context.Context, authenticationID string, m interface{},
+) (
+	jsonExternalAuthTacacs, error,
+) {
 	c := m.(*Client)
 	var result jsonExternalAuthTacacs
 	body, code, err := c.newRequest(ctx, "/externalauths/"+authenticationID, http.MethodGet, nil)
@@ -251,12 +279,12 @@ func readExternalAuthTacacsOptions(
 		return result, nil
 	}
 	if code != http.StatusOK {
-		return result, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return result, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 
 	err = json.Unmarshal([]byte(body), &result)
 	if err != nil {
-		return result, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return result, fmt.Errorf("unmarshaling json: %w", err)
 	}
 
 	return result, nil

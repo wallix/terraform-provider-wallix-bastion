@@ -135,10 +135,19 @@ func resourceTargetGroup() *schema.Resource {
 						"subprotocol": {
 							Type:     schema.TypeString,
 							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"SSH_SHELL_SESSION", "SSH_REMOTE_COMMAND", "SSH_SCP_UP", "SSH_SCP_DOWN",
-								"SFTP_SESSION", "RLOGIN", "TELNET", "RDP"},
-								false),
+							ValidateFunc: validation.StringInSlice(
+								[]string{
+									"SSH_SHELL_SESSION",
+									"SSH_REMOTE_COMMAND",
+									"SSH_SCP_UP",
+									"SSH_SCP_DOWN",
+									"SFTP_SESSION",
+									"RLOGIN",
+									"TELNET",
+									"RDP",
+								},
+								false,
+							),
 						},
 					},
 				},
@@ -259,15 +268,18 @@ func resourceTargetGroup() *schema.Resource {
 		},
 	}
 }
+
 func resourceTargetGroupVersionCheck(version string) error {
-	if bchk.StringInSlice(version, defaultVersionsValid()) {
+	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_targetgroup not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_targetgroup not available with api version %s", version)
 }
 
-func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceTargetGroupCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceTargetGroupVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -288,13 +300,16 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, m in
 		return diag.FromErr(err)
 	}
 	if !ex {
-		return diag.FromErr(fmt.Errorf("group_name %s can't find after POST", d.Get("group_name").(string)))
+		return diag.FromErr(fmt.Errorf("group_name %s not found after POST", d.Get("group_name").(string)))
 	}
 	d.SetId(id)
 
 	return resourceTargetGroupRead(ctx, d, m)
 }
-func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceTargetGroupRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceTargetGroupVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -311,7 +326,10 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, m inte
 
 	return nil
 }
-func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceTargetGroupUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceTargetGroupVersionCheck(c.bastionAPIVersion); err != nil {
@@ -324,7 +342,10 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, m in
 
 	return resourceTargetGroupRead(ctx, d, m)
 }
-func resourceTargetGroupDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceTargetGroupDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceTargetGroupVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -335,7 +356,12 @@ func resourceTargetGroupDelete(ctx context.Context, d *schema.ResourceData, m in
 
 	return nil
 }
-func resourceTargetGroupImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+func resourceTargetGroupImport(
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceTargetGroupVersionCheck(c.bastionAPIVersion); err != nil {
@@ -360,30 +386,34 @@ func resourceTargetGroupImport(d *schema.ResourceData, m interface{}) ([]*schema
 	return result, nil
 }
 
-func searchResourceTargetGroup(ctx context.Context, groupName string, m interface{}) (string, bool, error) {
+func searchResourceTargetGroup(
+	ctx context.Context, groupName string, m interface{},
+) (
+	string, bool, error,
+) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/targetgroups/?fields=group_name,id&limit=-1", http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/targetgroups/?q=group_name="+groupName, http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
 	if code != http.StatusOK {
-		return "", false, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return "", false, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 	var results []jsonTargetGroup
 	err = json.Unmarshal([]byte(body), &results)
 	if err != nil {
-		return "", false, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return "", false, fmt.Errorf("unmarshaling json: %w", err)
 	}
-	for _, v := range results {
-		if v.GroupName == groupName {
-			return v.ID, true, nil
-		}
+	if len(results) == 1 {
+		return results[0].ID, true, nil
 	}
 
 	return "", false, nil
 }
 
-func addTargetGroup(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addTargetGroup(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	json, err := prepareTargetGroupJSON(d)
 	if err != nil {
@@ -394,13 +424,15 @@ func addTargetGroup(ctx context.Context, d *schema.ResourceData, m interface{}) 
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
 
-func updateTargetGroup(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateTargetGroup(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	json, err := prepareTargetGroupJSON(d)
 	if err != nil {
@@ -411,25 +443,28 @@ func updateTargetGroup(ctx context.Context, d *schema.ResourceData, m interface{
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
-func deleteTargetGroup(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+
+func deleteTargetGroup(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/targetgroups/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
 
-func prepareTargetGroupJSON(d *schema.ResourceData) (jsonTargetGroup, error) { // nolint: gocognit, gocyclo
+func prepareTargetGroupJSON(d *schema.ResourceData) (jsonTargetGroup, error) { //nolint: gocognit,gocyclo,maintidx
 	jsonData := jsonTargetGroup{
 		Description: d.Get("description").(string),
 		GroupName:   d.Get("group_name").(string),
@@ -603,7 +638,10 @@ func prepareTargetGroupJSON(d *schema.ResourceData) (jsonTargetGroup, error) { /
 }
 
 func readTargetGroupOptions(
-	ctx context.Context, groupID string, m interface{}) (jsonTargetGroup, error) {
+	ctx context.Context, groupID string, m interface{},
+) (
+	jsonTargetGroup, error,
+) {
 	c := m.(*Client)
 	var result jsonTargetGroup
 	body, code, err := c.newRequest(ctx, "/targetgroups/"+groupID, http.MethodGet, nil)
@@ -614,11 +652,11 @@ func readTargetGroupOptions(
 		return result, nil
 	}
 	if code != http.StatusOK {
-		return result, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return result, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 	err = json.Unmarshal([]byte(body), &result)
 	if err != nil {
-		return result, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return result, fmt.Errorf("unmarshaling json: %w", err)
 	}
 
 	return result, nil

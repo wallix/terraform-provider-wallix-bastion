@@ -142,15 +142,18 @@ func resourceAuthorization() *schema.Resource {
 		},
 	}
 }
+
 func resourceAuthorizationVersionCheck(version string) error {
-	if bchk.StringInSlice(version, defaultVersionsValid()) {
+	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_authorization not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_authorization not available with api version %s", version)
 }
 
-func resourceAuthorizationCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceAuthorizationCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceAuthorizationVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -171,13 +174,16 @@ func resourceAuthorizationCreate(ctx context.Context, d *schema.ResourceData, m 
 		return diag.FromErr(err)
 	}
 	if !ex {
-		return diag.FromErr(fmt.Errorf("authorization_name %s can't find after POST", d.Get("authorization_name").(string)))
+		return diag.FromErr(fmt.Errorf("authorization_name %s not found after POST", d.Get("authorization_name").(string)))
 	}
 	d.SetId(id)
 
 	return resourceAuthorizationRead(ctx, d, m)
 }
-func resourceAuthorizationRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceAuthorizationRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceAuthorizationVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -194,7 +200,10 @@ func resourceAuthorizationRead(ctx context.Context, d *schema.ResourceData, m in
 
 	return nil
 }
-func resourceAuthorizationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceAuthorizationUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceAuthorizationVersionCheck(c.bastionAPIVersion); err != nil {
@@ -207,7 +216,10 @@ func resourceAuthorizationUpdate(ctx context.Context, d *schema.ResourceData, m 
 
 	return resourceAuthorizationRead(ctx, d, m)
 }
-func resourceAuthorizationDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceAuthorizationDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceAuthorizationVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -218,7 +230,12 @@ func resourceAuthorizationDelete(ctx context.Context, d *schema.ResourceData, m 
 
 	return nil
 }
-func resourceAuthorizationImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+func resourceAuthorizationImport(
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceAuthorizationVersionCheck(c.bastionAPIVersion); err != nil {
@@ -243,30 +260,34 @@ func resourceAuthorizationImport(d *schema.ResourceData, m interface{}) ([]*sche
 	return result, nil
 }
 
-func searchResourceAuthorization(ctx context.Context, authorizationName string, m interface{}) (string, bool, error) {
+func searchResourceAuthorization(
+	ctx context.Context, authorizationName string, m interface{},
+) (
+	string, bool, error,
+) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/authorizations/?fields=authorization_name,id&limit=-1", http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/authorizations/?q=authorization_name="+authorizationName, http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
 	if code != http.StatusOK {
-		return "", false, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return "", false, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 	var results []jsonAuthorization
 	err = json.Unmarshal([]byte(body), &results)
 	if err != nil {
-		return "", false, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return "", false, fmt.Errorf("unmarshaling json: %w", err)
 	}
-	for _, v := range results {
-		if v.AuthorizationName == authorizationName {
-			return v.ID, true, nil
-		}
+	if len(results) == 1 {
+		return results[0].ID, true, nil
 	}
 
 	return "", false, nil
 }
 
-func addAuthorization(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addAuthorization(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareAuthorizationJSON(d, true)
 	body, code, err := c.newRequest(ctx, "/authorizations/", http.MethodPost, jsonData)
@@ -274,13 +295,15 @@ func addAuthorization(ctx context.Context, d *schema.ResourceData, m interface{}
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
 
-func updateAuthorization(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateAuthorization(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareAuthorizationJSON(d, false)
 	body, code, err := c.newRequest(ctx, "/authorizations/"+d.Id()+"?force=true", http.MethodPut, jsonData)
@@ -288,20 +311,22 @@ func updateAuthorization(ctx context.Context, d *schema.ResourceData, m interfac
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
 
-func deleteAuthorization(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func deleteAuthorization(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/authorizations/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
@@ -356,7 +381,10 @@ func prepareAuthorizationJSON(d *schema.ResourceData, newResource bool) jsonAuth
 }
 
 func readAuthorizationOptions(
-	ctx context.Context, authorizationID string, m interface{}) (jsonAuthorization, error) {
+	ctx context.Context, authorizationID string, m interface{},
+) (
+	jsonAuthorization, error,
+) {
 	c := m.(*Client)
 	var result jsonAuthorization
 	body, code, err := c.newRequest(ctx, "/authorizations/"+authorizationID, http.MethodGet, nil)
@@ -367,11 +395,11 @@ func readAuthorizationOptions(
 		return result, nil
 	}
 	if code != http.StatusOK {
-		return result, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return result, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 	err = json.Unmarshal([]byte(body), &result)
 	if err != nil {
-		return result, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return result, fmt.Errorf("unmarshaling json: %w", err)
 	}
 
 	return result, nil

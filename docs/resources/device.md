@@ -6,7 +6,7 @@ Provides a device resource.
 
 ```hcl
 # Configure a device
-resource wallix-bastion_device server1 {
+resource "wallix-bastion_device" "server1" {
   device_name = "server1"
   host        = "server1"
 }

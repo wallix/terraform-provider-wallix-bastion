@@ -6,7 +6,7 @@ Provides a Tacacs+ externaulauth resource.
 
 ```hcl
 # Configure a tacacs external authentication
-resource wallix-bastion_externalauth_tacacs server1 {
+resource "wallix-bastion_externalauth_tacacs" "server1" {
   authentication_name = "server1"
   host                = "server1"
   port                = 49

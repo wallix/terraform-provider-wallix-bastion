@@ -6,4 +6,4 @@
 
 ### In addition to develop
 
-- [Go](https://golang.org/doc/install) 1.16
+- [Go](https://golang.org/doc/install) `v1.18` or `v1.19`

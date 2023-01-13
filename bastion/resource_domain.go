@@ -74,9 +74,10 @@ func resourceDomain() *schema.Resource {
 				ConflictsWith: []string{"vault_plugin"},
 			},
 			"passphrase": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				RequiredWith: []string{"ca_private_key"},
 			},
 			"password_change_policy": {
 				Type:         schema.TypeString,
@@ -112,15 +113,18 @@ func resourceDomain() *schema.Resource {
 		},
 	}
 }
+
 func resourceDomainVersionCheck(version string) error {
-	if bchk.StringInSlice(version, defaultVersionsValid()) {
+	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_domain not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_domain not available with api version %s", version)
 }
 
-func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceDomainCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -141,13 +145,16 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, m interfa
 		return diag.FromErr(err)
 	}
 	if !ex {
-		return diag.FromErr(fmt.Errorf("domain_name %s can't find after POST", d.Get("domain_name").(string)))
+		return diag.FromErr(fmt.Errorf("domain_name %s not found after POST", d.Get("domain_name").(string)))
 	}
 	d.SetId(id)
 
 	return resourceDomainRead(ctx, d, m)
 }
-func resourceDomainRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceDomainRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -164,7 +171,10 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, m interface
 
 	return nil
 }
-func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceDomainUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceDomainVersionCheck(c.bastionAPIVersion); err != nil {
@@ -177,7 +187,10 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, m interfa
 
 	return resourceDomainRead(ctx, d, m)
 }
-func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceDomainDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -188,7 +201,12 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, m interfa
 
 	return nil
 }
-func resourceDomainImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+func resourceDomainImport(
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceDomainVersionCheck(c.bastionAPIVersion); err != nil {
@@ -213,30 +231,34 @@ func resourceDomainImport(d *schema.ResourceData, m interface{}) ([]*schema.Reso
 	return result, nil
 }
 
-func searchResourceDomain(ctx context.Context, domainName string, m interface{}) (string, bool, error) {
+func searchResourceDomain(
+	ctx context.Context, domainName string, m interface{},
+) (
+	string, bool, error,
+) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/domains/?fields=domain_name,id&limit=-1", http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/domains/?q=domain_name="+domainName, http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
 	if code != http.StatusOK {
-		return "", false, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return "", false, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 	var results []jsonDomain
 	err = json.Unmarshal([]byte(body), &results)
 	if err != nil {
-		return "", false, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return "", false, fmt.Errorf("unmarshaling json: %w", err)
 	}
-	for _, v := range results {
-		if v.DomainName == domainName {
-			return v.ID, true, nil
-		}
+	if len(results) == 1 {
+		return results[0].ID, true, nil
 	}
 
 	return "", false, nil
 }
 
-func addDomain(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addDomain(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareDomainJSON(d, true)
 	body, code, err := c.newRequest(ctx, "/domains/", http.MethodPost, jsonData)
@@ -244,13 +266,15 @@ func addDomain(ctx context.Context, d *schema.ResourceData, m interface{}) error
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
 
-func updateDomain(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateDomain(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareDomainJSON(d, false)
 	body, code, err := c.newRequest(ctx, "/domains/"+d.Id(), http.MethodPut, jsonData)
@@ -258,20 +282,22 @@ func updateDomain(ctx context.Context, d *schema.ResourceData, m interface{}) er
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
 
-func deleteDomain(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func deleteDomain(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/domains/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
@@ -324,7 +350,10 @@ func prepareDomainJSON(d *schema.ResourceData, newResource bool) jsonDomain {
 }
 
 func readDomainOptions(
-	ctx context.Context, domainID string, m interface{}) (jsonDomain, error) {
+	ctx context.Context, domainID string, m interface{},
+) (
+	jsonDomain, error,
+) {
 	c := m.(*Client)
 	var result jsonDomain
 	body, code, err := c.newRequest(ctx, "/domains/"+domainID, http.MethodGet, nil)
@@ -335,11 +364,11 @@ func readDomainOptions(
 		return result, nil
 	}
 	if code != http.StatusOK {
-		return result, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return result, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 	err = json.Unmarshal([]byte(body), &result)
 	if err != nil {
-		return result, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return result, fmt.Errorf("unmarshaling json: %w", err)
 	}
 
 	return result, nil

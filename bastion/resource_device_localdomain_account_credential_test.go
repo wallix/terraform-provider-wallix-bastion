@@ -64,28 +64,28 @@ func TestAccResourceDeviceLocalDomainAccountCred_basic(t *testing.T) {
 
 func testAccResourceDeviceLocalDomainAccountCredCreate() string {
 	return `
-resource wallix-bastion_device testacc_DeviceLocalDomainAccountCred {
+resource "wallix-bastion_device" "testacc_DeviceLocalDomainAccountCred" {
   device_name = "testacc_DeviceLocalDomainAccountCred"
   host        = "testacc_localdomain_account.device"
 }
-resource wallix-bastion_device_localdomain testacc_DeviceLocalDomainAccountCred {
+resource "wallix-bastion_device_localdomain" "testacc_DeviceLocalDomainAccountCred" {
   device_id   = wallix-bastion_device.testacc_DeviceLocalDomainAccountCred.id
   domain_name = "testacc_DeviceLocalDomainAccountCred"
 }
-resource wallix-bastion_device_localdomain_account testacc_DeviceLocalDomainAccountCred {
+resource "wallix-bastion_device_localdomain_account" "testacc_DeviceLocalDomainAccountCred" {
   device_id     = wallix-bastion_device.testacc_DeviceLocalDomainAccountCred.id
   domain_id     = wallix-bastion_device_localdomain.testacc_DeviceLocalDomainAccountCred.id
   account_name  = "testacc_DeviceLocalDomainAccountCred_admin"
   account_login = "admin"
 }
-resource wallix-bastion_device_localdomain_account_credential testacc_DeviceLocalDomainAccountCred {
+resource "wallix-bastion_device_localdomain_account_credential" "testacc_DeviceLocalDomainAccountCred" {
   device_id  = wallix-bastion_device.testacc_DeviceLocalDomainAccountCred.id
   domain_id  = wallix-bastion_device_localdomain.testacc_DeviceLocalDomainAccountCred.id
   account_id = wallix-bastion_device_localdomain_account.testacc_DeviceLocalDomainAccountCred.id
   type       = "password"
   password   = random_password.testacc_DomainAccountCred.result
 }
-resource wallix-bastion_device_localdomain_account_credential testacc_DeviceLocalDomainAccountCred2 {
+resource "wallix-bastion_device_localdomain_account_credential" "testacc_DeviceLocalDomainAccountCred2" {
   device_id   = wallix-bastion_device.testacc_DeviceLocalDomainAccountCred.id
   domain_id   = wallix-bastion_device_localdomain.testacc_DeviceLocalDomainAccountCred.id
   account_id  = wallix-bastion_device_localdomain_account.testacc_DeviceLocalDomainAccountCred.id
@@ -105,21 +105,21 @@ resource "random_password" "testacc_DomainAccountCred" {
 
 func testAccResourceDeviceLocalDomainAccountCredUpdate() string {
 	return `
-resource wallix-bastion_device testacc_DeviceLocalDomainAccountCred {
+resource "wallix-bastion_device" "testacc_DeviceLocalDomainAccountCred" {
   device_name = "testacc_DeviceLocalDomainAccountCred"
   host        = "testacc_localdomain_account.device"
 }
-resource wallix-bastion_device_localdomain testacc_DeviceLocalDomainAccountCred {
+resource "wallix-bastion_device_localdomain" "testacc_DeviceLocalDomainAccountCred" {
   device_id   = wallix-bastion_device.testacc_DeviceLocalDomainAccountCred.id
   domain_name = "testacc_DeviceLocalDomainAccountCred"
 }
-resource wallix-bastion_device_localdomain_account testacc_DeviceLocalDomainAccountCred {
+resource "wallix-bastion_device_localdomain_account" "testacc_DeviceLocalDomainAccountCred" {
   device_id     = wallix-bastion_device.testacc_DeviceLocalDomainAccountCred.id
   domain_id     = wallix-bastion_device_localdomain.testacc_DeviceLocalDomainAccountCred.id
   account_name  = "testacc_DeviceLocalDomainAccountCred_admin"
   account_login = "admin"
 }
-resource wallix-bastion_device_localdomain_account_credential testacc_DeviceLocalDomainAccountCred2 {
+resource "wallix-bastion_device_localdomain_account_credential" "testacc_DeviceLocalDomainAccountCred2" {
   device_id   = wallix-bastion_device.testacc_DeviceLocalDomainAccountCred.id
   domain_id   = wallix-bastion_device_localdomain.testacc_DeviceLocalDomainAccountCred.id
   account_id  = wallix-bastion_device_localdomain_account.testacc_DeviceLocalDomainAccountCred.id

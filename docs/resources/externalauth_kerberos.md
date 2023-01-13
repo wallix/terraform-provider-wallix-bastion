@@ -6,11 +6,12 @@ Provides a Kerberos externaulauth resource.
 
 ```hcl
 # Configure a tacacs external authentication
-resource wallix-bastion_externalauth_kerberos server1 {
+resource "wallix-bastion_externalauth_kerberos" "server1" {
   authentication_name = "server1"
   host                = "server1"
   ker_dom_controller  = "controller"
   port                = 88
+  keytab              = filebase64("keytab")
 }
 ```
 
@@ -30,7 +31,7 @@ The following arguments are supported:
   Use KERBEROS-PASSWORD protocol.
 - **description** (Optional, String)  
   Description of the authentication.
-- **keytab** (Optional, String)  
+- **keytab** (Optional, String, Sensitive, **Value can't refresh**)  
   The keytab file, containing pairs of principal and encrypted keys.  
   The content of the file needed must be converted to base64 before being sent.
 - **login_attribute** (Optional, String)  

@@ -6,7 +6,7 @@ Provides a authorization resource.
 
 ```hcl
 # Configure an authorization
-resource wallix-bastion_authorization auth {
+resource "wallix-bastion_authorization" "auth" {
   authorization_name = "authName"
   user_group         = "userGroup"
   target_group       = "targetGroup"

@@ -62,8 +62,9 @@ func resourceExternalAuthKerberos() *schema.Resource {
 				Optional: true,
 			},
 			"keytab": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 			"login_attribute": {
 				Type:     schema.TypeString,
@@ -76,15 +77,18 @@ func resourceExternalAuthKerberos() *schema.Resource {
 		},
 	}
 }
+
 func resourceExternalAuthKerberosVersionCheck(version string) error {
-	if bchk.StringInSlice(version, defaultVersionsValid()) {
+	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_externalauth_kerberos not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_externalauth_kerberos not available with api version %s", version)
 }
 
-func resourceExternalAuthKerberosCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceExternalAuthKerberosCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceExternalAuthKerberosVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -105,13 +109,16 @@ func resourceExternalAuthKerberosCreate(ctx context.Context, d *schema.ResourceD
 		return diag.FromErr(err)
 	}
 	if !ex {
-		return diag.FromErr(fmt.Errorf("authentication_name %s can't find after POST", d.Get("authentication_name").(string)))
+		return diag.FromErr(fmt.Errorf("authentication_name %s not found after POST", d.Get("authentication_name").(string)))
 	}
 	d.SetId(id)
 
 	return resourceExternalAuthKerberosRead(ctx, d, m)
 }
-func resourceExternalAuthKerberosRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceExternalAuthKerberosRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceExternalAuthKerberosVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -128,7 +135,10 @@ func resourceExternalAuthKerberosRead(ctx context.Context, d *schema.ResourceDat
 
 	return nil
 }
-func resourceExternalAuthKerberosUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceExternalAuthKerberosUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceExternalAuthKerberosVersionCheck(c.bastionAPIVersion); err != nil {
@@ -141,7 +151,10 @@ func resourceExternalAuthKerberosUpdate(ctx context.Context, d *schema.ResourceD
 
 	return resourceExternalAuthKerberosRead(ctx, d, m)
 }
-func resourceExternalAuthKerberosDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceExternalAuthKerberosDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceExternalAuthKerberosVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -152,7 +165,12 @@ func resourceExternalAuthKerberosDelete(ctx context.Context, d *schema.ResourceD
 
 	return nil
 }
-func resourceExternalAuthKerberosImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+func resourceExternalAuthKerberosImport(
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceExternalAuthKerberosVersionCheck(c.bastionAPIVersion); err != nil {
@@ -178,30 +196,33 @@ func resourceExternalAuthKerberosImport(d *schema.ResourceData, m interface{}) (
 }
 
 func searchResourceExternalAuthKerberos(
-	ctx context.Context, authenticationName string, m interface{}) (string, bool, error) {
+	ctx context.Context, authenticationName string, m interface{},
+) (
+	string, bool, error,
+) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/externalauths/?fields=authentication_name,id&limit=-1", http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/externalauths/?q=authentication_name="+authenticationName, http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
 	if code != http.StatusOK {
-		return "", false, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return "", false, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 	var results []jsonExternalAuthKerberos
 	err = json.Unmarshal([]byte(body), &results)
 	if err != nil {
-		return "", false, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return "", false, fmt.Errorf("unmarshaling json: %w", err)
 	}
-	for _, v := range results {
-		if v.AuthenticationName == authenticationName {
-			return v.ID, true, nil
-		}
+	if len(results) == 1 {
+		return results[0].ID, true, nil
 	}
 
 	return "", false, nil
 }
 
-func addExternalAuthKerberos(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addExternalAuthKerberos(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareExternalAuthKerberosJSON(d)
 	body, code, err := c.newRequest(ctx, "/externalauths/", http.MethodPost, jsonData)
@@ -209,13 +230,15 @@ func addExternalAuthKerberos(ctx context.Context, d *schema.ResourceData, m inte
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
 
-func updateExternalAuthKerberos(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateExternalAuthKerberos(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareExternalAuthKerberosJSON(d)
 	body, code, err := c.newRequest(ctx, "/externalauths/"+d.Id(), http.MethodPut, jsonData)
@@ -223,19 +246,22 @@ func updateExternalAuthKerberos(ctx context.Context, d *schema.ResourceData, m i
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
-func deleteExternalAuthKerberos(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+
+func deleteExternalAuthKerberos(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/externalauths/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
@@ -261,7 +287,10 @@ func prepareExternalAuthKerberosJSON(d *schema.ResourceData) jsonExternalAuthKer
 }
 
 func readExternalAuthKerberosOptions(
-	ctx context.Context, authenticationID string, m interface{}) (jsonExternalAuthKerberos, error) {
+	ctx context.Context, authenticationID string, m interface{},
+) (
+	jsonExternalAuthKerberos, error,
+) {
 	c := m.(*Client)
 	var result jsonExternalAuthKerberos
 	body, code, err := c.newRequest(ctx, "/externalauths/"+authenticationID, http.MethodGet, nil)
@@ -272,12 +301,12 @@ func readExternalAuthKerberosOptions(
 		return result, nil
 	}
 	if code != http.StatusOK {
-		return result, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return result, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 
 	err = json.Unmarshal([]byte(body), &result)
 	if err != nil {
-		return result, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return result, fmt.Errorf("unmarshaling json: %w", err)
 	}
 
 	return result, nil

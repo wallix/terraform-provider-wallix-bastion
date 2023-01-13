@@ -6,7 +6,7 @@ Provides a account linked to device_localdomain resource.
 
 ```hcl
 # Configure a account into local domain of a device
-resource wallix-bastion_device_localdomain_account srv1adm {
+resource "wallix-bastion_device_localdomain_account" "srv1adm" {
   device_id     = "xxxxxxxx"
   domain_id     = "yyyyyyy"
   account_name  = "admin"

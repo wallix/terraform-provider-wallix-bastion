@@ -107,16 +107,18 @@ func resourceDeviceLocalDomainAccount() *schema.Resource {
 		},
 	}
 }
+
 func resourceDeviceLocalDomainAccountVersionCheck(version string) error {
-	if bchk.StringInSlice(version, defaultVersionsValid()) {
+	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_device_localdomain_account not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_device_localdomain_account not available with api version %s", version)
 }
 
-func resourceDeviceLocalDomainAccountCreate(ctx context.Context,
-	d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceDeviceLocalDomainAccountCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceDeviceLocalDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -155,14 +157,17 @@ func resourceDeviceLocalDomainAccountCreate(ctx context.Context,
 		return diag.FromErr(err)
 	}
 	if !ex {
-		return diag.FromErr(fmt.Errorf("account_name %s on domain_id %s, device_id %s can't find after POST",
+		return diag.FromErr(fmt.Errorf("account_name %s on domain_id %s, device_id %s not found after POST",
 			d.Get("account_name").(string), d.Get("domain_id").(string), d.Get("device_id").(string)))
 	}
 	d.SetId(id)
 
 	return resourceDeviceLocalDomainAccountRead(ctx, d, m)
 }
-func resourceDeviceLocalDomainAccountRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceDeviceLocalDomainAccountRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceDeviceLocalDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -180,8 +185,10 @@ func resourceDeviceLocalDomainAccountRead(ctx context.Context, d *schema.Resourc
 
 	return nil
 }
-func resourceDeviceLocalDomainAccountUpdate(ctx context.Context,
-	d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceDeviceLocalDomainAccountUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceDeviceLocalDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
@@ -194,8 +201,10 @@ func resourceDeviceLocalDomainAccountUpdate(ctx context.Context,
 
 	return resourceDeviceLocalDomainAccountRead(ctx, d, m)
 }
-func resourceDeviceLocalDomainAccountDelete(ctx context.Context,
-	d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceDeviceLocalDomainAccountDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceDeviceLocalDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -206,7 +215,12 @@ func resourceDeviceLocalDomainAccountDelete(ctx context.Context,
 
 	return nil
 }
-func resourceDeviceLocalDomainAccountImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+func resourceDeviceLocalDomainAccountImport(
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceDeviceLocalDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
@@ -242,32 +256,35 @@ func resourceDeviceLocalDomainAccountImport(d *schema.ResourceData, m interface{
 	return result, nil
 }
 
-func searchResourceDeviceLocalDomainAccount(ctx context.Context,
-	deviceID, domainID, accountName string, m interface{}) (string, bool, error) {
+func searchResourceDeviceLocalDomainAccount(
+	ctx context.Context, deviceID, domainID, accountName string, m interface{},
+) (
+	string, bool, error,
+) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/devices/"+deviceID+"/localdomains/"+domainID+
-		"/accounts/?fields=account_name,id&limit=-1", http.MethodGet, nil)
+		"/accounts/?q=account_name="+accountName, http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
 	if code != http.StatusOK {
-		return "", false, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return "", false, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 	var results []jsonDeviceLocalDomainAccount
 	err = json.Unmarshal([]byte(body), &results)
 	if err != nil {
-		return "", false, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return "", false, fmt.Errorf("unmarshaling json: %w", err)
 	}
-	for _, v := range results {
-		if v.AccountName == accountName {
-			return v.ID, true, nil
-		}
+	if len(results) == 1 {
+		return results[0].ID, true, nil
 	}
 
 	return "", false, nil
 }
 
-func addDeviceLocalDomainAccount(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addDeviceLocalDomainAccount(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareDeviceLocalDomainAccountJSON(d)
 	body, code, err := c.newRequest(ctx,
@@ -277,13 +294,15 @@ func addDeviceLocalDomainAccount(ctx context.Context, d *schema.ResourceData, m 
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
 
-func updateDeviceLocalDomainAccount(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateDeviceLocalDomainAccount(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareDeviceLocalDomainAccountJSON(d)
 	body, code, err := c.newRequest(ctx,
@@ -293,13 +312,15 @@ func updateDeviceLocalDomainAccount(ctx context.Context, d *schema.ResourceData,
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
 
-func deleteDeviceLocalDomainAccount(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func deleteDeviceLocalDomainAccount(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
 		"/devices/"+d.Get("device_id").(string)+"/localdomains/"+d.Get("domain_id").(string)+
@@ -308,7 +329,7 @@ func deleteDeviceLocalDomainAccount(ctx context.Context, d *schema.ResourceData,
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
@@ -335,8 +356,10 @@ func prepareDeviceLocalDomainAccountJSON(d *schema.ResourceData) jsonDeviceLocal
 }
 
 func readDeviceLocalDomainAccountOptions(
-	ctx context.Context, deviceID, localDomainID, accountID string, m interface{}) (
-	jsonDeviceLocalDomainAccount, error) {
+	ctx context.Context, deviceID, localDomainID, accountID string, m interface{},
+) (
+	jsonDeviceLocalDomainAccount, error,
+) {
 	c := m.(*Client)
 	var result jsonDeviceLocalDomainAccount
 	body, code, err := c.newRequest(ctx,
@@ -349,11 +372,11 @@ func readDeviceLocalDomainAccountOptions(
 		return result, nil
 	}
 	if code != http.StatusOK {
-		return result, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return result, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 	err = json.Unmarshal([]byte(body), &result)
 	if err != nil {
-		return result, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return result, fmt.Errorf("unmarshaling json: %w", err)
 	}
 
 	return result, nil

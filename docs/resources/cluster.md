@@ -6,7 +6,7 @@ Provides a global cluster resource.
 
 ```hcl
 # Configure a cluster
-resource wallix-bastion_cluster example {
+resource "wallix-bastion_cluster" "example" {
   cluster_name = "example"
   interactive_logins = [
     "device1:RDP",

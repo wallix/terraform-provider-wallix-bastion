@@ -5,7 +5,7 @@ Get information on Wallix version.
 ## Example Usage
 
 ```hcl
-data wallix-bastion_version version {}
+data "wallix-bastion_version" "version" {}
 ```
 
 ## Attribute Reference

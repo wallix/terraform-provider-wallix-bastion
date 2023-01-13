@@ -128,15 +128,18 @@ func resourceApplication() *schema.Resource {
 		},
 	}
 }
+
 func resourceApplicationVersionCheck(version string) error {
-	if bchk.StringInSlice(version, defaultVersionsValid()) {
+	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_application not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_application not available with api version %s", version)
 }
 
-func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceApplicationCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceApplicationVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -157,13 +160,16 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, m in
 		return diag.FromErr(err)
 	}
 	if !ex {
-		return diag.FromErr(fmt.Errorf("application_name %s can't find after POST", d.Get("application_name").(string)))
+		return diag.FromErr(fmt.Errorf("application_name %s not found after POST", d.Get("application_name").(string)))
 	}
 	d.SetId(id)
 
 	return resourceApplicationRead(ctx, d, m)
 }
-func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceApplicationRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceApplicationVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -180,7 +186,10 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, m inte
 
 	return nil
 }
-func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceApplicationUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceApplicationVersionCheck(c.bastionAPIVersion); err != nil {
@@ -193,7 +202,10 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, m in
 
 	return resourceApplicationRead(ctx, d, m)
 }
-func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceApplicationDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceApplicationVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -204,7 +216,12 @@ func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, m in
 
 	return nil
 }
-func resourceApplicationImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+func resourceApplicationImport(
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceApplicationVersionCheck(c.bastionAPIVersion); err != nil {
@@ -229,30 +246,34 @@ func resourceApplicationImport(d *schema.ResourceData, m interface{}) ([]*schema
 	return result, nil
 }
 
-func searchResourceApplication(ctx context.Context, applicationName string, m interface{}) (string, bool, error) {
+func searchResourceApplication(
+	ctx context.Context, applicationName string, m interface{},
+) (
+	string, bool, error,
+) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/applications/?fields=application_name,id&limit=-1", http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/applications/?q=application_name="+applicationName, http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
 	if code != http.StatusOK {
-		return "", false, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return "", false, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 	var results []jsonApplication
 	err = json.Unmarshal([]byte(body), &results)
 	if err != nil {
-		return "", false, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return "", false, fmt.Errorf("unmarshaling json: %w", err)
 	}
-	for _, v := range results {
-		if v.ApplicationName == applicationName {
-			return v.ID, true, nil
-		}
+	if len(results) == 1 {
+		return results[0].ID, true, nil
 	}
 
 	return "", false, nil
 }
 
-func addApplication(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addApplication(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareApplicationJSON(d)
 	body, code, err := c.newRequest(ctx, "/applications/", http.MethodPost, jsonData)
@@ -260,13 +281,15 @@ func addApplication(ctx context.Context, d *schema.ResourceData, m interface{}) 
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
 
-func updateApplication(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateApplication(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareApplicationJSON(d)
 	body, code, err := c.newRequest(ctx, "/applications/"+d.Id()+"?force=true", http.MethodPut, jsonData)
@@ -274,20 +297,22 @@ func updateApplication(ctx context.Context, d *schema.ResourceData, m interface{
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
 
-func deleteApplication(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func deleteApplication(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/applications/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
@@ -321,7 +346,10 @@ func prepareApplicationJSON(d *schema.ResourceData) jsonApplication {
 }
 
 func readApplicationOptions(
-	ctx context.Context, applicationID string, m interface{}) (jsonApplication, error) {
+	ctx context.Context, applicationID string, m interface{},
+) (
+	jsonApplication, error,
+) {
 	c := m.(*Client)
 	var result jsonApplication
 	body, code, err := c.newRequest(ctx, "/applications/"+applicationID, http.MethodGet, nil)
@@ -332,11 +360,11 @@ func readApplicationOptions(
 		return result, nil
 	}
 	if code != http.StatusOK {
-		return result, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return result, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 	err = json.Unmarshal([]byte(body), &result)
 	if err != nil {
-		return result, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return result, fmt.Errorf("unmarshaling json: %w", err)
 	}
 
 	return result, nil
@@ -383,7 +411,7 @@ func fillApplication(d *schema.ResourceData, jsonData jsonApplication) {
 			"password_change_policy": v.PasswordChangePolicy,
 			"password_change_plugin": v.PasswordChangePlugin,
 		})
-		pluginParameters, _ := json.Marshal(v.PasswordChangePluginParameters) // nolint: errchkjson
+		pluginParameters, _ := json.Marshal(v.PasswordChangePluginParameters) //nolint: errchkjson
 		localDomains[len(localDomains)-1]["password_change_plugin_parameters"] = string(pluginParameters)
 	}
 	if tfErr := d.Set("local_domains", localDomains); tfErr != nil {

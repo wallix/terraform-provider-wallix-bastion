@@ -3,29 +3,30 @@ run:
 linters:
   enable-all: true
   disable:
-    # maligned # deprecated 1.38 but govet-fieldalignment not usuable
-    - scopelint # deprecated 1.38
-    - interfacer # deprecated 1.39
-    - golint # deprecated 1.41
-    - exhaustivestruct # deprecated 1.46
+    # maligned # deprecated 1.38.0 but govet-fieldalignment not usuable
+    - interfacer # deprecated 1.38.0
+    - scopelint # deprecated 1.39.0
+    - golint # deprecated 1.41.0
+    - exhaustivestruct # deprecated 1.46.0
+    # ifshort # deprecated 1.48.0 but no replacement
+    - nosnakecase # deprecated 1.48.1
+    - deadcode # deprecated 1.49.0
+    - structcheck # deprecated 1.49.0
+    - varcheck # deprecated 1.49.0
     - funlen
-    - gochecknoglobals
     - dupl
     - wsl
     - gomnd
     - goerr113 
     - nestif
-    - gofumpt
     - exhaustruct
     - paralleltest
     - gci
-    - wrapcheck
     - cyclop
     - forcetypeassert
     - tagliatelle
     - gomoddirectives
     - varnamelen
-    - maintidx
 linters-settings:
   govet:
     enable-all: true
@@ -33,8 +34,8 @@ linters-settings:
       - fieldalignment
   gocognit:
     # minimal code complexity to report, 30 by default
-    min-complexity: 100
+    min-complexity: 30
   gocyclo:
     # minimal code complexity to report, 30 by default
-    min-complexity: 50
+    min-complexity: 30
   

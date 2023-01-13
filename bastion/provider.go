@@ -8,14 +8,16 @@ import (
 )
 
 const (
-	versionValidate3_3 = "v3.3"
-	versionValidate3_6 = "v3.6"
+	VersionWallixAPI33 = "v3.3"
+	VersionWallixAPI36 = "v3.6"
+	VersionWallixAPI38 = "v3.8"
 )
 
 func defaultVersionsValid() []string {
 	return []string{
-		versionValidate3_3,
-		versionValidate3_6,
+		VersionWallixAPI33,
+		VersionWallixAPI36,
+		VersionWallixAPI38,
 	}
 }
 
@@ -46,7 +48,7 @@ func Provider() *schema.Provider {
 			"api_version": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("WALLIX_BASTION_API_VERSION", "v3.3"),
+				DefaultFunc: schema.EnvDefaultFunc("WALLIX_BASTION_API_VERSION", VersionWallixAPI33),
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
@@ -57,6 +59,10 @@ func Provider() *schema.Provider {
 			"wallix-bastion_application":                           resourceApplication(),
 			"wallix-bastion_application_localdomain":               resourceApplicationLocalDomain(),
 			"wallix-bastion_application_localdomain_account":       resourceApplicationLocalDomainAccount(),
+			"wallix-bastion_authdomain_ad":                         resourceAuthDomainAD(),
+			"wallix-bastion_authdomain_azuread":                    resourceAuthDomainAzureAD(),
+			"wallix-bastion_authdomain_ldap":                       resourceAuthDomainLdap(),
+			"wallix-bastion_authdomain_mapping":                    resourceAuthDomainMapping(),
 			"wallix-bastion_authorization":                         resourceAuthorization(),
 			"wallix-bastion_checkout_policy":                       resourceCheckoutPolicy(),
 			"wallix-bastion_cluster":                               resourceCluster(),
@@ -72,6 +78,7 @@ func Provider() *schema.Provider {
 			"wallix-bastion_externalauth_kerberos":                 resourceExternalAuthKerberos(),
 			"wallix-bastion_externalauth_ldap":                     resourceExternalAuthLdap(),
 			"wallix-bastion_externalauth_radius":                   resourceExternalAuthRadius(),
+			"wallix-bastion_externalauth_saml":                     resourceExternalAuthSaml(),
 			"wallix-bastion_externalauth_tacacs":                   resourceExternalAuthTacacs(),
 			"wallix-bastion_ldapdomain":                            resourceLdapDomain(),
 			"wallix-bastion_ldapmapping":                           resourceLdapMapping(),
@@ -85,7 +92,11 @@ func Provider() *schema.Provider {
 	}
 }
 
-func configureProvider(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+func configureProvider(
+	ctx context.Context, d *schema.ResourceData,
+) (
+	interface{}, diag.Diagnostics,
+) {
 	config := Config{
 		bastionAPIVersion: d.Get("api_version").(string),
 		bastionIP:         d.Get("ip").(string),

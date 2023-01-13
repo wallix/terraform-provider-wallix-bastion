@@ -6,7 +6,7 @@ Provides a localdomain resource linked to device.
 
 ```hcl
 # Configure a local domain on device
-resource wallix-bastion_device_localdomain srv1dom {
+resource "wallix-bastion_device_localdomain" "srv1dom" {
   device_id   = "xxxxxxxx"
   domain_name = "domlocal"
 }

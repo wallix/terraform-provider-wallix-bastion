@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	govers "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -112,15 +113,27 @@ func resourceLdapDomain() *schema.Resource {
 		},
 	}
 }
+
 func resourceLdapDomainVersionCheck(version string) error {
-	if bchk.StringInSlice(version, defaultVersionsValid()) {
+	if bchk.InSlice(version, []string{VersionWallixAPI33, VersionWallixAPI36}) {
 		return nil
 	}
+	if vers, err := govers.NewVersion(version); err == nil {
+		versionResourceRename, _ := govers.NewVersion(VersionWallixAPI38)
+		if vers.GreaterThanOrEqual(versionResourceRename) {
+			return fmt.Errorf(
+				"resource wallix-bastion_ldapdomain not available with api version %s\n"+
+					" use wallix-bastion_authdomain_ldap instead",
+				version)
+		}
+	}
 
-	return fmt.Errorf("resource wallix-bastion_ldapdomain not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_ldapdomain not available with api version %s", version)
 }
 
-func resourceLdapDomainCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceLdapDomainCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceLdapDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -140,7 +153,10 @@ func resourceLdapDomainCreate(ctx context.Context, d *schema.ResourceData, m int
 
 	return resourceLdapDomainRead(ctx, d, m)
 }
-func resourceLdapDomainRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceLdapDomainRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceLdapDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -157,7 +173,10 @@ func resourceLdapDomainRead(ctx context.Context, d *schema.ResourceData, m inter
 
 	return nil
 }
-func resourceLdapDomainUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceLdapDomainUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceLdapDomainVersionCheck(c.bastionAPIVersion); err != nil {
@@ -170,7 +189,10 @@ func resourceLdapDomainUpdate(ctx context.Context, d *schema.ResourceData, m int
 
 	return resourceLdapDomainRead(ctx, d, m)
 }
-func resourceLdapDomainDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceLdapDomainDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceLdapDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -181,7 +203,12 @@ func resourceLdapDomainDelete(ctx context.Context, d *schema.ResourceData, m int
 
 	return nil
 }
-func resourceLdapDomainImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+func resourceLdapDomainImport(
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceLdapDomainVersionCheck(c.bastionAPIVersion); err != nil {
@@ -205,7 +232,11 @@ func resourceLdapDomainImport(d *schema.ResourceData, m interface{}) ([]*schema.
 	return result, nil
 }
 
-func checkResourceLdapDomainExists(ctx context.Context, domainName string, m interface{}) (bool, error) {
+func checkResourceLdapDomainExists(
+	ctx context.Context, domainName string, m interface{},
+) (
+	bool, error,
+) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/ldapdomains/"+domainName, http.MethodGet, nil)
 	if err != nil {
@@ -215,13 +246,15 @@ func checkResourceLdapDomainExists(ctx context.Context, domainName string, m int
 		return false, nil
 	}
 	if code != http.StatusOK {
-		return false, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return false, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 
 	return true, nil
 }
 
-func addLdapDomain(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addLdapDomain(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareLdapDomainJSON(d, true)
 	body, code, err := c.newRequest(ctx, "/ldapdomains/", http.MethodPost, jsonData)
@@ -229,13 +262,15 @@ func addLdapDomain(ctx context.Context, d *schema.ResourceData, m interface{}) e
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
 
-func updateLdapDomain(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateLdapDomain(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareLdapDomainJSON(d, false)
 	body, code, err := c.newRequest(ctx, "/ldapdomains/"+d.Id()+"?force=true", http.MethodPut, jsonData)
@@ -243,20 +278,22 @@ func updateLdapDomain(ctx context.Context, d *schema.ResourceData, m interface{}
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
 
-func deleteLdapDomain(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func deleteLdapDomain(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/ldapdomains/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
@@ -293,7 +330,10 @@ func prepareLdapDomainJSON(d *schema.ResourceData, newResource bool) jsonLdapDom
 }
 
 func readLdapDomainOptions(
-	ctx context.Context, domainName string, m interface{}) (jsonLdapDomain, error) {
+	ctx context.Context, domainName string, m interface{},
+) (
+	jsonLdapDomain, error,
+) {
 	c := m.(*Client)
 	var result jsonLdapDomain
 	body, code, err := c.newRequest(ctx, "/ldapdomains/"+domainName, http.MethodGet, nil)
@@ -304,11 +344,11 @@ func readLdapDomainOptions(
 		return result, nil
 	}
 	if code != http.StatusOK {
-		return result, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return result, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 	err = json.Unmarshal([]byte(body), &result)
 	if err != nil {
-		return result, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return result, fmt.Errorf("unmarshaling json: %w", err)
 	}
 
 	return result, nil

@@ -4,7 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 )
 
-// Config : provider config.
+// Config: provider config.
 type Config struct {
 	bastionPort       int
 	bastionAPIVersion string
@@ -13,7 +13,7 @@ type Config struct {
 	bastionUser       string
 }
 
-// Client : read information to connect on wallix bastion.
+// Client: read information to connect on wallix bastion.
 func (c *Config) Client() (*Client, diag.Diagnostics) {
 	cl := &Client{
 		bastionIP:         c.bastionIP,

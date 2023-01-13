@@ -38,8 +38,10 @@ func resourceConnectionPolicy() *schema.Resource {
 			"protocol": {
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"SSH", "RAWTCPIP", "RDP", "RLOGIN", "TELNET", "VNC"}, false),
+				ValidateFunc: validation.StringInSlice(
+					[]string{"SSH", "RAWTCPIP", "RDP", "RLOGIN", "TELNET", "VNC"},
+					false,
+				),
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -58,15 +60,18 @@ func resourceConnectionPolicy() *schema.Resource {
 		},
 	}
 }
+
 func resourceConnectionPolicyVersionCheck(version string) error {
-	if bchk.StringInSlice(version, defaultVersionsValid()) {
+	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_connection_policy not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_connection_policy not available with api version %s", version)
 }
 
-func resourceConnectionPolicyCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceConnectionPolicyCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceConnectionPolicyVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -87,14 +92,17 @@ func resourceConnectionPolicyCreate(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(err)
 	}
 	if !ex {
-		return diag.FromErr(fmt.Errorf("connection_policy_name %s can't find after POST",
+		return diag.FromErr(fmt.Errorf("connection_policy_name %s not found after POST",
 			d.Get("connection_policy_name").(string)))
 	}
 	d.SetId(id)
 
 	return resourceConnectionPolicyRead(ctx, d, m)
 }
-func resourceConnectionPolicyRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceConnectionPolicyRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceConnectionPolicyVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -111,7 +119,10 @@ func resourceConnectionPolicyRead(ctx context.Context, d *schema.ResourceData, m
 
 	return nil
 }
-func resourceConnectionPolicyUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceConnectionPolicyUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceConnectionPolicyVersionCheck(c.bastionAPIVersion); err != nil {
@@ -124,7 +135,10 @@ func resourceConnectionPolicyUpdate(ctx context.Context, d *schema.ResourceData,
 
 	return resourceConnectionPolicyRead(ctx, d, m)
 }
-func resourceConnectionPolicyDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceConnectionPolicyDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceConnectionPolicyVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -135,7 +149,12 @@ func resourceConnectionPolicyDelete(ctx context.Context, d *schema.ResourceData,
 
 	return nil
 }
-func resourceConnectionPolicyImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+func resourceConnectionPolicyImport(
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceConnectionPolicyVersionCheck(c.bastionAPIVersion); err != nil {
@@ -160,32 +179,35 @@ func resourceConnectionPolicyImport(d *schema.ResourceData, m interface{}) ([]*s
 	return result, nil
 }
 
-func searchResourceConnectionPolicy(ctx context.Context,
-	connectionPolicyName string, m interface{}) (string, bool, error) {
+func searchResourceConnectionPolicy(
+	ctx context.Context, connectionPolicyName string, m interface{},
+) (
+	string, bool, error,
+) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
-		"/connectionpolicies/?fields=connection_policy_name,id&limit=-1", http.MethodGet, nil)
+		"/connectionpolicies/?q=connection_policy_name="+connectionPolicyName, http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
 	if code != http.StatusOK {
-		return "", false, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return "", false, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 	var results []jsonConnectionPolicy
 	err = json.Unmarshal([]byte(body), &results)
 	if err != nil {
-		return "", false, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return "", false, fmt.Errorf("unmarshaling json: %w", err)
 	}
-	for _, v := range results {
-		if v.ConnectionPolicyName == connectionPolicyName {
-			return v.ID, true, nil
-		}
+	if len(results) == 1 {
+		return results[0].ID, true, nil
 	}
 
 	return "", false, nil
 }
 
-func addConnectionPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addConnectionPolicy(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData, err := prepareConnectionPolicyJSON(d)
 	if err != nil {
@@ -196,13 +218,15 @@ func addConnectionPolicy(ctx context.Context, d *schema.ResourceData, m interfac
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
 
-func updateConnectionPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateConnectionPolicy(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData, err := prepareConnectionPolicyJSON(d)
 	if err != nil {
@@ -213,20 +237,22 @@ func updateConnectionPolicy(ctx context.Context, d *schema.ResourceData, m inter
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
 
-func deleteConnectionPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func deleteConnectionPolicy(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/connectionpolicies/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
@@ -239,7 +265,7 @@ func prepareConnectionPolicyJSON(d *schema.ResourceData) (jsonConnectionPolicy, 
 	jsonData.Protocol = d.Get("protocol").(string)
 	if v := d.Get("authentication_methods").(*schema.Set).List(); len(v) > 0 {
 		for _, vv := range v {
-			if !bchk.StringInSlice(vv.(string), validAuthenticationMethods()) {
+			if !bchk.InSlice(vv.(string), validAuthenticationMethods()) {
 				return jsonData, fmt.Errorf("authentication_methods must be in %v", validAuthenticationMethods())
 			}
 			jsonData.AuthenticationMethods = append(jsonData.AuthenticationMethods, vv.(string))
@@ -257,6 +283,7 @@ func prepareConnectionPolicyJSON(d *schema.ResourceData) (jsonConnectionPolicy, 
 
 	return jsonData, nil
 }
+
 func validAuthenticationMethods() []string {
 	return []string{
 		"KERBEROS_FORWARDING",
@@ -269,7 +296,10 @@ func validAuthenticationMethods() []string {
 }
 
 func readConnectionPolicyOptions(
-	ctx context.Context, connectionPolicyID string, m interface{}) (jsonConnectionPolicy, error) {
+	ctx context.Context, connectionPolicyID string, m interface{},
+) (
+	jsonConnectionPolicy, error,
+) {
 	c := m.(*Client)
 	var result jsonConnectionPolicy
 	body, code, err := c.newRequest(ctx, "/connectionpolicies/"+connectionPolicyID, http.MethodGet, nil)
@@ -280,11 +310,11 @@ func readConnectionPolicyOptions(
 		return result, nil
 	}
 	if code != http.StatusOK {
-		return result, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return result, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 	err = json.Unmarshal([]byte(body), &result)
 	if err != nil {
-		return result, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return result, fmt.Errorf("unmarshaling json: %w", err)
 	}
 
 	return result, nil
@@ -303,7 +333,7 @@ func fillConnectionPolicy(d *schema.ResourceData, jsonData jsonConnectionPolicy)
 	if tfErr := d.Set("authentication_methods", jsonData.AuthenticationMethods); tfErr != nil {
 		panic(tfErr)
 	}
-	options, _ := json.Marshal(jsonData.Options) // nolint: errchkjson
+	options, _ := json.Marshal(jsonData.Options) //nolint: errchkjson
 	if tfErr := d.Set("options", string(options)); tfErr != nil {
 		panic(tfErr)
 	}

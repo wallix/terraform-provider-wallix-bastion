@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 
+	govers "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	bchk "github.com/jeremmfr/go-utils/basiccheck"
@@ -45,15 +47,27 @@ func resourceLdapMapping() *schema.Resource {
 		},
 	}
 }
+
 func resourceLdapMappingVersionCheck(version string) error {
-	if bchk.StringInSlice(version, defaultVersionsValid()) {
+	if bchk.InSlice(version, []string{VersionWallixAPI33, VersionWallixAPI36}) {
 		return nil
 	}
+	if vers, err := govers.NewVersion(version); err == nil {
+		versionResourceRename, _ := govers.NewVersion(VersionWallixAPI38)
+		if vers.GreaterThanOrEqual(versionResourceRename) {
+			return fmt.Errorf(
+				"resource wallix-bastion_ldapmapping not available with api version %s\n"+
+					" use wallix-bastion_authdomain_mapping instead",
+				version)
+		}
+	}
 
-	return fmt.Errorf("resource wallix-bastion_ldapmapping not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_ldapmapping not available with api version %s", version)
 }
 
-func resourceLdapMappingCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceLdapMappingCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceLdapMappingVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -75,7 +89,10 @@ func resourceLdapMappingCreate(ctx context.Context, d *schema.ResourceData, m in
 
 	return nil
 }
-func resourceLdapMappingRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceLdapMappingRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceLdapMappingVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -92,7 +109,9 @@ func resourceLdapMappingRead(ctx context.Context, d *schema.ResourceData, m inte
 	return nil
 }
 
-func resourceLdapMappingDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceLdapMappingDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceLdapMappingVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -103,7 +122,12 @@ func resourceLdapMappingDelete(ctx context.Context, d *schema.ResourceData, m in
 
 	return nil
 }
-func resourceLdapMappingImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+func resourceLdapMappingImport(
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceLdapMappingVersionCheck(c.bastionAPIVersion); err != nil {
@@ -132,33 +156,35 @@ func resourceLdapMappingImport(d *schema.ResourceData, m interface{}) ([]*schema
 	return result, nil
 }
 
-func checkResourceLdapMappingExists(ctx context.Context,
-	domain, userGroup, ldapGroup string, m interface{}) (bool, error) {
+func checkResourceLdapMappingExists(
+	ctx context.Context, domain, userGroup, ldapGroup string, m interface{},
+) (
+	bool, error,
+) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/ldapmappings/?limit=-1", http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx,
+		"/ldapmappings/?q=domain="+domain+url.QueryEscape("&&")+"user_group="+userGroup, http.MethodGet, nil)
 	if err != nil {
 		return false, err
 	}
 	if code != http.StatusOK {
-		return false, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return false, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 	var results []jsonLdapMapping
 	err = json.Unmarshal([]byte(body), &results)
 	if err != nil {
-		return false, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return false, fmt.Errorf("unmarshaling json: %w", err)
 	}
-	for _, v := range results {
-		if v.Domain == domain &&
-			v.UserGroup == userGroup &&
-			v.LdapGroup == ldapGroup {
-			return true, nil
-		}
+	if len(results) == 1 && results[0].LdapGroup == ldapGroup {
+		return true, nil
 	}
 
 	return false, nil
 }
 
-func addLdapMapping(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addLdapMapping(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareLdapMappingJSON(d)
 	body, code, err := c.newRequest(ctx, "/ldapmappings/", http.MethodPost, jsonData)
@@ -166,13 +192,15 @@ func addLdapMapping(ctx context.Context, d *schema.ResourceData, m interface{}) 
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
 
-func deleteLdapMapping(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func deleteLdapMapping(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	idSplit := strings.Split(d.Id(), "/")
 	if len(idSplit) != 3 {
@@ -183,7 +211,7 @@ func deleteLdapMapping(ctx context.Context, d *schema.ResourceData, m interface{
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil

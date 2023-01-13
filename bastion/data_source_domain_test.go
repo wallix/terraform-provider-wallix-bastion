@@ -28,7 +28,7 @@ func TestAccDataSourceDomain_basic(t *testing.T) {
 
 func testAccDataSourceDomainConfigCreate() string {
 	return `
-resource wallix-bastion_domain testacc_dataDomain {
+resource "wallix-bastion_domain" "testacc_dataDomain" {
   domain_name      = "testacc-domain"
   domain_real_name = "testacc-domain.local"
 }
@@ -37,12 +37,12 @@ resource wallix-bastion_domain testacc_dataDomain {
 
 func testAccDataSourceDomainConfigData() string {
 	return `
-resource wallix-bastion_domain testacc_dataDomain {
+resource "wallix-bastion_domain" "testacc_dataDomain" {
   domain_name      = "testacc-domain"
   domain_real_name = "testacc-domain.local"
 }
 
-data wallix-bastion_domain testacc_dataDomain {
+data "wallix-bastion_domain" "testacc_dataDomain" {
   domain_name = "testacc-domain"
 }
 `

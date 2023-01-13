@@ -6,7 +6,7 @@ Provides a user resource.
 
 ```hcl
 # Configure an user
-resource wallix-bastion_user demo {
+resource "wallix-bastion_user" "demo" {
   user_name          = "demo"
   email              = "demo@none.none"
   profile            = "user"

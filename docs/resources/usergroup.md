@@ -6,7 +6,7 @@ Provides a usergroup resource.
 
 ```hcl
 # Configure a group of users
-resource wallix-bastion_usergroup demo {
+resource "wallix-bastion_usergroup" "demo" {
   group_name = "demo"
   timeframes = ["allthetime"]
 }

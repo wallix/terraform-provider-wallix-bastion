@@ -5,7 +5,7 @@ Get information on a global domain resource.
 ## Example Usage
 
 ```hcl
-data wallix-bastion_domain globDomain {
+data "wallix-bastion_domain" "globDomain" {
   domain_name = "globDomain"
 }
 ```

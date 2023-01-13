@@ -34,7 +34,7 @@ func TestAccResourceTargetgroup_basic(t *testing.T) {
 
 func testAccResourceTargetgroupCreate() string {
 	return `
-resource wallix-bastion_targetgroup testacc_Targetgroup {
+resource "wallix-bastion_targetgroup" "testacc_Targetgroup" {
   group_name = "testacc_Targetgroup"
 }
 `
@@ -42,7 +42,7 @@ resource wallix-bastion_targetgroup testacc_Targetgroup {
 
 func testAccResourceTargetgroupUpdate() string {
 	return `
-resource wallix-bastion_targetgroup testacc_Targetgroup {
+resource "wallix-bastion_targetgroup" "testacc_Targetgroup" {
   group_name  = "testacc_Targetgroup"
   description = "testacc Targetgroup"
   restrictions {
@@ -78,11 +78,11 @@ resource wallix-bastion_targetgroup testacc_Targetgroup {
     service = wallix-bastion_device_service.testacc_Targetgroup.service_name
   }
 }
-resource wallix-bastion_device testacc_Targetgroup {
+resource "wallix-bastion_device" "testacc_Targetgroup" {
   device_name = "testacc_Targetgroup"
   host        = "testacc_Targetgroup.device"
 }
-resource wallix-bastion_device_service testacc_Targetgroup {
+resource "wallix-bastion_device_service" "testacc_Targetgroup" {
   device_id         = wallix-bastion_device.testacc_Targetgroup.id
   service_name      = "testacc_Targetgroup"
   connection_policy = "SSH"
@@ -91,11 +91,11 @@ resource wallix-bastion_device_service testacc_Targetgroup {
   subprotocols      = ["SSH_SHELL_SESSION"]
   global_domains    = [wallix-bastion_domain.testacc_Targetgroup.domain_name]
 }
-resource wallix-bastion_device testacc_Targetgroup2 {
+resource "wallix-bastion_device" "testacc_Targetgroup2" {
   device_name = "testacc_Targetgroup2"
   host        = "testacc_Targetgroup2.device"
 }
-resource wallix-bastion_device_service testacc_Targetgroup2 {
+resource "wallix-bastion_device_service" "testacc_Targetgroup2" {
   device_id         = wallix-bastion_device.testacc_Targetgroup2.id
   service_name      = "testacc_Targetgroup2"
   connection_policy = "SSH"
@@ -103,21 +103,21 @@ resource wallix-bastion_device_service testacc_Targetgroup2 {
   protocol          = "SSH"
   subprotocols      = ["SSH_SHELL_SESSION"]
 }
-resource wallix-bastion_device_localdomain testacc_Targetgroup2 {
+resource "wallix-bastion_device_localdomain" "testacc_Targetgroup2" {
   device_id   = wallix-bastion_device.testacc_Targetgroup2.id
   domain_name = "testacc_Targetgroup2"
 }
-resource wallix-bastion_device_localdomain_account testacc_Targetgroup2 {
+resource "wallix-bastion_device_localdomain_account" "testacc_Targetgroup2" {
   device_id     = wallix-bastion_device.testacc_Targetgroup2.id
   domain_id     = wallix-bastion_device_localdomain.testacc_Targetgroup2.id
   account_name  = "testacc_Targetgroup2_admin"
   account_login = "admin"
   services      = [wallix-bastion_device_service.testacc_Targetgroup2.service_name]
 }
-resource wallix-bastion_domain testacc_Targetgroup {
+resource "wallix-bastion_domain" "testacc_Targetgroup" {
   domain_name = "testacc_Targetgroup"
 }
-resource wallix-bastion_domain_account testacc_Targetgroup {
+resource "wallix-bastion_domain_account" "testacc_Targetgroup" {
   domain_id     = wallix-bastion_domain.testacc_Targetgroup.id
   account_name  = "testacc_Targetgroup_Admin"
   account_login = "admin"
