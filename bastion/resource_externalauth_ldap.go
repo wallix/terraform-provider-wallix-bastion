@@ -31,6 +31,7 @@ type jsonExternalAuthLdap struct {
 	Login                string  `json:"login,omitempty"`
 	LoginAttribute       string  `json:"login_attribute"`
 	Host                 string  `json:"host"`
+	Passphrase           string  `json:"passphrase,omitempty"`
 	Password             string  `json:"password,omitempty"`
 	PrivateKey           string  `json:"private_key"`
 	Type                 string  `json:"type"`
@@ -80,8 +81,9 @@ func resourceExternalAuthLdap() *schema.Resource {
 				Optional: true,
 			},
 			"certificate": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -111,14 +113,21 @@ func resourceExternalAuthLdap() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"passphrase": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				RequiredWith: []string{"private_key"},
+			},
 			"password": {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
 			},
 			"private_key": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 			"use_primary_auth_domain": {
 				Type:     schema.TypeBool,
@@ -127,15 +136,18 @@ func resourceExternalAuthLdap() *schema.Resource {
 		},
 	}
 }
+
 func resourceExternalAuthLdapVersionCheck(version string) error {
 	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_externalauth_ldap not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_externalauth_ldap not available with api version %s", version)
 }
 
-func resourceExternalAuthLdapCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceExternalAuthLdapCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceExternalAuthLdapVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -160,13 +172,16 @@ func resourceExternalAuthLdapCreate(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(err)
 	}
 	if !ex {
-		return diag.FromErr(fmt.Errorf("authentication_name %s can't find after POST", d.Get("authentication_name").(string)))
+		return diag.FromErr(fmt.Errorf("authentication_name %s not found after POST", d.Get("authentication_name").(string)))
 	}
 	d.SetId(id)
 
 	return resourceExternalAuthLdapRead(ctx, d, m)
 }
-func resourceExternalAuthLdapRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceExternalAuthLdapRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceExternalAuthLdapVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -183,7 +198,10 @@ func resourceExternalAuthLdapRead(ctx context.Context, d *schema.ResourceData, m
 
 	return nil
 }
-func resourceExternalAuthLdapUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceExternalAuthLdapUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceExternalAuthLdapVersionCheck(c.bastionAPIVersion); err != nil {
@@ -200,7 +218,10 @@ func resourceExternalAuthLdapUpdate(ctx context.Context, d *schema.ResourceData,
 
 	return resourceExternalAuthLdapRead(ctx, d, m)
 }
-func resourceExternalAuthLdapDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceExternalAuthLdapDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceExternalAuthLdapVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -211,7 +232,12 @@ func resourceExternalAuthLdapDelete(ctx context.Context, d *schema.ResourceData,
 
 	return nil
 }
-func resourceExternalAuthLdapImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+func resourceExternalAuthLdapImport(
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceExternalAuthLdapVersionCheck(c.bastionAPIVersion); err != nil {
@@ -237,30 +263,33 @@ func resourceExternalAuthLdapImport(d *schema.ResourceData, m interface{}) ([]*s
 }
 
 func searchResourceExternalAuthLdap(
-	ctx context.Context, authenticationName string, m interface{}) (string, bool, error) {
+	ctx context.Context, authenticationName string, m interface{},
+) (
+	string, bool, error,
+) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/externalauths/?fields=authentication_name,id&limit=-1", http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/externalauths/?q=authentication_name="+authenticationName, http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
 	if code != http.StatusOK {
-		return "", false, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return "", false, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 	var results []jsonExternalAuthLdap
 	err = json.Unmarshal([]byte(body), &results)
 	if err != nil {
-		return "", false, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return "", false, fmt.Errorf("unmarshaling json: %w", err)
 	}
-	for _, v := range results {
-		if v.AuthenticationName == authenticationName {
-			return v.ID, true, nil
-		}
+	if len(results) == 1 {
+		return results[0].ID, true, nil
 	}
 
 	return "", false, nil
 }
 
-func addExternalAuthLdap(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addExternalAuthLdap(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareExternalAuthLdapJSON(d)
 	body, code, err := c.newRequest(ctx, "/externalauths/", http.MethodPost, jsonData)
@@ -268,13 +297,15 @@ func addExternalAuthLdap(ctx context.Context, d *schema.ResourceData, m interfac
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
 
-func updateExternalAuthLdap(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateExternalAuthLdap(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareExternalAuthLdapJSON(d)
 	body, code, err := c.newRequest(ctx, "/externalauths/"+d.Id(), http.MethodPut, jsonData)
@@ -282,19 +313,22 @@ func updateExternalAuthLdap(ctx context.Context, d *schema.ResourceData, m inter
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
-func deleteExternalAuthLdap(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+
+func deleteExternalAuthLdap(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/externalauths/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
@@ -319,6 +353,7 @@ func prepareExternalAuthLdapJSON(d *schema.ResourceData) jsonExternalAuthLdap {
 		LoginAttribute:       d.Get("login_attribute").(string),
 		Host:                 d.Get("host").(string),
 		Password:             d.Get("password").(string),
+		Passphrase:           d.Get("passphrase").(string),
 		Port:                 d.Get("port").(int),
 		PrivateKey:           d.Get("private_key").(string),
 		Type:                 "LDAP",
@@ -326,7 +361,10 @@ func prepareExternalAuthLdapJSON(d *schema.ResourceData) jsonExternalAuthLdap {
 }
 
 func readExternalAuthLdapOptions(
-	ctx context.Context, authenticationID string, m interface{}) (jsonExternalAuthLdap, error) {
+	ctx context.Context, authenticationID string, m interface{},
+) (
+	jsonExternalAuthLdap, error,
+) {
 	c := m.(*Client)
 	var result jsonExternalAuthLdap
 	body, code, err := c.newRequest(ctx, "/externalauths/"+authenticationID, http.MethodGet, nil)
@@ -337,12 +375,12 @@ func readExternalAuthLdapOptions(
 		return result, nil
 	}
 	if code != http.StatusOK {
-		return result, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return result, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 
 	err = json.Unmarshal([]byte(body), &result)
 	if err != nil {
-		return result, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return result, fmt.Errorf("unmarshaling json: %w", err)
 	}
 
 	return result, nil
@@ -376,9 +414,6 @@ func fillExternalAuthLdap(d *schema.ResourceData, jsonData jsonExternalAuthLdap)
 	if tfErr := d.Set("ca_certificate", jsonData.CACertificate); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("certificate", jsonData.Certificate); tfErr != nil {
-		panic(tfErr)
-	}
 	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
@@ -395,9 +430,6 @@ func fillExternalAuthLdap(d *schema.ResourceData, jsonData jsonExternalAuthLdap)
 		panic(tfErr)
 	}
 	if tfErr := d.Set("is_starttls", jsonData.IsStartTLS); tfErr != nil {
-		panic(tfErr)
-	}
-	if tfErr := d.Set("private_key", jsonData.PrivateKey); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("use_primary_auth_domain", jsonData.UsePrimaryAuthDomain); tfErr != nil {

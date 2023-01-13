@@ -68,15 +68,18 @@ func resourceCheckoutPolicy() *schema.Resource {
 		},
 	}
 }
+
 func resourceCheckoutPolicyVersionCheck(version string) error {
 	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_checkout_policy not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_checkout_policy not available with api version %s", version)
 }
 
-func resourceCheckoutPolicyCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceCheckoutPolicyCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceCheckoutPolicyVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -97,14 +100,17 @@ func resourceCheckoutPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(err)
 	}
 	if !ex {
-		return diag.FromErr(fmt.Errorf("checkout_policy_name %s can't find after POST",
+		return diag.FromErr(fmt.Errorf("checkout_policy_name %s not found after POST",
 			d.Get("checkout_policy_name").(string)))
 	}
 	d.SetId(id)
 
 	return resourceCheckoutPolicyRead(ctx, d, m)
 }
-func resourceCheckoutPolicyRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceCheckoutPolicyRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceCheckoutPolicyVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -121,7 +127,10 @@ func resourceCheckoutPolicyRead(ctx context.Context, d *schema.ResourceData, m i
 
 	return nil
 }
-func resourceCheckoutPolicyUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceCheckoutPolicyUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceCheckoutPolicyVersionCheck(c.bastionAPIVersion); err != nil {
@@ -134,7 +143,10 @@ func resourceCheckoutPolicyUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	return resourceCheckoutPolicyRead(ctx, d, m)
 }
-func resourceCheckoutPolicyDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceCheckoutPolicyDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceCheckoutPolicyVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -145,7 +157,12 @@ func resourceCheckoutPolicyDelete(ctx context.Context, d *schema.ResourceData, m
 
 	return nil
 }
-func resourceCheckoutPolicyImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+func resourceCheckoutPolicyImport(
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceCheckoutPolicyVersionCheck(c.bastionAPIVersion); err != nil {
@@ -170,30 +187,35 @@ func resourceCheckoutPolicyImport(d *schema.ResourceData, m interface{}) ([]*sch
 	return result, nil
 }
 
-func searchResourceCheckoutPolicy(ctx context.Context, checkoutPolicyName string, m interface{}) (string, bool, error) {
+func searchResourceCheckoutPolicy(
+	ctx context.Context, checkoutPolicyName string, m interface{},
+) (
+	string, bool, error,
+) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/checkoutpolicies/?fields=checkout_policy_name,id&limit=-1", http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx,
+		"/checkoutpolicies/?q=checkout_policy_name="+checkoutPolicyName, http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
 	if code != http.StatusOK {
-		return "", false, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return "", false, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 	var results []jsonCheckoutPolicy
 	err = json.Unmarshal([]byte(body), &results)
 	if err != nil {
-		return "", false, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return "", false, fmt.Errorf("unmarshaling json: %w", err)
 	}
-	for _, v := range results {
-		if v.CheckoutPolicyName == checkoutPolicyName {
-			return v.ID, true, nil
-		}
+	if len(results) == 1 {
+		return results[0].ID, true, nil
 	}
 
 	return "", false, nil
 }
 
-func addCheckoutPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addCheckoutPolicy(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareCheckoutPolicyJSON(d)
 	body, code, err := c.newRequest(ctx, "/checkoutpolicies/", http.MethodPost, jsonData)
@@ -201,13 +223,15 @@ func addCheckoutPolicy(ctx context.Context, d *schema.ResourceData, m interface{
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
 
-func updateCheckoutPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateCheckoutPolicy(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareCheckoutPolicyJSON(d)
 	body, code, err := c.newRequest(ctx, "/checkoutpolicies/"+d.Id(), http.MethodPut, jsonData)
@@ -215,20 +239,22 @@ func updateCheckoutPolicy(ctx context.Context, d *schema.ResourceData, m interfa
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
 
-func deleteCheckoutPolicy(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func deleteCheckoutPolicy(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/checkoutpolicies/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
@@ -248,7 +274,10 @@ func prepareCheckoutPolicyJSON(d *schema.ResourceData) jsonCheckoutPolicy {
 }
 
 func readCheckoutPolicyOptions(
-	ctx context.Context, checkoutPolicyID string, m interface{}) (jsonCheckoutPolicy, error) {
+	ctx context.Context, checkoutPolicyID string, m interface{},
+) (
+	jsonCheckoutPolicy, error,
+) {
 	c := m.(*Client)
 	var result jsonCheckoutPolicy
 	body, code, err := c.newRequest(ctx, "/checkoutpolicies/"+checkoutPolicyID, http.MethodGet, nil)
@@ -259,11 +288,11 @@ func readCheckoutPolicyOptions(
 		return result, nil
 	}
 	if code != http.StatusOK {
-		return result, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return result, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 	err = json.Unmarshal([]byte(body), &result)
 	if err != nil {
-		return result, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return result, fmt.Errorf("unmarshaling json: %w", err)
 	}
 
 	return result, nil

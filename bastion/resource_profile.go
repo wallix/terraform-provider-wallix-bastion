@@ -263,15 +263,18 @@ func resourceProfile() *schema.Resource {
 		},
 	}
 }
+
 func resourceProfileVersionCheck(version string) error {
 	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_profile not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_profile not available with api version %s", version)
 }
 
-func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceProfileCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceProfileVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -292,13 +295,16 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, m interf
 		return diag.FromErr(err)
 	}
 	if !ex {
-		return diag.FromErr(fmt.Errorf("profile_name %s can't find after POST", d.Get("profile_name").(string)))
+		return diag.FromErr(fmt.Errorf("profile_name %s not found after POST", d.Get("profile_name").(string)))
 	}
 	d.SetId(id)
 
 	return resourceProfileRead(ctx, d, m)
 }
-func resourceProfileRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceProfileRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceProfileVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -315,7 +321,10 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, m interfac
 
 	return nil
 }
-func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceProfileUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceProfileVersionCheck(c.bastionAPIVersion); err != nil {
@@ -328,7 +337,10 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, m interf
 
 	return resourceProfileRead(ctx, d, m)
 }
-func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceProfileDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceProfileVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -339,7 +351,12 @@ func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, m interf
 
 	return nil
 }
-func resourceProfileImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+func resourceProfileImport(
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceProfileVersionCheck(c.bastionAPIVersion); err != nil {
@@ -367,30 +384,34 @@ func resourceProfileImport(d *schema.ResourceData, m interface{}) ([]*schema.Res
 	return result, nil
 }
 
-func searchResourceProfile(ctx context.Context, profileName string, m interface{}) (string, bool, error) {
+func searchResourceProfile(
+	ctx context.Context, profileName string, m interface{},
+) (
+	string, bool, error,
+) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/profiles/?fields=profile_name,id&limit=-1", http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/profiles/?q=profile_name="+profileName, http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
 	if code != http.StatusOK {
-		return "", false, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return "", false, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 	var results []jsonProfile
 	err = json.Unmarshal([]byte(body), &results)
 	if err != nil {
-		return "", false, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return "", false, fmt.Errorf("unmarshaling json: %w", err)
 	}
-	for _, v := range results {
-		if v.ProfileName == profileName {
-			return v.ID, true, nil
-		}
+	if len(results) == 1 {
+		return results[0].ID, true, nil
 	}
 
 	return "", false, nil
 }
 
-func addProfile(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addProfile(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareProfileJSON(d, true)
 	body, code, err := c.newRequest(ctx, "/profiles/", http.MethodPost, jsonData)
@@ -398,13 +419,15 @@ func addProfile(ctx context.Context, d *schema.ResourceData, m interface{}) erro
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
 
-func updateProfile(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateProfile(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareProfileJSON(d, false)
 	body, code, err := c.newRequest(ctx, "/profiles/"+d.Id()+"?force=true", http.MethodPut, jsonData)
@@ -412,26 +435,28 @@ func updateProfile(ctx context.Context, d *schema.ResourceData, m interface{}) e
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
 
-func deleteProfile(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func deleteProfile(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/profiles/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
 
-func prepareProfileJSON(d *schema.ResourceData, newResource bool) jsonProfile {
+func prepareProfileJSON(d *schema.ResourceData, newResource bool) jsonProfile { //nolint: gocognit,gocyclo
 	var jsonData jsonProfile
 	if newResource {
 		jsonData.ProfileName = d.Get("profile_name").(string)
@@ -554,7 +579,10 @@ func prepareProfileJSON(d *schema.ResourceData, newResource bool) jsonProfile {
 }
 
 func readProfileOptions(
-	ctx context.Context, profileID string, m interface{}) (jsonProfile, error) {
+	ctx context.Context, profileID string, m interface{},
+) (
+	jsonProfile, error,
+) {
 	c := m.(*Client)
 	var result jsonProfile
 	body, code, err := c.newRequest(ctx, "/profiles/"+profileID, http.MethodGet, nil)
@@ -565,11 +593,11 @@ func readProfileOptions(
 		return result, nil
 	}
 	if code != http.StatusOK {
-		return result, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return result, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 	err = json.Unmarshal([]byte(body), &result)
 	if err != nil {
-		return result, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return result, fmt.Errorf("unmarshaling json: %w", err)
 	}
 
 	return result, nil

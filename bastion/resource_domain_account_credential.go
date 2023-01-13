@@ -40,9 +40,10 @@ func resourceDomainAccountCredential() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"password", "ssh_key"}, false),
 			},
 			"passphrase": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				RequiredWith: []string{"private_key"},
 			},
 			"password": {
 				Type:      schema.TypeString,
@@ -61,16 +62,18 @@ func resourceDomainAccountCredential() *schema.Resource {
 		},
 	}
 }
+
 func resourceDomainAccountCredentialVersionCheck(version string) error {
 	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_domain_account_credential not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_domain_account_credential not available with api version %s", version)
 }
 
-func resourceDomainAccountCredentialCreate(ctx context.Context,
-	d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceDomainAccountCredentialCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -110,15 +113,17 @@ func resourceDomainAccountCredentialCreate(ctx context.Context,
 	}
 	if !ex {
 		return diag.FromErr(fmt.Errorf(
-			"credential tpye %s on account_id %s, domain_id %s can't find after POST",
+			"credential tpye %s on account_id %s, domain_id %s not found after POST",
 			d.Get("type").(string), d.Get("account_id").(string), d.Get("domain_id").(string)))
 	}
 	d.SetId(id)
 
 	return resourceDomainAccountCredentialRead(ctx, d, m)
 }
-func resourceDomainAccountCredentialRead(ctx context.Context,
-	d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceDomainAccountCredentialRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -136,8 +141,10 @@ func resourceDomainAccountCredentialRead(ctx context.Context,
 
 	return nil
 }
-func resourceDomainAccountCredentialUpdate(ctx context.Context,
-	d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceDomainAccountCredentialUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
@@ -150,8 +157,10 @@ func resourceDomainAccountCredentialUpdate(ctx context.Context,
 
 	return resourceDomainAccountCredentialRead(ctx, d, m)
 }
-func resourceDomainAccountCredentialDelete(ctx context.Context,
-	d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceDomainAccountCredentialDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -162,8 +171,12 @@ func resourceDomainAccountCredentialDelete(ctx context.Context,
 
 	return nil
 }
+
 func resourceDomainAccountCredentialImport(
-	d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
@@ -199,22 +212,25 @@ func resourceDomainAccountCredentialImport(
 	return result, nil
 }
 
-func searchResourceDomainAccountCredential(ctx context.Context,
-	domainID, accountID, typeCred string, m interface{}) (string, bool, error) {
+func searchResourceDomainAccountCredential(
+	ctx context.Context, domainID, accountID, typeCred string, m interface{},
+) (
+	string, bool, error,
+) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
 		"/domains/"+domainID+"/accounts/"+accountID+
-			"/credentials/?fields=type,id&limit=-1", http.MethodGet, nil)
+			"/credentials/", http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
 	if code != http.StatusOK {
-		return "", false, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return "", false, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 	var results []jsonCredential
 	err = json.Unmarshal([]byte(body), &results)
 	if err != nil {
-		return "", false, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return "", false, fmt.Errorf("unmarshaling json: %w", err)
 	}
 	for _, v := range results {
 		if v.Type == typeCred {
@@ -225,7 +241,9 @@ func searchResourceDomainAccountCredential(ctx context.Context,
 	return "", false, nil
 }
 
-func addDomainAccountCredential(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addDomainAccountCredential(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareDomainAccountCredentialJSON(d, true)
 	body, code, err := c.newRequest(ctx,
@@ -235,13 +253,15 @@ func addDomainAccountCredential(ctx context.Context, d *schema.ResourceData, m i
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
 
-func updateDomainAccountCredential(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateDomainAccountCredential(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData := prepareDomainAccountCredentialJSON(d, false)
 	body, code, err := c.newRequest(ctx,
@@ -251,13 +271,15 @@ func updateDomainAccountCredential(ctx context.Context, d *schema.ResourceData, 
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
 
-func deleteDomainAccountCredential(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func deleteDomainAccountCredential(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
 		"/domains/"+d.Get("domain_id").(string)+"/accounts/"+d.Get("account_id").(string)+"/credentials/"+d.Id(),
@@ -266,14 +288,15 @@ func deleteDomainAccountCredential(ctx context.Context, d *schema.ResourceData, 
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
 
 func prepareDomainAccountCredentialJSON(
-	d *schema.ResourceData, newResource bool) jsonCredential {
+	d *schema.ResourceData, newResource bool,
+) jsonCredential {
 	var jsonData jsonCredential
 	jsonData.Type = d.Get("type").(string)
 	if jsonData.Type == "password" {
@@ -289,8 +312,10 @@ func prepareDomainAccountCredentialJSON(
 }
 
 func readDomainAccountCredentialOptions(
-	ctx context.Context, localDomainID, accountID, credentialID string, m interface{}) (
-	jsonCredential, error) {
+	ctx context.Context, localDomainID, accountID, credentialID string, m interface{},
+) (
+	jsonCredential, error,
+) {
 	c := m.(*Client)
 	var result jsonCredential
 	body, code, err := c.newRequest(ctx,
@@ -303,11 +328,11 @@ func readDomainAccountCredentialOptions(
 		return result, nil
 	}
 	if code != http.StatusOK {
-		return result, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return result, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 	err = json.Unmarshal([]byte(body), &result)
 	if err != nil {
-		return result, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return result, fmt.Errorf("unmarshaling json: %w", err)
 	}
 
 	return result, nil

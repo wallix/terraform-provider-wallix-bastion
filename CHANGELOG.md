@@ -1,9 +1,25 @@
 <!-- markdownlint-disable-file MD013 MD041 -->
 # changelog
 
+FEATURES:
+
+* add `wallix-bastion_externalauth_saml` resource
+* add `wallix-bastion_authdomain_ldap` resource
+* add `wallix-bastion_authdomain_mapping` resource
+* add `wallix-bastion_authdomain_ad` resource
+* add `wallix-bastion_authdomain_azuread` resource
+
 ENHANCEMENTS:
 
 * release now with golang 1.19
+* optimize resource search when checking if it already exists before create or when importing
+* resource/**wallix-bastion_externalauth_ldap**: add `passphrase` argument
+
+BUG FIXES:
+
+* resource/**wallix-bastion_externalauth_kerberos**: fix missing sensitive option on `keytab`
+* resource/**wallix-bastion_externalauth_ldap**: fix missing sensitive option on `certificate` and `private_key` and can't be refresh
+* resource/**wallix-bastion_\*domain** & resource/**wallix-bastion_\*credential**: fix missing requirement of `private_key` with `passphrase` argument
 
 ## 0.6.1 (May 17, 2022)
 

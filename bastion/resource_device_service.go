@@ -56,8 +56,10 @@ func resourceDeviceService() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"SSH", "RAWTCPIP", "RDP", "RLOGIN", "TELNET", "VNC"}, false),
+				ValidateFunc: validation.StringInSlice(
+					[]string{"SSH", "RAWTCPIP", "RDP", "RLOGIN", "TELNET", "VNC"},
+					false,
+				),
 			},
 			"global_domains": {
 				Type:     schema.TypeSet,
@@ -73,15 +75,18 @@ func resourceDeviceService() *schema.Resource {
 		},
 	}
 }
+
 func resourceDeviceServiceVersionCheck(version string) error {
 	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_device_service not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_device_service not available with api version %s", version)
 }
 
-func resourceDeviceServiceCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceDeviceServiceCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceDeviceServiceVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -110,14 +115,17 @@ func resourceDeviceServiceCreate(ctx context.Context, d *schema.ResourceData, m 
 		return diag.FromErr(err)
 	}
 	if !ex {
-		return diag.FromErr(fmt.Errorf("service_name %s on device_id %s can't find after POST",
+		return diag.FromErr(fmt.Errorf("service_name %s on device_id %s not found after POST",
 			d.Get("service_name").(string), d.Get("device_id").(string)))
 	}
 	d.SetId(id)
 
 	return resourceDeviceServiceRead(ctx, d, m)
 }
-func resourceDeviceServiceRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceDeviceServiceRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceDeviceServiceVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -134,7 +142,10 @@ func resourceDeviceServiceRead(ctx context.Context, d *schema.ResourceData, m in
 
 	return nil
 }
-func resourceDeviceServiceUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceDeviceServiceUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceDeviceVersionCheck(c.bastionAPIVersion); err != nil {
@@ -147,7 +158,10 @@ func resourceDeviceServiceUpdate(ctx context.Context, d *schema.ResourceData, m 
 
 	return resourceDeviceServiceRead(ctx, d, m)
 }
-func resourceDeviceServiceDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceDeviceServiceDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceDeviceServiceVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -158,7 +172,12 @@ func resourceDeviceServiceDelete(ctx context.Context, d *schema.ResourceData, m 
 
 	return nil
 }
-func resourceDeviceServiceImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+func resourceDeviceServiceImport(
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceDeviceServiceVersionCheck(c.bastionAPIVersion); err != nil {
@@ -190,32 +209,35 @@ func resourceDeviceServiceImport(d *schema.ResourceData, m interface{}) ([]*sche
 	return result, nil
 }
 
-func searchResourceDeviceService(ctx context.Context,
-	deviceID, serviceName string, m interface{}) (string, bool, error) {
+func searchResourceDeviceService(
+	ctx context.Context, deviceID, serviceName string, m interface{},
+) (
+	string, bool, error,
+) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/devices/"+deviceID+
-		"/services/?fields=service_name,id&limit=-1", http.MethodGet, nil)
+		"/services/?q=service_name="+serviceName, http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
 	if code != http.StatusOK {
-		return "", false, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return "", false, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 	var results []jsonDeviceService
 	err = json.Unmarshal([]byte(body), &results)
 	if err != nil {
-		return "", false, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return "", false, fmt.Errorf("unmarshaling json: %w", err)
 	}
-	for _, v := range results {
-		if v.ServiceName == serviceName {
-			return v.ID, true, nil
-		}
+	if len(results) == 1 {
+		return results[0].ID, true, nil
 	}
 
 	return "", false, nil
 }
 
-func addDeviceService(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addDeviceService(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	json, err := prepareDeviceServiceJSON(d, true)
 	if err != nil {
@@ -226,13 +248,15 @@ func addDeviceService(ctx context.Context, d *schema.ResourceData, m interface{}
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
 
-func updateDeviceService(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateDeviceService(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	json, err := prepareDeviceServiceJSON(d, false)
 	if err != nil {
@@ -244,13 +268,15 @@ func updateDeviceService(ctx context.Context, d *schema.ResourceData, m interfac
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
 
-func deleteDeviceService(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func deleteDeviceService(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
 		"/devices/"+d.Get("device_id").(string)+"/services/"+d.Id(), http.MethodDelete, nil)
@@ -258,21 +284,44 @@ func deleteDeviceService(ctx context.Context, d *schema.ResourceData, m interfac
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
 
 func sshSubProtocolsValid() []string {
-	return []string{"SSH_SHELL_SESSION", "SSH_REMOTE_COMMAND", "SSH_SCP_UP", "SSH_SCP_DOWN",
-		"SSH_X11", "SFTP_SESSION", "SSH_DIRECT_TCPIP", "SSH_REVERSE_TCPIP", "SSH_AUTH_AGENT"}
+	return []string{
+		"SSH_SHELL_SESSION",
+		"SSH_REMOTE_COMMAND",
+		"SSH_SCP_UP",
+		"SSH_SCP_DOWN",
+		"SSH_X11",
+		"SFTP_SESSION",
+		"SSH_DIRECT_TCPIP",
+		"SSH_REVERSE_TCPIP",
+		"SSH_AUTH_AGENT",
+	}
 }
+
 func rdpSubProtocolsValid() []string {
-	return []string{"RDP_CLIPBOARD_UP", "RDP_CLIPBOARD_DOWN", "RDP_CLIPBOARD_FILE", "RDP_PRINTER",
-		"RDP_COM_PORT", "RDP_DRIVE", "RDP_SMARTCARD", "RDP_AUDIO_OUTPUT"}
+	return []string{
+		"RDP_CLIPBOARD_UP",
+		"RDP_CLIPBOARD_DOWN",
+		"RDP_CLIPBOARD_FILE",
+		"RDP_PRINTER",
+		"RDP_COM_PORT",
+		"RDP_DRIVE",
+		"RDP_SMARTCARD",
+		"RDP_AUDIO_OUTPUT",
+	}
 }
-func prepareDeviceServiceJSON(d *schema.ResourceData, newResource bool) (jsonDeviceService, error) {
+
+func prepareDeviceServiceJSON(
+	d *schema.ResourceData, newResource bool,
+) (
+	jsonDeviceService, error,
+) {
 	var jsonData jsonDeviceService
 	if newResource {
 		jsonData.ServiceName = d.Get("service_name").(string)
@@ -312,7 +361,10 @@ func prepareDeviceServiceJSON(d *schema.ResourceData, newResource bool) (jsonDev
 }
 
 func readDeviceServiceOptions(
-	ctx context.Context, deviceID, serviceID string, m interface{}) (jsonDeviceService, error) {
+	ctx context.Context, deviceID, serviceID string, m interface{},
+) (
+	jsonDeviceService, error,
+) {
 	c := m.(*Client)
 	var result jsonDeviceService
 	body, code, err := c.newRequest(ctx, "/devices/"+deviceID+"/services/"+serviceID, http.MethodGet, nil)
@@ -323,11 +375,11 @@ func readDeviceServiceOptions(
 		return result, nil
 	}
 	if code != http.StatusOK {
-		return result, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return result, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 	err = json.Unmarshal([]byte(body), &result)
 	if err != nil {
-		return result, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return result, fmt.Errorf("unmarshaling json: %w", err)
 	}
 
 	return result, nil

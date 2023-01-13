@@ -59,7 +59,9 @@ func dataSourceVersion() *schema.Resource {
 	}
 }
 
-func dataSourceVersionRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceVersionRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	cfg, err := readVersionOptions(ctx, m)
 	if err != nil {
 		return diag.FromErr(err)
@@ -70,7 +72,11 @@ func dataSourceVersionRead(ctx context.Context, d *schema.ResourceData, m interf
 	return nil
 }
 
-func readVersionOptions(ctx context.Context, m interface{}) (jsonVersion, error) {
+func readVersionOptions(
+	ctx context.Context, m interface{},
+) (
+	jsonVersion, error,
+) {
 	c := m.(*Client)
 	var result jsonVersion
 	url := "https://" + c.bastionIP + ":" + strconv.Itoa(c.bastionPort) + "/api/version"
@@ -79,7 +85,7 @@ func readVersionOptions(ctx context.Context, m interface{}) (jsonVersion, error)
 	req.Header.Add("X-Auth-Key", c.bastionToken)
 	req.Header.Add("X-Auth-User", c.bastionUser)
 	if err != nil {
-		return result, err
+		return result, fmt.Errorf("preparing http request: %w", err)
 	}
 	tr := &http.Transport{
 		TLSClientConfig:   &tls.Config{InsecureSkipVerify: true}, //nolint: gosec
@@ -88,20 +94,20 @@ func readVersionOptions(ctx context.Context, m interface{}) (jsonVersion, error)
 	httpClient := &http.Client{Transport: tr}
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		return result, err
+		return result, fmt.Errorf("sending http request: %w", err)
 	}
 	defer resp.Body.Close()
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return result, err
+		return result, fmt.Errorf("reading http response: %w", err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return result, fmt.Errorf("api doesn't return OK : %d with body :\n%s", resp.StatusCode, string(respBody))
+		return result, fmt.Errorf("api doesn't return OK: %d with body:\n%s", resp.StatusCode, string(respBody))
 	}
 	err = json.Unmarshal(respBody, &result)
 	if err != nil {
-		return result, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return result, fmt.Errorf("unmarshaling json: %w", err)
 	}
 
 	return result, nil

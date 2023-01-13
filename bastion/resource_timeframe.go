@@ -90,15 +90,18 @@ func resourceTimeframe() *schema.Resource {
 		},
 	}
 }
+
 func resourceTimeframeVersionCheck(version string) error {
 	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_timeframe not validate with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_timeframe not available with api version %s", version)
 }
 
-func resourceTimeframeCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceTimeframeCreate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceTimeframeVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -119,13 +122,16 @@ func resourceTimeframeCreate(ctx context.Context, d *schema.ResourceData, m inte
 		return diag.FromErr(err)
 	}
 	if !ex {
-		return diag.FromErr(fmt.Errorf("timeframe_name %s can't find after POST", d.Get("timeframe_name").(string)))
+		return diag.FromErr(fmt.Errorf("timeframe_name %s not found after POST", d.Get("timeframe_name").(string)))
 	}
 	d.SetId(d.Get("timeframe_name").(string))
 
 	return resourceTimeframeRead(ctx, d, m)
 }
-func resourceTimeframeRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceTimeframeRead(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceTimeframeVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -142,7 +148,10 @@ func resourceTimeframeRead(ctx context.Context, d *schema.ResourceData, m interf
 
 	return nil
 }
-func resourceTimeframeUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceTimeframeUpdate(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceTimeframeVersionCheck(c.bastionAPIVersion); err != nil {
@@ -155,7 +164,10 @@ func resourceTimeframeUpdate(ctx context.Context, d *schema.ResourceData, m inte
 
 	return resourceTimeframeRead(ctx, d, m)
 }
-func resourceTimeframeDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+func resourceTimeframeDelete(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) diag.Diagnostics {
 	c := m.(*Client)
 	if err := resourceTimeframeVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
@@ -166,7 +178,12 @@ func resourceTimeframeDelete(ctx context.Context, d *schema.ResourceData, m inte
 
 	return nil
 }
-func resourceTimeframeImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+
+func resourceTimeframeImport(
+	d *schema.ResourceData, m interface{},
+) (
+	[]*schema.ResourceData, error,
+) {
 	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceTimeframeVersionCheck(c.bastionAPIVersion); err != nil {
@@ -191,7 +208,11 @@ func resourceTimeframeImport(d *schema.ResourceData, m interface{}) ([]*schema.R
 	return result, nil
 }
 
-func checkResourceTimeframeExits(ctx context.Context, timeframeName string, m interface{}) (bool, error) {
+func checkResourceTimeframeExits(
+	ctx context.Context, timeframeName string, m interface{},
+) (
+	bool, error,
+) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/timeframes/"+timeframeName, http.MethodGet, nil)
 	if err != nil {
@@ -201,13 +222,15 @@ func checkResourceTimeframeExits(ctx context.Context, timeframeName string, m in
 		return false, nil
 	}
 	if code != http.StatusOK {
-		return false, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return false, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 
 	return true, nil
 }
 
-func addTimeframe(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func addTimeframe(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData, err := prepareTimeframeJSON(d)
 	if err != nil {
@@ -218,13 +241,15 @@ func addTimeframe(ctx context.Context, d *schema.ResourceData, m interface{}) er
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
 
-func updateTimeframe(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func updateTimeframe(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	jsonData, err := prepareTimeframeJSON(d)
 	if err != nil {
@@ -235,20 +260,22 @@ func updateTimeframe(ctx context.Context, d *schema.ResourceData, m interface{})
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
 
-func deleteTimeframe(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func deleteTimeframe(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/timeframes/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
 		return err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent : %d with body :\n%s", code, body)
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
@@ -292,7 +319,10 @@ func prepareTimeframeJSON(d *schema.ResourceData) (jsonTimeframe, error) {
 }
 
 func readTimeframeOptions(
-	ctx context.Context, timeframeID string, m interface{}) (jsonTimeframe, error) {
+	ctx context.Context, timeframeID string, m interface{},
+) (
+	jsonTimeframe, error,
+) {
 	c := m.(*Client)
 	var result jsonTimeframe
 	body, code, err := c.newRequest(ctx, "/timeframes/"+timeframeID, http.MethodGet, nil)
@@ -303,11 +333,11 @@ func readTimeframeOptions(
 		return result, nil
 	}
 	if code != http.StatusOK {
-		return result, fmt.Errorf("api doesn't return OK : %d with body :\n%s", code, body)
+		return result, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
 	err = json.Unmarshal([]byte(body), &result)
 	if err != nil {
-		return result, fmt.Errorf("json.Unmarshal failed : %w", err)
+		return result, fmt.Errorf("unmarshaling json: %w", err)
 	}
 
 	return result, nil

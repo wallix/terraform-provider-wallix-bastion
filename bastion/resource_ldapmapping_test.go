@@ -1,32 +1,38 @@
 package bastion_test
 
 import (
+	"os"
 	"testing"
 
+	"github.com/claranet/terraform-provider-wallix-bastion/bastion"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccResourceLDAPMapping_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccResourceLDAPMappingCreate(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(
-						"wallix-bastion_ldapmapping.testacc_LDAPMapping",
-						"id"),
-				),
+	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); v == "" ||
+		v == bastion.VersionWallixAPI33 ||
+		v == bastion.VersionWallixAPI36 {
+		resource.Test(t, resource.TestCase{
+			PreCheck:  func() { testAccPreCheck(t) },
+			Providers: testAccProviders,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccResourceLDAPMappingCreate(),
+					Check: resource.ComposeTestCheckFunc(
+						resource.TestCheckResourceAttrSet(
+							"wallix-bastion_ldapmapping.testacc_LDAPMapping",
+							"id"),
+					),
+				},
+				{
+					ResourceName:  "wallix-bastion_ldapmapping.testacc_LDAPMapping",
+					ImportState:   true,
+					ImportStateId: "testacc_LDAPMapping/testacc_LDAPMapping/CN=testacc,OU=FR,DC=test,DC=com",
+				},
 			},
-			{
-				ResourceName:  "wallix-bastion_ldapmapping.testacc_LDAPMapping",
-				ImportState:   true,
-				ImportStateId: "testacc_LDAPMapping/testacc_LDAPMapping/CN=testacc,OU=FR,DC=test,DC=com",
-			},
-		},
-		PreventPostDestroyRefresh: true,
-	})
+			PreventPostDestroyRefresh: true,
+		})
+	}
 }
 
 func testAccResourceLDAPMappingCreate() string {
