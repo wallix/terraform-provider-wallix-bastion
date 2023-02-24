@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	bchk "github.com/jeremmfr/go-utils/basiccheck"
 )
 
 func dataSourceDomain() *schema.Resource {
@@ -52,11 +53,19 @@ func dataSourceDomain() *schema.Resource {
 	}
 }
 
+func dataSourceDomainVersionCheck(version string) error {
+	if bchk.InSlice(version, defaultVersionsValid()) {
+		return nil
+	}
+
+	return fmt.Errorf("data source wallix-bastion_domain not available with api version %s", version)
+}
+
 func dataSourceDomainRead(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourceDomainVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := dataSourceDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	id, ex, err := searchResourceDomain(ctx, d.Get("domain_name").(string), m)
