@@ -1,11 +1,11 @@
 module github.com/claranet/terraform-provider-wallix-bastion
 
-go 1.18
+go 1.19
 
 require (
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.24.1
-	github.com/jeremmfr/go-utils v0.8.0
+	github.com/jeremmfr/go-utils v0.9.0
 )
 
 require (

@@ -1,6 +1,16 @@
 <!-- markdownlint-disable-file MD013 MD041 -->
 # changelog
 
+## 0.8.0 (February 24, 2023)
+
+FEATURES:
+
+* add `wallix-bastion_configoption` data source
+
+ENHANCEMENTS:
+
+* release now with golang 1.20
+
 ## 0.7.0 (January 13, 2023)
 
 FEATURES:
