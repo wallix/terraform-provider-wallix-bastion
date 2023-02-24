@@ -5,6 +5,10 @@ FEATURES:
 
 * add `wallix-bastion_configoption` data source
 
+ENHANCEMENTS:
+
+* release now with golang 1.20
+
 ## 0.7.0 (January 13, 2023)
 
 FEATURES:
