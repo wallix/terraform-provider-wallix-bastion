@@ -312,14 +312,14 @@ func prepareDomainAccountCredentialJSON(
 }
 
 func readDomainAccountCredentialOptions(
-	ctx context.Context, localDomainID, accountID, credentialID string, m interface{},
+	ctx context.Context, domainID, accountID, credentialID string, m interface{},
 ) (
 	jsonCredential, error,
 ) {
 	c := m.(*Client)
 	var result jsonCredential
 	body, code, err := c.newRequest(ctx,
-		"/domains/"+localDomainID+"/accounts/"+accountID+"/credentials/"+credentialID,
+		"/domains/"+domainID+"/accounts/"+accountID+"/credentials/"+credentialID,
 		http.MethodGet, nil)
 	if err != nil {
 		return result, err
@@ -333,6 +333,17 @@ func readDomainAccountCredentialOptions(
 	err = json.Unmarshal([]byte(body), &result)
 	if err != nil {
 		return result, fmt.Errorf("unmarshaling json: %w", err)
+	}
+	// avoid the bug when the credential still exists but not linked to the account
+	credsID, found, err := searchResourceDomainAccountCredential(ctx, domainID, accountID, result.Type, m)
+	if err != nil {
+		return result, err
+	}
+	if !found {
+		return jsonCredential{}, nil
+	}
+	if credsID != result.ID {
+		return jsonCredential{}, nil
 	}
 
 	return result, nil

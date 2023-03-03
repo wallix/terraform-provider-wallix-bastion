@@ -352,6 +352,18 @@ func readDeviceLocalDomainAccountCredentialOptions(
 	if err != nil {
 		return result, fmt.Errorf("unmarshaling json: %w", err)
 	}
+	// avoid the bug when the credential still exists but not linked to the account
+	credsID, found, err := searchResourceDeviceLocalDomainAccountCredential(
+		ctx, deviceID, localDomainID, accountID, result.Type, m)
+	if err != nil {
+		return result, err
+	}
+	if !found {
+		return jsonCredential{}, nil
+	}
+	if credsID != result.ID {
+		return jsonCredential{}, nil
+	}
 
 	return result, nil
 }
