@@ -13,11 +13,12 @@ import (
 )
 
 type jsonProfile struct {
-	TargetAccess bool   `json:"target_access"`
-	ID           string `json:"id,omitempty"`
-	ProfileName  string `json:"profile_name,omitempty"`
-	Description  string `json:"description"`
-	IPLimitation string `json:"ip_limitation"`
+	TargetAccess bool      `json:"target_access"`
+	ID           string    `json:"id,omitempty"`
+	ProfileName  string    `json:"profile_name,omitempty"`
+	Description  string    `json:"description"`
+	IPLimitation string    `json:"ip_limitation"`
+	Dashboards   *[]string `json:"dashboards,omitempty"`
 	GuiFeatures  struct {
 		WabAudit           *string `json:"wab_audit"`
 		SystemAudit        *string `json:"system_audit"`
@@ -56,6 +57,10 @@ type jsonProfile struct {
 		Enabled    bool      `json:"enabled"`
 		UserGroups *[]string `json:"user_groups,omitempty"`
 	} `json:"user_groups_limitation"`
+}
+
+type profileFeatures struct {
+	withDashboards bool
 }
 
 func resourceProfile() *schema.Resource {
@@ -220,6 +225,11 @@ func resourceProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"dashboards": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"ip_limitation": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -264,7 +274,10 @@ func resourceProfile() *schema.Resource {
 	}
 }
 
-func resourceProfileVersionCheck(version string) error {
+func resourceProfileVersionCheck(version string, features profileFeatures) error {
+	if features.withDashboards && version == VersionWallixAPI33 {
+		return fmt.Errorf("can't use dashboards with api version %s", version)
+	}
 	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
 	}
@@ -276,7 +289,11 @@ func resourceProfileCreate(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourceProfileVersionCheck(c.bastionAPIVersion); err != nil {
+	var features profileFeatures
+	if len(d.Get("dashboards").(*schema.Set).List()) > 0 {
+		features.withDashboards = true
+	}
+	if err := resourceProfileVersionCheck(c.bastionAPIVersion, features); err != nil {
 		return diag.FromErr(err)
 	}
 	_, ex, err := searchResourceProfile(ctx, d.Get("profile_name").(string), m)
@@ -286,7 +303,7 @@ func resourceProfileCreate(
 	if ex {
 		return diag.FromErr(fmt.Errorf("profile_name %s already exists", d.Get("profile_name").(string)))
 	}
-	err = addProfile(ctx, d, m)
+	err = addProfile(ctx, d, m, features)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -306,7 +323,7 @@ func resourceProfileRead(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourceProfileVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceProfileVersionCheck(c.bastionAPIVersion, profileFeatures{}); err != nil {
 		return diag.FromErr(err)
 	}
 	cfg, err := readProfileOptions(ctx, d.Id(), m)
@@ -327,10 +344,14 @@ func resourceProfileUpdate(
 ) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
-	if err := resourceProfileVersionCheck(c.bastionAPIVersion); err != nil {
+	var features profileFeatures
+	if len(d.Get("dashboards").(*schema.Set).List()) > 0 {
+		features.withDashboards = true
+	}
+	if err := resourceProfileVersionCheck(c.bastionAPIVersion, features); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := updateProfile(ctx, d, m); err != nil {
+	if err := updateProfile(ctx, d, m, features); err != nil {
 		return diag.FromErr(err)
 	}
 	d.Partial(false)
@@ -342,7 +363,7 @@ func resourceProfileDelete(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourceProfileVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceProfileVersionCheck(c.bastionAPIVersion, profileFeatures{}); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := deleteProfile(ctx, d, m); err != nil {
@@ -359,7 +380,7 @@ func resourceProfileImport(
 ) {
 	ctx := context.Background()
 	c := m.(*Client)
-	if err := resourceProfileVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceProfileVersionCheck(c.bastionAPIVersion, profileFeatures{}); err != nil {
 		return nil, err
 	}
 	id, ex, err := searchResourceProfile(ctx, d.Id(), m)
@@ -410,10 +431,10 @@ func searchResourceProfile(
 }
 
 func addProfile(
-	ctx context.Context, d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{}, features profileFeatures,
 ) error {
 	c := m.(*Client)
-	jsonData := prepareProfileJSON(d, true)
+	jsonData := prepareProfileJSON(d, true, features)
 	body, code, err := c.newRequest(ctx, "/profiles/", http.MethodPost, jsonData)
 	if err != nil {
 		return err
@@ -426,10 +447,10 @@ func addProfile(
 }
 
 func updateProfile(
-	ctx context.Context, d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{}, features profileFeatures,
 ) error {
 	c := m.(*Client)
-	jsonData := prepareProfileJSON(d, false)
+	jsonData := prepareProfileJSON(d, false, features)
 	body, code, err := c.newRequest(ctx, "/profiles/"+d.Id()+"?force=true", http.MethodPut, jsonData)
 	if err != nil {
 		return err
@@ -456,7 +477,9 @@ func deleteProfile(
 	return nil
 }
 
-func prepareProfileJSON(d *schema.ResourceData, newResource bool) jsonProfile { //nolint: gocognit,gocyclo
+func prepareProfileJSON( //nolint: gocognit,gocyclo
+	d *schema.ResourceData, newResource bool, features profileFeatures,
+) jsonProfile {
 	var jsonData jsonProfile
 	if newResource {
 		jsonData.ProfileName = d.Get("profile_name").(string)
@@ -549,6 +572,13 @@ func prepareProfileJSON(d *schema.ResourceData, newResource bool) jsonProfile { 
 		}
 	}
 	jsonData.Description = d.Get("description").(string)
+	if features.withDashboards {
+		dashboards := make([]string, len(d.Get("dashboards").(*schema.Set).List()))
+		for i, v := range d.Get("dashboards").(*schema.Set).List() {
+			dashboards[i] = v.(string)
+		}
+		jsonData.Dashboards = &dashboards
+	}
 	jsonData.IPLimitation = d.Get("ip_limitation").(string)
 	jsonData.TargetAccess = d.Get("target_access").(bool)
 	for _, v := range d.Get("target_groups_limitation").([]interface{}) {
@@ -642,6 +672,9 @@ func fillProfile(d *schema.ResourceData, jsonData jsonProfile) {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+		panic(tfErr)
+	}
+	if tfErr := d.Set("dashboards", jsonData.Dashboards); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("ip_limitation", jsonData.IPLimitation); tfErr != nil {

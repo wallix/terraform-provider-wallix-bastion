@@ -1,6 +1,16 @@
 <!-- markdownlint-disable-file MD013 MD041 -->
 # changelog
 
+## 0.9.0 (March 03, 2023)
+
+ENHANCEMENTS:
+
+* resource/**wallix-bastion_profile**: add `dashboards` argument (not compatible with API v3.3)
+
+BUG FIXES:
+
+* fix not detecting that an account's credentials have been deleted while it still exists with resource ID but not linked to the account
+
 ## 0.8.0 (February 24, 2023)
 
 FEATURES:
