@@ -1,6 +1,10 @@
 <!-- markdownlint-disable-file MD013 MD041 -->
 # changelog
 
+ENHANCEMENTS:
+
+* resource/**wallix-bastion_profile**: add `dashboards` argument (not compatible with API v3.3)
+
 ## 0.8.0 (February 24, 2023)
 
 FEATURES:

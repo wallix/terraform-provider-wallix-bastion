@@ -93,6 +93,8 @@ The following arguments are supported:
     Need to be `execute`.
 - **description** (Optional, String)  
   The profile description.
+- **dashboards** (Optional, Set of String)  
+  List of dashboards names.
 - **ip_limitation** (Optional, String)  
   The profile ip limitation.  
   Format is an IPv4 address, subnet or host name.
