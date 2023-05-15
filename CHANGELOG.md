@@ -1,6 +1,12 @@
 <!-- markdownlint-disable-file MD013 MD041 -->
 # changelog
 
+## 0.9.1 (May 15, 2023)
+
+BUG FIXES:
+
+* force a resource replacement when `private_key` change on `wallix-bastion_device_localdomain_account_credential` and `wallix-bastion_domain_account_credential` resources (update doesn't work with generated keys)
+
 ## 0.9.0 (March 03, 2023)
 
 ENHANCEMENTS:

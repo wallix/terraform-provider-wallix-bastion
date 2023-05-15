@@ -54,6 +54,7 @@ func resourceDomainAccountCredential() *schema.Resource {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
+				ForceNew:  true,
 			},
 			"public_key": {
 				Type:     schema.TypeString,
@@ -245,7 +246,7 @@ func addDomainAccountCredential(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) error {
 	c := m.(*Client)
-	jsonData := prepareDomainAccountCredentialJSON(d, true)
+	jsonData := prepareDomainAccountCredentialJSON(d)
 	body, code, err := c.newRequest(ctx,
 		"/domains/"+d.Get("domain_id").(string)+"/accounts/"+d.Get("account_id").(string)+"/credentials/",
 		http.MethodPost, jsonData)
@@ -263,7 +264,7 @@ func updateDomainAccountCredential(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) error {
 	c := m.(*Client)
-	jsonData := prepareDomainAccountCredentialJSON(d, false)
+	jsonData := prepareDomainAccountCredentialJSON(d)
 	body, code, err := c.newRequest(ctx,
 		"/domains/"+d.Get("domain_id").(string)+"/accounts/"+d.Get("account_id").(string)+"/credentials/"+d.Id(),
 		http.MethodPut, jsonData)
@@ -295,17 +296,15 @@ func deleteDomainAccountCredential(
 }
 
 func prepareDomainAccountCredentialJSON(
-	d *schema.ResourceData, newResource bool,
+	d *schema.ResourceData,
 ) jsonCredential {
 	var jsonData jsonCredential
 	jsonData.Type = d.Get("type").(string)
 	if jsonData.Type == "password" {
 		jsonData.Password = d.Get("password").(string)
 	} else if jsonData.Type == "ssh_key" {
-		if newResource || !strings.HasPrefix(d.Get("private_key").(string), "generate:") {
-			jsonData.PrivateKey = d.Get("private_key").(string)
-			jsonData.Passphrase = d.Get("passphrase").(string)
-		}
+		jsonData.PrivateKey = d.Get("private_key").(string)
+		jsonData.Passphrase = d.Get("passphrase").(string)
 	}
 
 	return jsonData
