@@ -29,7 +29,7 @@ The following arguments are supported:
   The passphrase for the private key (only for an encrypted private key).
 - **password** (Optional, String, Sensitive, **Value can't refresh**)  
   The account password.
-- **private_key** (Optional, String, Sensitive, **Value can't refresh**)  
+- **private_key** (Optional, String, Sensitive, **Value can't refresh**, Forces new resource)  
   The account private key.  
   Special values are allowed to automatically generate SSH key:
   `generate:RSA_1024`, `generate:RSA_2048`, `generate:RSA_4096`, `generate:RSA_8192`,
