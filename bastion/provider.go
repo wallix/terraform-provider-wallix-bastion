@@ -94,7 +94,7 @@ func Provider() *schema.Provider {
 }
 
 func configureProvider(
-	ctx context.Context, d *schema.ResourceData,
+	_ context.Context, d *schema.ResourceData,
 ) (
 	interface{}, diag.Diagnostics,
 ) {
