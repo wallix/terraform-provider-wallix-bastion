@@ -1,6 +1,10 @@
 <!-- markdownlint-disable-file MD013 MD041 -->
 # changelog
 
+FEATURES:
+
+* add `wallix-bastion_connection_message` resource
+
 BUG FIXES:
 
 * reduce CRUD operations time (reuse HTTP/TCP connections instead of using a new for each request to API)
