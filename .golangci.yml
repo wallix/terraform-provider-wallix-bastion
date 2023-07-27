@@ -27,6 +27,7 @@ linters:
     - tagliatelle
     - gomoddirectives
     - varnamelen
+    - depguard
 linters-settings:
   govet:
     enable-all: true

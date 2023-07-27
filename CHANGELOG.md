@@ -1,6 +1,16 @@
 <!-- markdownlint-disable-file MD013 MD041 -->
 # changelog
 
+## 0.10.0 (July 27, 2023)
+
+FEATURES:
+
+* add `wallix-bastion_connection_message` resource
+
+BUG FIXES:
+
+* reduce CRUD operations time (reuse HTTP/TCP connections instead of using a new for each request to API)
+
 ## 0.9.1 (May 15, 2023)
 
 BUG FIXES:

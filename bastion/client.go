@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/hashicorp/go-cleanhttp"
 )
 
 // Information to connect on Wallix bastion.
@@ -19,6 +21,14 @@ type Client struct {
 	bastionIP         string
 	bastionToken      string
 	bastionUser       string
+}
+
+var defaultHTTPClient *http.Client //nolint:gochecknoglobals
+
+func init() { //nolint:gochecknoinits
+	transport := cleanhttp.DefaultPooledTransport()
+	transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //nolint: gosec
+	defaultHTTPClient = &http.Client{Transport: transport}
 }
 
 func (c *Client) newRequest(ctx context.Context, uri string, method string, jsonBody interface{}) (string, int, error) {
@@ -41,12 +51,7 @@ func (c *Client) newRequest(ctx context.Context, uri string, method string, json
 	if err != nil {
 		return "", http.StatusInternalServerError, fmt.Errorf("preparing http request: %w", err)
 	}
-	tr := &http.Transport{
-		TLSClientConfig:   &tls.Config{InsecureSkipVerify: true}, //nolint: gosec
-		DisableKeepAlives: true,
-	}
-	httpClient := &http.Client{Transport: tr}
-	resp, err := httpClient.Do(req)
+	resp, err := defaultHTTPClient.Do(req)
 	if err != nil {
 		return "", http.StatusInternalServerError, fmt.Errorf("sending http request: %w", err)
 	}

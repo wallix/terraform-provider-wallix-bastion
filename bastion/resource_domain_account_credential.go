@@ -100,7 +100,7 @@ func resourceDomainAccountCredentialCreate(
 		return diag.FromErr(err)
 	}
 	if ex {
-		return diag.FromErr(fmt.Errorf("credential tpye %s on account_id %s, domain_id %s already exists",
+		return diag.FromErr(fmt.Errorf("credential type %s on account_id %s, domain_id %s already exists",
 			d.Get("type").(string), d.Get("account_id").(string), d.Get("domain_id").(string)))
 	}
 	err = addDomainAccountCredential(ctx, d, m)
@@ -114,7 +114,7 @@ func resourceDomainAccountCredentialCreate(
 	}
 	if !ex {
 		return diag.FromErr(fmt.Errorf(
-			"credential tpye %s on account_id %s, domain_id %s not found after POST",
+			"credential type %s on account_id %s, domain_id %s not found after POST",
 			d.Get("type").(string), d.Get("account_id").(string), d.Get("domain_id").(string)))
 	}
 	d.SetId(id)
