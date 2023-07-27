@@ -1,6 +1,10 @@
 <!-- markdownlint-disable-file MD013 MD041 -->
 # changelog
 
+BUG FIXES:
+
+* reduce CRUD operations time (reuse HTTP/TCP connections instead of using a new for each request to API)
+
 ## 0.9.1 (May 15, 2023)
 
 BUG FIXES:

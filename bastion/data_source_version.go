@@ -2,7 +2,6 @@ package bastion
 
 import (
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -87,12 +86,7 @@ func readVersionOptions(
 	if err != nil {
 		return result, fmt.Errorf("preparing http request: %w", err)
 	}
-	tr := &http.Transport{
-		TLSClientConfig:   &tls.Config{InsecureSkipVerify: true}, //nolint: gosec
-		DisableKeepAlives: true,
-	}
-	httpClient := &http.Client{Transport: tr}
-	resp, err := httpClient.Do(req)
+	resp, err := defaultHTTPClient.Do(req)
 	if err != nil {
 		return result, fmt.Errorf("sending http request: %w", err)
 	}

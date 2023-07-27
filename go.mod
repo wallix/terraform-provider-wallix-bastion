@@ -3,6 +3,7 @@ module github.com/claranet/terraform-provider-wallix-bastion
 go 1.19
 
 require (
+	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.27.0
 	github.com/jeremmfr/go-utils v0.9.0
@@ -18,7 +19,6 @@ require (
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-checkpoint v0.5.0 // indirect
-	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320 // indirect
 	github.com/hashicorp/go-hclog v1.5.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
