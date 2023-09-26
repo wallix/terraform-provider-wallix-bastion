@@ -6,15 +6,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccDataSourceLocalpasswordpolicy_basic(t *testing.T) {
+func TestAccDataSourceLocalPasswordPolicy_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceLocalpasswordpolicyData(),
+				Config: testAccDataSourceLocalPasswordPolicyData(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.wallix-bastion_localpasswordpolicy.default",
+					resource.TestCheckResourceAttrSet("data.wallix-bastion_local_password_policy.default",
 						"id"),
 				),
 			},
@@ -23,8 +23,8 @@ func TestAccDataSourceLocalpasswordpolicy_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceLocalpasswordpolicyData() string {
+func testAccDataSourceLocalPasswordPolicyData() string {
 	return `
-data "wallix-bastion_localpasswordpolicy" "default" {}
+data "wallix-bastion_local_password_policy" "default" {}
 `
 }

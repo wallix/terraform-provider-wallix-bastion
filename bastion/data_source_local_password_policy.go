@@ -11,7 +11,7 @@ import (
 	bchk "github.com/jeremmfr/go-utils/basiccheck"
 )
 
-type jsonLocalpasswordpolicy struct {
+type jsonLocalPasswordPolicy struct {
 	AllowSameUserAndPassword bool     `json:"allow_same_user_and_password"`
 	ID                       string   `json:"id,omitempty"`
 	PasswordPolicyName       string   `json:"password_policy_name"`
@@ -29,9 +29,9 @@ type jsonLocalpasswordpolicy struct {
 	SSHKeyAlgosAllowed       []string `json:"ssh_key_algos_allowed"`
 }
 
-func dataSourceLocalpasswordpolicy() *schema.Resource {
+func dataSourceLocalPasswordPolicy() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceLocalpasswordpolicyRead,
+		ReadContext: dataSourceLocalPasswordPolicyRead,
 		Schema: map[string]*schema.Schema{
 			"password_policy_name": {
 				Type:     schema.TypeString,
@@ -96,58 +96,58 @@ func dataSourceLocalpasswordpolicy() *schema.Resource {
 	}
 }
 
-func dataSourceLocalpasswordpolicyVersionCheck(version string) error {
+func dataSourceLocalPasswordPolicyVersionCheck(version string) error {
 	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
 	}
 
-	return fmt.Errorf("data source wallix-bastion_localpasswordpolicy not available with api version %s", version)
+	return fmt.Errorf("data source wallix-bastion_local_password_policy not available with api version %s", version)
 }
 
-func dataSourceLocalpasswordpolicyRead(
+func dataSourceLocalPasswordPolicyRead(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) diag.Diagnostics {
 	c := m.(*Client)
-	if err := dataSourceLocalpasswordpolicyVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := dataSourceLocalPasswordPolicyVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	cfg, err := readLocalpasswordpolicyOptions(ctx, d.Get("password_policy_name").(string), m)
+	cfg, err := readLocalPasswordPolicyOptions(ctx, d.Get("password_policy_name").(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	fillLocalpasswordpolicy(d, cfg)
+	fillLocalPasswordPolicy(d, cfg)
 	d.SetId(cfg.ID)
 
 	return nil
 }
 
-func readLocalpasswordpolicyOptions(
+func readLocalPasswordPolicyOptions(
 	ctx context.Context, passwordPolicyName string, m interface{},
 ) (
-	jsonLocalpasswordpolicy, error,
+	jsonLocalPasswordPolicy, error,
 ) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
 		"/localpasswordpolicies/?q=password_policy_name="+passwordPolicyName, http.MethodGet, nil)
 	if err != nil {
-		return jsonLocalpasswordpolicy{}, err
+		return jsonLocalPasswordPolicy{}, err
 	}
 	if code != http.StatusOK {
-		return jsonLocalpasswordpolicy{}, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
+		return jsonLocalPasswordPolicy{}, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
-	var results []jsonLocalpasswordpolicy
+	var results []jsonLocalPasswordPolicy
 	err = json.Unmarshal([]byte(body), &results)
 	if err != nil {
-		return jsonLocalpasswordpolicy{}, fmt.Errorf("unmarshaling json: %w", err)
+		return jsonLocalPasswordPolicy{}, fmt.Errorf("unmarshaling json: %w", err)
 	}
 	if len(results) == 0 {
-		return jsonLocalpasswordpolicy{}, fmt.Errorf("password_policy_name %s not found", passwordPolicyName)
+		return jsonLocalPasswordPolicy{}, fmt.Errorf("password_policy_name %s not found", passwordPolicyName)
 	}
 
 	return results[0], nil
 }
 
-func fillLocalpasswordpolicy(d *schema.ResourceData, jsonData jsonLocalpasswordpolicy) {
+func fillLocalPasswordPolicy(d *schema.ResourceData, jsonData jsonLocalPasswordPolicy) {
 	if tfErr := d.Set("allow_same_user_and_password", jsonData.AllowSameUserAndPassword); tfErr != nil {
 		panic(tfErr)
 	}

@@ -3,7 +3,7 @@
 
 FEATURES:
 
-* add `wallix-bastion_localpasswordpolicy` data source
+* add `wallix-bastion_local_password_policy` data source
 
 ## 0.10.0 (July 27, 2023)
 

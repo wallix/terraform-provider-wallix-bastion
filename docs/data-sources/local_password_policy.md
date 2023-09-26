@@ -1,11 +1,11 @@
-# wallix-bastion_localpasswordpolicy Data Source
+# wallix-bastion_local_password_policy Data Source
 
-Get information on a localpasswordpolicy.
+Get information on a local_password_policy.
 
 ## Example Usage
 
 ```hcl
-data "wallix-bastion_localpasswordpolicy" "default" {}
+data "wallix-bastion_local_password_policy" "default" {}
 ```
 
 ## Argument Reference
