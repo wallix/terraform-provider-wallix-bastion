@@ -1,6 +1,8 @@
 <!-- markdownlint-disable-file MD013 MD041 -->
 # changelog
 
+## 0.11.0 (September 26, 2023)
+
 FEATURES:
 
 * add `wallix-bastion_local_password_policy` data source
