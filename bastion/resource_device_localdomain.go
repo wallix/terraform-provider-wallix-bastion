@@ -306,8 +306,12 @@ func deleteDeviceLocalDomain(
 }
 
 func prepareDeviceLocalDomainJSON(d *schema.ResourceData, newResource bool) jsonDeviceLocalDomain {
-	var jsonData jsonDeviceLocalDomain
-	jsonData.DomainName = d.Get("domain_name").(string)
+	jsonData := jsonDeviceLocalDomain{
+		Description: d.Get("description").(string),
+		DomainName:  d.Get("domain_name").(string),
+		Passphrase:  d.Get("passphrase").(string),
+	}
+
 	if !strings.HasPrefix(d.Get("ca_private_key").(string), "generate:") {
 		jsonData.CAPrivateKey = d.Get("ca_private_key").(string)
 	} else if d.HasChange("ca_private_key") {
@@ -316,8 +320,7 @@ func prepareDeviceLocalDomainJSON(d *schema.ResourceData, newResource bool) json
 			jsonData.CAPrivateKey = newKey.(string)
 		}
 	}
-	jsonData.Description = d.Get("description").(string)
-	jsonData.Passphrase = d.Get("passphrase").(string)
+
 	if d.Get("enable_password_change").(bool) {
 		if !newResource {
 			adminAccount := d.Get("admin_account").(string)

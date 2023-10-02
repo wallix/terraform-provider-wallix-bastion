@@ -298,8 +298,10 @@ func deleteDomainAccountCredential(
 func prepareDomainAccountCredentialJSON(
 	d *schema.ResourceData,
 ) jsonCredential {
-	var jsonData jsonCredential
-	jsonData.Type = d.Get("type").(string)
+	jsonData := jsonCredential{
+		Type: d.Get("type").(string),
+	}
+
 	if jsonData.Type == "password" {
 		jsonData.Password = d.Get("password").(string)
 	} else if jsonData.Type == "ssh_key" {

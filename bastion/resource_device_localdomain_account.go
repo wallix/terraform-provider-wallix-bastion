@@ -336,14 +336,15 @@ func deleteDeviceLocalDomainAccount(
 }
 
 func prepareDeviceLocalDomainAccountJSON(d *schema.ResourceData) jsonDeviceLocalDomainAccount {
-	var jsonData jsonDeviceLocalDomainAccount
-	jsonData.AccountName = d.Get("account_name").(string)
-	jsonData.AccountLogin = d.Get("account_login").(string)
-	jsonData.CheckoutPolicy = d.Get("checkout_policy").(string)
-	jsonData.AutoChangePassword = d.Get("auto_change_password").(bool)
-	jsonData.AutoChangeSSHKey = d.Get("auto_change_ssh_key").(bool)
-	jsonData.CertificateValidity = d.Get("certificate_validity").(string)
-	jsonData.Description = d.Get("description").(string)
+	jsonData := jsonDeviceLocalDomainAccount{
+		AccountName:         d.Get("account_name").(string),
+		AccountLogin:        d.Get("account_login").(string),
+		AutoChangePassword:  d.Get("auto_change_password").(bool),
+		AutoChangeSSHKey:    d.Get("auto_change_ssh_key").(bool),
+		CertificateValidity: d.Get("certificate_validity").(string),
+		CheckoutPolicy:      d.Get("checkout_policy").(string),
+		Description:         d.Get("description").(string),
+	}
 
 	listServices := d.Get("services").(*schema.Set).List()
 	jsonData.Services = make([]string, len(listServices))

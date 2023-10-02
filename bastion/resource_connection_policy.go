@@ -259,10 +259,11 @@ func deleteConnectionPolicy(
 }
 
 func prepareConnectionPolicyJSON(d *schema.ResourceData) (jsonConnectionPolicy, error) {
-	var jsonData jsonConnectionPolicy
-	jsonData.ConnectionPolicyName = d.Get("connection_policy_name").(string)
-	jsonData.Description = d.Get("description").(string)
-	jsonData.Protocol = d.Get("protocol").(string)
+	jsonData := jsonConnectionPolicy{
+		ConnectionPolicyName: d.Get("connection_policy_name").(string),
+		Description:          d.Get("description").(string),
+		Protocol:             d.Get("protocol").(string),
+	}
 
 	listAuthenticationMethods := d.Get("authentication_methods").(*schema.Set).List()
 	jsonData.AuthenticationMethods = make([]string, len(listAuthenticationMethods))

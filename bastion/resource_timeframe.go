@@ -282,10 +282,11 @@ func deleteTimeframe(
 }
 
 func prepareTimeframeJSON(d *schema.ResourceData) (jsonTimeframe, error) {
-	var jsonData jsonTimeframe
-	jsonData.TimeframeName = d.Get("timeframe_name").(string)
-	jsonData.Description = d.Get("description").(string)
-	jsonData.IsOvertimable = d.Get("is_overtimable").(bool)
+	jsonData := jsonTimeframe{
+		Description:   d.Get("description").(string),
+		IsOvertimable: d.Get("is_overtimable").(bool),
+		TimeframeName: d.Get("timeframe_name").(string),
+	}
 
 	listPeriods := d.Get("periods").(*schema.Set).List()
 	jsonData.Periods = make([]jsonTimeFramePeriod, len(listPeriods))

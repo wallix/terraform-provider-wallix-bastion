@@ -480,10 +480,16 @@ func deleteProfile(
 func prepareProfileJSON( //nolint: gocognit,gocyclo
 	d *schema.ResourceData, newResource bool, features profileFeatures,
 ) jsonProfile {
-	var jsonData jsonProfile
+	jsonData := jsonProfile{
+		Description:  d.Get("description").(string),
+		IPLimitation: d.Get("ip_limitation").(string),
+		TargetAccess: d.Get("target_access").(bool),
+	}
+
 	if newResource {
 		jsonData.ProfileName = d.Get("profile_name").(string)
 	}
+
 	for _, v := range d.Get("gui_features").([]interface{}) {
 		if v == nil {
 			continue
@@ -529,6 +535,7 @@ func prepareProfileJSON( //nolint: gocognit,gocyclo
 			jsonData.GuiFeatures.CredentialRecovery = &v2
 		}
 	}
+
 	for _, v := range d.Get("gui_transmission").([]interface{}) {
 		if v == nil {
 			continue
@@ -571,7 +578,6 @@ func prepareProfileJSON( //nolint: gocognit,gocyclo
 			jsonData.GuiTransmission.CredentialRecovery = &v2
 		}
 	}
-	jsonData.Description = d.Get("description").(string)
 
 	if features.withDashboards {
 		listDashboards := d.Get("dashboards").(*schema.Set).List()
@@ -581,8 +587,6 @@ func prepareProfileJSON( //nolint: gocognit,gocyclo
 		}
 		jsonData.Dashboards = &dashboards
 	}
-	jsonData.IPLimitation = d.Get("ip_limitation").(string)
-	jsonData.TargetAccess = d.Get("target_access").(bool)
 
 	for _, v := range d.Get("target_groups_limitation").([]interface{}) {
 		m := v.(map[string]interface{})
@@ -599,6 +603,7 @@ func prepareProfileJSON( //nolint: gocognit,gocyclo
 		}
 		jsonData.TargetGroupsLimitation.DefaultTargetGroup = &defaultTargetGroup
 	}
+
 	for _, v := range d.Get("user_groups_limitation").([]interface{}) {
 		m := v.(map[string]interface{})
 		jsonData.UserGroupsLimitation.Enabled = true

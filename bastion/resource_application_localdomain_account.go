@@ -307,12 +307,14 @@ func deleteApplicationLocalDomainAccount(
 }
 
 func prepareApplicationLocalDomainAccountJSON(d *schema.ResourceData) jsonApplicationLocalDomainAccount {
-	var jsonData jsonApplicationLocalDomainAccount
-	jsonData.AccountName = d.Get("account_name").(string)
-	jsonData.AccountLogin = d.Get("account_login").(string)
-	jsonData.CheckoutPolicy = d.Get("checkout_policy").(string)
-	jsonData.AutoChangePassword = d.Get("auto_change_password").(bool)
-	jsonData.Description = d.Get("description").(string)
+	jsonData := jsonApplicationLocalDomainAccount{
+		AccountLogin:       d.Get("account_login").(string),
+		AccountName:        d.Get("account_name").(string),
+		AutoChangePassword: d.Get("auto_change_password").(bool),
+		CheckoutPolicy:     d.Get("checkout_policy").(string),
+		Description:        d.Get("description").(string),
+	}
+
 	credentials := make([]jsonCredential, 0)
 	if d.Get("password").(string) != "" {
 		credentials = append(credentials, jsonCredential{

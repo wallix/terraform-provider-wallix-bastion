@@ -261,14 +261,15 @@ func deleteCheckoutPolicy(
 }
 
 func prepareCheckoutPolicyJSON(d *schema.ResourceData) jsonCheckoutPolicy {
-	var jsonData jsonCheckoutPolicy
-	jsonData.CheckoutPolicyName = d.Get("checkout_policy_name").(string)
-	jsonData.Description = d.Get("description").(string)
-	jsonData.EnableLock = d.Get("enable_lock").(bool)
-	jsonData.ChangeCredentialsAtCheckin = d.Get("change_credentials_at_checkin").(bool)
-	jsonData.Duration = d.Get("duration").(int)
-	jsonData.Extension = d.Get("extension").(int)
-	jsonData.MaxDuration = d.Get("max_duration").(int)
+	jsonData := jsonCheckoutPolicy{
+		ChangeCredentialsAtCheckin: d.Get("change_credentials_at_checkin").(bool),
+		CheckoutPolicyName:         d.Get("checkout_policy_name").(string),
+		Description:                d.Get("description").(string),
+		EnableLock:                 d.Get("enable_lock").(bool),
+		Duration:                   d.Get("duration").(int),
+		Extension:                  d.Get("extension").(int),
+		MaxDuration:                d.Get("max_duration").(int),
+	}
 
 	return jsonData
 }

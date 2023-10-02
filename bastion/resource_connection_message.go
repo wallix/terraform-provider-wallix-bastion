@@ -152,8 +152,9 @@ func updateConnectionMessage(
 }
 
 func prepareConnectionMessageJSON(d *schema.ResourceData) jsonConnectionMessage {
-	var jsonData jsonConnectionMessage
-	jsonData.Message = d.Get("message").(string)
+	jsonData := jsonConnectionMessage{
+		Message: d.Get("message").(string),
+	}
 
 	return jsonData
 }

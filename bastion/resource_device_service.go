@@ -322,13 +322,15 @@ func prepareDeviceServiceJSON(
 ) (
 	jsonDeviceService, error,
 ) {
-	var jsonData jsonDeviceService
+	jsonData := jsonDeviceService{
+		ConnectionPolicy: d.Get("connection_policy").(string),
+		Port:             d.Get("port").(int),
+	}
+
 	if newResource {
 		jsonData.ServiceName = d.Get("service_name").(string)
 		jsonData.Protocol = d.Get("protocol").(string)
 	}
-	jsonData.ConnectionPolicy = d.Get("connection_policy").(string)
-	jsonData.Port = d.Get("port").(int)
 
 	if d.HasChange("global_domains") {
 		listGlobalDomains := d.Get("global_domains").(*schema.Set).List()
