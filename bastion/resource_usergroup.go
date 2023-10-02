@@ -288,27 +288,31 @@ func prepareUserGroupJSON(d *schema.ResourceData) jsonUserGroup {
 		GroupName:   d.Get("group_name").(string),
 		Profile:     d.Get("profile").(string),
 	}
+
 	if d.HasChanges("users") {
-		users := make([]string, 0)
-		for _, v := range d.Get("users").(*schema.Set).List() {
-			users = append(users, v.(string))
+		listUsers := d.Get("users").(*schema.Set).List()
+		users := make([]string, len(listUsers))
+		for i, v := range listUsers {
+			users[i] = v.(string)
 		}
 		jsonData.Users = &users
 	}
-	for _, v := range d.Get("timeframes").(*schema.Set).List() {
-		jsonData.TimeFrames = append(jsonData.TimeFrames, v.(string))
+
+	listTimeFrames := d.Get("timeframes").(*schema.Set).List()
+	jsonData.TimeFrames = make([]string, len(listTimeFrames))
+	for i, v := range listTimeFrames {
+		jsonData.TimeFrames[i] = v.(string)
 	}
-	if len(d.Get("restrictions").(*schema.Set).List()) > 0 {
-		for _, v := range d.Get("restrictions").(*schema.Set).List() {
-			r := v.(map[string]interface{})
-			jsonData.Restrictions = append(jsonData.Restrictions, jsonRestriction{
-				Action:      r["action"].(string),
-				Rules:       r["rules"].(string),
-				SubProtocol: r["subprotocol"].(string),
-			})
+
+	listRestrictions := d.Get("restrictions").(*schema.Set).List()
+	jsonData.Restrictions = make([]jsonRestriction, len(listRestrictions))
+	for i, v := range listRestrictions {
+		restrictions := v.(map[string]interface{})
+		jsonData.Restrictions[i] = jsonRestriction{
+			Action:      restrictions["action"].(string),
+			Rules:       restrictions["rules"].(string),
+			SubProtocol: restrictions["subprotocol"].(string),
 		}
-	} else {
-		jsonData.Restrictions = make([]jsonRestriction, 0)
 	}
 
 	return jsonData
@@ -352,13 +356,13 @@ func fillUserGroup(d *schema.ResourceData, jsonData jsonUserGroup) {
 	if tfErr := d.Set("profile", jsonData.Profile); tfErr != nil {
 		panic(tfErr)
 	}
-	restrictions := make([]map[string]interface{}, 0)
-	for _, v := range jsonData.Restrictions {
-		restrictions = append(restrictions, map[string]interface{}{
+	restrictions := make([]map[string]interface{}, len(jsonData.Restrictions))
+	for i, v := range jsonData.Restrictions {
+		restrictions[i] = map[string]interface{}{
 			"action":      v.Action,
 			"rules":       v.Rules,
 			"subprotocol": v.SubProtocol,
-		})
+		}
 	}
 	if tfErr := d.Set("restrictions", restrictions); tfErr != nil {
 		panic(tfErr)

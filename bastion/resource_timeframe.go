@@ -286,33 +286,34 @@ func prepareTimeframeJSON(d *schema.ResourceData) (jsonTimeframe, error) {
 	jsonData.TimeframeName = d.Get("timeframe_name").(string)
 	jsonData.Description = d.Get("description").(string)
 	jsonData.IsOvertimable = d.Get("is_overtimable").(bool)
-	if v := d.Get("periods").(*schema.Set).List(); len(v) > 0 {
-		for _, v2 := range v {
-			period := v2.(map[string]interface{})
-			jsonPeriod := jsonTimeFramePeriod{
-				StartDate: period["start_date"].(string),
-				EndDate:   period["end_date"].(string),
-				StartTime: period["start_time"].(string),
-				EndTime:   period["end_time"].(string),
-			}
-			for _, d := range period["week_days"].(*schema.Set).List() {
-				if !bchk.InSlice(d.(string), []string{
-					"monday",
-					"tuesday",
-					"wednesday",
-					"thursday",
-					"friday",
-					"saturday",
-					"sunday",
-				}) {
-					return jsonData, fmt.Errorf("`%s` isn't a valid week_day", d.(string))
-				}
-				jsonPeriod.WeekDays = append(jsonPeriod.WeekDays, d.(string))
-			}
-			jsonData.Periods = append(jsonData.Periods, jsonPeriod)
+
+	listPeriods := d.Get("periods").(*schema.Set).List()
+	jsonData.Periods = make([]jsonTimeFramePeriod, len(listPeriods))
+	for i, v := range listPeriods {
+		period := v.(map[string]interface{})
+		jsonPeriod := jsonTimeFramePeriod{
+			StartDate: period["start_date"].(string),
+			EndDate:   period["end_date"].(string),
+			StartTime: period["start_time"].(string),
+			EndTime:   period["end_time"].(string),
 		}
-	} else {
-		jsonData.Periods = make([]jsonTimeFramePeriod, 0)
+		listWeekDays := period["week_days"].(*schema.Set).List()
+		jsonPeriod.WeekDays = make([]string, len(listWeekDays))
+		for ii, d := range listWeekDays {
+			if !bchk.InSlice(d.(string), []string{
+				"monday",
+				"tuesday",
+				"wednesday",
+				"thursday",
+				"friday",
+				"saturday",
+				"sunday",
+			}) {
+				return jsonData, fmt.Errorf("`%s` isn't a valid week_day", d.(string))
+			}
+			jsonPeriod.WeekDays[ii] = d.(string)
+		}
+		jsonData.Periods[i] = jsonPeriod
 	}
 
 	return jsonData, nil
@@ -353,15 +354,15 @@ func fillTimeframe(d *schema.ResourceData, jsonData jsonTimeframe) {
 	if tfErr := d.Set("is_overtimable", jsonData.IsOvertimable); tfErr != nil {
 		panic(tfErr)
 	}
-	periods := make([]map[string]interface{}, 0)
-	for _, v := range jsonData.Periods {
-		periods = append(periods, map[string]interface{}{
+	periods := make([]map[string]interface{}, len(jsonData.Periods))
+	for i, v := range jsonData.Periods {
+		periods[i] = map[string]interface{}{
 			"start_date": v.StartDate,
 			"end_date":   v.EndDate,
 			"start_time": v.StartTime,
 			"end_time":   v.EndTime,
 			"week_days":  v.WeekDays,
-		})
+		}
 	}
 	if tfErr := d.Set("periods", periods); tfErr != nil {
 		panic(tfErr)

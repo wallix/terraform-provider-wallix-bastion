@@ -263,16 +263,16 @@ func prepareConnectionPolicyJSON(d *schema.ResourceData) (jsonConnectionPolicy, 
 	jsonData.ConnectionPolicyName = d.Get("connection_policy_name").(string)
 	jsonData.Description = d.Get("description").(string)
 	jsonData.Protocol = d.Get("protocol").(string)
-	if v := d.Get("authentication_methods").(*schema.Set).List(); len(v) > 0 {
-		for _, vv := range v {
-			if !bchk.InSlice(vv.(string), validAuthenticationMethods()) {
-				return jsonData, fmt.Errorf("authentication_methods must be in %v", validAuthenticationMethods())
-			}
-			jsonData.AuthenticationMethods = append(jsonData.AuthenticationMethods, vv.(string))
+
+	listAuthenticationMethods := d.Get("authentication_methods").(*schema.Set).List()
+	jsonData.AuthenticationMethods = make([]string, len(listAuthenticationMethods))
+	for i, v := range listAuthenticationMethods {
+		if !bchk.InSlice(v.(string), validAuthenticationMethods()) {
+			return jsonData, fmt.Errorf("authentication_methods must be in %v", validAuthenticationMethods())
 		}
-	} else {
-		jsonData.AuthenticationMethods = make([]string, 0)
+		jsonData.AuthenticationMethods[i] = v.(string)
 	}
+
 	var options map[string]interface{}
 	if v := d.Get("options").(string); v != "" {
 		_ = json.Unmarshal([]byte(v), &options)

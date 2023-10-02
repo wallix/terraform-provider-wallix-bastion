@@ -369,9 +369,9 @@ func fillDevice(d *schema.ResourceData, jsonData jsonDevice) {
 	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	localDomains := make([]map[string]interface{}, 0)
-	for _, v := range *jsonData.LocalDomains {
-		localDomains = append(localDomains, map[string]interface{}{
+	localDomains := make([]map[string]interface{}, len(*jsonData.LocalDomains))
+	for i, v := range *jsonData.LocalDomains {
+		localDomains[i] = map[string]interface{}{
 			"id":                     v.ID,
 			"admin_account":          v.AdminAccount,
 			"domain_name":            v.DomainName,
@@ -380,15 +380,15 @@ func fillDevice(d *schema.ResourceData, jsonData jsonDevice) {
 			"enable_password_change": v.EnablePasswordChange,
 			"password_change_policy": v.PasswordChangePolicy,
 			"password_change_plugin": v.PasswordChangePlugin,
-		})
+		}
 		pluginParameters, _ := json.Marshal(v.PasswordChangePluginParameters) //nolint: errchkjson
-		localDomains[len(localDomains)-1]["password_change_plugin_parameters"] = string(pluginParameters)
+		localDomains[i]["password_change_plugin_parameters"] = string(pluginParameters)
 	}
 	if tfErr := d.Set("local_domains", localDomains); tfErr != nil {
 		panic(tfErr)
 	}
-	services := make([]map[string]interface{}, 0)
-	for _, v := range *jsonData.Services {
+	services := make([]map[string]interface{}, len(*jsonData.Services))
+	for i, v := range *jsonData.Services {
 		service := map[string]interface{}{
 			"id":                v.ID,
 			"service_name":      v.ServiceName,
@@ -399,16 +399,14 @@ func fillDevice(d *schema.ResourceData, jsonData jsonDevice) {
 			"subprotocols":      make([]string, 0),
 		}
 		if v.GlobalDomains != nil {
-			for _, v2 := range *v.GlobalDomains {
-				service["global_domains"] = append(service["global_domains"].([]string), v2)
-			}
+			service["global_domains"] = make(([]string), len(*v.GlobalDomains))
+			copy(service["global_domains"].([]string), *v.GlobalDomains)
 		}
 		if v.SubProtocols != nil {
-			for _, v2 := range *v.SubProtocols {
-				service["subprotocols"] = append(service["subprotocols"].([]string), v2)
-			}
+			service["subprotocols"] = make(([]string), len(*v.SubProtocols))
+			copy(service["subprotocols"].([]string), *v.SubProtocols)
 		}
-		services = append(services, service)
+		services[i] = service
 	}
 	if tfErr := d.Set("services", services); tfErr != nil {
 		panic(tfErr)

@@ -326,20 +326,22 @@ func prepareApplicationJSON(d *schema.ResourceData) jsonApplication {
 		Parameters:       d.Get("parameters").(string),
 		Target:           d.Get("target").(string),
 	}
-	for _, v := range d.Get("paths").(*schema.Set).List() {
-		m := v.(map[string]interface{})
-		jsonData.Paths = append(jsonData.Paths, jsonApplicationPath{
-			Target:     m["target"].(string),
-			Program:    m["program"].(string),
-			WorkingDir: m["working_dir"].(string),
-		})
-	}
-	if len(d.Get("global_domains").(*schema.Set).List()) > 0 {
-		for _, v := range d.Get("global_domains").(*schema.Set).List() {
-			jsonData.GlobalDomains = append(jsonData.GlobalDomains, v.(string))
+
+	listPaths := d.Get("paths").(*schema.Set).List()
+	jsonData.Paths = make([]jsonApplicationPath, len(listPaths))
+	for i, v := range listPaths {
+		paths := v.(map[string]interface{})
+		jsonData.Paths[i] = jsonApplicationPath{
+			Target:     paths["target"].(string),
+			Program:    paths["program"].(string),
+			WorkingDir: paths["working_dir"].(string),
 		}
-	} else {
-		jsonData.GlobalDomains = make([]string, 0)
+	}
+
+	listGlobalDomains := d.Get("global_domains").(*schema.Set).List()
+	jsonData.GlobalDomains = make([]string, len(listGlobalDomains))
+	for i, v := range listGlobalDomains {
+		jsonData.GlobalDomains[i] = v.(string)
 	}
 
 	return jsonData
@@ -377,13 +379,13 @@ func fillApplication(d *schema.ResourceData, jsonData jsonApplication) {
 	if tfErr := d.Set("connection_policy", jsonData.ConnectionPolicy); tfErr != nil {
 		panic(tfErr)
 	}
-	paths := make([]map[string]interface{}, 0)
-	for _, v := range jsonData.Paths {
-		paths = append(paths, map[string]interface{}{
+	paths := make([]map[string]interface{}, len(jsonData.Paths))
+	for i, v := range jsonData.Paths {
+		paths[i] = map[string]interface{}{
 			"target":      v.Target,
 			"program":     v.Program,
 			"working_dir": v.WorkingDir,
-		})
+		}
 	}
 	if tfErr := d.Set("paths", paths); tfErr != nil {
 		panic(tfErr)
@@ -400,9 +402,9 @@ func fillApplication(d *schema.ResourceData, jsonData jsonApplication) {
 	if tfErr := d.Set("parameters", jsonData.Parameters); tfErr != nil {
 		panic(tfErr)
 	}
-	localDomains := make([]map[string]interface{}, 0)
-	for _, v := range *jsonData.LocalDomains {
-		localDomains = append(localDomains, map[string]interface{}{
+	localDomains := make([]map[string]interface{}, len(*jsonData.LocalDomains))
+	for i, v := range *jsonData.LocalDomains {
+		localDomains[i] = map[string]interface{}{
 			"id":                     v.ID,
 			"admin_account":          v.AdminAccount,
 			"domain_name":            v.DomainName,
@@ -410,7 +412,7 @@ func fillApplication(d *schema.ResourceData, jsonData jsonApplication) {
 			"enable_password_change": v.EnablePasswordChange,
 			"password_change_policy": v.PasswordChangePolicy,
 			"password_change_plugin": v.PasswordChangePlugin,
-		})
+		}
 		pluginParameters, _ := json.Marshal(v.PasswordChangePluginParameters) //nolint: errchkjson
 		localDomains[len(localDomains)-1]["password_change_plugin_parameters"] = string(pluginParameters)
 	}

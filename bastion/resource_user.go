@@ -295,6 +295,7 @@ func prepareUserJSON(d *schema.ResourceData, newResource bool) jsonUser {
 		ExpirationDate: d.Get("expiration_date").(string),
 		IsDisabled:     d.Get("is_disabled").(bool),
 	}
+
 	if newResource {
 		jsonData.PreferredLanguage = d.Get("preferred_language").(string)
 		jsonData.Password = d.Get("password").(string)
@@ -302,15 +303,20 @@ func prepareUserJSON(d *schema.ResourceData, newResource bool) jsonUser {
 			jsonData.ForceChangePwd = &b
 		}
 	}
+
 	if d.HasChanges("groups") {
-		groups := make([]string, 0)
-		for _, v := range d.Get("groups").(*schema.Set).List() {
-			groups = append(groups, v.(string))
+		listGroups := d.Get("groups").(*schema.Set).List()
+		groups := make([]string, len(listGroups))
+		for i, v := range listGroups {
+			groups[i] = v.(string)
 		}
 		jsonData.Groups = &groups
 	}
-	for _, v := range d.Get("user_auths").(*schema.Set).List() {
-		jsonData.UserAuths = append(jsonData.UserAuths, v.(string))
+
+	listUserAuths := d.Get("user_auths").(*schema.Set).List()
+	jsonData.UserAuths = make([]string, len(listUserAuths))
+	for i, v := range listUserAuths {
+		jsonData.UserAuths[i] = v.(string)
 	}
 
 	return jsonData

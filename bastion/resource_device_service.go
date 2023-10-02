@@ -329,27 +329,30 @@ func prepareDeviceServiceJSON(
 	}
 	jsonData.ConnectionPolicy = d.Get("connection_policy").(string)
 	jsonData.Port = d.Get("port").(int)
+
 	if d.HasChange("global_domains") {
-		globalDomains := make([]string, 0)
-		for _, v := range d.Get("global_domains").(*schema.Set).List() {
-			globalDomains = append(globalDomains, v.(string))
+		listGlobalDomains := d.Get("global_domains").(*schema.Set).List()
+		globalDomains := make([]string, len(listGlobalDomains))
+		for i, v := range listGlobalDomains {
+			globalDomains[i] = v.(string)
 		}
 		jsonData.GlobalDomains = &globalDomains
 	}
-	if v := d.Get("subprotocols").(*schema.Set).List(); len(v) > 0 {
-		subProtocols := make([]string, 0)
-		for _, v2 := range v {
+
+	if listSubProtocols := d.Get("subprotocols").(*schema.Set).List(); len(listSubProtocols) > 0 {
+		subProtocols := make([]string, len(listSubProtocols))
+		for i, v := range listSubProtocols {
 			switch d.Get("protocol").(string) {
 			case "SSH":
-				if !bchk.InSlice(v2.(string), sshSubProtocolsValid()) {
-					return jsonData, fmt.Errorf("subprotocols %s not valid for SSH service", v2)
+				if !bchk.InSlice(v.(string), sshSubProtocolsValid()) {
+					return jsonData, fmt.Errorf("subprotocols %s not valid for SSH service", v)
 				}
-				subProtocols = append(subProtocols, v2.(string))
+				subProtocols[i] = v.(string)
 			case "RDP":
-				if !bchk.InSlice(v2.(string), rdpSubProtocolsValid()) {
-					return jsonData, fmt.Errorf("subprotocols %s not valid for RDP service", v2)
+				if !bchk.InSlice(v.(string), rdpSubProtocolsValid()) {
+					return jsonData, fmt.Errorf("subprotocols %s not valid for RDP service", v)
 				}
-				subProtocols = append(subProtocols, v2.(string))
+				subProtocols[i] = v.(string)
 			default:
 				return jsonData, fmt.Errorf("subprotocols need to not set for %s service", d.Get("protocol").(string))
 			}

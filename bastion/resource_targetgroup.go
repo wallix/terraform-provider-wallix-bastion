@@ -469,169 +469,161 @@ func prepareTargetGroupJSON(d *schema.ResourceData) (jsonTargetGroup, error) { /
 		Description: d.Get("description").(string),
 		GroupName:   d.Get("group_name").(string),
 	}
-	if len(d.Get("password_retrieval_accounts").(*schema.Set).List()) > 0 {
-		for _, v := range d.Get("password_retrieval_accounts").(*schema.Set).List() {
-			passRetrievalAccounts := v.(map[string]interface{})
-			switch {
-			case passRetrievalAccounts["domain_type"].(string) == domainTypeGlobal:
-				if passRetrievalAccounts["device"].(string) != "" ||
-					passRetrievalAccounts["application"].(string) != "" {
-					return jsonData, fmt.Errorf("bad password_retrieval_accounts: " +
-						"device and application need to be null with domain_type=global")
-				}
-			case passRetrievalAccounts["domain_type"].(string) == domainTypeLocal:
-				if passRetrievalAccounts["device"].(string) == "" &&
-					passRetrievalAccounts["application"].(string) == "" {
-					return jsonData, fmt.Errorf("bad password_retrieval_accounts: " +
-						"device or application need to be set with domain_type=local")
-				}
-			case passRetrievalAccounts["device"].(string) != "" && passRetrievalAccounts["application"].(string) != "":
+
+	listPasswordRetrievalAccounts := d.Get("password_retrieval_accounts").(*schema.Set).List()
+	jsonData.PasswordRetrieval.Accounts = make(
+		[]jsonTargerGroupPasswordRetrievalAccount,
+		len(listPasswordRetrievalAccounts),
+	)
+	for i, v := range listPasswordRetrievalAccounts {
+		passwordRetrievalAccounts := v.(map[string]interface{})
+		switch {
+		case passwordRetrievalAccounts["domain_type"].(string) == domainTypeGlobal:
+			if passwordRetrievalAccounts["device"].(string) != "" ||
+				passwordRetrievalAccounts["application"].(string) != "" {
 				return jsonData, fmt.Errorf("bad password_retrieval_accounts: " +
-					"device and application mutually exclusive")
+					"device and application need to be null with domain_type=global")
 			}
-			jsonData.PasswordRetrieval.Accounts = append(jsonData.PasswordRetrieval.Accounts,
-				jsonTargerGroupPasswordRetrievalAccount{
-					Account:     passRetrievalAccounts["account"].(string),
-					Domain:      passRetrievalAccounts["domain"].(string),
-					DomainType:  passRetrievalAccounts["domain_type"].(string),
-					Device:      passRetrievalAccounts["device"].(string),
-					Application: passRetrievalAccounts["application"].(string),
-				})
-		}
-	} else {
-		jsonData.PasswordRetrieval.Accounts = make([]jsonTargerGroupPasswordRetrievalAccount, 0)
-	}
-	if len(d.Get("restrictions").(*schema.Set).List()) > 0 {
-		for _, v := range d.Get("restrictions").(*schema.Set).List() {
-			r := v.(map[string]interface{})
-			jsonData.Restrictions = append(jsonData.Restrictions, jsonRestriction{
-				Action:      r["action"].(string),
-				Rules:       r["rules"].(string),
-				SubProtocol: r["subprotocol"].(string),
-			})
-		}
-	} else {
-		jsonData.Restrictions = make([]jsonRestriction, 0)
-	}
-	if len(d.Get("session_accounts").(*schema.Set).List()) > 0 {
-		for _, v := range d.Get("session_accounts").(*schema.Set).List() {
-			sessAccounts := v.(map[string]interface{})
-			switch {
-			case (sessAccounts["device"].(string) == "" || sessAccounts["service"].(string) == "") &&
-				sessAccounts["application"].(string) == "":
-				return jsonData, fmt.Errorf("bad session_accounts: " +
-					"device/service or application need to be set")
-			case sessAccounts["device"].(string) != "" && sessAccounts["application"].(string) != "":
-				return jsonData, fmt.Errorf("bad session_accounts: " +
-					"device and application mutually exclusive")
-			case sessAccounts["service"].(string) != "" && sessAccounts["application"].(string) != "":
-				return jsonData, fmt.Errorf("bad session_accounts: " +
-					"service and application mutually exclusive")
-			case sessAccounts["device"].(string) != "" && sessAccounts["service"].(string) == "":
-				return jsonData, fmt.Errorf("bad session_accounts: "+
-					"missing service for device %s", sessAccounts["device"].(string))
-			case sessAccounts["service"].(string) != "" && sessAccounts["device"].(string) == "":
-				return jsonData, fmt.Errorf("bad session_accounts: "+
-					"missing device for service %s", sessAccounts["service"].(string))
+		case passwordRetrievalAccounts["domain_type"].(string) == domainTypeLocal:
+			if passwordRetrievalAccounts["device"].(string) == "" &&
+				passwordRetrievalAccounts["application"].(string) == "" {
+				return jsonData, fmt.Errorf("bad password_retrieval_accounts: " +
+					"device or application need to be set with domain_type=local")
 			}
-			jsonData.Session.Accounts = append(jsonData.Session.Accounts,
-				jsonTargetGroupSessionAccount{
-					Account:     sessAccounts["account"].(string),
-					Domain:      sessAccounts["domain"].(string),
-					DomainType:  sessAccounts["domain_type"].(string),
-					Device:      sessAccounts["device"].(string),
-					Service:     sessAccounts["service"].(string),
-					Application: sessAccounts["application"].(string),
-				})
+		case passwordRetrievalAccounts["device"].(string) != "" && passwordRetrievalAccounts["application"].(string) != "":
+			return jsonData, fmt.Errorf("bad password_retrieval_accounts: " +
+				"device and application mutually exclusive")
 		}
-	} else {
-		jsonData.Session.Accounts = make([]jsonTargetGroupSessionAccount, 0)
-	}
-	if len(d.Get("session_account_mappings").(*schema.Set).List()) > 0 {
-		for _, v := range d.Get("session_account_mappings").(*schema.Set).List() {
-			sessAccountMappings := v.(map[string]interface{})
-			switch {
-			case sessAccountMappings["device"].(string) != "" && sessAccountMappings["application"].(string) != "":
-				return jsonData, fmt.Errorf("bad session_account_mappings: " +
-					"device and application mutually exclusive")
-			case sessAccountMappings["service"].(string) != "" && sessAccountMappings["application"].(string) != "":
-				return jsonData, fmt.Errorf("bad session_account_mappings: " +
-					"service and application mutually exclusive")
-			case sessAccountMappings["device"].(string) != "" && sessAccountMappings["service"].(string) == "":
-				return jsonData, fmt.Errorf("bad session_account_mappings: "+
-					"missing service for device %s", sessAccountMappings["device"].(string))
-			case sessAccountMappings["service"].(string) != "" && sessAccountMappings["device"].(string) == "":
-				return jsonData, fmt.Errorf("bad session_account_mappings: "+
-					"missing device for service %s", sessAccountMappings["service"].(string))
-			}
-			jsonData.Session.AccountMappings = append(jsonData.Session.AccountMappings,
-				jsonTargetGroupSessionAccountMapping{
-					Device:      sessAccountMappings["device"].(string),
-					Service:     sessAccountMappings["service"].(string),
-					Application: sessAccountMappings["application"].(string),
-				})
+		jsonData.PasswordRetrieval.Accounts[i] = jsonTargerGroupPasswordRetrievalAccount{
+			Account:     passwordRetrievalAccounts["account"].(string),
+			Domain:      passwordRetrievalAccounts["domain"].(string),
+			DomainType:  passwordRetrievalAccounts["domain_type"].(string),
+			Device:      passwordRetrievalAccounts["device"].(string),
+			Application: passwordRetrievalAccounts["application"].(string),
 		}
-	} else {
-		jsonData.Session.AccountMappings = make([]jsonTargetGroupSessionAccountMapping, 0)
 	}
-	if len(d.Get("session_interactive_logins").(*schema.Set).List()) > 0 {
-		for _, v := range d.Get("session_interactive_logins").(*schema.Set).List() {
-			sessInteractiveLogins := v.(map[string]interface{})
-			switch {
-			case sessInteractiveLogins["device"].(string) != "" && sessInteractiveLogins["application"].(string) != "":
-				return jsonData, fmt.Errorf("bad session_interactive_logins: " +
-					"device and application mutually exclusive")
-			case sessInteractiveLogins["service"].(string) != "" && sessInteractiveLogins["application"].(string) != "":
-				return jsonData, fmt.Errorf("bad session_interactive_logins: " +
-					"service and application mutually exclusive")
-			case sessInteractiveLogins["device"].(string) != "" && sessInteractiveLogins["service"].(string) == "":
-				return jsonData, fmt.Errorf("bad session_interactive_logins: "+
-					"missing service for device %s", sessInteractiveLogins["device"].(string))
-			case sessInteractiveLogins["service"].(string) != "" && sessInteractiveLogins["device"].(string) == "":
-				return jsonData, fmt.Errorf("bad session_interactive_logins: "+
-					"missing device for service %s", sessInteractiveLogins["service"].(string))
-			}
-			jsonData.Session.InteractiveLogins = append(jsonData.Session.InteractiveLogins,
-				jsonTargetGroupSessionInteractiveLogin{
-					Device:      sessInteractiveLogins["device"].(string),
-					Service:     sessInteractiveLogins["service"].(string),
-					Application: sessInteractiveLogins["application"].(string),
-				})
+
+	listRestrictions := d.Get("restrictions").(*schema.Set).List()
+	jsonData.Restrictions = make([]jsonRestriction, len(listRestrictions))
+	for i, v := range listRestrictions {
+		restrictions := v.(map[string]interface{})
+		jsonData.Restrictions[i] = jsonRestriction{
+			Action:      restrictions["action"].(string),
+			Rules:       restrictions["rules"].(string),
+			SubProtocol: restrictions["subprotocol"].(string),
 		}
-	} else {
-		jsonData.Session.InteractiveLogins = make([]jsonTargetGroupSessionInteractiveLogin, 0)
 	}
-	if len(d.Get("session_scenario_accounts").(*schema.Set).List()) > 0 {
-		for _, v := range d.Get("session_scenario_accounts").(*schema.Set).List() {
-			sessScenarioAccounts := v.(map[string]interface{})
-			switch {
-			case sessScenarioAccounts["domain_type"].(string) == domainTypeGlobal:
-				if sessScenarioAccounts["device"].(string) != "" ||
-					sessScenarioAccounts["application"].(string) != "" {
-					return jsonData, fmt.Errorf("bad session_scenario_accounts: " +
-						"device and application need to be null with domain_type=global")
-				}
-			case sessScenarioAccounts["domain_type"].(string) == domainTypeLocal:
-				if sessScenarioAccounts["device"].(string) == "" &&
-					sessScenarioAccounts["application"].(string) == "" {
-					return jsonData, fmt.Errorf("bad session_scenario_accounts: " +
-						"device or application need to be set with domain_type=local")
-				}
-			case sessScenarioAccounts["device"].(string) != "" && sessScenarioAccounts["application"].(string) != "":
+
+	listSessionAccounts := d.Get("session_accounts").(*schema.Set).List()
+	jsonData.Session.Accounts = make([]jsonTargetGroupSessionAccount, len(listSessionAccounts))
+	for i, v := range listSessionAccounts {
+		sessionAccounts := v.(map[string]interface{})
+		switch {
+		case (sessionAccounts["device"].(string) == "" || sessionAccounts["service"].(string) == "") &&
+			sessionAccounts["application"].(string) == "":
+			return jsonData, fmt.Errorf("bad session_accounts: " +
+				"device/service or application need to be set")
+		case sessionAccounts["device"].(string) != "" && sessionAccounts["application"].(string) != "":
+			return jsonData, fmt.Errorf("bad session_accounts: " +
+				"device and application mutually exclusive")
+		case sessionAccounts["service"].(string) != "" && sessionAccounts["application"].(string) != "":
+			return jsonData, fmt.Errorf("bad session_accounts: " +
+				"service and application mutually exclusive")
+		case sessionAccounts["device"].(string) != "" && sessionAccounts["service"].(string) == "":
+			return jsonData, fmt.Errorf("bad session_accounts: "+
+				"missing service for device %s", sessionAccounts["device"].(string))
+		case sessionAccounts["service"].(string) != "" && sessionAccounts["device"].(string) == "":
+			return jsonData, fmt.Errorf("bad session_accounts: "+
+				"missing device for service %s", sessionAccounts["service"].(string))
+		}
+		jsonData.Session.Accounts[i] = jsonTargetGroupSessionAccount{
+			Account:     sessionAccounts["account"].(string),
+			Domain:      sessionAccounts["domain"].(string),
+			DomainType:  sessionAccounts["domain_type"].(string),
+			Device:      sessionAccounts["device"].(string),
+			Service:     sessionAccounts["service"].(string),
+			Application: sessionAccounts["application"].(string),
+		}
+	}
+
+	listSessionAccountMappings := d.Get("session_account_mappings").(*schema.Set).List()
+	jsonData.Session.AccountMappings = make([]jsonTargetGroupSessionAccountMapping, len(listSessionAccountMappings))
+	for i, v := range listSessionAccountMappings {
+		sessionAccountMappings := v.(map[string]interface{})
+		switch {
+		case sessionAccountMappings["device"].(string) != "" && sessionAccountMappings["application"].(string) != "":
+			return jsonData, fmt.Errorf("bad session_account_mappings: " +
+				"device and application mutually exclusive")
+		case sessionAccountMappings["service"].(string) != "" && sessionAccountMappings["application"].(string) != "":
+			return jsonData, fmt.Errorf("bad session_account_mappings: " +
+				"service and application mutually exclusive")
+		case sessionAccountMappings["device"].(string) != "" && sessionAccountMappings["service"].(string) == "":
+			return jsonData, fmt.Errorf("bad session_account_mappings: "+
+				"missing service for device %s", sessionAccountMappings["device"].(string))
+		case sessionAccountMappings["service"].(string) != "" && sessionAccountMappings["device"].(string) == "":
+			return jsonData, fmt.Errorf("bad session_account_mappings: "+
+				"missing device for service %s", sessionAccountMappings["service"].(string))
+		}
+		jsonData.Session.AccountMappings[i] = jsonTargetGroupSessionAccountMapping{
+			Device:      sessionAccountMappings["device"].(string),
+			Service:     sessionAccountMappings["service"].(string),
+			Application: sessionAccountMappings["application"].(string),
+		}
+	}
+
+	listSessionInteractiveLogins := d.Get("session_interactive_logins").(*schema.Set).List()
+	jsonData.Session.InteractiveLogins = make([]jsonTargetGroupSessionInteractiveLogin, len(listSessionInteractiveLogins))
+	for i, v := range listSessionInteractiveLogins {
+		sessionInteractiveLogins := v.(map[string]interface{})
+		switch {
+		case sessionInteractiveLogins["device"].(string) != "" && sessionInteractiveLogins["application"].(string) != "":
+			return jsonData, fmt.Errorf("bad session_interactive_logins: " +
+				"device and application mutually exclusive")
+		case sessionInteractiveLogins["service"].(string) != "" && sessionInteractiveLogins["application"].(string) != "":
+			return jsonData, fmt.Errorf("bad session_interactive_logins: " +
+				"service and application mutually exclusive")
+		case sessionInteractiveLogins["device"].(string) != "" && sessionInteractiveLogins["service"].(string) == "":
+			return jsonData, fmt.Errorf("bad session_interactive_logins: "+
+				"missing service for device %s", sessionInteractiveLogins["device"].(string))
+		case sessionInteractiveLogins["service"].(string) != "" && sessionInteractiveLogins["device"].(string) == "":
+			return jsonData, fmt.Errorf("bad session_interactive_logins: "+
+				"missing device for service %s", sessionInteractiveLogins["service"].(string))
+		}
+		jsonData.Session.InteractiveLogins[i] = jsonTargetGroupSessionInteractiveLogin{
+			Device:      sessionInteractiveLogins["device"].(string),
+			Service:     sessionInteractiveLogins["service"].(string),
+			Application: sessionInteractiveLogins["application"].(string),
+		}
+	}
+
+	listSessionScenarioAccounts := d.Get("session_scenario_accounts").(*schema.Set).List()
+	jsonData.Session.ScenarioAccounts = make([]jsonTargetGroupSessionScenarioAccount, len(listSessionScenarioAccounts))
+	for i, v := range listSessionScenarioAccounts {
+		sessionScenarioAccounts := v.(map[string]interface{})
+		switch {
+		case sessionScenarioAccounts["domain_type"].(string) == domainTypeGlobal:
+			if sessionScenarioAccounts["device"].(string) != "" ||
+				sessionScenarioAccounts["application"].(string) != "" {
 				return jsonData, fmt.Errorf("bad session_scenario_accounts: " +
-					"device and application mutually exclusive")
+					"device and application need to be null with domain_type=global")
 			}
-			jsonData.Session.ScenarioAccounts = append(jsonData.Session.ScenarioAccounts,
-				jsonTargetGroupSessionScenarioAccount{
-					Account:     sessScenarioAccounts["account"].(string),
-					Domain:      sessScenarioAccounts["domain"].(string),
-					DomainType:  sessScenarioAccounts["domain_type"].(string),
-					Device:      sessScenarioAccounts["device"].(string),
-					Application: sessScenarioAccounts["application"].(string),
-				})
+		case sessionScenarioAccounts["domain_type"].(string) == domainTypeLocal:
+			if sessionScenarioAccounts["device"].(string) == "" &&
+				sessionScenarioAccounts["application"].(string) == "" {
+				return jsonData, fmt.Errorf("bad session_scenario_accounts: " +
+					"device or application need to be set with domain_type=local")
+			}
+		case sessionScenarioAccounts["device"].(string) != "" && sessionScenarioAccounts["application"].(string) != "":
+			return jsonData, fmt.Errorf("bad session_scenario_accounts: " +
+				"device and application mutually exclusive")
 		}
-	} else {
-		jsonData.Session.ScenarioAccounts = make([]jsonTargetGroupSessionScenarioAccount, 0)
+		jsonData.Session.ScenarioAccounts[i] = jsonTargetGroupSessionScenarioAccount{
+			Account:     sessionScenarioAccounts["account"].(string),
+			Domain:      sessionScenarioAccounts["domain"].(string),
+			DomainType:  sessionScenarioAccounts["domain_type"].(string),
+			Device:      sessionScenarioAccounts["device"].(string),
+			Application: sessionScenarioAccounts["application"].(string),
+		}
 	}
 
 	return jsonData, nil
@@ -669,75 +661,75 @@ func fillTargetGroup(d *schema.ResourceData, jsonData jsonTargetGroup) {
 	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	passwordRetrievalAccounts := make([]map[string]interface{}, 0)
-	for _, v := range jsonData.PasswordRetrieval.Accounts {
-		passwordRetrievalAccounts = append(passwordRetrievalAccounts, map[string]interface{}{
+	passwordRetrievalAccounts := make([]map[string]interface{}, len(jsonData.PasswordRetrieval.Accounts))
+	for i, v := range jsonData.PasswordRetrieval.Accounts {
+		passwordRetrievalAccounts[i] = map[string]interface{}{
 			"account":     v.Account,
 			"domain":      v.Domain,
 			"domain_type": v.DomainType,
 			"device":      v.Device,
 			"application": v.Application,
-		})
+		}
 	}
 	if tfErr := d.Set("password_retrieval_accounts", passwordRetrievalAccounts); tfErr != nil {
 		panic(tfErr)
 	}
-	restrictions := make([]map[string]interface{}, 0)
-	for _, v := range jsonData.Restrictions {
-		restrictions = append(restrictions, map[string]interface{}{
+	restrictions := make([]map[string]interface{}, len(jsonData.Restrictions))
+	for i, v := range jsonData.Restrictions {
+		restrictions[i] = map[string]interface{}{
 			"action":      v.Action,
 			"rules":       v.Rules,
 			"subprotocol": v.SubProtocol,
-		})
+		}
 	}
 	if tfErr := d.Set("restrictions", restrictions); tfErr != nil {
 		panic(tfErr)
 	}
-	sessionAccounts := make([]map[string]interface{}, 0)
-	for _, v := range jsonData.Session.Accounts {
-		sessionAccounts = append(sessionAccounts, map[string]interface{}{
+	sessionAccounts := make([]map[string]interface{}, len(jsonData.Session.Accounts))
+	for i, v := range jsonData.Session.Accounts {
+		sessionAccounts[i] = map[string]interface{}{
 			"account":     v.Account,
 			"domain":      v.Domain,
 			"domain_type": v.DomainType,
 			"device":      v.Device,
 			"service":     v.Service,
 			"application": v.Application,
-		})
+		}
 	}
 	if tfErr := d.Set("session_accounts", sessionAccounts); tfErr != nil {
 		panic(tfErr)
 	}
-	sessionAccountsMappings := make([]map[string]interface{}, 0)
-	for _, v := range jsonData.Session.AccountMappings {
-		sessionAccountsMappings = append(sessionAccountsMappings, map[string]interface{}{
+	sessionAccountMappings := make([]map[string]interface{}, len(jsonData.Session.AccountMappings))
+	for i, v := range jsonData.Session.AccountMappings {
+		sessionAccountMappings[i] = map[string]interface{}{
 			"device":      v.Device,
 			"service":     v.Service,
 			"application": v.Application,
-		})
+		}
 	}
-	if tfErr := d.Set("session_account_mappings", sessionAccountsMappings); tfErr != nil {
+	if tfErr := d.Set("session_account_mappings", sessionAccountMappings); tfErr != nil {
 		panic(tfErr)
 	}
-	sessionInteractiveLogins := make([]map[string]interface{}, 0)
-	for _, v := range jsonData.Session.InteractiveLogins {
-		sessionInteractiveLogins = append(sessionInteractiveLogins, map[string]interface{}{
+	sessionInteractiveLogins := make([]map[string]interface{}, len(jsonData.Session.InteractiveLogins))
+	for i, v := range jsonData.Session.InteractiveLogins {
+		sessionInteractiveLogins[i] = map[string]interface{}{
 			"device":      v.Device,
 			"service":     v.Service,
 			"application": v.Application,
-		})
+		}
 	}
 	if tfErr := d.Set("session_interactive_logins", sessionInteractiveLogins); tfErr != nil {
 		panic(tfErr)
 	}
-	sessionScenarioAccounts := make([]map[string]interface{}, 0)
-	for _, v := range jsonData.Session.ScenarioAccounts {
-		sessionScenarioAccounts = append(sessionScenarioAccounts, map[string]interface{}{
+	sessionScenarioAccounts := make([]map[string]interface{}, len(jsonData.Session.ScenarioAccounts))
+	for i, v := range jsonData.Session.ScenarioAccounts {
+		sessionScenarioAccounts[i] = map[string]interface{}{
 			"account":     v.Account,
 			"domain":      v.Domain,
 			"domain_type": v.DomainType,
 			"device":      v.Device,
 			"application": v.Application,
-		})
+		}
 	}
 	if tfErr := d.Set("session_scenario_accounts", sessionScenarioAccounts); tfErr != nil {
 		panic(tfErr)

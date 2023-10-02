@@ -250,29 +250,27 @@ func deleteCluster(
 }
 
 func prepareClusterJSON(d *schema.ResourceData) jsonCluster {
-	var jsonData jsonCluster
-	jsonData.ClusterName = d.Get("cluster_name").(string)
-	if len(d.Get("accounts").(*schema.Set).List()) > 0 {
-		for _, v := range d.Get("accounts").(*schema.Set).List() {
-			jsonData.Accounts = append(jsonData.Accounts, v.(string))
-		}
-	} else {
-		jsonData.Accounts = make([]string, 0)
+	jsonData := jsonCluster{
+		ClusterName: d.Get("cluster_name").(string),
+		Description: d.Get("description").(string),
 	}
-	if len(d.Get("account_mappings").(*schema.Set).List()) > 0 {
-		for _, v := range d.Get("account_mappings").(*schema.Set).List() {
-			jsonData.AccountMappings = append(jsonData.AccountMappings, v.(string))
-		}
-	} else {
-		jsonData.AccountMappings = make([]string, 0)
+
+	listAccounts := d.Get("accounts").(*schema.Set).List()
+	jsonData.Accounts = make([]string, len(listAccounts))
+	for i, v := range listAccounts {
+		jsonData.Accounts[i] = v.(string)
 	}
-	jsonData.Description = d.Get("description").(string)
-	if len(d.Get("interactive_logins").(*schema.Set).List()) > 0 {
-		for _, v := range d.Get("interactive_logins").(*schema.Set).List() {
-			jsonData.InteractiveLogins = append(jsonData.InteractiveLogins, v.(string))
-		}
-	} else {
-		jsonData.InteractiveLogins = make([]string, 0)
+
+	listAccountMappings := d.Get("account_mappings").(*schema.Set).List()
+	jsonData.AccountMappings = make([]string, len(listAccountMappings))
+	for i, v := range listAccountMappings {
+		jsonData.AccountMappings[i] = v.(string)
+	}
+
+	listInteractiveLogins := d.Get("interactive_logins").(*schema.Set).List()
+	jsonData.InteractiveLogins = make([]string, len(listInteractiveLogins))
+	for i, v := range listInteractiveLogins {
+		jsonData.InteractiveLogins[i] = v.(string)
 	}
 
 	return jsonData
