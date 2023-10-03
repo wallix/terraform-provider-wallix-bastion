@@ -1,6 +1,10 @@
 <!-- markdownlint-disable-file MD013 MD041 -->
 # changelog
 
+ENHANCEMENTS:
+
+* release now with golang 1.21
+
 BUG FIXES:
 
 * reduced compute and memory usage to prepare the JSON payload when creating or updating resource
