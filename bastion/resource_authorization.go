@@ -342,10 +342,12 @@ func prepareAuthorizationJSON(d *schema.ResourceData, newResource bool) jsonAuth
 		IsCritical:                 d.Get("is_critical").(bool),
 		IsRecorded:                 d.Get("is_recorded").(bool),
 	}
+
 	if newResource {
 		jsonData.UserGroup = d.Get("user_group").(string)
 		jsonData.TargetGroup = d.Get("target_group").(string)
 	}
+
 	if d.Get("approval_required").(bool) {
 		activeQuorum := d.Get("active_quorum").(int)
 		jsonData.ActiveQuorum = &activeQuorum
@@ -353,9 +355,10 @@ func prepareAuthorizationJSON(d *schema.ResourceData, newResource bool) jsonAuth
 		jsonData.InactiveQuorum = &inactiveQuorum
 		approvalTimeout := d.Get("approval_timeout").(int)
 		jsonData.ApprovalTimeout = &approvalTimeout
-		approvers := make([]string, 0)
-		for _, v := range d.Get("approvers").([]interface{}) {
-			approvers = append(approvers, v.(string))
+		listApprovers := d.Get("approvers").([]interface{})
+		approvers := make([]string, len(listApprovers))
+		for i, v := range listApprovers {
+			approvers[i] = v.(string)
 		}
 		jsonData.Approvers = &approvers
 		hasComment := d.Get("has_comment").(bool)
@@ -369,10 +372,11 @@ func prepareAuthorizationJSON(d *schema.ResourceData, newResource bool) jsonAuth
 		singleConnection := d.Get("single_connection").(bool)
 		jsonData.SingleConnection = &singleConnection
 	}
-	if v := d.Get("subprotocols").(*schema.Set).List(); len(v) > 0 {
-		subProtocols := make([]string, 0)
-		for _, v2 := range v {
-			subProtocols = append(subProtocols, v2.(string))
+
+	if listSubProtocols := d.Get("subprotocols").(*schema.Set).List(); len(listSubProtocols) > 0 {
+		subProtocols := make([]string, len(listSubProtocols))
+		for i, v := range listSubProtocols {
+			subProtocols[i] = v.(string)
 		}
 		jsonData.SubProtocols = &subProtocols
 	}

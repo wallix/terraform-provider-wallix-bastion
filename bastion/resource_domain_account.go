@@ -321,22 +321,25 @@ func deleteDomainAccount(
 }
 
 func prepareDomainAccountJSON(d *schema.ResourceData) (jsonDomainAccount, error) {
-	var jsonData jsonDomainAccount
-	jsonData.AccountName = d.Get("account_name").(string)
-	jsonData.AccountLogin = d.Get("account_login").(string)
-	jsonData.CheckoutPolicy = d.Get("checkout_policy").(string)
-	jsonData.AutoChangePassword = d.Get("auto_change_password").(bool)
-	jsonData.AutoChangeSSHKey = d.Get("auto_change_ssh_key").(bool)
-	jsonData.CertificateValidity = d.Get("certificate_validity").(string)
-	jsonData.Description = d.Get("description").(string)
+	jsonData := jsonDomainAccount{
+		AccountLogin:        d.Get("account_login").(string),
+		AccountName:         d.Get("account_name").(string),
+		AutoChangePassword:  d.Get("auto_change_password").(bool),
+		AutoChangeSSHKey:    d.Get("auto_change_ssh_key").(bool),
+		CertificateValidity: d.Get("certificate_validity").(string),
+		CheckoutPolicy:      d.Get("checkout_policy").(string),
+		Description:         d.Get("description").(string),
+	}
+
 	if d.HasChange("resources") {
-		resources := make([]string, 0)
-		for _, v := range d.Get("resources").(*schema.Set).List() {
+		listResources := d.Get("resources").(*schema.Set).List()
+		resources := make([]string, len(listResources))
+		for i, v := range listResources {
 			vSplt := strings.Split(v.(string), ":")
 			if len(vSplt) != 2 {
 				return jsonData, fmt.Errorf("resource must have format device:service or application:APP")
 			}
-			resources = append(resources, v.(string))
+			resources[i] = v.(string)
 		}
 		jsonData.Resources = &resources
 	}
@@ -388,13 +391,13 @@ func fillDomainAccount(d *schema.ResourceData, jsonData jsonDomainAccount) {
 	if tfErr := d.Set("certificate_validity", jsonData.CertificateValidity); tfErr != nil {
 		panic(tfErr)
 	}
-	credentials := make([]map[string]interface{}, 0)
-	for _, v := range *jsonData.Credentials {
-		credentials = append(credentials, map[string]interface{}{
+	credentials := make([]map[string]interface{}, len(*jsonData.Credentials))
+	for i, v := range *jsonData.Credentials {
+		credentials[i] = map[string]interface{}{
 			"id":         v.ID,
 			"public_key": v.PublicKey,
 			"type":       v.Type,
-		})
+		}
 	}
 	if tfErr := d.Set("credentials", credentials); tfErr != nil {
 		panic(tfErr)

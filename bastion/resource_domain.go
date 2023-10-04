@@ -304,9 +304,13 @@ func deleteDomain(
 }
 
 func prepareDomainJSON(d *schema.ResourceData, newResource bool) jsonDomain {
-	var jsonData jsonDomain
-	jsonData.DomainName = d.Get("domain_name").(string)
-	jsonData.DomainRealName = d.Get("domain_real_name").(string)
+	jsonData := jsonDomain{
+		Description:    d.Get("description").(string),
+		DomainName:     d.Get("domain_name").(string),
+		DomainRealName: d.Get("domain_real_name").(string),
+		Passphrase:     d.Get("passphrase").(string),
+	}
+
 	if !strings.HasPrefix(d.Get("ca_private_key").(string), "generate:") {
 		jsonData.CAPrivateKey = d.Get("ca_private_key").(string)
 	} else if d.HasChange("ca_private_key") {
@@ -315,8 +319,6 @@ func prepareDomainJSON(d *schema.ResourceData, newResource bool) jsonDomain {
 			jsonData.CAPrivateKey = newKey.(string)
 		}
 	}
-	jsonData.Description = d.Get("description").(string)
-	jsonData.Passphrase = d.Get("passphrase").(string)
 
 	if d.Get("enable_password_change").(bool) {
 		if !newResource {

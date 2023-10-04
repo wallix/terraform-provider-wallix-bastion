@@ -290,9 +290,11 @@ func deleteApplicationLocalDomain(
 }
 
 func prepareApplicationLocalDomainJSON(d *schema.ResourceData, newResource bool) jsonApplicationLocalDomain {
-	var jsonData jsonApplicationLocalDomain
-	jsonData.DomainName = d.Get("domain_name").(string)
-	jsonData.Description = d.Get("description").(string)
+	jsonData := jsonApplicationLocalDomain{
+		Description: d.Get("description").(string),
+		DomainName:  d.Get("domain_name").(string),
+	}
+
 	if d.Get("enable_password_change").(bool) {
 		if !newResource {
 			adminAccount := d.Get("admin_account").(string)

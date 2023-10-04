@@ -480,10 +480,16 @@ func deleteProfile(
 func prepareProfileJSON( //nolint: gocognit,gocyclo
 	d *schema.ResourceData, newResource bool, features profileFeatures,
 ) jsonProfile {
-	var jsonData jsonProfile
+	jsonData := jsonProfile{
+		Description:  d.Get("description").(string),
+		IPLimitation: d.Get("ip_limitation").(string),
+		TargetAccess: d.Get("target_access").(bool),
+	}
+
 	if newResource {
 		jsonData.ProfileName = d.Get("profile_name").(string)
 	}
+
 	for _, v := range d.Get("gui_features").([]interface{}) {
 		if v == nil {
 			continue
@@ -529,6 +535,7 @@ func prepareProfileJSON( //nolint: gocognit,gocyclo
 			jsonData.GuiFeatures.CredentialRecovery = &v2
 		}
 	}
+
 	for _, v := range d.Get("gui_transmission").([]interface{}) {
 		if v == nil {
 			continue
@@ -571,36 +578,39 @@ func prepareProfileJSON( //nolint: gocognit,gocyclo
 			jsonData.GuiTransmission.CredentialRecovery = &v2
 		}
 	}
-	jsonData.Description = d.Get("description").(string)
+
 	if features.withDashboards {
-		dashboards := make([]string, len(d.Get("dashboards").(*schema.Set).List()))
-		for i, v := range d.Get("dashboards").(*schema.Set).List() {
+		listDashboards := d.Get("dashboards").(*schema.Set).List()
+		dashboards := make([]string, len(listDashboards))
+		for i, v := range listDashboards {
 			dashboards[i] = v.(string)
 		}
 		jsonData.Dashboards = &dashboards
 	}
-	jsonData.IPLimitation = d.Get("ip_limitation").(string)
-	jsonData.TargetAccess = d.Get("target_access").(bool)
+
 	for _, v := range d.Get("target_groups_limitation").([]interface{}) {
 		m := v.(map[string]interface{})
 		jsonData.TargetGroupsLimitation.Enabled = true
-		targetGroup := make([]string, 0)
-		for _, v2 := range m["target_groups"].(*schema.Set).List() {
-			targetGroup = append(targetGroup, v2.(string))
+		listTargetGroups := m["target_groups"].(*schema.Set).List()
+		targetGroups := make([]string, len(listTargetGroups))
+		for i, v2 := range listTargetGroups {
+			targetGroups[i] = v2.(string)
 		}
-		jsonData.TargetGroupsLimitation.TargetGroups = &targetGroup
+		jsonData.TargetGroupsLimitation.TargetGroups = &targetGroups
 		var defaultTargetGroup interface{}
 		if v2 := m["default_target_group"].(string); v2 != "" {
 			defaultTargetGroup = v2
 		}
 		jsonData.TargetGroupsLimitation.DefaultTargetGroup = &defaultTargetGroup
 	}
+
 	for _, v := range d.Get("user_groups_limitation").([]interface{}) {
 		m := v.(map[string]interface{})
 		jsonData.UserGroupsLimitation.Enabled = true
-		userGroups := make([]string, 0)
-		for _, v2 := range m["user_groups"].(*schema.Set).List() {
-			userGroups = append(userGroups, v2.(string))
+		listUserGroups := m["user_groups"].(*schema.Set).List()
+		userGroups := make([]string, len(listUserGroups))
+		for i, v2 := range listUserGroups {
+			userGroups[i] = v2.(string)
 		}
 		jsonData.UserGroupsLimitation.UserGroups = &userGroups
 	}
@@ -634,8 +644,7 @@ func readProfileOptions(
 }
 
 func fillProfile(d *schema.ResourceData, jsonData jsonProfile) {
-	guiFeatures := make([]map[string]interface{}, 0)
-	guiFeatures = append(guiFeatures, map[string]interface{}{
+	guiFeatures := []map[string]interface{}{{
 		"wab_audit":           jsonData.GuiFeatures.WabAudit,
 		"system_audit":        jsonData.GuiFeatures.SystemAudit,
 		"users":               jsonData.GuiFeatures.Users,
@@ -649,12 +658,11 @@ func fillProfile(d *schema.ResourceData, jsonData jsonProfile) {
 		"backup":              jsonData.GuiFeatures.Backup,
 		"approval":            jsonData.GuiFeatures.Approval,
 		"credential_recovery": jsonData.GuiFeatures.CredentialRecovery,
-	})
+	}}
 	if tfErr := d.Set("gui_features", guiFeatures); tfErr != nil {
 		panic(tfErr)
 	}
-	guiTransmission := make([]map[string]interface{}, 0)
-	guiTransmission = append(guiTransmission, map[string]interface{}{
+	guiTransmission := []map[string]interface{}{{
 		"system_audit":        jsonData.GuiTransmission.SystemAudit,
 		"users":               jsonData.GuiTransmission.Users,
 		"user_groups":         jsonData.GuiTransmission.UserGroups,
@@ -667,7 +675,7 @@ func fillProfile(d *schema.ResourceData, jsonData jsonProfile) {
 		"backup":              jsonData.GuiTransmission.Backup,
 		"approval":            jsonData.GuiTransmission.Approval,
 		"credential_recovery": jsonData.GuiTransmission.CredentialRecovery,
-	})
+	}}
 	if tfErr := d.Set("gui_transmission", guiTransmission); tfErr != nil {
 		panic(tfErr)
 	}
@@ -684,11 +692,10 @@ func fillProfile(d *schema.ResourceData, jsonData jsonProfile) {
 		panic(tfErr)
 	}
 	if jsonData.TargetGroupsLimitation.Enabled {
-		targetGroupsLimitation := make([]map[string]interface{}, 0)
-		targetGroupsLimitation = append(targetGroupsLimitation, map[string]interface{}{
+		targetGroupsLimitation := []map[string]interface{}{{
 			"default_target_group": *jsonData.TargetGroupsLimitation.DefaultTargetGroup,
 			"target_groups":        *jsonData.TargetGroupsLimitation.TargetGroups,
-		})
+		}}
 		if tfErr := d.Set("target_groups_limitation", targetGroupsLimitation); tfErr != nil {
 			panic(tfErr)
 		}
@@ -699,10 +706,9 @@ func fillProfile(d *schema.ResourceData, jsonData jsonProfile) {
 		}
 	}
 	if jsonData.UserGroupsLimitation.Enabled {
-		userGroupsLimitation := make([]map[string]interface{}, 0)
-		userGroupsLimitation = append(userGroupsLimitation, map[string]interface{}{
+		userGroupsLimitation := []map[string]interface{}{{
 			"user_groups": *jsonData.UserGroupsLimitation.UserGroups,
-		})
+		}}
 		if tfErr := d.Set("user_groups_limitation", userGroupsLimitation); tfErr != nil {
 			panic(tfErr)
 		}

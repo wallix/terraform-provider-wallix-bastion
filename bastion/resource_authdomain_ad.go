@@ -315,7 +315,6 @@ func prepareAuthDomainADJSON(d *schema.ResourceData) jsonAuthDomainAD {
 		AuthDomainName:       d.Get("auth_domain_name").(string),
 		DefaultEmailDomain:   d.Get("default_email_domain").(string),
 		DefaultLanguage:      d.Get("default_language").(string),
-		ExternalAuths:        make([]string, 0),
 		Description:          d.Get("description").(string),
 		CheckX509SanEmail:    d.Get("check_x509_san_email").(bool),
 		DisplayNameAttribute: d.Get("display_name_attribute").(string),
@@ -325,15 +324,20 @@ func prepareAuthDomainADJSON(d *schema.ResourceData) jsonAuthDomainAD {
 		LanguageAttribute:    d.Get("language_attribute").(string),
 		PubKeyAttribute:      d.Get("pubkey_attribute").(string),
 		SanDomainName:        d.Get("san_domain_name").(string),
-		SecondaryAuth:        make([]string, 0),
 		X509Condition:        d.Get("x509_condition").(string),
 		X509SearchFilter:     d.Get("x509_search_filter").(string),
 	}
-	for _, v := range d.Get("external_auths").([]interface{}) {
-		jsonData.ExternalAuths = append(jsonData.ExternalAuths, v.(string))
+
+	listExternalAuths := d.Get("external_auths").([]interface{})
+	jsonData.ExternalAuths = make([]string, len(listExternalAuths))
+	for i, v := range listExternalAuths {
+		jsonData.ExternalAuths[i] = v.(string)
 	}
-	for _, v := range d.Get("secondary_auth").([]interface{}) {
-		jsonData.SecondaryAuth = append(jsonData.SecondaryAuth, v.(string))
+
+	listSecondaryAuth := d.Get("secondary_auth").([]interface{})
+	jsonData.SecondaryAuth = make([]string, len(listSecondaryAuth))
+	for i, v := range listSecondaryAuth {
+		jsonData.SecondaryAuth[i] = v.(string)
 	}
 
 	return jsonData

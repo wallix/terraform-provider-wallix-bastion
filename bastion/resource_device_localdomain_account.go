@@ -336,20 +336,20 @@ func deleteDeviceLocalDomainAccount(
 }
 
 func prepareDeviceLocalDomainAccountJSON(d *schema.ResourceData) jsonDeviceLocalDomainAccount {
-	var jsonData jsonDeviceLocalDomainAccount
-	jsonData.AccountName = d.Get("account_name").(string)
-	jsonData.AccountLogin = d.Get("account_login").(string)
-	jsonData.CheckoutPolicy = d.Get("checkout_policy").(string)
-	jsonData.AutoChangePassword = d.Get("auto_change_password").(bool)
-	jsonData.AutoChangeSSHKey = d.Get("auto_change_ssh_key").(bool)
-	jsonData.CertificateValidity = d.Get("certificate_validity").(string)
-	jsonData.Description = d.Get("description").(string)
-	if len(d.Get("services").(*schema.Set).List()) > 0 {
-		for _, v := range d.Get("services").(*schema.Set).List() {
-			jsonData.Services = append(jsonData.Services, v.(string))
-		}
-	} else {
-		jsonData.Services = make([]string, 0)
+	jsonData := jsonDeviceLocalDomainAccount{
+		AccountName:         d.Get("account_name").(string),
+		AccountLogin:        d.Get("account_login").(string),
+		AutoChangePassword:  d.Get("auto_change_password").(bool),
+		AutoChangeSSHKey:    d.Get("auto_change_ssh_key").(bool),
+		CertificateValidity: d.Get("certificate_validity").(string),
+		CheckoutPolicy:      d.Get("checkout_policy").(string),
+		Description:         d.Get("description").(string),
+	}
+
+	listServices := d.Get("services").(*schema.Set).List()
+	jsonData.Services = make([]string, len(listServices))
+	for i, v := range listServices {
+		jsonData.Services[i] = v.(string)
 	}
 
 	return jsonData
@@ -401,13 +401,13 @@ func fillDeviceLocalDomainAccount(d *schema.ResourceData, jsonData jsonDeviceLoc
 	if tfErr := d.Set("certificate_validity", jsonData.CertificateValidity); tfErr != nil {
 		panic(tfErr)
 	}
-	credentials := make([]map[string]interface{}, 0)
-	for _, v := range *jsonData.Credentials {
-		credentials = append(credentials, map[string]interface{}{
+	credentials := make([]map[string]interface{}, len(*jsonData.Credentials))
+	for i, v := range *jsonData.Credentials {
+		credentials[i] = map[string]interface{}{
 			"id":         v.ID,
 			"public_key": v.PublicKey,
 			"type":       v.Type,
-		})
+		}
 	}
 	if tfErr := d.Set("credentials", credentials); tfErr != nil {
 		panic(tfErr)

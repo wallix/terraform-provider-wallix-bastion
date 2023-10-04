@@ -318,12 +318,17 @@ func prepareLdapDomainJSON(d *schema.ResourceData, newResource bool) jsonLdapDom
 	if newResource {
 		jsonData.DomainName = d.Get("domain_name").(string)
 	}
-	for _, v := range d.Get("external_ldaps").([]interface{}) {
-		jsonData.ExternalLdaps = append(jsonData.ExternalLdaps, v.(string))
+
+	listExternalLdaps := d.Get("external_ldaps").([]interface{})
+	jsonData.ExternalLdaps = make([]string, len(listExternalLdaps))
+	for i, v := range listExternalLdaps {
+		jsonData.ExternalLdaps[i] = v.(string)
 	}
-	jsonData.SecondaryAuth = make([]string, 0)
-	for _, v := range d.Get("secondary_auth").([]interface{}) {
-		jsonData.SecondaryAuth = append(jsonData.SecondaryAuth, v.(string))
+
+	listSecondaryAuth := d.Get("secondary_auth").([]interface{})
+	jsonData.SecondaryAuth = make([]string, len(listSecondaryAuth))
+	for i, v := range listSecondaryAuth {
+		jsonData.SecondaryAuth[i] = v.(string)
 	}
 
 	return jsonData

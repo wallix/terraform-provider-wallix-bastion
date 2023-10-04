@@ -1,6 +1,17 @@
 <!-- markdownlint-disable-file MD013 MD041 -->
 # changelog
 
+## 0.12.0 (October 04, 2023)
+
+ENHANCEMENTS:
+
+* release now with golang 1.21
+* resource/**wallix-bastion_user**: update the password when has changed in config to not empty value and `force_change_pwd` isn't true (instead of no-op on password when update resource)
+
+BUG FIXES:
+
+* reduced compute and memory usage to prepare the JSON payload when creating or updating resource
+
 ## 0.11.0 (September 26, 2023)
 
 FEATURES:
