@@ -45,8 +45,10 @@ The following arguments are supported:
   Format is a comma-separated list of IPv4 addresses, subnets or ranges.
 - **is_disabled** (Optional, Boolean)  
   Account is disabled.
-- **password** (Optional, String, Sensitive, **Only used when create resource**)  
-  The password.
+- **password** (Optional, String, Sensitive, **Value can't refresh**)  
+  The password.  
+  Updating the password when has changed in config to not empty value
+  and `force_change_pwd` isn't true.
 - **preferred_language** (Optional, String, **Only used when create resource**)  
   The preferred language.  
   Need to be `de`, `en`, `es`, `fr` or `ru`.

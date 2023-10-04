@@ -4,6 +4,7 @@
 ENHANCEMENTS:
 
 * release now with golang 1.21
+* resource/**wallix-bastion_user**: update the password when has changed in config to not empty value and `force_change_pwd` isn't true (instead of no-op on password when update resource)
 
 BUG FIXES:
 

@@ -302,6 +302,10 @@ func prepareUserJSON(d *schema.ResourceData, newResource bool) jsonUser {
 		if d.Get("force_change_pwd").(bool) {
 			jsonData.ForceChangePwd = &b
 		}
+	} else if d.HasChange("password") && !d.Get("force_change_pwd").(bool) {
+		if v := d.Get("password").(string); v != "" {
+			jsonData.Password = v
+		}
 	}
 
 	if d.HasChanges("groups") {
