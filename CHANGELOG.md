@@ -1,6 +1,8 @@
 <!-- markdownlint-disable-file MD013 MD041 -->
 # changelog
 
+## 0.12.0 (October 04, 2023)
+
 ENHANCEMENTS:
 
 * release now with golang 1.21
