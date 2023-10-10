@@ -7,3 +7,7 @@
 ### In addition to develop
 
 - [Go](https://golang.org/doc/install) `v1.20` or `v1.21`
+
+### Special Thanks
+
+We would like to Greatly thanks our Partner [Claranet](https://www.claranet.fr/) for their great work on this provider !
