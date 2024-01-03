@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/wallix/terraform-provider-wallix-bastion/bastion"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/wallix/terraform-provider-wallix-bastion/bastion"
 )
 
 func TestAccResourceExternalAuthSaml_basic(t *testing.T) {
