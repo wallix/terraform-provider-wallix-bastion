@@ -1,5 +1,10 @@
 # changelog
 
+## 0.12.2 (January 03, 2024)
+
+* Corrected and added documentation example
+* Updated dependancies
+
 ## 0.12.1 (October 11, 2023)
 
 * Corrected documentation example
