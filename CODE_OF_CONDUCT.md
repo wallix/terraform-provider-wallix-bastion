@@ -1,3 +1,4 @@
+<!-- markdownlint-disable-file MD013 MD041 MD034-->
 # Contributor Covenant Code of Conduct
 
 ## Our Pledge

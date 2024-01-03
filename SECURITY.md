@@ -1,3 +1,5 @@
+<!-- markdownlint-disable-file MD034 -->
+
 # Security Policy
 
 ## Supported Versions
@@ -9,4 +11,4 @@
 
 ## Reporting a Vulnerability
 
-Please report any security vulnerability to security-support@wallix.com
+Please report any security vulnerability to security-support@wallix.com.
