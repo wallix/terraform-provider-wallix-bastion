@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/claranet/terraform-provider-wallix-bastion/bastion"
+	"github.com/wallix/terraform-provider-wallix-bastion/bastion"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
