@@ -1,4 +1,4 @@
-module github.com/claranet/terraform-provider-wallix-bastion
+module github.com/wallix/terraform-provider-wallix-bastion
 
 go 1.20
 
