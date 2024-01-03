@@ -11,4 +11,5 @@
 ### Special Thanks
 
 We would like to Greatly thanks:
-* [Claranet](https://www.claranet.fr/) for their great work on this provider!
+
+- [Claranet](https://www.claranet.fr) for their great work on this provider!
