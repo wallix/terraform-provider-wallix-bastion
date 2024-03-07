@@ -13,3 +13,4 @@ terraform-provider-wallix-bastion
 
 # Editor config
 .vscode/
+terraform-provider-bastion
