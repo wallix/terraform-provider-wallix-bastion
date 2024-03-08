@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -21,6 +22,7 @@ type Client struct {
 	bastionIP         string
 	bastionToken      string
 	bastionUser       string
+	bastionPwd        string
 }
 
 var defaultHTTPClient *http.Client //nolint:gochecknoglobals
@@ -46,8 +48,14 @@ func (c *Client) newRequest(ctx context.Context, uri string, method string, json
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	req.Header.Add("Content-Type", "application/json; charset=utf-8")
 	req.Header.Add("User-Agent", "terraform-provider-wallix-bastion")
-	req.Header.Add("X-Auth-Key", c.bastionToken)
-	req.Header.Add("X-Auth-User", c.bastionUser)
+	if c.bastionToken != "" {
+		req.Header.Add("X-Auth-Key", c.bastionToken)
+		req.Header.Add("X-Auth-User", c.bastionUser)
+	} else {
+		rawcreds := c.bastionUser + ":" + c.bastionPwd
+		encodedcreds := base64.StdEncoding.EncodeToString([]byte(rawcreds))
+		req.Header.Add("Authorization", "Basic "+encodedcreds)
+	}
 	if err != nil {
 		return "", http.StatusInternalServerError, fmt.Errorf("preparing http request: %w", err)
 	}

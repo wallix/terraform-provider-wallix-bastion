@@ -37,13 +37,18 @@ func Provider() *schema.Provider {
 			},
 			"token": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("WALLIX_BASTION_TOKEN", nil),
 			},
 			"user": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("WALLIX_BASTION_USER", "admin"),
+				DefaultFunc: schema.EnvDefaultFunc("WALLIX_BASTION_USER", nil),
+			},
+			"password": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("WALLIX_BASTION_PASSWORD", nil),
 			},
 			"api_version": {
 				Type:        schema.TypeString,
@@ -106,6 +111,7 @@ func configureProvider(
 		bastionPort:       d.Get("port").(int),
 		bastionToken:      d.Get("token").(string),
 		bastionUser:       d.Get("user").(string),
+		bastionPwd:        d.Get("password").(string),
 	}
 
 	return config.Client()

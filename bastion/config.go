@@ -11,6 +11,7 @@ type Config struct {
 	bastionIP         string
 	bastionToken      string
 	bastionUser       string
+	bastionPwd        string
 }
 
 // Client: read information to connect on wallix bastion.
@@ -21,6 +22,7 @@ func (c *Config) Client() (*Client, diag.Diagnostics) {
 		bastionToken:      c.bastionToken,
 		bastionUser:       c.bastionUser,
 		bastionAPIVersion: c.bastionAPIVersion,
+		bastionPwd:        c.bastionPwd,
 	}
 
 	return cl, nil
