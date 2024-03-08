@@ -53,8 +53,8 @@ func (c *Client) newRequest(ctx context.Context, uri string, method string, json
 		req.Header.Add("X-Auth-User", c.bastionUser)
 	} else {
 		rawcreds := c.bastionUser + ":" + c.bastionPwd
-		encoded_creds := base64.StdEncoding.EncodeToString([]byte(rawcreds))
-		req.Header.Add("Authorization", "Basic "+encoded_creds)
+		encodedcreds := base64.StdEncoding.EncodeToString([]byte(rawcreds))
+		req.Header.Add("Authorization", "Basic "+encodedcreds)
 	}
 	if err != nil {
 		return "", http.StatusInternalServerError, fmt.Errorf("preparing http request: %w", err)

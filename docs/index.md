@@ -25,7 +25,6 @@ The following arguments are supported in the `provider` block:
   This is the password used to authenticate against Bastion API.
   It can also be sourced from the `WALLIX_BASTION_PASSWORD`environment variable.
 
-
 - **api_version** (Optional)  
   This is the version of api used to call api.  
   It can also be sourced from the `WALLIX_BASTION_API_VERSION` environment variable.  
