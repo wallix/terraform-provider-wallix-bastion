@@ -42,7 +42,7 @@ func Provider() *schema.Provider {
 			},
 			"user": {
 				Type:        schema.TypeString,
-				Optional:    false,
+				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("WALLIX_BASTION_USER", nil),
 			},
 			"password": {
