@@ -21,6 +21,7 @@ jobs:
         with:
           version: v1.54
           args: -c .golangci.yml -v
+          cache: false
 
   markdown-lint:
     name: markdown-lint
@@ -54,6 +55,7 @@ jobs:
           repository: katbyte/terrafmt
           ref: v0.5.2
           path: terrafmt
+          cache: false
       - name: Build terrafmt bin
         run: cd terrafmt && go install ./... && cd ${GITHUB_WORKSPACE}
       - name: Detect resource/data-source blocks without double quote on type and name (blocks not detected by terrafmt)
