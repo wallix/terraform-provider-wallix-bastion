@@ -22,7 +22,7 @@ jobs:
           go-version: '1.21'
       -
         name: Import GPG key
-        uses: crazy-max/ghaction-import-gpg@v6.1.0
+        uses: crazy-max/ghaction-import-gpg@v6.2.0
         id: import_gpg
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
