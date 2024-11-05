@@ -3,6 +3,7 @@ package bastion
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -161,7 +162,7 @@ func resourceAuthDomainMappingImport(
 	}
 	idSplit := strings.Split(d.Id(), "/")
 	if len(idSplit) != 2 {
-		return nil, fmt.Errorf("id must be <domain_id>/<user_group>")
+		return nil, errors.New("id must be <domain_id>/<user_group>")
 	}
 	id, ex, err := searchResourceAuthDomainMapping(ctx, idSplit[0], idSplit[1], m)
 	if err != nil {

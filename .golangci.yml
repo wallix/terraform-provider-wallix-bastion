@@ -1,34 +1,36 @@
 run:
   timeout: 5m
+
 linters:
   enable-all: true
   disable:
-    # maligned # deprecated 1.38.0 but govet-fieldalignment not usuable
-    - interfacer # deprecated 1.38.0
-    - scopelint # deprecated 1.39.0
-    - golint # deprecated 1.41.0
-    - exhaustivestruct # deprecated 1.46.0
-    # ifshort # deprecated 1.48.0 but no replacement
-    - nosnakecase # deprecated 1.48.1
-    - deadcode # deprecated 1.49.0
-    - structcheck # deprecated 1.49.0
-    - varcheck # deprecated 1.49.0
-    - funlen
-    - dupl
-    - wsl
-    - gomnd
-    - goerr113 
-    - nestif
-    - exhaustruct
-    - paralleltest
-    - gci
+    # deprecated
+    - execinquery # deprecated 1.58.0
+    - gomnd # deprecated 1.58.0
+    - exportloopref # deprecated 1.60.2
+    # unwanted
     - cyclop
-    - forcetypeassert
-    - tagliatelle
-    - gomoddirectives
-    - varnamelen
     - depguard
+    - dupl
+    - err113
+    - exhaustruct
+    - forcetypeassert
+    - funlen
+    - gomoddirectives
+    - mnd
+    - nestif
+    - paralleltest
+    - tagliatelle
+    - varnamelen
+    - wsl
+
 linters-settings:
+  gci:
+    custom-order: true
+    sections:
+      - standard
+      - localModule
+      - default
   govet:
     enable-all: true
     disable:
@@ -39,4 +41,3 @@ linters-settings:
   gocyclo:
     # minimal code complexity to report, 30 by default
     min-complexity: 30
-  

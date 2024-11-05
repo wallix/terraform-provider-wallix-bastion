@@ -3,6 +3,7 @@ package bastion
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -481,17 +482,17 @@ func prepareTargetGroupJSON(d *schema.ResourceData) (jsonTargetGroup, error) { /
 		case passwordRetrievalAccounts["domain_type"].(string) == domainTypeGlobal:
 			if passwordRetrievalAccounts["device"].(string) != "" ||
 				passwordRetrievalAccounts["application"].(string) != "" {
-				return jsonData, fmt.Errorf("bad password_retrieval_accounts: " +
+				return jsonData, errors.New("bad password_retrieval_accounts: " +
 					"device and application need to be null with domain_type=global")
 			}
 		case passwordRetrievalAccounts["domain_type"].(string) == domainTypeLocal:
 			if passwordRetrievalAccounts["device"].(string) == "" &&
 				passwordRetrievalAccounts["application"].(string) == "" {
-				return jsonData, fmt.Errorf("bad password_retrieval_accounts: " +
+				return jsonData, errors.New("bad password_retrieval_accounts: " +
 					"device or application need to be set with domain_type=local")
 			}
 		case passwordRetrievalAccounts["device"].(string) != "" && passwordRetrievalAccounts["application"].(string) != "":
-			return jsonData, fmt.Errorf("bad password_retrieval_accounts: " +
+			return jsonData, errors.New("bad password_retrieval_accounts: " +
 				"device and application mutually exclusive")
 		}
 		jsonData.PasswordRetrieval.Accounts[i] = jsonTargerGroupPasswordRetrievalAccount{
@@ -521,13 +522,13 @@ func prepareTargetGroupJSON(d *schema.ResourceData) (jsonTargetGroup, error) { /
 		switch {
 		case (sessionAccounts["device"].(string) == "" || sessionAccounts["service"].(string) == "") &&
 			sessionAccounts["application"].(string) == "":
-			return jsonData, fmt.Errorf("bad session_accounts: " +
+			return jsonData, errors.New("bad session_accounts: " +
 				"device/service or application need to be set")
 		case sessionAccounts["device"].(string) != "" && sessionAccounts["application"].(string) != "":
-			return jsonData, fmt.Errorf("bad session_accounts: " +
+			return jsonData, errors.New("bad session_accounts: " +
 				"device and application mutually exclusive")
 		case sessionAccounts["service"].(string) != "" && sessionAccounts["application"].(string) != "":
-			return jsonData, fmt.Errorf("bad session_accounts: " +
+			return jsonData, errors.New("bad session_accounts: " +
 				"service and application mutually exclusive")
 		case sessionAccounts["device"].(string) != "" && sessionAccounts["service"].(string) == "":
 			return jsonData, fmt.Errorf("bad session_accounts: "+
@@ -552,10 +553,10 @@ func prepareTargetGroupJSON(d *schema.ResourceData) (jsonTargetGroup, error) { /
 		sessionAccountMappings := v.(map[string]interface{})
 		switch {
 		case sessionAccountMappings["device"].(string) != "" && sessionAccountMappings["application"].(string) != "":
-			return jsonData, fmt.Errorf("bad session_account_mappings: " +
+			return jsonData, errors.New("bad session_account_mappings: " +
 				"device and application mutually exclusive")
 		case sessionAccountMappings["service"].(string) != "" && sessionAccountMappings["application"].(string) != "":
-			return jsonData, fmt.Errorf("bad session_account_mappings: " +
+			return jsonData, errors.New("bad session_account_mappings: " +
 				"service and application mutually exclusive")
 		case sessionAccountMappings["device"].(string) != "" && sessionAccountMappings["service"].(string) == "":
 			return jsonData, fmt.Errorf("bad session_account_mappings: "+
@@ -577,10 +578,10 @@ func prepareTargetGroupJSON(d *schema.ResourceData) (jsonTargetGroup, error) { /
 		sessionInteractiveLogins := v.(map[string]interface{})
 		switch {
 		case sessionInteractiveLogins["device"].(string) != "" && sessionInteractiveLogins["application"].(string) != "":
-			return jsonData, fmt.Errorf("bad session_interactive_logins: " +
+			return jsonData, errors.New("bad session_interactive_logins: " +
 				"device and application mutually exclusive")
 		case sessionInteractiveLogins["service"].(string) != "" && sessionInteractiveLogins["application"].(string) != "":
-			return jsonData, fmt.Errorf("bad session_interactive_logins: " +
+			return jsonData, errors.New("bad session_interactive_logins: " +
 				"service and application mutually exclusive")
 		case sessionInteractiveLogins["device"].(string) != "" && sessionInteractiveLogins["service"].(string) == "":
 			return jsonData, fmt.Errorf("bad session_interactive_logins: "+
@@ -604,17 +605,17 @@ func prepareTargetGroupJSON(d *schema.ResourceData) (jsonTargetGroup, error) { /
 		case sessionScenarioAccounts["domain_type"].(string) == domainTypeGlobal:
 			if sessionScenarioAccounts["device"].(string) != "" ||
 				sessionScenarioAccounts["application"].(string) != "" {
-				return jsonData, fmt.Errorf("bad session_scenario_accounts: " +
+				return jsonData, errors.New("bad session_scenario_accounts: " +
 					"device and application need to be null with domain_type=global")
 			}
 		case sessionScenarioAccounts["domain_type"].(string) == domainTypeLocal:
 			if sessionScenarioAccounts["device"].(string) == "" &&
 				sessionScenarioAccounts["application"].(string) == "" {
-				return jsonData, fmt.Errorf("bad session_scenario_accounts: " +
+				return jsonData, errors.New("bad session_scenario_accounts: " +
 					"device or application need to be set with domain_type=local")
 			}
 		case sessionScenarioAccounts["device"].(string) != "" && sessionScenarioAccounts["application"].(string) != "":
-			return jsonData, fmt.Errorf("bad session_scenario_accounts: " +
+			return jsonData, errors.New("bad session_scenario_accounts: " +
 				"device and application mutually exclusive")
 		}
 		jsonData.Session.ScenarioAccounts[i] = jsonTargetGroupSessionScenarioAccount{

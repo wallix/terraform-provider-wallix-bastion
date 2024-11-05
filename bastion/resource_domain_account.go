@@ -3,6 +3,7 @@ package bastion
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -213,7 +214,7 @@ func resourceDomainAccountImport(
 	}
 	idSplit := strings.Split(d.Id(), "/")
 	if len(idSplit) != 2 {
-		return nil, fmt.Errorf("id must be <domain_id>/<account_name>")
+		return nil, errors.New("id must be <domain_id>/<account_name>")
 	}
 	id, ex, err := searchResourceDomainAccount(ctx, idSplit[0], idSplit[1], m)
 	if err != nil {
@@ -337,7 +338,7 @@ func prepareDomainAccountJSON(d *schema.ResourceData) (jsonDomainAccount, error)
 		for i, v := range listResources {
 			vSplt := strings.Split(v.(string), ":")
 			if len(vSplt) != 2 {
-				return jsonData, fmt.Errorf("resource must have format device:service or application:APP")
+				return jsonData, errors.New("resource must have format device:service or application:APP")
 			}
 			resources[i] = v.(string)
 		}

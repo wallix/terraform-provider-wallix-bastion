@@ -3,6 +3,7 @@ package bastion
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -199,7 +200,7 @@ func resourceApplicationLocalDomainAccountImport(
 	}
 	idSplit := strings.Split(d.Id(), "/")
 	if len(idSplit) != 3 {
-		return nil, fmt.Errorf("id must be <application_id>/<domain_id>/<account_name>")
+		return nil, errors.New("id must be <application_id>/<domain_id>/<account_name>")
 	}
 	id, ex, err := searchResourceApplicationLocalDomainAccount(ctx, idSplit[0], idSplit[1], idSplit[2], m)
 	if err != nil {

@@ -3,6 +3,7 @@ package bastion
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -135,7 +136,7 @@ func resourceLdapMappingImport(
 	}
 	idSplit := strings.Split(d.Id(), "/")
 	if len(idSplit) != 3 {
-		return nil, fmt.Errorf("id must be <domain>/<user_group>/<ldap_group>")
+		return nil, errors.New("id must be <domain>/<user_group>/<ldap_group>")
 	}
 	ex, err := checkResourceLdapMappingExists(ctx, idSplit[0], idSplit[1], idSplit[2], m)
 	if err != nil {
@@ -204,7 +205,7 @@ func deleteLdapMapping(
 	c := m.(*Client)
 	idSplit := strings.Split(d.Id(), "/")
 	if len(idSplit) != 3 {
-		return fmt.Errorf("id must be <domain>/<user_group>/<ldap_group>")
+		return errors.New("id must be <domain>/<user_group>/<ldap_group>")
 	}
 	body, code, err := c.newRequest(ctx, "/ldapmappings/"+idSplit[0]+"/"+idSplit[1]+"/"+idSplit[2], http.MethodDelete, nil)
 	if err != nil {

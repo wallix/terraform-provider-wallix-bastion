@@ -3,6 +3,7 @@ package bastion
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -200,7 +201,7 @@ func resourceDeviceLocalDomainAccountCredentialImport(
 	}
 	idSplit := strings.Split(d.Id(), "/")
 	if len(idSplit) != 4 {
-		return nil, fmt.Errorf("id must be <device_id>/<domain_id>/<account_id>/<type>")
+		return nil, errors.New("id must be <device_id>/<domain_id>/<account_id>/<type>")
 	}
 	id, ex, err := searchResourceDeviceLocalDomainAccountCredential(ctx, idSplit[0], idSplit[1], idSplit[2], idSplit[3], m)
 	if err != nil {
