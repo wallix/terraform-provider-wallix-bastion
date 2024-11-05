@@ -194,7 +194,7 @@ func resourceTimeframeImport(
 		return nil, err
 	}
 	if !ex {
-		return nil, fmt.Errorf("don't find timeframe_name with id %s (id must be <timeframe_name>", d.Id())
+		return nil, fmt.Errorf("don't find timeframe_name with id %s (id must be <timeframe_name>)", d.Id())
 	}
 	cfg, err := readTimeframeOptions(ctx, d.Id(), m)
 	if err != nil {

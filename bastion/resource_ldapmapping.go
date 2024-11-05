@@ -143,7 +143,7 @@ func resourceLdapMappingImport(
 		return nil, err
 	}
 	if !ex {
-		return nil, fmt.Errorf("don't find ldapmapping with id %s (id must be <domain>/<user_group>/<ldap_group>", d.Id())
+		return nil, fmt.Errorf("don't find ldapmapping with id %s (id must be <domain>/<user_group>/<ldap_group>)", d.Id())
 	}
 	cfg := jsonLdapMapping{
 		Domain:    idSplit[0],

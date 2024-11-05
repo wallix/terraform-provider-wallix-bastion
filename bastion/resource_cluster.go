@@ -163,7 +163,7 @@ func resourceClusterImport(
 		return nil, err
 	}
 	if !ex {
-		return nil, fmt.Errorf("don't find cluster_name with id %s (id must be <cluster_name>", d.Id())
+		return nil, fmt.Errorf("don't find cluster_name with id %s (id must be <cluster_name>)", d.Id())
 	}
 	cfg, err := readClusterOptions(ctx, id, m)
 	if err != nil {

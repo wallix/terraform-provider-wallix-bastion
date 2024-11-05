@@ -197,7 +197,7 @@ func resourceApplicationLocalDomainImport(
 		return nil, err
 	}
 	if !ex {
-		return nil, fmt.Errorf("don't find domain_name with id %s (id must be <application_id>/<domain_name>", d.Id())
+		return nil, fmt.Errorf("don't find domain_name with id %s (id must be <application_id>/<domain_name>)", d.Id())
 	}
 	cfg, err := readApplicationLocalDomainOptions(ctx, idSplit[0], id, m)
 	if err != nil {

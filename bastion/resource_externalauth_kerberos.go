@@ -181,7 +181,7 @@ func resourceExternalAuthKerberosImport(
 		return nil, err
 	}
 	if !ex {
-		return nil, fmt.Errorf("don't find authentication_name with id %s (id must be <authentication_name>", d.Id())
+		return nil, fmt.Errorf("don't find authentication_name with id %s (id must be <authentication_name>)", d.Id())
 	}
 	cfg, err := readExternalAuthKerberosOptions(ctx, id, m)
 	if err != nil {

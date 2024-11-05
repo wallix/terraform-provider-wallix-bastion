@@ -202,7 +202,7 @@ func resourceUserImport(
 		return nil, err
 	}
 	if !ex {
-		return nil, fmt.Errorf("don't find user_name with id %s (id must be <user_name>", d.Id())
+		return nil, fmt.Errorf("don't find user_name with id %s (id must be <user_name>)", d.Id())
 	}
 	cfg, err := readUserOptions(ctx, d.Id(), m)
 	if err != nil {

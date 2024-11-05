@@ -169,7 +169,7 @@ func resourceAuthDomainMappingImport(
 		return nil, err
 	}
 	if !ex {
-		return nil, fmt.Errorf("don't find auth domain mapping with id %s (id must be <domain_id>/<user_group>", d.Id())
+		return nil, fmt.Errorf("don't find auth domain mapping with id %s (id must be <domain_id>/<user_group>)", d.Id())
 	}
 	cfg, err := readAuthDomainMappingOptions(ctx, idSplit[0], id, m)
 	if err != nil {

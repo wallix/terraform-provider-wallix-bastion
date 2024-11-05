@@ -232,7 +232,7 @@ func resourceApplicationImport(
 		return nil, err
 	}
 	if !ex {
-		return nil, fmt.Errorf("don't find application_name with id %s (id must be <application_name>", d.Id())
+		return nil, fmt.Errorf("don't find application_name with id %s (id must be <application_name>)", d.Id())
 	}
 	cfg, err := readApplicationOptions(ctx, id, m)
 	if err != nil {

@@ -388,7 +388,7 @@ func resourceProfileImport(
 		return nil, err
 	}
 	if !ex {
-		return nil, fmt.Errorf("don't find profile_name with id %s (id must be <profile_name>", d.Id())
+		return nil, fmt.Errorf("don't find profile_name with id %s (id must be <profile_name>)", d.Id())
 	}
 	cfg, err := readProfileOptions(ctx, id, m)
 	if err != nil {

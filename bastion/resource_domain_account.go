@@ -222,7 +222,7 @@ func resourceDomainAccountImport(
 	}
 	if !ex {
 		return nil, fmt.Errorf("don't find account_name with id %s "+
-			"(id must be <domain_id>/<account_name>", d.Id())
+			"(id must be <domain_id>/<account_name>)", d.Id())
 	}
 	cfg, err := readDomainAccountOptions(ctx, idSplit[0], id, m)
 	if err != nil {

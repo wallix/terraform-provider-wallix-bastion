@@ -173,7 +173,7 @@ func resourceCheckoutPolicyImport(
 		return nil, err
 	}
 	if !ex {
-		return nil, fmt.Errorf("don't find checkout_policy_name with id %s (id must be <checkout_policy_name>", d.Id())
+		return nil, fmt.Errorf("don't find checkout_policy_name with id %s (id must be <checkout_policy_name>)", d.Id())
 	}
 	cfg, err := readCheckoutPolicyOptions(ctx, id, m)
 	if err != nil {

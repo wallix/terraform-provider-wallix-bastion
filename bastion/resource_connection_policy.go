@@ -165,7 +165,7 @@ func resourceConnectionPolicyImport(
 		return nil, err
 	}
 	if !ex {
-		return nil, fmt.Errorf("don't find connection_policy_name with id %s (id must be <connection_policy_name>", d.Id())
+		return nil, fmt.Errorf("don't find connection_policy_name with id %s (id must be <connection_policy_name>)", d.Id())
 	}
 	cfg, err := readConnectionPolicyOptions(ctx, id, m)
 	if err != nil {

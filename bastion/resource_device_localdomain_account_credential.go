@@ -209,7 +209,7 @@ func resourceDeviceLocalDomainAccountCredentialImport(
 	}
 	if !ex {
 		return nil, fmt.Errorf("don't find credential with id %s "+
-			"(id must be <device_id>/<domain_id>/<account_id>/<type>", d.Id())
+			"(id must be <device_id>/<domain_id>/<account_id>/<type>)", d.Id())
 	}
 	cfg, err := readDeviceLocalDomainAccountCredentialOptions(ctx, idSplit[0], idSplit[1], idSplit[2], id, m)
 	if err != nil {

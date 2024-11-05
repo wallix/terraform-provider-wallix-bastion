@@ -194,7 +194,7 @@ func resourceDomainAccountCredentialImport(
 	}
 	if !ex {
 		return nil, fmt.Errorf("don't find credential with id %s "+
-			"(id must be <domain_id>/<account_id>/<type>", d.Id())
+			"(id must be <domain_id>/<account_id>/<type>)", d.Id())
 	}
 	cfg, err := readDomainAccountCredentialOptions(ctx, idSplit[0], idSplit[1], id, m)
 	if err != nil {

@@ -217,7 +217,7 @@ func resourceAuthDomainAzureADImport(
 		return nil, err
 	}
 	if !ex {
-		return nil, fmt.Errorf("don't find domain_name with id %s (id must be <domain_name>", d.Id())
+		return nil, fmt.Errorf("don't find domain_name with id %s (id must be <domain_name>)", d.Id())
 	}
 	cfg, err := readAuthDomainAzureADOptions(ctx, d.Id(), m)
 	if err != nil {

@@ -208,7 +208,7 @@ func resourceApplicationLocalDomainAccountImport(
 	}
 	if !ex {
 		return nil, fmt.Errorf("don't find account_name with id %s "+
-			"(id must be <application_id>/<domain_id>/<account_name>", d.Id())
+			"(id must be <application_id>/<domain_id>/<account_name>)", d.Id())
 	}
 	cfg, err := readApplicationLocalDomainAccountOptions(ctx, idSplit[0], idSplit[1], id, m)
 	if err != nil {
