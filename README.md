@@ -6,7 +6,7 @@
 
 ### In addition to develop
 
-- [Go](https://golang.org/doc/install) `v1.20` or `v1.21`
+- [Go](https://golang.org/doc/install) `v1.22` or `v1.23`
 
 ### Special Thanks
 
