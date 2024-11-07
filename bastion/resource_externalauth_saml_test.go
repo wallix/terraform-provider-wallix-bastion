@@ -67,8 +67,6 @@ func TestAccResourceExternalAuthSaml_basic38(t *testing.T) {
 
 func TestAccResourceExternalAuthSaml_basic(t *testing.T) {
 	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); v != "" &&
-		v != bastion.VersionWallixAPI33 &&
-		v != bastion.VersionWallixAPI36 &&
 		v != bastion.VersionWallixAPI38 {
 		resource.Test(t, resource.TestCase{
 			PreCheck:  func() { testAccPreCheck(t) },

@@ -1,4 +1,11 @@
 <!-- markdownlint-disable-file MD013 MD041 -->
+BREAKING CHANGES:
+
+* remove compatibility with API version 3.3 and 3.6
+* remove resource `wallix-bastion_ldapdomain`
+* remove resource `wallix-bastion_ldapmapping`
+* default provider api_version argument is now `v3.8`
+
 FEATURES:
 
 * add compatibility with API version 3.12

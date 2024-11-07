@@ -145,7 +145,7 @@ func resourceExternalAuthSaml() *schema.Resource {
 }
 
 func resourceExternalAuthSamlVersionCheck(version string) error {
-	if bchk.InSlice(version, versions38Plus()) {
+	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
 	}
 

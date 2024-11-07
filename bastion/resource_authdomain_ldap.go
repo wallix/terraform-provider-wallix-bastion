@@ -120,7 +120,7 @@ func resourceAuthDomainLdap() *schema.Resource {
 }
 
 func resourceAuthDomainLdapVersionCheck(version string) error {
-	if bchk.InSlice(version, versions38Plus()) {
+	if bchk.InSlice(version, defaultVersionsValid()) {
 		return nil
 	}
 

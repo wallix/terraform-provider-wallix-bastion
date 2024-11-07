@@ -1,42 +1,35 @@
 package bastion_test
 
 import (
-	"os"
 	"testing"
-
-	"github.com/wallix/terraform-provider-wallix-bastion/bastion"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccResourceAuthDomainLdap_basic(t *testing.T) {
-	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); v != "" &&
-		v != bastion.VersionWallixAPI33 &&
-		v != bastion.VersionWallixAPI36 {
-		resource.Test(t, resource.TestCase{
-			PreCheck:  func() { testAccPreCheck(t) },
-			Providers: testAccProviders,
-			Steps: []resource.TestStep{
-				{
-					Config: testAccResourceAuthDomainLdapCreate(),
-					Check: resource.ComposeTestCheckFunc(
-						resource.TestCheckResourceAttrSet(
-							"wallix-bastion_authdomain_ldap.testacc_AuthDomainLDAP",
-							"id"),
-					),
-				},
-				{
-					Config: testAccResourceAuthDomainLdapUpdate(),
-				},
-				{
-					ResourceName:  "wallix-bastion_authdomain_ldap.testacc_AuthDomainLDAP",
-					ImportState:   true,
-					ImportStateId: "testacc.AuthDomainLDAP-u",
-				},
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceAuthDomainLdapCreate(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(
+						"wallix-bastion_authdomain_ldap.testacc_AuthDomainLDAP",
+						"id"),
+				),
 			},
-			PreventPostDestroyRefresh: true,
-		})
-	}
+			{
+				Config: testAccResourceAuthDomainLdapUpdate(),
+			},
+			{
+				ResourceName:  "wallix-bastion_authdomain_ldap.testacc_AuthDomainLDAP",
+				ImportState:   true,
+				ImportStateId: "testacc.AuthDomainLDAP-u",
+			},
+		},
+		PreventPostDestroyRefresh: true,
+	})
 }
 
 func testAccResourceAuthDomainLdapCreate() string {
