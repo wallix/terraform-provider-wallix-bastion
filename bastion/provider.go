@@ -8,9 +8,10 @@ import (
 )
 
 const (
-	VersionWallixAPI33 = "v3.3"
-	VersionWallixAPI36 = "v3.6"
-	VersionWallixAPI38 = "v3.8"
+	VersionWallixAPI33  = "v3.3"
+	VersionWallixAPI36  = "v3.6"
+	VersionWallixAPI38  = "v3.8"
+	VersionWallixAPI312 = "v3.12"
 )
 
 func defaultVersionsValid() []string {
@@ -18,6 +19,14 @@ func defaultVersionsValid() []string {
 		VersionWallixAPI33,
 		VersionWallixAPI36,
 		VersionWallixAPI38,
+		VersionWallixAPI312,
+	}
+}
+
+func versions38Plus() []string {
+	return []string{
+		VersionWallixAPI38,
+		VersionWallixAPI312,
 	}
 }
 

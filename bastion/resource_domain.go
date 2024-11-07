@@ -22,7 +22,7 @@ type jsonDomain struct {
 	CAPrivateKey                   string                  `json:"ca_private_key,omitempty"`
 	CAPublicKey                    string                  `json:"ca_public_key,omitempty"`
 	Description                    string                  `json:"description"`
-	Passphrase                     string                  `json:"passphrase"`
+	Passphrase                     string                  `json:"passphrase,omitempty"`
 	PasswordChangePolicy           string                  `json:"password_change_policy,omitempty"`
 	PasswordChangePlugin           string                  `json:"password_change_plugin,omitempty"`
 	PasswordChangePluginParameters *map[string]interface{} `json:"password_change_plugin_parameters,omitempty"`

@@ -13,22 +13,31 @@ import (
 )
 
 type jsonExternalAuthSaml struct {
-	Timeout                    float64 `json:"timeout"`
-	ID                         string  `json:"id,omitempty"`
-	AuthenticationName         string  `json:"authentication_name"`
-	Certificate                string  `json:"certificate"`
-	Description                string  `json:"description"`
-	IDPEntityID                string  `json:"idp_entity_id,omitempty"`
-	IDPMetadata                string  `json:"idp_metadata"`
-	Passphrase                 string  `json:"passphrase,omitempty"`
-	PrivateKey                 string  `json:"private_key"`
-	SamlRequestMethod          string  `json:"saml_request_method,omitempty"`
-	SamlRequestURL             string  `json:"saml_request_url,omitempty"`
-	SPAssertionConsumerService string  `json:"sp_assertion_consumer_service,omitempty"`
-	SPEntityID                 string  `json:"sp_entity_id,omitempty"`
-	SPMetadata                 string  `json:"sp_metadata,omitempty"`
-	SPSingleLogoutService      string  `json:"sp_single_logout_service,omitempty"`
-	Type                       string  `json:"type"`
+	Timeout                    float64                                 `json:"timeout"`
+	ID                         string                                  `json:"id,omitempty"`
+	AuthenticationName         string                                  `json:"authentication_name"`
+	Certificate                string                                  `json:"certificate"`
+	Description                string                                  `json:"description"`
+	IDPEntityID                string                                  `json:"idp_entity_id,omitempty"`
+	IDPMetadata                string                                  `json:"idp_metadata"`
+	Passphrase                 string                                  `json:"passphrase,omitempty"`
+	PrivateKey                 string                                  `json:"private_key"`
+	SamlRequestMethod          string                                  `json:"saml_request_method,omitempty"`
+	SamlRequestURL             string                                  `json:"saml_request_url,omitempty"`
+	SPAssertionConsumerService string                                  `json:"sp_assertion_consumer_service,omitempty"`
+	SPEntityID                 string                                  `json:"sp_entity_id,omitempty"`
+	SPMetadata                 string                                  `json:"sp_metadata,omitempty"`
+	SPSingleLogoutService      string                                  `json:"sp_single_logout_service,omitempty"`
+	Type                       string                                  `json:"type"`
+	ClaimCustomization         *jsonExternalAuthSamlClaimCustomization `json:"claim_customization,omitempty"`
+}
+
+type jsonExternalAuthSamlClaimCustomization struct {
+	Username    string `json:"username"`
+	Displayname string `json:"displayname"`
+	Email       string `json:"email"`
+	Language    string `json:"language"`
+	Group       string `json:"group"`
 }
 
 func resourceExternalAuthSaml() *schema.Resource {
@@ -58,6 +67,35 @@ func resourceExternalAuthSaml() *schema.Resource {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
+			},
+			"claim_customization": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"username": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"displayname": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"email": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"language": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"group": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -107,7 +145,7 @@ func resourceExternalAuthSaml() *schema.Resource {
 }
 
 func resourceExternalAuthSamlVersionCheck(version string) error {
-	if bchk.InSlice(version, []string{VersionWallixAPI38}) {
+	if bchk.InSlice(version, versions38Plus()) {
 		return nil
 	}
 
@@ -296,7 +334,7 @@ func deleteExternalAuthSaml(
 }
 
 func prepareExternalAuthSamlJSON(d *schema.ResourceData) jsonExternalAuthSaml {
-	return jsonExternalAuthSaml{
+	jsonData := jsonExternalAuthSaml{
 		AuthenticationName: d.Get("authentication_name").(string),
 		Type:               "SAML",
 		IDPMetadata:        d.Get("idp_metadata").(string),
@@ -306,6 +344,21 @@ func prepareExternalAuthSamlJSON(d *schema.ResourceData) jsonExternalAuthSaml {
 		Passphrase:         d.Get("passphrase").(string),
 		PrivateKey:         d.Get("private_key").(string),
 	}
+	for _, v := range d.Get("claim_customization").([]interface{}) {
+		if v == nil {
+			continue
+		}
+		m := v.(map[string]interface{})
+		jsonData.ClaimCustomization = &jsonExternalAuthSamlClaimCustomization{
+			Username:    m["username"].(string),
+			Displayname: m["displayname"].(string),
+			Email:       m["email"].(string),
+			Language:    m["language"].(string),
+			Group:       m["group"].(string),
+		}
+	}
+
+	return jsonData
 }
 
 func readExternalAuthSamlOptions(

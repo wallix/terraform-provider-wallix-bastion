@@ -31,7 +31,7 @@ func TestAccResourceAuthDomainAD_basic(t *testing.T) {
 				{
 					ResourceName:  "wallix-bastion_authdomain_ad.testacc_AuthDomainAD",
 					ImportState:   true,
-					ImportStateId: "testacc_AuthDomainAD_u",
+					ImportStateId: "testacc.AuthDomainAD-u",
 				},
 			},
 			PreventPostDestroyRefresh: true,
@@ -42,7 +42,7 @@ func TestAccResourceAuthDomainAD_basic(t *testing.T) {
 func testAccResourceAuthDomainADCreate() string {
 	return `
 resource "wallix-bastion_authdomain_ad" "testacc_AuthDomainAD" {
-  domain_name          = "testacc_AuthDomainAD"
+  domain_name          = "testacc.AuthDomainAD"
   auth_domain_name     = "test2.com"
   external_auths       = [wallix-bastion_externalauth_ldap.testacc_AuthDomainAD.authentication_name]
   default_language     = "fr"
@@ -65,7 +65,7 @@ resource "wallix-bastion_externalauth_ldap" "testacc_AuthDomainAD" {
 func testAccResourceAuthDomainADUpdate() string {
 	return `
 resource "wallix-bastion_authdomain_ad" "testacc_AuthDomainAD" {
-  domain_name            = "testacc_AuthDomainAD_u"
+  domain_name            = "testacc.AuthDomainAD-u"
   auth_domain_name       = "test2u.com"
   external_auths         = [wallix-bastion_externalauth_ldap.testacc_AuthDomainAD.authentication_name]
   default_language       = "en"

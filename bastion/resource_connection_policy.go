@@ -10,13 +10,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	bchk "github.com/jeremmfr/go-utils/basiccheck"
+	"golang.org/x/mod/semver"
 )
 
 type jsonConnectionPolicy struct {
 	ID                    string                 `json:"id,omitempty"`
 	ConnectionPolicyName  string                 `json:"connection_policy_name"`
 	Description           string                 `json:"description"`
-	Protocol              string                 `json:"protocol"`
+	Protocol              string                 `json:"protocol,omitempty"`
+	Type                  string                 `json:"type,omitempty"`
 	Options               map[string]interface{} `json:"options"`
 	AuthenticationMethods []string               `json:"authentication_methods"`
 }
@@ -40,6 +42,16 @@ func resourceConnectionPolicy() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.StringInSlice(
 					[]string{"SSH", "RAWTCPIP", "RDP", "RLOGIN", "TELNET", "VNC"},
+					false,
+				),
+			},
+			"type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice(
+					[]string{"SSH", "RAWTCPIP", "RDP", "RDP-JUMPHOST", "RLOGIN", "TELNET", "VNC"},
 					false,
 				),
 			},
@@ -83,7 +95,7 @@ func resourceConnectionPolicyCreate(
 	if ex {
 		return diag.FromErr(fmt.Errorf("connection_policy_name %s already exists", d.Get("connection_policy_name").(string)))
 	}
-	err = addConnectionPolicy(ctx, d, m)
+	err = addConnectionPolicy(ctx, d, m, c.bastionAPIVersion)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -128,7 +140,7 @@ func resourceConnectionPolicyUpdate(
 	if err := resourceConnectionPolicyVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := updateConnectionPolicy(ctx, d, m); err != nil {
+	if err := updateConnectionPolicy(ctx, d, m, c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	d.Partial(false)
@@ -206,10 +218,10 @@ func searchResourceConnectionPolicy(
 }
 
 func addConnectionPolicy(
-	ctx context.Context, d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{}, apiVersion string,
 ) error {
 	c := m.(*Client)
-	jsonData, err := prepareConnectionPolicyJSON(d)
+	jsonData, err := prepareConnectionPolicyJSON(d, true, apiVersion)
 	if err != nil {
 		return err
 	}
@@ -225,10 +237,10 @@ func addConnectionPolicy(
 }
 
 func updateConnectionPolicy(
-	ctx context.Context, d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{}, apiVersion string,
 ) error {
 	c := m.(*Client)
-	jsonData, err := prepareConnectionPolicyJSON(d)
+	jsonData, err := prepareConnectionPolicyJSON(d, false, apiVersion)
 	if err != nil {
 		return err
 	}
@@ -258,11 +270,24 @@ func deleteConnectionPolicy(
 	return nil
 }
 
-func prepareConnectionPolicyJSON(d *schema.ResourceData) (jsonConnectionPolicy, error) {
+func prepareConnectionPolicyJSON(
+	d *schema.ResourceData, newResource bool, apiVersion string,
+) (
+	jsonConnectionPolicy, error,
+) {
 	jsonData := jsonConnectionPolicy{
 		ConnectionPolicyName: d.Get("connection_policy_name").(string),
 		Description:          d.Get("description").(string),
-		Protocol:             d.Get("protocol").(string),
+	}
+	if newResource {
+		jsonData.Protocol = d.Get("protocol").(string)
+		if semver.Compare(apiVersion, VersionWallixAPI312) >= 0 {
+			if v := d.Get("type").(string); v != "" {
+				jsonData.Type = v
+			} else {
+				jsonData.Type = jsonData.Protocol
+			}
+		}
 	}
 
 	listAuthenticationMethods := d.Get("authentication_methods").(*schema.Set).List()
@@ -330,6 +355,15 @@ func fillConnectionPolicy(d *schema.ResourceData, jsonData jsonConnectionPolicy)
 	}
 	if tfErr := d.Set("protocol", jsonData.Protocol); tfErr != nil {
 		panic(tfErr)
+	}
+	if jsonData.Type != "" {
+		if tfErr := d.Set("type", jsonData.Type); tfErr != nil {
+			panic(tfErr)
+		}
+	} else {
+		if tfErr := d.Set("type", jsonData.Protocol); tfErr != nil {
+			panic(tfErr)
+		}
 	}
 	if tfErr := d.Set("authentication_methods", jsonData.AuthenticationMethods); tfErr != nil {
 		panic(tfErr)

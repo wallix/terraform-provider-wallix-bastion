@@ -120,7 +120,7 @@ func resourceAuthDomainAD() *schema.Resource {
 }
 
 func resourceAuthDomainADVersionCheck(version string) error {
-	if bchk.InSlice(version, []string{VersionWallixAPI38}) {
+	if bchk.InSlice(version, versions38Plus()) {
 		return nil
 	}
 

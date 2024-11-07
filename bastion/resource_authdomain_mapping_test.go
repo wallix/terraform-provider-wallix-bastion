@@ -57,7 +57,7 @@ func TestAccResourceAuthDomainMapping_basic(t *testing.T) {
 func testAccResourceAuthDomainMappingCreate() string {
 	return `
 resource "wallix-bastion_authdomain_ldap" "testacc_AuthDomainMapping" {
-  domain_name          = "testacc_AuthDomainMapping"
+  domain_name          = "testacc.AuthDomainMapping"
   auth_domain_name     = "test.com"
   external_auths       = [wallix-bastion_externalauth_ldap.testacc_AuthDomainMapping.authentication_name]
   default_language     = "fr"
@@ -90,7 +90,7 @@ resource "wallix-bastion_authdomain_mapping" "testacc_AuthDomainMapping" {
 func testAccResourceAuthDomainMappingUpdate() string {
 	return `
 resource "wallix-bastion_authdomain_ldap" "testacc_AuthDomainMapping" {
-  domain_name          = "testacc_AuthDomainMapping"
+  domain_name          = "testacc.AuthDomainMapping"
   auth_domain_name     = "test.com"
   external_auths       = [wallix-bastion_externalauth_ldap.testacc_AuthDomainMapping.authentication_name]
   default_language     = "fr"

@@ -9,10 +9,10 @@ import (
 	"net/url"
 	"strings"
 
-	govers "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	bchk "github.com/jeremmfr/go-utils/basiccheck"
+	"golang.org/x/mod/semver"
 )
 
 type jsonLdapMapping struct {
@@ -53,14 +53,11 @@ func resourceLdapMappingVersionCheck(version string) error {
 	if bchk.InSlice(version, []string{VersionWallixAPI33, VersionWallixAPI36}) {
 		return nil
 	}
-	if vers, err := govers.NewVersion(version); err == nil {
-		versionResourceRename, _ := govers.NewVersion(VersionWallixAPI38)
-		if vers.GreaterThanOrEqual(versionResourceRename) {
-			return fmt.Errorf(
-				"resource wallix-bastion_ldapmapping not available with api version %s\n"+
-					" use wallix-bastion_authdomain_mapping instead",
-				version)
-		}
+	if semver.Compare(version, VersionWallixAPI38) >= 0 {
+		return fmt.Errorf(
+			"resource wallix-bastion_ldapmapping not available with api version %s\n"+
+				" use wallix-bastion_authdomain_mapping instead",
+			version)
 	}
 
 	return fmt.Errorf("resource wallix-bastion_ldapmapping not available with api version %s", version)
