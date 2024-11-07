@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"slices"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	bchk "github.com/jeremmfr/go-utils/basiccheck"
 )
 
 type jsonTimeframe struct {
@@ -92,7 +92,7 @@ func resourceTimeframe() *schema.Resource {
 }
 
 func resourceTimeframeVersionCheck(version string) error {
-	if bchk.InSlice(version, defaultVersionsValid()) {
+	if slices.Contains(defaultVersionsValid(), version) {
 		return nil
 	}
 
@@ -301,7 +301,7 @@ func prepareTimeframeJSON(d *schema.ResourceData) (jsonTimeframe, error) {
 		listWeekDays := period["week_days"].(*schema.Set).List()
 		jsonPeriod.WeekDays = make([]string, len(listWeekDays))
 		for ii, d := range listWeekDays {
-			if !bchk.InSlice(d.(string), []string{
+			if !slices.Contains([]string{
 				"monday",
 				"tuesday",
 				"wednesday",
@@ -309,7 +309,7 @@ func prepareTimeframeJSON(d *schema.ResourceData) (jsonTimeframe, error) {
 				"friday",
 				"saturday",
 				"sunday",
-			}) {
+			}, d.(string)) {
 				return jsonData, fmt.Errorf("`%s` isn't a valid week_day", d.(string))
 			}
 			jsonPeriod.WeekDays[ii] = d.(string)

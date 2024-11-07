@@ -3,10 +3,10 @@ package bastion
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	bchk "github.com/jeremmfr/go-utils/basiccheck"
 )
 
 func dataSourceDomain() *schema.Resource {
@@ -54,7 +54,7 @@ func dataSourceDomain() *schema.Resource {
 }
 
 func dataSourceDomainVersionCheck(version string) error {
-	if bchk.InSlice(version, defaultVersionsValid()) {
+	if slices.Contains(defaultVersionsValid(), version) {
 		return nil
 	}
 

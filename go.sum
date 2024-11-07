@@ -86,8 +86,6 @@ github.com/hashicorp/yamux v0.1.1 h1:yrQxtgseBDrq9Y652vSRDvsKCJKOUD+GzTS4Y0Y8pvE
 github.com/hashicorp/yamux v0.1.1/go.mod h1:CtWFDAQgb7dxtzFs4tWbplKIe2jSi3+5vKbgIO0SLnQ=
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 h1:BQSFePA1RWJOlocH6Fxy8MmwDt+yVQYULKfN0RoTN8A=
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99/go.mod h1:1lJo3i6rXxKeerYnT8Nvf0QmHCRC1n8sfWVwXF2Frvo=
-github.com/jeremmfr/go-utils v0.10.0 h1:gEgZzLkzzHqRS0slHv3NCEeVemBYWWF7C4M3W1EatlY=
-github.com/jeremmfr/go-utils v0.10.0/go.mod h1:Lkn95iSzCRviFhn2/0XmqzWGmxI+kkoqKAZqip7VUmM=
 github.com/jeremmfr/terraform-plugin-sdk/v2 v2.35.1-0.20241104080352-55b65701df12 h1:9kr38pXYu83ByiliYIMgTabUrroIPlIYqkH/X+9YvgI=
 github.com/jeremmfr/terraform-plugin-sdk/v2 v2.35.1-0.20241104080352-55b65701df12/go.mod h1:B0Al8NyYVr8Mp/KLwssKXG1RqnTk7FySqSn4fRuLNgw=
 github.com/jhump/protoreflect v1.15.1 h1:HUMERORf3I3ZdX05WaQ6MIpd/NJ434hTp5YiKgfCL6c=

@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	bchk "github.com/jeremmfr/go-utils/basiccheck"
 	"golang.org/x/mod/semver"
 )
 
@@ -74,7 +74,7 @@ func resourceConnectionPolicy() *schema.Resource {
 }
 
 func resourceConnectionPolicyVersionCheck(version string) error {
-	if bchk.InSlice(version, defaultVersionsValid()) {
+	if slices.Contains(defaultVersionsValid(), version) {
 		return nil
 	}
 
@@ -293,7 +293,7 @@ func prepareConnectionPolicyJSON(
 	listAuthenticationMethods := d.Get("authentication_methods").(*schema.Set).List()
 	jsonData.AuthenticationMethods = make([]string, len(listAuthenticationMethods))
 	for i, v := range listAuthenticationMethods {
-		if !bchk.InSlice(v.(string), validAuthenticationMethods()) {
+		if !slices.Contains(validAuthenticationMethods(), v.(string)) {
 			return jsonData, fmt.Errorf("authentication_methods must be in %v", validAuthenticationMethods())
 		}
 		jsonData.AuthenticationMethods[i] = v.(string)

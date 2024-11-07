@@ -5,12 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	balt "github.com/jeremmfr/go-utils/basicalter"
-	bchk "github.com/jeremmfr/go-utils/basiccheck"
 )
 
 type jsonConfigOptions struct {
@@ -57,7 +57,7 @@ func dataSourceConfigoption() *schema.Resource {
 }
 
 func dataSourceConfigoptionVersionCheck(version string) error {
-	if bchk.InSlice(version, defaultVersionsValid()) {
+	if slices.Contains(defaultVersionsValid(), version) {
 		return nil
 	}
 
@@ -94,7 +94,7 @@ func readConfigoption(
 		for _, v := range optionsList {
 			params += v.(string) + ","
 		}
-		_ = balt.CutPrefixInString(&params, ",")
+		params = strings.TrimSuffix(params, ",")
 	}
 	body, code, err := c.newRequest(ctx, "/configoptions/"+d.Get("config_id").(string)+params, http.MethodGet, nil)
 	if err != nil {
