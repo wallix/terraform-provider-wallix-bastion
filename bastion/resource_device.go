@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	bchk "github.com/jeremmfr/go-utils/basiccheck"
 )
 
 type jsonDevice struct {
@@ -134,7 +134,7 @@ func resourceDevice() *schema.Resource {
 }
 
 func resourceDeviceVersionCheck(version string) error {
-	if bchk.InSlice(version, defaultVersionsValid()) {
+	if slices.Contains(defaultVersionsValid(), version) {
 		return nil
 	}
 
@@ -236,7 +236,7 @@ func resourceDeviceImport(
 		return nil, err
 	}
 	if !ex {
-		return nil, fmt.Errorf("don't find device_name with id %s (id must be <device_name>", d.Id())
+		return nil, fmt.Errorf("don't find device_name with id %s (id must be <device_name>)", d.Id())
 	}
 	cfg, err := readDeviceOptions(ctx, id, m)
 	if err != nil {

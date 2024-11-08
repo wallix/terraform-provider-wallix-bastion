@@ -3,13 +3,14 @@ package bastion
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	bchk "github.com/jeremmfr/go-utils/basiccheck"
 )
 
 type jsonApplicationLocalDomainAccount struct {
@@ -78,7 +79,7 @@ func resourceApplicationLocalDomainAccount() *schema.Resource {
 }
 
 func resourceApplicationLocalDomainAccountVersionCheck(version string) error {
-	if bchk.InSlice(version, defaultVersionsValid()) {
+	if slices.Contains(defaultVersionsValid(), version) {
 		return nil
 	}
 
@@ -199,7 +200,7 @@ func resourceApplicationLocalDomainAccountImport(
 	}
 	idSplit := strings.Split(d.Id(), "/")
 	if len(idSplit) != 3 {
-		return nil, fmt.Errorf("id must be <application_id>/<domain_id>/<account_name>")
+		return nil, errors.New("id must be <application_id>/<domain_id>/<account_name>")
 	}
 	id, ex, err := searchResourceApplicationLocalDomainAccount(ctx, idSplit[0], idSplit[1], idSplit[2], m)
 	if err != nil {
@@ -207,7 +208,7 @@ func resourceApplicationLocalDomainAccountImport(
 	}
 	if !ex {
 		return nil, fmt.Errorf("don't find account_name with id %s "+
-			"(id must be <application_id>/<domain_id>/<account_name>", d.Id())
+			"(id must be <application_id>/<domain_id>/<account_name>)", d.Id())
 	}
 	cfg, err := readApplicationLocalDomainAccountOptions(ctx, idSplit[0], idSplit[1], id, m)
 	if err != nil {

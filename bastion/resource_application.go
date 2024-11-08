@@ -3,23 +3,30 @@ package bastion
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	bchk "github.com/jeremmfr/go-utils/basiccheck"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"golang.org/x/mod/semver"
 )
 
 type jsonApplication struct {
 	ID               string                        `json:"id,omitempty"`
 	ApplicationName  string                        `json:"application_name"`
 	ConnectionPolicy string                        `json:"connection_policy"`
+	Category         string                        `json:"category,omitempty"`
+	ApplicationURL   *string                       `json:"application_url,omitempty"`
+	Browser          *string                       `json:"browser,omitempty"`
+	BrowserVersion   *string                       `json:"browser_version,omitempty"`
 	Description      string                        `json:"description"`
 	Parameters       string                        `json:"parameters"`
-	Target           string                        `json:"target"`
-	GlobalDomains    []string                      `json:"global_domains"`
-	Paths            []jsonApplicationPath         `json:"paths"`
+	Target           *string                       `json:"target,omitempty"`
+	GlobalDomains    *[]string                     `json:"global_domains,omitempty"`
+	Paths            *[]jsonApplicationPath        `json:"paths,omitempty"`
 	LocalDomains     *[]jsonApplicationLocalDomain `json:"local_domains,omitempty"`
 }
 
@@ -47,9 +54,41 @@ func resourceApplication() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"category": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      "standard",
+				ValidateFunc: validation.StringInSlice([]string{"standard", "jumphost"}, false),
+			},
+			"application_url": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"browser": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"browser_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"global_domains": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"parameters": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"paths": {
 				Type:     schema.TypeSet,
-				Required: true,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"target": {
@@ -69,19 +108,6 @@ func resourceApplication() *schema.Resource {
 				},
 			},
 			"target": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"global_domains": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"parameters": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -130,7 +156,7 @@ func resourceApplication() *schema.Resource {
 }
 
 func resourceApplicationVersionCheck(version string) error {
-	if bchk.InSlice(version, defaultVersionsValid()) {
+	if slices.Contains(defaultVersionsValid(), version) {
 		return nil
 	}
 
@@ -151,7 +177,7 @@ func resourceApplicationCreate(
 	if ex {
 		return diag.FromErr(fmt.Errorf("application_name %s already exists", d.Get("application_name").(string)))
 	}
-	err = addApplication(ctx, d, m)
+	err = addApplication(ctx, d, m, c.bastionAPIVersion)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -195,7 +221,7 @@ func resourceApplicationUpdate(
 	if err := resourceApplicationVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := updateApplication(ctx, d, m); err != nil {
+	if err := updateApplication(ctx, d, m, c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	d.Partial(false)
@@ -232,7 +258,7 @@ func resourceApplicationImport(
 		return nil, err
 	}
 	if !ex {
-		return nil, fmt.Errorf("don't find application_name with id %s (id must be <application_name>", d.Id())
+		return nil, fmt.Errorf("don't find application_name with id %s (id must be <application_name>)", d.Id())
 	}
 	cfg, err := readApplicationOptions(ctx, id, m)
 	if err != nil {
@@ -272,10 +298,13 @@ func searchResourceApplication(
 }
 
 func addApplication(
-	ctx context.Context, d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{}, apiVersion string,
 ) error {
 	c := m.(*Client)
-	jsonData := prepareApplicationJSON(d)
+	jsonData, err := prepareApplicationJSON(d, true, apiVersion)
+	if err != nil {
+		return err
+	}
 	body, code, err := c.newRequest(ctx, "/applications/", http.MethodPost, jsonData)
 	if err != nil {
 		return err
@@ -288,10 +317,13 @@ func addApplication(
 }
 
 func updateApplication(
-	ctx context.Context, d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{}, apiVersion string,
 ) error {
 	c := m.(*Client)
-	jsonData := prepareApplicationJSON(d)
+	jsonData, err := prepareApplicationJSON(d, false, apiVersion)
+	if err != nil {
+		return err
+	}
 	body, code, err := c.newRequest(ctx, "/applications/"+d.Id()+"?force=true", http.MethodPut, jsonData)
 	if err != nil {
 		return err
@@ -318,33 +350,92 @@ func deleteApplication(
 	return nil
 }
 
-func prepareApplicationJSON(d *schema.ResourceData) jsonApplication {
+func prepareApplicationJSON(
+	d *schema.ResourceData, newResource bool, apiVersion string,
+) (
+	jsonApplication, error,
+) {
 	jsonData := jsonApplication{
 		ApplicationName:  d.Get("application_name").(string),
 		ConnectionPolicy: d.Get("connection_policy").(string),
 		Description:      d.Get("description").(string),
 		Parameters:       d.Get("parameters").(string),
-		Target:           d.Get("target").(string),
 	}
-
-	listPaths := d.Get("paths").(*schema.Set).List()
-	jsonData.Paths = make([]jsonApplicationPath, len(listPaths))
-	for i, v := range listPaths {
-		paths := v.(map[string]interface{})
-		jsonData.Paths[i] = jsonApplicationPath{
-			Target:     paths["target"].(string),
-			Program:    paths["program"].(string),
-			WorkingDir: paths["working_dir"].(string),
+	if newResource &&
+		semver.Compare(apiVersion, VersionWallixAPI312) >= 0 {
+		jsonData.Category = d.Get("category").(string)
+	}
+	switch jsonData.Category {
+	case "", "standard":
+		if d.Get("application_url").(string) != "" {
+			return jsonData, errors.New("application_url cannot be configured when category = standard")
 		}
+		if d.Get("browser").(string) != "" {
+			return jsonData, errors.New("browser cannot be configured when category = standard")
+		}
+		if d.Get("browser_version").(string) != "" {
+			return jsonData, errors.New("browser_version cannot be configured when category = standard")
+		}
+
+		target := d.Get("target").(string)
+		if target == "" {
+			return jsonData, errors.New("target must be specified when category = standard")
+		}
+		jsonData.Target = &target
+
+		listPaths := d.Get("paths").(*schema.Set).List()
+		if len(listPaths) == 0 {
+			return jsonData, errors.New("paths must be specified when category = standard")
+		}
+		jsonDataPaths := make([]jsonApplicationPath, len(listPaths))
+		for i, v := range listPaths {
+			paths := v.(map[string]interface{})
+			jsonDataPaths[i] = jsonApplicationPath{
+				Target:     paths["target"].(string),
+				Program:    paths["program"].(string),
+				WorkingDir: paths["working_dir"].(string),
+			}
+		}
+		jsonData.Paths = &jsonDataPaths
+
+		listGlobalDomains := d.Get("global_domains").(*schema.Set).List()
+		jsonDataGlobalDomains := make([]string, len(listGlobalDomains))
+		for i, v := range listGlobalDomains {
+			jsonDataGlobalDomains[i] = v.(string)
+		}
+		jsonData.GlobalDomains = &jsonDataGlobalDomains
+
+	case "jumphost":
+		if semver.Compare(apiVersion, VersionWallixAPI312) < 0 {
+			return jsonData, fmt.Errorf("category = jumphost not available with api version %s", apiVersion)
+		}
+		if d.Get("target").(string) != "" {
+			return jsonData, errors.New("target cannot be configured when category = jumphost")
+		}
+		if len(d.Get("paths").(*schema.Set).List()) > 0 {
+			return jsonData, errors.New("paths cannot be configured when category = jumphost")
+		}
+		if len(d.Get("global_domains").(*schema.Set).List()) > 0 {
+			return jsonData, errors.New("paths cannot be configured when category = jumphost")
+		}
+
+		applicationURL := d.Get("application_url").(string)
+		if applicationURL == "" {
+			return jsonData, errors.New("application_url must be specified when category = jumphost")
+		}
+		jsonData.ApplicationURL = &applicationURL
+
+		browser := d.Get("browser").(string)
+		if browser == "" {
+			return jsonData, errors.New("browser must be specified when category = jumphost")
+		}
+		jsonData.Browser = &browser
+
+		browserVersion := d.Get("browser_version").(string)
+		jsonData.BrowserVersion = &browserVersion
 	}
 
-	listGlobalDomains := d.Get("global_domains").(*schema.Set).List()
-	jsonData.GlobalDomains = make([]string, len(listGlobalDomains))
-	for i, v := range listGlobalDomains {
-		jsonData.GlobalDomains[i] = v.(string)
-	}
-
-	return jsonData
+	return jsonData, nil
 }
 
 func readApplicationOptions(
@@ -372,26 +463,46 @@ func readApplicationOptions(
 	return result, nil
 }
 
-func fillApplication(d *schema.ResourceData, jsonData jsonApplication) {
+func fillApplication(d *schema.ResourceData, jsonData jsonApplication) { //nolint:gocognit
 	if tfErr := d.Set("application_name", jsonData.ApplicationName); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("connection_policy", jsonData.ConnectionPolicy); tfErr != nil {
 		panic(tfErr)
 	}
-	paths := make([]map[string]interface{}, len(jsonData.Paths))
-	for i, v := range jsonData.Paths {
-		paths[i] = map[string]interface{}{
-			"target":      v.Target,
-			"program":     v.Program,
-			"working_dir": v.WorkingDir,
+	category := jsonData.Category
+	if category == "" {
+		category = "standard"
+	}
+	if tfErr := d.Set("category", category); tfErr != nil {
+		panic(tfErr)
+	}
+	if jsonData.ApplicationURL != nil {
+		if tfErr := d.Set("application_url", *jsonData.ApplicationURL); tfErr != nil {
+			panic(tfErr)
+		}
+	} else {
+		if tfErr := d.Set("application_url", ""); tfErr != nil {
+			panic(tfErr)
 		}
 	}
-	if tfErr := d.Set("paths", paths); tfErr != nil {
-		panic(tfErr)
+	if jsonData.Browser != nil {
+		if tfErr := d.Set("browser", *jsonData.Browser); tfErr != nil {
+			panic(tfErr)
+		}
+	} else {
+		if tfErr := d.Set("browser", ""); tfErr != nil {
+			panic(tfErr)
+		}
 	}
-	if tfErr := d.Set("target", jsonData.Target); tfErr != nil {
-		panic(tfErr)
+	if jsonData.BrowserVersion != nil {
+		if tfErr := d.Set("browser_version", *jsonData.BrowserVersion); tfErr != nil {
+			panic(tfErr)
+		}
+	} else {
+		if tfErr := d.Set("browser_version", ""); tfErr != nil {
+			panic(tfErr)
+		}
 	}
 	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
 		panic(tfErr)
@@ -401,6 +512,29 @@ func fillApplication(d *schema.ResourceData, jsonData jsonApplication) {
 	}
 	if tfErr := d.Set("parameters", jsonData.Parameters); tfErr != nil {
 		panic(tfErr)
+	}
+	paths := make([]map[string]interface{}, 0)
+	if jsonData.Paths != nil {
+		paths = make([]map[string]interface{}, len(*jsonData.Paths))
+		for i, v := range *jsonData.Paths {
+			paths[i] = map[string]interface{}{
+				"target":      v.Target,
+				"program":     v.Program,
+				"working_dir": v.WorkingDir,
+			}
+		}
+	}
+	if tfErr := d.Set("paths", paths); tfErr != nil {
+		panic(tfErr)
+	}
+	if jsonData.Target != nil {
+		if tfErr := d.Set("target", *jsonData.Target); tfErr != nil {
+			panic(tfErr)
+		}
+	} else {
+		if tfErr := d.Set("target", ""); tfErr != nil {
+			panic(tfErr)
+		}
 	}
 	localDomains := make([]map[string]interface{}, len(*jsonData.LocalDomains))
 	for i, v := range *jsonData.LocalDomains {

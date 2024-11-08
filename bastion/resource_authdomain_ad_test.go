@@ -1,47 +1,41 @@
 package bastion_test
 
 import (
-	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/wallix/terraform-provider-wallix-bastion/bastion"
 )
 
 func TestAccResourceAuthDomainAD_basic(t *testing.T) {
-	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); v != "" &&
-		v != bastion.VersionWallixAPI33 &&
-		v != bastion.VersionWallixAPI36 {
-		resource.Test(t, resource.TestCase{
-			PreCheck:  func() { testAccPreCheck(t) },
-			Providers: testAccProviders,
-			Steps: []resource.TestStep{
-				{
-					Config: testAccResourceAuthDomainADCreate(),
-					Check: resource.ComposeTestCheckFunc(
-						resource.TestCheckResourceAttrSet(
-							"wallix-bastion_authdomain_ad.testacc_AuthDomainAD",
-							"id"),
-					),
-				},
-				{
-					Config: testAccResourceAuthDomainADUpdate(),
-				},
-				{
-					ResourceName:  "wallix-bastion_authdomain_ad.testacc_AuthDomainAD",
-					ImportState:   true,
-					ImportStateId: "testacc_AuthDomainAD_u",
-				},
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceAuthDomainADCreate(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(
+						"wallix-bastion_authdomain_ad.testacc_AuthDomainAD",
+						"id"),
+				),
 			},
-			PreventPostDestroyRefresh: true,
-		})
-	}
+			{
+				Config: testAccResourceAuthDomainADUpdate(),
+			},
+			{
+				ResourceName:  "wallix-bastion_authdomain_ad.testacc_AuthDomainAD",
+				ImportState:   true,
+				ImportStateId: "testacc.AuthDomainAD-u",
+			},
+		},
+		PreventPostDestroyRefresh: true,
+	})
 }
 
 func testAccResourceAuthDomainADCreate() string {
 	return `
 resource "wallix-bastion_authdomain_ad" "testacc_AuthDomainAD" {
-  domain_name          = "testacc_AuthDomainAD"
+  domain_name          = "testacc.AuthDomainAD"
   auth_domain_name     = "test2.com"
   external_auths       = [wallix-bastion_externalauth_ldap.testacc_AuthDomainAD.authentication_name]
   default_language     = "fr"
@@ -64,7 +58,7 @@ resource "wallix-bastion_externalauth_ldap" "testacc_AuthDomainAD" {
 func testAccResourceAuthDomainADUpdate() string {
 	return `
 resource "wallix-bastion_authdomain_ad" "testacc_AuthDomainAD" {
-  domain_name            = "testacc_AuthDomainAD_u"
+  domain_name            = "testacc.AuthDomainAD-u"
   auth_domain_name       = "test2u.com"
   external_auths         = [wallix-bastion_externalauth_ldap.testacc_AuthDomainAD.authentication_name]
   default_language       = "en"

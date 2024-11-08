@@ -24,6 +24,10 @@ The following arguments are supported:
 - **protocol** (Required, String)  
   The connection policy protocol.
   Need to be `SSH`, `RAWTCPIP`, `RDP`, `RLOGIN`, `TELNET` or `VNC`.
+- **type** (Optional, String)  
+  The connection policy type.  
+  Default to value of `protocol`.  
+  Need to be `SSH`, `RAWTCPIP`, `RDP`, `RDP-JUMPHOST`, `RLOGIN`, `TELNET` or `VNC`.
 - **description** (Optional, String)  
   The connection policy description.
 - **authentication_methods** (Optional, Set of String)  

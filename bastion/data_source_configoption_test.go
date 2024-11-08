@@ -2,7 +2,7 @@ package bastion_test
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -30,7 +30,7 @@ func TestAccDataSourceConfigoption_basic(t *testing.T) {
 								return err
 							}
 							if jsonData["name"].(string) != "one_time_password_ttl" {
-								return fmt.Errorf("can't find name=one_time_password_ttl in json")
+								return errors.New("can't find name=one_time_password_ttl in json")
 							}
 
 							return nil

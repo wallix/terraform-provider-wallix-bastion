@@ -2,61 +2,55 @@ package bastion_test
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/wallix/terraform-provider-wallix-bastion/bastion"
 )
 
 func TestAccResourceAuthDomainMapping_basic(t *testing.T) {
 	resourceName := "wallix-bastion_authdomain_mapping.testacc_AuthDomainMapping"
-	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); v != "" &&
-		v != bastion.VersionWallixAPI33 &&
-		v != bastion.VersionWallixAPI36 {
-		resource.Test(t, resource.TestCase{
-			PreCheck:  func() { testAccPreCheck(t) },
-			Providers: testAccProviders,
-			Steps: []resource.TestStep{
-				{
-					Config: testAccResourceAuthDomainMappingCreate(),
-					Check: resource.ComposeTestCheckFunc(
-						resource.TestCheckResourceAttrSet(resourceName,
-							"id"),
-						resource.TestCheckResourceAttrSet(resourceName,
-							"domain"),
-					),
-				},
-				{
-					Config: testAccResourceAuthDomainMappingUpdate(),
-				},
-				{
-					ResourceName: resourceName,
-					ImportState:  true,
-					ImportStateIdFunc: func(s *terraform.State) (string, error) {
-						rs, ok := s.RootModule().Resources[resourceName]
-						if !ok {
-							return "", fmt.Errorf("Resource %s not found", resourceName)
-						}
-						devID := rs.Primary.Attributes["domain_id"]
-						if devID == "" {
-							return "", fmt.Errorf("Attribute %s not found:\n%+v", "domain_id", rs.Primary.Attributes)
-						}
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceAuthDomainMappingCreate(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceName,
+						"id"),
+					resource.TestCheckResourceAttrSet(resourceName,
+						"domain"),
+				),
+			},
+			{
+				Config: testAccResourceAuthDomainMappingUpdate(),
+			},
+			{
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					rs, ok := s.RootModule().Resources[resourceName]
+					if !ok {
+						return "", fmt.Errorf("Resource %s not found", resourceName)
+					}
+					devID := rs.Primary.Attributes["domain_id"]
+					if devID == "" {
+						return "", fmt.Errorf("Attribute %s not found:\n%+v", "domain_id", rs.Primary.Attributes)
+					}
 
-						return devID + "/testacc_AuthDomainMapping2", nil
-					},
+					return devID + "/testacc_AuthDomainMapping2", nil
 				},
 			},
-			PreventPostDestroyRefresh: true,
-		})
-	}
+		},
+		PreventPostDestroyRefresh: true,
+	})
 }
 
 func testAccResourceAuthDomainMappingCreate() string {
 	return `
 resource "wallix-bastion_authdomain_ldap" "testacc_AuthDomainMapping" {
-  domain_name          = "testacc_AuthDomainMapping"
+  domain_name          = "testacc.AuthDomainMapping"
   auth_domain_name     = "test.com"
   external_auths       = [wallix-bastion_externalauth_ldap.testacc_AuthDomainMapping.authentication_name]
   default_language     = "fr"
@@ -89,7 +83,7 @@ resource "wallix-bastion_authdomain_mapping" "testacc_AuthDomainMapping" {
 func testAccResourceAuthDomainMappingUpdate() string {
 	return `
 resource "wallix-bastion_authdomain_ldap" "testacc_AuthDomainMapping" {
-  domain_name          = "testacc_AuthDomainMapping"
+  domain_name          = "testacc.AuthDomainMapping"
   auth_domain_name     = "test.com"
   external_auths       = [wallix-bastion_externalauth_ldap.testacc_AuthDomainMapping.authentication_name]
   default_language     = "fr"

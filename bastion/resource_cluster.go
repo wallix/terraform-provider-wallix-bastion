@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	bchk "github.com/jeremmfr/go-utils/basiccheck"
 )
 
 type jsonCluster struct {
@@ -61,7 +61,7 @@ func resourceCluster() *schema.Resource {
 }
 
 func resourceClusterVersionCheck(version string) error {
-	if bchk.InSlice(version, defaultVersionsValid()) {
+	if slices.Contains(defaultVersionsValid(), version) {
 		return nil
 	}
 
@@ -163,7 +163,7 @@ func resourceClusterImport(
 		return nil, err
 	}
 	if !ex {
-		return nil, fmt.Errorf("don't find cluster_name with id %s (id must be <cluster_name>", d.Id())
+		return nil, fmt.Errorf("don't find cluster_name with id %s (id must be <cluster_name>)", d.Id())
 	}
 	cfg, err := readClusterOptions(ctx, id, m)
 	if err != nil {

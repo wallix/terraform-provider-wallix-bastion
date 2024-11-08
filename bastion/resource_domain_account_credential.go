@@ -3,14 +3,15 @@ package bastion
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	bchk "github.com/jeremmfr/go-utils/basiccheck"
 )
 
 func resourceDomainAccountCredential() *schema.Resource {
@@ -65,7 +66,7 @@ func resourceDomainAccountCredential() *schema.Resource {
 }
 
 func resourceDomainAccountCredentialVersionCheck(version string) error {
-	if bchk.InSlice(version, defaultVersionsValid()) {
+	if slices.Contains(defaultVersionsValid(), version) {
 		return nil
 	}
 
@@ -185,7 +186,7 @@ func resourceDomainAccountCredentialImport(
 	}
 	idSplit := strings.Split(d.Id(), "/")
 	if len(idSplit) != 3 {
-		return nil, fmt.Errorf("id must be <domain_id>/<account_id>/<type>")
+		return nil, errors.New("id must be <domain_id>/<account_id>/<type>")
 	}
 	id, ex, err := searchResourceDomainAccountCredential(ctx, idSplit[0], idSplit[1], idSplit[2], m)
 	if err != nil {
@@ -193,7 +194,7 @@ func resourceDomainAccountCredentialImport(
 	}
 	if !ex {
 		return nil, fmt.Errorf("don't find credential with id %s "+
-			"(id must be <domain_id>/<account_id>/<type>", d.Id())
+			"(id must be <domain_id>/<account_id>/<type>)", d.Id())
 	}
 	cfg, err := readDomainAccountCredentialOptions(ctx, idSplit[0], idSplit[1], id, m)
 	if err != nil {

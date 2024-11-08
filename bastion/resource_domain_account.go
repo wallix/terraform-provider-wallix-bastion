@@ -3,13 +3,14 @@ package bastion
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	bchk "github.com/jeremmfr/go-utils/basiccheck"
 )
 
 type jsonDomainAccount struct {
@@ -105,7 +106,7 @@ func resourceDomainAccount() *schema.Resource {
 }
 
 func resourceDomainAccountVersionCheck(version string) error {
-	if bchk.InSlice(version, defaultVersionsValid()) {
+	if slices.Contains(defaultVersionsValid(), version) {
 		return nil
 	}
 
@@ -213,7 +214,7 @@ func resourceDomainAccountImport(
 	}
 	idSplit := strings.Split(d.Id(), "/")
 	if len(idSplit) != 2 {
-		return nil, fmt.Errorf("id must be <domain_id>/<account_name>")
+		return nil, errors.New("id must be <domain_id>/<account_name>")
 	}
 	id, ex, err := searchResourceDomainAccount(ctx, idSplit[0], idSplit[1], m)
 	if err != nil {
@@ -221,7 +222,7 @@ func resourceDomainAccountImport(
 	}
 	if !ex {
 		return nil, fmt.Errorf("don't find account_name with id %s "+
-			"(id must be <domain_id>/<account_name>", d.Id())
+			"(id must be <domain_id>/<account_name>)", d.Id())
 	}
 	cfg, err := readDomainAccountOptions(ctx, idSplit[0], id, m)
 	if err != nil {
@@ -337,7 +338,7 @@ func prepareDomainAccountJSON(d *schema.ResourceData) (jsonDomainAccount, error)
 		for i, v := range listResources {
 			vSplt := strings.Split(v.(string), ":")
 			if len(vSplt) != 2 {
-				return jsonData, fmt.Errorf("resource must have format device:service or application:APP")
+				return jsonData, errors.New("resource must have format device:service or application:APP")
 			}
 			resources[i] = v.(string)
 		}

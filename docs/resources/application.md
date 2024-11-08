@@ -26,22 +26,38 @@ The following arguments are supported:
   The application name.
 - **connection_policy**  (Required, String)  
   The connection policy name.
-- **paths** (Required, Set of Block)  
-  Need to be specified multiple times for each target in cluster or once if target is a device's session.
+- **category** (Optional, String)  
+  The application category.  
+  Default to `standard`.  
+  Need to be `standard` or `jumphost`.
+- **application_url** (Optional, String)  
+  The application url.  
+  `category` need to be `jumphost`.
+- **browser** (Optional, String)  
+  The application browser.  
+  `category` need to be `jumphost`.
+- **browser_version** (Optional, String)  
+  The browser version.  
+  `category` need to be `jumphost`.
+- **description** - (Optional, String)  
+  The application description.
+- **global_domains** (Optional, List of String)  
+  The global domains names.  
+  `category` need to be `standard`.
+- **parameters** (Optional, String)  
+  The application parameters.
+- **paths** (Optional, Set of Block)  
+  Need to be specified when `category` = `standard`,
+  multiple times for each target in cluster or once if target is a device's session.
   - **target** (Required, String)  
     The application target.
   - **program** (Required, String)  
     The application path.
   - **working_dir** (Required, String)  
     The application working directory.
-- **target** (Required, String)  
-  The application target/cluster name.
-- **description** - (Optional, String)  
-  The application description.
-- **global_domains** (Optional, List of String)  
-  The global domains names.
-- **parameters** (Optional, String)  
-  The application parameters.
+- **target** (Optional, String)  
+  The application target/cluster name.  
+  Need to be specified when `category` = `standard`
 
 ## Attribute Reference
 
