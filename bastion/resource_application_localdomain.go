@@ -3,14 +3,15 @@ package bastion
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	bchk "github.com/jeremmfr/go-utils/basiccheck"
 )
 
 type jsonApplicationLocalDomain struct {
@@ -79,7 +80,7 @@ func resourceApplicationLocalDomain() *schema.Resource {
 }
 
 func resourceApplicationLocalDomainVersionCheck(version string) error {
-	if bchk.InSlice(version, defaultVersionsValid()) {
+	if slices.Contains(defaultVersionsValid(), version) {
 		return nil
 	}
 
@@ -189,14 +190,14 @@ func resourceApplicationLocalDomainImport(
 	}
 	idSplit := strings.Split(d.Id(), "/")
 	if len(idSplit) != 2 {
-		return nil, fmt.Errorf("id must be <application_id>/<domain_name>")
+		return nil, errors.New("id must be <application_id>/<domain_name>")
 	}
 	id, ex, err := searchResourceApplicationLocalDomain(ctx, idSplit[0], idSplit[1], m)
 	if err != nil {
 		return nil, err
 	}
 	if !ex {
-		return nil, fmt.Errorf("don't find domain_name with id %s (id must be <application_id>/<domain_name>", d.Id())
+		return nil, fmt.Errorf("don't find domain_name with id %s (id must be <application_id>/<domain_name>)", d.Id())
 	}
 	cfg, err := readApplicationLocalDomainOptions(ctx, idSplit[0], id, m)
 	if err != nil {

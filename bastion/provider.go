@@ -8,16 +8,14 @@ import (
 )
 
 const (
-	VersionWallixAPI33 = "v3.3"
-	VersionWallixAPI36 = "v3.6"
-	VersionWallixAPI38 = "v3.8"
+	VersionWallixAPI38  = "v3.8"
+	VersionWallixAPI312 = "v3.12"
 )
 
 func defaultVersionsValid() []string {
 	return []string{
-		VersionWallixAPI33,
-		VersionWallixAPI36,
 		VersionWallixAPI38,
+		VersionWallixAPI312,
 	}
 }
 
@@ -53,7 +51,7 @@ func Provider() *schema.Provider {
 			"api_version": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("WALLIX_BASTION_API_VERSION", VersionWallixAPI33),
+				DefaultFunc: schema.EnvDefaultFunc("WALLIX_BASTION_API_VERSION", VersionWallixAPI38),
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
@@ -88,8 +86,6 @@ func Provider() *schema.Provider {
 			"wallix-bastion_externalauth_radius":                   resourceExternalAuthRadius(),
 			"wallix-bastion_externalauth_saml":                     resourceExternalAuthSaml(),
 			"wallix-bastion_externalauth_tacacs":                   resourceExternalAuthTacacs(),
-			"wallix-bastion_ldapdomain":                            resourceLdapDomain(),
-			"wallix-bastion_ldapmapping":                           resourceLdapMapping(),
 			"wallix-bastion_profile":                               resourceProfile(),
 			"wallix-bastion_targetgroup":                           resourceTargetGroup(),
 			"wallix-bastion_timeframe":                             resourceTimeframe(),

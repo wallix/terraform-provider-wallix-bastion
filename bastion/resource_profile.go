@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	bchk "github.com/jeremmfr/go-utils/basiccheck"
 )
 
 type jsonProfile struct {
@@ -57,10 +57,6 @@ type jsonProfile struct {
 		Enabled    bool      `json:"enabled"`
 		UserGroups *[]string `json:"user_groups,omitempty"`
 	} `json:"user_groups_limitation"`
-}
-
-type profileFeatures struct {
-	withDashboards bool
 }
 
 func resourceProfile() *schema.Resource {
@@ -274,11 +270,8 @@ func resourceProfile() *schema.Resource {
 	}
 }
 
-func resourceProfileVersionCheck(version string, features profileFeatures) error {
-	if features.withDashboards && version == VersionWallixAPI33 {
-		return fmt.Errorf("can't use dashboards with api version %s", version)
-	}
-	if bchk.InSlice(version, defaultVersionsValid()) {
+func resourceProfileVersionCheck(version string) error {
+	if slices.Contains(defaultVersionsValid(), version) {
 		return nil
 	}
 
@@ -289,11 +282,7 @@ func resourceProfileCreate(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) diag.Diagnostics {
 	c := m.(*Client)
-	var features profileFeatures
-	if len(d.Get("dashboards").(*schema.Set).List()) > 0 {
-		features.withDashboards = true
-	}
-	if err := resourceProfileVersionCheck(c.bastionAPIVersion, features); err != nil {
+	if err := resourceProfileVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	_, ex, err := searchResourceProfile(ctx, d.Get("profile_name").(string), m)
@@ -303,7 +292,7 @@ func resourceProfileCreate(
 	if ex {
 		return diag.FromErr(fmt.Errorf("profile_name %s already exists", d.Get("profile_name").(string)))
 	}
-	err = addProfile(ctx, d, m, features)
+	err = addProfile(ctx, d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -323,7 +312,7 @@ func resourceProfileRead(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourceProfileVersionCheck(c.bastionAPIVersion, profileFeatures{}); err != nil {
+	if err := resourceProfileVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	cfg, err := readProfileOptions(ctx, d.Id(), m)
@@ -344,14 +333,10 @@ func resourceProfileUpdate(
 ) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
-	var features profileFeatures
-	if len(d.Get("dashboards").(*schema.Set).List()) > 0 {
-		features.withDashboards = true
-	}
-	if err := resourceProfileVersionCheck(c.bastionAPIVersion, features); err != nil {
+	if err := resourceProfileVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := updateProfile(ctx, d, m, features); err != nil {
+	if err := updateProfile(ctx, d, m); err != nil {
 		return diag.FromErr(err)
 	}
 	d.Partial(false)
@@ -363,7 +348,7 @@ func resourceProfileDelete(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourceProfileVersionCheck(c.bastionAPIVersion, profileFeatures{}); err != nil {
+	if err := resourceProfileVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := deleteProfile(ctx, d, m); err != nil {
@@ -380,7 +365,7 @@ func resourceProfileImport(
 ) {
 	ctx := context.Background()
 	c := m.(*Client)
-	if err := resourceProfileVersionCheck(c.bastionAPIVersion, profileFeatures{}); err != nil {
+	if err := resourceProfileVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
 	}
 	id, ex, err := searchResourceProfile(ctx, d.Id(), m)
@@ -388,7 +373,7 @@ func resourceProfileImport(
 		return nil, err
 	}
 	if !ex {
-		return nil, fmt.Errorf("don't find profile_name with id %s (id must be <profile_name>", d.Id())
+		return nil, fmt.Errorf("don't find profile_name with id %s (id must be <profile_name>)", d.Id())
 	}
 	cfg, err := readProfileOptions(ctx, id, m)
 	if err != nil {
@@ -431,10 +416,10 @@ func searchResourceProfile(
 }
 
 func addProfile(
-	ctx context.Context, d *schema.ResourceData, m interface{}, features profileFeatures,
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) error {
 	c := m.(*Client)
-	jsonData := prepareProfileJSON(d, true, features)
+	jsonData := prepareProfileJSON(d, true)
 	body, code, err := c.newRequest(ctx, "/profiles/", http.MethodPost, jsonData)
 	if err != nil {
 		return err
@@ -447,10 +432,10 @@ func addProfile(
 }
 
 func updateProfile(
-	ctx context.Context, d *schema.ResourceData, m interface{}, features profileFeatures,
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) error {
 	c := m.(*Client)
-	jsonData := prepareProfileJSON(d, false, features)
+	jsonData := prepareProfileJSON(d, false)
 	body, code, err := c.newRequest(ctx, "/profiles/"+d.Id()+"?force=true", http.MethodPut, jsonData)
 	if err != nil {
 		return err
@@ -478,7 +463,7 @@ func deleteProfile(
 }
 
 func prepareProfileJSON( //nolint: gocognit,gocyclo
-	d *schema.ResourceData, newResource bool, features profileFeatures,
+	d *schema.ResourceData, newResource bool,
 ) jsonProfile {
 	jsonData := jsonProfile{
 		Description:  d.Get("description").(string),
@@ -579,8 +564,8 @@ func prepareProfileJSON( //nolint: gocognit,gocyclo
 		}
 	}
 
-	if features.withDashboards {
-		listDashboards := d.Get("dashboards").(*schema.Set).List()
+	listDashboards := d.Get("dashboards").(*schema.Set).List()
+	if len(listDashboards) > 0 {
 		dashboards := make([]string, len(listDashboards))
 		for i, v := range listDashboards {
 			dashboards[i] = v.(string)

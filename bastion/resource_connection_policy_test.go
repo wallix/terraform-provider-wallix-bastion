@@ -35,13 +35,6 @@ func TestAccResourceConnectionPolicy_basic(t *testing.T) {
 // nolint: lll, nolintlint
 func testAccResourceConnectionPolicyCreate() string {
 	return `
-resource "wallix-bastion_connection_policy" "testacc_ConnectionPolicy" {
-  connection_policy_name = "testacc_ConnectionPolicy"
-  protocol               = "RAWTCPIP"
-  options = jsonencode({
-    general = {}
-  })
-}
 locals {
   optionsv8 = {
     algorithms = {
@@ -168,6 +161,92 @@ locals {
       log_group_membership = false
     }
   }
+  optionsv12 = {
+    general = {
+      transformation_rule       = ""
+      vault_transformation_rule = ""
+    }
+    authentication = {
+      show_issue_banner = false
+    }
+    session = {
+      inactivity_timeout        = 0
+      allow_multi_channels      = false
+      force_shell_disconnection = false
+      server_keepalive_type     = "none"
+      server_keepalive_interval = 0
+    }
+    trace = {
+      log_all_kbd          = false
+      log_group_membership = false
+    }
+    restriction = {
+      cmds_compatibility = "cisco"
+    }
+    algorithms = {
+      kex_algos           = "diffie-hellman-group-exchange-sha256,diffie-hellman-group16-sha512,ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521,curve25519-sha256,curve25519-sha256@libssh.org,diffie-hellman-group18-sha512"
+      cipher_algos        = "chacha20-poly1305@openssh.com,aes128-gcm@openssh.com,aes256-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr"
+      integrity_algos     = "hmac-sha2-256,hmac-sha2-512,hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com"
+      compression_algos   = ""
+      hostkey_algos       = "ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,ssh-ed25519,rsa-sha2-256,rsa-sha2-512"
+      allow_rsa_sha2_cert = true
+      dh_modulus_min_size = 3072
+    }
+    server_pubkey = {
+      server_pubkey_store           = true
+      server_pubkey_check           = "1"
+      server_access_allowed_message = "0"
+      server_pubkey_create_message  = "1"
+      server_pubkey_success_message = "0"
+      server_pubkey_failure_message = "1"
+    }
+    startup_scenario = {
+      enable      = false
+      scenario    = ""
+      show_output = true
+      timeout     = 10
+      ask_startup = false
+    }
+    tcp = {
+      enable_tcpkeepalive    = false
+      tcpkeepalive_interval  = 0
+      tcpkeepalive_max_count = 0
+    }
+    proxy = {
+      enable     = false
+      proxy_type = "None"
+      host       = ""
+      port       = 0
+      login      = ""
+      password   = ""
+    }
+    file_verification = {
+      enable_up               = false
+      enable_down             = false
+      block_invalid_file_up   = false
+      block_invalid_file_down = false
+      max_file_size_rejected  = 500
+      abort_on_block          = false
+      block_show_message      = true
+    }
+    file_storage = {
+      store_file = "never"
+    }
+  }
+  optionsRAWTCPIP = {
+    nat_redirection = {
+      enable = false
+      host   = ""
+      port   = 0
+    }
+  }
+
+  options = {
+    "8"  = local.optionsv8
+    "9"  = local.optionsv9
+    "10" = local.optionsv9
+    "12" = local.optionsv12
+  }
 }
 
 data "wallix-bastion_version" "v" {}
@@ -176,7 +255,12 @@ resource "wallix-bastion_connection_policy" "testacc_ConnectionPolicy2" {
   description            = "testacc ConnectionPolicy2"
   protocol               = "SSH"
   authentication_methods = ["PASSWORD_VAULT"]
-  options                = split(".", data.wallix-bastion_version.v.wab_version)[0] == "8" ? jsonencode(local.optionsv8) : jsonencode(local.optionsv9)
+  options                = jsonencode(local.options[split(".", data.wallix-bastion_version.v.wab_version)[0]])
+}
+resource "wallix-bastion_connection_policy" "testacc_ConnectionPolicy" {
+  connection_policy_name = "testacc_ConnectionPolicy"
+  protocol               = "RAWTCPIP"
+  options                = jsonencode(local.optionsRAWTCPIP)
 }
 `
 }
@@ -310,6 +394,84 @@ locals {
       log_group_membership = false
     }
   }
+  optionsv12 = {
+    general = {
+      transformation_rule       = ""
+      vault_transformation_rule = ""
+    }
+    authentication = {
+      show_issue_banner = false
+    }
+    session = {
+      inactivity_timeout        = 0
+      allow_multi_channels      = false
+      force_shell_disconnection = false
+      server_keepalive_type     = "none"
+      server_keepalive_interval = 0
+    }
+    trace = {
+      log_all_kbd          = false
+      log_group_membership = false
+    }
+    restriction = {
+      cmds_compatibility = "cisco"
+    }
+    algorithms = {
+      kex_algos           = "diffie-hellman-group-exchange-sha256,diffie-hellman-group16-sha512,ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521,curve25519-sha256,curve25519-sha256@libssh.org,diffie-hellman-group18-sha512"
+      cipher_algos        = "chacha20-poly1305@openssh.com,aes128-gcm@openssh.com,aes256-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr"
+      integrity_algos     = "hmac-sha2-256,hmac-sha2-512,hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com"
+      compression_algos   = ""
+      hostkey_algos       = "ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,ssh-ed25519,rsa-sha2-256,rsa-sha2-512"
+      allow_rsa_sha2_cert = true
+      dh_modulus_min_size = 3072
+    }
+    server_pubkey = {
+      server_pubkey_store           = true
+      server_pubkey_check           = "1"
+      server_access_allowed_message = "0"
+      server_pubkey_create_message  = "1"
+      server_pubkey_success_message = "0"
+      server_pubkey_failure_message = "1"
+    }
+    startup_scenario = {
+      enable      = false
+      scenario    = ""
+      show_output = true
+      timeout     = 10
+      ask_startup = false
+    }
+    tcp = {
+      enable_tcpkeepalive    = false
+      tcpkeepalive_interval  = 0
+      tcpkeepalive_max_count = 0
+    }
+    proxy = {
+      enable     = false
+      proxy_type = "None"
+      host       = ""
+      port       = 0
+      login      = ""
+      password   = ""
+    }
+    file_verification = {
+      enable_up               = false
+      enable_down             = false
+      block_invalid_file_up   = false
+      block_invalid_file_down = false
+      max_file_size_rejected  = 500
+      abort_on_block          = false
+      block_show_message      = true
+    }
+    file_storage = {
+      store_file = "never"
+    }
+  }
+  options = {
+    "8"  = local.optionsv8
+    "9"  = local.optionsv9
+    "10" = local.optionsv9
+    "12" = local.optionsv12
+  }
 }
 
 data "wallix-bastion_version" "v" {}
@@ -318,7 +480,7 @@ resource "wallix-bastion_connection_policy" "testacc_ConnectionPolicy2" {
   description            = "testacc ConnectionPolicy2"
   protocol               = "SSH"
   authentication_methods = ["PASSWORD_VAULT", "PASSWORD_MAPPING"]
-  options                = split(".", data.wallix-bastion_version.v.wab_version)[0] == "8" ? jsonencode(local.optionsv8) : jsonencode(local.optionsv9)
+  options                = jsonencode(local.options[split(".", data.wallix-bastion_version.v.wab_version)[0]])
 }
 `
 }

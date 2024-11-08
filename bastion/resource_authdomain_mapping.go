@@ -3,13 +3,14 @@ package bastion
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	bchk "github.com/jeremmfr/go-utils/basiccheck"
 )
 
 type jsonAuthDomain struct {
@@ -55,7 +56,7 @@ func resourceAuthDomainMapping() *schema.Resource {
 }
 
 func resourceAuthDomainMappingVersionCheck(version string) error {
-	if bchk.InSlice(version, []string{VersionWallixAPI38}) {
+	if slices.Contains(defaultVersionsValid(), version) {
 		return nil
 	}
 
@@ -161,14 +162,14 @@ func resourceAuthDomainMappingImport(
 	}
 	idSplit := strings.Split(d.Id(), "/")
 	if len(idSplit) != 2 {
-		return nil, fmt.Errorf("id must be <domain_id>/<user_group>")
+		return nil, errors.New("id must be <domain_id>/<user_group>")
 	}
 	id, ex, err := searchResourceAuthDomainMapping(ctx, idSplit[0], idSplit[1], m)
 	if err != nil {
 		return nil, err
 	}
 	if !ex {
-		return nil, fmt.Errorf("don't find auth domain mapping with id %s (id must be <domain_id>/<user_group>", d.Id())
+		return nil, fmt.Errorf("don't find auth domain mapping with id %s (id must be <domain_id>/<user_group>)", d.Id())
 	}
 	cfg, err := readAuthDomainMappingOptions(ctx, idSplit[0], id, m)
 	if err != nil {

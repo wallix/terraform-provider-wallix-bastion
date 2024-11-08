@@ -5,14 +5,69 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/wallix/terraform-provider-wallix-bastion/bastion"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
+
+func TestAccResourceExternalAuthSaml_basic38(t *testing.T) {
+	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); v == bastion.VersionWallixAPI38 {
+		resource.Test(t, resource.TestCase{
+			PreCheck:  func() { testAccPreCheck(t) },
+			Providers: testAccProviders,
+			ExternalProviders: map[string]resource.ExternalProvider{
+				"tls": {
+					Source:            "hashicorp/tls",
+					VersionConstraint: "~> 4.0",
+				},
+			},
+			Steps: []resource.TestStep{
+				{
+					Config: testAccResourceExternalAuthSaml38Create(),
+					Check: resource.ComposeTestCheckFunc(
+						resource.TestCheckResourceAttrSet(
+							"wallix-bastion_externalauth_saml.testacc_ExternalAuthSaml",
+							"id"),
+						resource.TestCheckResourceAttrSet(
+							"wallix-bastion_externalauth_saml.testacc_ExternalAuthSaml",
+							"idp_entity_id"),
+						resource.TestCheckResourceAttrSet(
+							"wallix-bastion_externalauth_saml.testacc_ExternalAuthSaml",
+							"saml_request_url"),
+						resource.TestCheckResourceAttrSet(
+							"wallix-bastion_externalauth_saml.testacc_ExternalAuthSaml",
+							"saml_request_method"),
+						resource.TestCheckResourceAttrSet(
+							"wallix-bastion_externalauth_saml.testacc_ExternalAuthSaml",
+							"sp_metadata"),
+						resource.TestCheckResourceAttrSet(
+							"wallix-bastion_externalauth_saml.testacc_ExternalAuthSaml",
+							"sp_entity_id"),
+						resource.TestCheckResourceAttrSet(
+							"wallix-bastion_externalauth_saml.testacc_ExternalAuthSaml",
+							"sp_assertion_consumer_service"),
+						resource.TestCheckResourceAttrSet(
+							"wallix-bastion_externalauth_saml.testacc_ExternalAuthSaml",
+							"sp_single_logout_service"),
+					),
+				},
+				{
+					Config: testAccResourceExternalAuthSaml38Update(),
+				},
+				{
+					ResourceName:  "wallix-bastion_externalauth_saml.testacc_ExternalAuthSaml",
+					ImportState:   true,
+					ImportStateId: "testacc_ExternalAuthSaml",
+				},
+			},
+			PreventPostDestroyRefresh: true,
+		})
+	}
+}
 
 func TestAccResourceExternalAuthSaml_basic(t *testing.T) {
 	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); v != "" &&
-		v != bastion.VersionWallixAPI33 &&
-		v != bastion.VersionWallixAPI36 {
+		v != bastion.VersionWallixAPI38 {
 		resource.Test(t, resource.TestCase{
 			PreCheck:  func() { testAccPreCheck(t) },
 			Providers: testAccProviders,
@@ -92,6 +147,18 @@ const (
 `
 )
 
+func testAccResourceExternalAuthSaml38Create() string {
+	return fmt.Sprintf(`
+resource "wallix-bastion_externalauth_saml" "testacc_ExternalAuthSaml" {
+  authentication_name = "testacc_ExternalAuthSaml"
+  idp_metadata        = <<EOT
+%s
+EOT
+  timeout             = 30
+}
+`, idpMetadataSAML)
+}
+
 func testAccResourceExternalAuthSamlCreate() string {
 	return fmt.Sprintf(`
 resource "wallix-bastion_externalauth_saml" "testacc_ExternalAuthSaml" {
@@ -100,6 +167,44 @@ resource "wallix-bastion_externalauth_saml" "testacc_ExternalAuthSaml" {
 %s
 EOT
   timeout             = 30
+  claim_customization {
+    username = "email"
+  }
+}
+`, idpMetadataSAML)
+}
+
+func testAccResourceExternalAuthSaml38Update() string {
+	return fmt.Sprintf(`
+resource "wallix-bastion_externalauth_saml" "testacc_ExternalAuthSaml" {
+  authentication_name = "testacc_ExternalAuthSaml"
+  idp_metadata        = <<EOT
+%s
+EOT
+  timeout             = 60
+  description         = "testacc_ExternalAuthSaml description"
+  certificate         = tls_self_signed_cert.example.cert_pem
+  private_key         = tls_private_key.example.private_key_pem
+}
+
+resource "tls_private_key" "example" {
+  algorithm   = "ECDSA"
+  ecdsa_curve = "P384"
+}
+
+resource "tls_self_signed_cert" "example" {
+  private_key_pem = tls_private_key.example.private_key_pem
+
+  subject {
+    common_name  = "example.com"
+    organization = "ACME Examples, Inc"
+  }
+  validity_period_hours = 12
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+  ]
 }
 `, idpMetadataSAML)
 }
@@ -115,6 +220,13 @@ EOT
   description         = "testacc_ExternalAuthSaml description"
   certificate         = tls_self_signed_cert.example.cert_pem
   private_key         = tls_private_key.example.private_key_pem
+  claim_customization {
+    username    = "email"
+    displayname = "username"
+    email       = "email"
+    language    = "language"
+    group       = "group"
+  }
 }
 
 resource "tls_private_key" "example" {

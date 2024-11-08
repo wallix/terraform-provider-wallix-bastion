@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	bchk "github.com/jeremmfr/go-utils/basiccheck"
 )
 
 type jsonAuthDomainAD struct {
@@ -120,7 +120,7 @@ func resourceAuthDomainAD() *schema.Resource {
 }
 
 func resourceAuthDomainADVersionCheck(version string) error {
-	if bchk.InSlice(version, []string{VersionWallixAPI38}) {
+	if slices.Contains(defaultVersionsValid(), version) {
 		return nil
 	}
 
@@ -222,7 +222,7 @@ func resourceAuthDomainADImport(
 		return nil, err
 	}
 	if !ex {
-		return nil, fmt.Errorf("don't find domain_name with id %s (id must be <domain_name>", d.Id())
+		return nil, fmt.Errorf("don't find domain_name with id %s (id must be <domain_name>)", d.Id())
 	}
 	cfg, err := readAuthDomainADOptions(ctx, d.Id(), m)
 	if err != nil {

@@ -3,14 +3,15 @@ package bastion
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	bchk "github.com/jeremmfr/go-utils/basiccheck"
 )
 
 func resourceDeviceLocalDomainAccountCredential() *schema.Resource {
@@ -70,7 +71,7 @@ func resourceDeviceLocalDomainAccountCredential() *schema.Resource {
 }
 
 func resourceDeviceLocalDomainAccountCredentialVersionCheck(version string) error {
-	if bchk.InSlice(version, defaultVersionsValid()) {
+	if slices.Contains(defaultVersionsValid(), version) {
 		return nil
 	}
 
@@ -200,7 +201,7 @@ func resourceDeviceLocalDomainAccountCredentialImport(
 	}
 	idSplit := strings.Split(d.Id(), "/")
 	if len(idSplit) != 4 {
-		return nil, fmt.Errorf("id must be <device_id>/<domain_id>/<account_id>/<type>")
+		return nil, errors.New("id must be <device_id>/<domain_id>/<account_id>/<type>")
 	}
 	id, ex, err := searchResourceDeviceLocalDomainAccountCredential(ctx, idSplit[0], idSplit[1], idSplit[2], idSplit[3], m)
 	if err != nil {
@@ -208,7 +209,7 @@ func resourceDeviceLocalDomainAccountCredentialImport(
 	}
 	if !ex {
 		return nil, fmt.Errorf("don't find credential with id %s "+
-			"(id must be <device_id>/<domain_id>/<account_id>/<type>", d.Id())
+			"(id must be <device_id>/<domain_id>/<account_id>/<type>)", d.Id())
 	}
 	cfg, err := readDeviceLocalDomainAccountCredentialOptions(ctx, idSplit[0], idSplit[1], idSplit[2], id, m)
 	if err != nil {

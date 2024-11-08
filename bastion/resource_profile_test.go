@@ -1,49 +1,38 @@
 package bastion_test
 
 import (
-	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/wallix/terraform-provider-wallix-bastion/bastion"
 )
 
 func TestAccResourceProfile_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                  func() { testAccPreCheck(t) },
-		Providers:                 testAccProviders,
-		Steps:                     testAccResourceProfileSteps(),
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceProfileCreate(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(
+						"wallix-bastion_profile.testacc_Profile",
+						"id"),
+				),
+			},
+			{
+				Config: testAccResourceProfileUpdate(),
+			},
+			{
+				ResourceName:  "wallix-bastion_profile.testacc_Profile",
+				ImportState:   true,
+				ImportStateId: "testacc_Profile",
+			},
+			{
+				Config: testAccResourceProfileUpdate2(),
+			},
+		},
 		PreventPostDestroyRefresh: true,
 	})
-}
-
-func testAccResourceProfileSteps() []resource.TestStep {
-	steps := []resource.TestStep{
-		{
-			Config: testAccResourceProfileCreate(),
-			Check: resource.ComposeTestCheckFunc(
-				resource.TestCheckResourceAttrSet(
-					"wallix-bastion_profile.testacc_Profile",
-					"id"),
-			),
-		},
-		{
-			Config: testAccResourceProfileUpdate(),
-		},
-		{
-			ResourceName:  "wallix-bastion_profile.testacc_Profile",
-			ImportState:   true,
-			ImportStateId: "testacc_Profile",
-		},
-	}
-	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); v != "" &&
-		v != bastion.VersionWallixAPI33 {
-		steps = append(steps, resource.TestStep{
-			Config: testAccResourceProfileUpdate2(),
-		})
-	}
-
-	return steps
 }
 
 func testAccResourceProfileCreate() string {

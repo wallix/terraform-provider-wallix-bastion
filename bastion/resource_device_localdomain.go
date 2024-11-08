@@ -3,14 +3,15 @@ package bastion
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	bchk "github.com/jeremmfr/go-utils/basiccheck"
 )
 
 type jsonDeviceLocalDomain struct {
@@ -21,7 +22,7 @@ type jsonDeviceLocalDomain struct {
 	CAPrivateKey                   string                  `json:"ca_private_key,omitempty"`
 	CAPublicKey                    string                  `json:"ca_public_key,omitempty"`
 	Description                    string                  `json:"description"`
-	Passphrase                     string                  `json:"passphrase"`
+	Passphrase                     string                  `json:"passphrase,omitempty"`
 	PasswordChangePolicy           string                  `json:"password_change_policy,omitempty"`
 	PasswordChangePlugin           string                  `json:"password_change_plugin,omitempty"`
 	PasswordChangePluginParameters *map[string]interface{} `json:"password_change_plugin_parameters,omitempty"`
@@ -97,7 +98,7 @@ func resourceDeviceLocalDomain() *schema.Resource {
 }
 
 func resourceDeviceLocalDomainVersionCheck(version string) error {
-	if bchk.InSlice(version, defaultVersionsValid()) {
+	if slices.Contains(defaultVersionsValid(), version) {
 		return nil
 	}
 
@@ -205,14 +206,14 @@ func resourceDeviceLocalDomainImport(
 	}
 	idSplit := strings.Split(d.Id(), "/")
 	if len(idSplit) != 2 {
-		return nil, fmt.Errorf("id must be <device_id>/<domain_name>")
+		return nil, errors.New("id must be <device_id>/<domain_name>")
 	}
 	id, ex, err := searchResourceDeviceLocalDomain(ctx, idSplit[0], idSplit[1], m)
 	if err != nil {
 		return nil, err
 	}
 	if !ex {
-		return nil, fmt.Errorf("don't find domain_name with id %s (id must be <device_id>/<domain_name>", d.Id())
+		return nil, fmt.Errorf("don't find domain_name with id %s (id must be <device_id>/<domain_name>)", d.Id())
 	}
 	cfg, err := readDeviceLocalDomainOptions(ctx, idSplit[0], id, m)
 	if err != nil {

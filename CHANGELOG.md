@@ -1,5 +1,10 @@
 # changelog
 
+## 0.13.0 (March 08, 2024)
+
+* build(deps): bump github.com/cloudflare/circl from 1.3.3 to 1.3.7 by @dependabot in https://github.com/wallix/terraform-provider-wallix-bastion/pull/13
+* added http basic authentication by @moulip in https://github.com/wallix/terraform-provider-wallix-bastion/pull/15
+
 ## 0.12.2 (January 03, 2024)
 
 * Corrected and added documentation example
