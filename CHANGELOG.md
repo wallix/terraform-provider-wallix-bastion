@@ -1,5 +1,27 @@
 # changelog
 
+## 0.14.0 (November 08, 2024)
+
+BREAKING CHANGES:
+
+* remove compatibility with API version 3.3 and 3.6
+* remove resource `wallix-bastion_ldapdomain`
+* remove resource `wallix-bastion_ldapmapping`
+* default provider api_version argument is now `v3.8`
+* user statement is now mandatory
+
+FEATURES:
+
+* add compatibility with API version 3.12
+
+ENHANCEMENTS:
+
+* **resource/wallix-bastion_application**:
+  * add `category`, `application_url`, `browser`, `browser_version` arguments to be able to add `jumphost` application (not tested)
+  * `paths` and `target` is now only required when `category` = `standard`
+* **resource/wallix-bastion_connection_policy**: add `type` argument with default value as `protocol` value
+* **resource/wallix-bastion_externalauth_saml**: add `claim_customization` block argument
+
 ## 0.13.0 (March 08, 2024)
 
 * build(deps): bump github.com/cloudflare/circl from 1.3.3 to 1.3.7 by @dependabot in https://github.com/wallix/terraform-provider-wallix-bastion/pull/13
