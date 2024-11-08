@@ -28,6 +28,11 @@ func Provider() *schema.Provider {
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("WALLIX_BASTION_HOST", nil),
 			},
+			"user": {
+				Type:        schema.TypeString,
+				Required:    true,
+				DefaultFunc: schema.EnvDefaultFunc("WALLIX_BASTION_USER", nil),
+			},
 			"port": {
 				Type:        schema.TypeInt,
 				Optional:    true,
@@ -37,11 +42,6 @@ func Provider() *schema.Provider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("WALLIX_BASTION_TOKEN", nil),
-			},
-			"user": {
-				Type:        schema.TypeString,
-				Required:    true,
-				DefaultFunc: schema.EnvDefaultFunc("WALLIX_BASTION_USER", nil),
 			},
 			"password": {
 				Type:        schema.TypeString,
