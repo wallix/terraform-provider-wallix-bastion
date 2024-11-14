@@ -274,7 +274,7 @@ func addDomainAccountCredential(
 			return err
 		}
 		if code != http.StatusOK && code != http.StatusNoContent {
-			return fmt.Errorf("second API call didn't return OK or NoContent: %d with body:\n%s", code, body)
+			return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 		}
 	}
 
