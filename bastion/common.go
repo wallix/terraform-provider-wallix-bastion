@@ -8,7 +8,7 @@ type jsonRestriction struct {
 
 type jsonCredential struct {
 	ID         string `json:"id,omitempty"`
-	Type       string `json:"type"`
+	Type       string `json:"type,omitempty"`
 	Password   string `json:"password,omitempty"`
 	PrivateKey string `json:"private_key,omitempty"`
 	PublicKey  string `json:"public_key,omitempty"`
