@@ -3,6 +3,7 @@ package bastion
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -284,22 +285,21 @@ func addDomainAccountCredential(
 func updateDomainAccountCredential(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) error {
-
 	// Extract the client from the meta parameter
 	client, ok := m.(*Client)
 	if !ok {
-		return fmt.Errorf("failed to cast interface to *Client")
+		return errors.New("failed to cast interface to *Client")
 	}
 
 	// Get the account ID and domain ID from the resource data
 	accountID, ok := d.Get("account_id").(string)
 	if !ok {
-		return fmt.Errorf("failed to get account_id from resource data")
+		return errors.New("failed to get account_id from resource data")
 	}
 
 	domainID, ok := d.Get("domain_id").(string)
 	if !ok {
-		return fmt.Errorf("failed to get domain_id from resource data")
+		return errors.New("failed to get domain_id from resource data")
 	}
 
 	// Check the value of propagate_credential_change option
@@ -317,7 +317,7 @@ func updateDomainAccountCredential(
 	// Make the appropriate request based on the propagate_credential_change value
 	body, code, err := client.newRequest(ctx, url, http.MethodPut, jsonData)
 	if err != nil {
-		return fmt.Errorf("request failed: %v", err)
+		return fmt.Errorf("request failed: %w", err)
 	}
 
 	if code != http.StatusOK && code != http.StatusNoContent {
