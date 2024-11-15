@@ -61,6 +61,10 @@ func resourceDomainAccountCredential() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"propagate_credential_change": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -247,7 +251,9 @@ func addDomainAccountCredential(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) error {
 	c := m.(*Client)
-	jsonData := prepareDomainAccountCredentialJSON(d)
+	propagate := d.Get("propagate_credential_change").(bool)
+	jsonData := prepareDomainAccountCredentialJSON(d, propagate, true)
+
 	body, code, err := c.newRequest(ctx,
 		"/domains/"+d.Get("domain_id").(string)+"/accounts/"+d.Get("account_id").(string)+"/credentials/",
 		http.MethodPost, jsonData)
@@ -258,22 +264,64 @@ func addDomainAccountCredential(
 		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
+	if propagate {
+		accountID := d.Get("account_id")
+		jsonDataPropagate := prepareDomainAccountCredentialJSON(d, propagate, false)
+
+		body, code, err = c.newRequest(ctx,
+			fmt.Sprintf("/accountchangepassword/%s/password", accountID),
+			http.MethodPut, jsonDataPropagate)
+		if err != nil {
+			return err
+		}
+		if code != http.StatusOK && code != http.StatusNoContent {
+			return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
+		}
+	}
+
 	return nil
 }
 
 func updateDomainAccountCredential(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) error {
-	c := m.(*Client)
-	jsonData := prepareDomainAccountCredentialJSON(d)
-	body, code, err := c.newRequest(ctx,
-		"/domains/"+d.Get("domain_id").(string)+"/accounts/"+d.Get("account_id").(string)+"/credentials/"+d.Id(),
-		http.MethodPut, jsonData)
-	if err != nil {
-		return err
+	// Extract the client from the meta parameter
+	client, ok := m.(*Client)
+	if !ok {
+		return errors.New("failed to cast interface to *Client")
 	}
+
+	// Get the account ID and domain ID from the resource data
+	accountID, ok := d.Get("account_id").(string)
+	if !ok {
+		return errors.New("failed to get account_id from resource data")
+	}
+
+	domainID, ok := d.Get("domain_id").(string)
+	if !ok {
+		return errors.New("failed to get domain_id from resource data")
+	}
+
+	// Check the value of propagate_credential_change option
+	propagate := d.Get("propagate_credential_change").(bool)
+
+	// Prepare the JSON data for the request
+	jsonData := prepareDomainAccountCredentialJSON(d, propagate, false)
+	var url string
+	if propagate {
+		url = fmt.Sprintf("/accountchangepassword/%s/password", accountID)
+	} else {
+		url = fmt.Sprintf("/domains/%s/accounts/%s/credentials/%s", domainID, accountID, d.Id())
+	}
+
+	// Make the appropriate request based on the propagate_credential_change value
+	body, code, err := client.newRequest(ctx, url, http.MethodPut, jsonData)
+	if err != nil {
+		return fmt.Errorf("request failed: %w", err)
+	}
+
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
+		return fmt.Errorf("API didn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
@@ -298,16 +346,27 @@ func deleteDomainAccountCredential(
 
 func prepareDomainAccountCredentialJSON(
 	d *schema.ResourceData,
+	propagate bool,
+	propagateAdd bool,
 ) jsonCredential {
-	jsonData := jsonCredential{
-		Type: d.Get("type").(string),
-	}
+	var jsonData jsonCredential
 
-	if jsonData.Type == "password" {
+	if propagate {
+		// Only include the password key
 		jsonData.Password = d.Get("password").(string)
-	} else if jsonData.Type == "ssh_key" {
-		jsonData.PrivateKey = d.Get("private_key").(string)
-		jsonData.Passphrase = d.Get("passphrase").(string)
+		if propagateAdd {
+			jsonData.Type = d.Get("type").(string)
+		}
+	} else {
+		// Include the type and other fields based on the type
+		jsonData.Type = d.Get("type").(string)
+
+		if jsonData.Type == "password" {
+			jsonData.Password = d.Get("password").(string)
+		} else if jsonData.Type == "ssh_key" {
+			jsonData.PrivateKey = d.Get("private_key").(string)
+			jsonData.Passphrase = d.Get("passphrase").(string)
+		}
 	}
 
 	return jsonData
