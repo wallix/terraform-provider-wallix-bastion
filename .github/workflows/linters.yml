@@ -5,10 +5,10 @@ jobs:
     name: golangci-lint
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go 1.21
+      - name: Set up Go 1.23
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.23'
           check-latest: true
         id: go
       - name: Disable cgo
@@ -17,10 +17,11 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v4
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v4
+        uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.54
+          version: v1.61.0
           args: -c .golangci.yml -v
+          skip-cache: true
 
   markdown-lint:
     name: markdown-lint
@@ -38,11 +39,12 @@ jobs:
     name: terrafmt
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go 1.21
+      - name: Set up Go 1.23
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.23'
           check-latest: true
+          skip-cache: true
         id: go
       - name: Show version
         run: go version
@@ -54,6 +56,7 @@ jobs:
           repository: katbyte/terrafmt
           ref: v0.5.2
           path: terrafmt
+          skip-cache: true
       - name: Build terrafmt bin
         run: cd terrafmt && go install ./... && cd ${GITHUB_WORKSPACE}
       - name: Detect resource/data-source blocks without double quote on type and name (blocks not detected by terrafmt)

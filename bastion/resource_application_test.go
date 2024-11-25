@@ -1,9 +1,13 @@
 package bastion_test
 
 import (
+	"os"
 	"testing"
 
+	"github.com/wallix/terraform-provider-wallix-bastion/bastion"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"golang.org/x/mod/semver"
 )
 
 func TestAccResourceApplication_basic(t *testing.T) {
@@ -30,6 +34,36 @@ func TestAccResourceApplication_basic(t *testing.T) {
 		},
 		PreventPostDestroyRefresh: true,
 	})
+}
+
+func TestAccResourceApplication_jumphost(t *testing.T) {
+	if os.Getenv("TESTACC_JUMPHOST") != "" {
+		if v := os.Getenv("WALLIX_BASTION_API_VERSION"); semver.Compare(v, bastion.VersionWallixAPI312) >= 0 {
+			resource.Test(t, resource.TestCase{
+				PreCheck:  func() { testAccPreCheck(t) },
+				Providers: testAccProviders,
+				Steps: []resource.TestStep{
+					{
+						Config: testAccResourceApplicationCreateJumphost(),
+						Check: resource.ComposeTestCheckFunc(
+							resource.TestCheckResourceAttrSet(
+								"wallix-bastion_application.testacc_Appli",
+								"id"),
+						),
+					},
+					{
+						Config: testAccResourceApplicationUpdateJumphost(),
+					},
+					{
+						ResourceName:  "wallix-bastion_application.testacc_Appli",
+						ImportState:   true,
+						ImportStateId: "testacc_Appli",
+					},
+				},
+				PreventPostDestroyRefresh: true,
+			})
+		}
+	}
 }
 
 // nolint: lll, nolintlint
@@ -65,6 +99,20 @@ resource "wallix-bastion_application" "testacc_Appli" {
     working_dir = "directory"
   }
   target = wallix-bastion_cluster.testacc_App.cluster_name
+}
+`
+}
+
+// nolint: lll, nolintlint
+func testAccResourceApplicationCreateJumphost() string {
+	return `
+resource "wallix-bastion_application" "testacc_Appli" {
+  application_name  = "testacc_Appli_jumphost"
+  category          = "jumphost"
+  connection_policy = "JumpHost"
+  browser           = "Mozilla Firefox"
+  browser_version   = "93.0"
+  application_url   = "https://github.com/login"
 }
 `
 }
@@ -108,6 +156,21 @@ resource "wallix-bastion_application" "testacc_Appli" {
   target         = wallix-bastion_cluster.testacc_App.cluster_name
   parameters     = "app_parameters"
   global_domains = [wallix-bastion_domain.testacc_App.domain_name]
+}
+`
+}
+
+func testAccResourceApplicationUpdateJumphost() string {
+	return `
+resource "wallix-bastion_application" "testacc_Appli" {
+  application_name  = "testacc_Appli_jumphost"
+  description       = "testacc Appli jumphost"
+  category          = "jumphost"
+  connection_policy = "JumpHost"
+  browser           = "Google Chrome"
+  browser_version   = "94.0.4606.81-1"
+  application_url   = "https://github.com/login"
+  parameters        = "app_parameters"
 }
 `
 }

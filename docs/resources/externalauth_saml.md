@@ -25,6 +25,18 @@ The following arguments are supported:
   SAML request timeout.
 - **certificate** (Optional, String, Sensitive, **Value can't refresh**)  
   The certificate of the Service Provider.
+- **claim_customization** (Optional, Block)  
+  A claim customization to bind the IDP attribute names with the SP ones.
+  - **username** (Required, String)  
+    IDP attribute that correspond to username.
+  - **displayname** (Optional, String)  
+    DP attribute that correspond to displayname.
+  - **email** (Optional, String)  
+    DP attribute that correspond to email.
+  - **language** (Optional, String)  
+    DP attribute that correspond to language.
+  - **group** (Optional, String)  
+    DP attribute that correspond to group.
 - **description** (Optional, String)  
   Description of the authentication.
 - **passphrase** (Optional, String, Sensitive, **Value can't refresh**)  
