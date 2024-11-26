@@ -86,6 +86,7 @@ func Provider() *schema.Provider {
 			"wallix-bastion_externalauth_radius":                   resourceExternalAuthRadius(),
 			"wallix-bastion_externalauth_saml":                     resourceExternalAuthSaml(),
 			"wallix-bastion_externalauth_tacacs":                   resourceExternalAuthTacacs(),
+			"wallix-bastion_encryption":                            resourceEncryption(),
 			"wallix-bastion_profile":                               resourceProfile(),
 			"wallix-bastion_targetgroup":                           resourceTargetGroup(),
 			"wallix-bastion_timeframe":                             resourceTimeframe(),
