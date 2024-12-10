@@ -1,3 +1,4 @@
+// nolint: lll,nolintlint
 package bastion_test
 
 import (
@@ -33,12 +34,17 @@ func TestAccResourceExternalAuthKerberos_basic(t *testing.T) {
 				ImportState:   true,
 				ImportStateId: "testacc_ExternalAuthKerberos",
 			},
+			{
+				Config: testAccResourceExternalAuthKerberosCreate2(),
+			},
+			{
+				Config: testAccResourceExternalAuthKerberosUpdate2(),
+			},
 		},
 		PreventPostDestroyRefresh: true,
 	})
 }
 
-// nolint: lll,nolintlint
 func testAccResourceExternalAuthKerberosCreate() string {
 	k, _ := hex.DecodeString(keytabDataHexStr)
 	os.WriteFile("/tmp/testacc_data", k, 0644) //nolint: all
@@ -55,7 +61,6 @@ resource "wallix-bastion_externalauth_kerberos" "testacc_ExternalAuthKerberos" {
 `
 }
 
-// nolint: lll,nolintlint
 func testAccResourceExternalAuthKerberosUpdate() string {
 	return `
 data "wallix-bastion_version" "v" {}
@@ -63,10 +68,38 @@ resource "wallix-bastion_externalauth_kerberos" "testacc_ExternalAuthKerberos" {
   authentication_name     = "testacc_ExternalAuthKerberos"
   host                    = "server1"
   ker_dom_controller      = "EXAMPLE.COM"
-  port                    = 88
-  kerberos_password       = true
+  port                    = 188
   description             = "testacc ExternalAuthKerberos"
-  login_attribute         = "attribute"
+  use_primary_auth_domain = true
+  keytab                  = split(".", data.wallix-bastion_version.v.wab_version)[0] == "8" ? "" : filebase64("/tmp/testacc_data")
+}
+`
+}
+
+func testAccResourceExternalAuthKerberosCreate2() string {
+	return `
+data "wallix-bastion_version" "v" {}
+resource "wallix-bastion_externalauth_kerberos" "testacc_ExternalAuthKerberosPassword" {
+  authentication_name = "testacc_ExternalAuthKerberosPassword"
+  host                = "server2"
+  ker_dom_controller  = "EXAMPLE.COM"
+  kerberos_password   = true
+  port                = 88
+  keytab              = split(".", data.wallix-bastion_version.v.wab_version)[0] == "8" ? "" : filebase64("/tmp/testacc_data")
+}
+`
+}
+
+func testAccResourceExternalAuthKerberosUpdate2() string {
+	return `
+data "wallix-bastion_version" "v" {}
+resource "wallix-bastion_externalauth_kerberos" "testacc_ExternalAuthKerberosPassword" {
+  authentication_name     = "testacc_ExternalAuthKerberosPassword"
+  host                    = "server2"
+  ker_dom_controller      = "EXAMPLE.COM"
+  kerberos_password       = true
+  port                    = 188
+  description             = "testacc ExternalAuthKerberosPassword"
   use_primary_auth_domain = true
   keytab                  = split(".", data.wallix-bastion_version.v.wab_version)[0] == "8" ? "" : filebase64("/tmp/testacc_data")
 }

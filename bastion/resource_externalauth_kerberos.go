@@ -21,7 +21,6 @@ type jsonExternalAuthKerberos struct {
 	Host                 string `json:"host"`
 	KerDomController     string `json:"ker_dom_controller"`
 	KeyTab               string `json:"keytab,omitempty"`
-	LoginAttribute       string `json:"login_attribute"`
 	Type                 string `json:"type"`
 }
 
@@ -69,6 +68,8 @@ func resourceExternalAuthKerberos() *schema.Resource {
 			"login_attribute": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Deprecated: "Remove this attribute's configuration as it is not used anymore" +
+					" and the attribute will be removed in the next major version of the provider.",
 			},
 			"use_primary_auth_domain": {
 				Type:     schema.TypeBool,
@@ -275,7 +276,6 @@ func prepareExternalAuthKerberosJSON(d *schema.ResourceData) jsonExternalAuthKer
 		Port:                 d.Get("port").(int),
 		Description:          d.Get("description").(string),
 		KeyTab:               d.Get("keytab").(string),
-		LoginAttribute:       d.Get("login_attribute").(string),
 		UsePrimaryAuthDomain: d.Get("use_primary_auth_domain").(bool),
 		Type:                 "KERBEROS",
 	}
@@ -326,9 +326,6 @@ func fillExternalAuthKerberos(d *schema.ResourceData, jsonData jsonExternalAuthK
 		panic(tfErr)
 	}
 	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
-		panic(tfErr)
-	}
-	if tfErr := d.Set("login_attribute", jsonData.LoginAttribute); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("use_primary_auth_domain", jsonData.UsePrimaryAuthDomain); tfErr != nil {
