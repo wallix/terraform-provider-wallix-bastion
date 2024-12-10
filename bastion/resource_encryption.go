@@ -39,10 +39,10 @@ func resourceEncryption() *schema.Resource {
 }
 
 func resourceEncryptionVersionCheck(version string) error {
-	fmt.Printf("Debug: Checking API version: %s\n", version)
 	if slices.Contains(defaultVersionsValid(), version) {
 		return nil
 	}
+
 	return fmt.Errorf("resource wallix-bastion_encryption is not available with API version %s", version)
 }
 
@@ -64,7 +64,10 @@ func resourceEncryptionCreate(
 	d.SetId("encryption")
 
 	// Set persistent attributes
-	d.Set("new_passphrase", d.Get("new_passphrase").(string))
+	err = d.Set("new_passphrase", d.Get("new_passphrase").(string))
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	return resourceEncryptionRead(ctx, d, m)
 }
@@ -84,10 +87,14 @@ func resourceEncryptionRead(
 	if !exists {
 		// Clear the resource ID if it no longer exists
 		d.SetId("")
+
 		return nil
 	}
 	d.SetId("encryption")
-	d.Set("new_passphrase", d.Get("new_passphrase").(string))
+	err = d.Set("new_passphrase", d.Get("new_passphrase").(string))
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
@@ -109,7 +116,10 @@ func resourceEncryptionUpdate(
 			return diag.FromErr(err)
 		}
 		if d.HasChange("new_passphrase") {
-			d.Set("new_passphrase", d.Get("new_passphrase"))
+			err := d.Set("new_passphrase", d.Get("new_passphrase"))
+			if err != nil {
+				return diag.FromErr(err)
+			}
 		}
 	}
 
@@ -130,6 +140,7 @@ func addEncryption(
 	if code != http.StatusOK && code != http.StatusNoContent {
 		return fmt.Errorf("API didn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
+
 	return nil
 }
 
@@ -149,10 +160,11 @@ func updateEncryption(
 }
 
 func resourceEncryptionDelete(
-	ctx context.Context, d *schema.ResourceData, m interface{},
+	_ context.Context, d *schema.ResourceData, m interface{},
 ) diag.Diagnostics {
 	// Since the API does not support deletion, we simply remove the resource from the Terraform state
 	d.SetId("")
+
 	return nil
 }
 
@@ -195,7 +207,6 @@ func verifyEncryption(
 }
 
 func prepareEncryptionJSON(d *schema.ResourceData, update bool) jsonEncryption {
-
 	var jsonData jsonEncryption
 
 	if update {
@@ -207,9 +218,10 @@ func prepareEncryptionJSON(d *schema.ResourceData, update bool) jsonEncryption {
 }
 
 func resourceEncryptionImport(
-	d *schema.ResourceData, m interface{},
+	d *schema.ResourceData, _ interface{},
 ) ([]*schema.ResourceData, error) {
 	// For import, assume the static ID
 	d.SetId("encryption")
+
 	return []*schema.ResourceData{d}, nil
 }
