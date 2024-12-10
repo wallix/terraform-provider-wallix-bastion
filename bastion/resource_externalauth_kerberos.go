@@ -68,7 +68,7 @@ func resourceExternalAuthKerberos() *schema.Resource {
 			"login_attribute": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Deprecated: "Remove this attribute's configuration as it no longer is used" +
+				Deprecated: "Remove this attribute's configuration as it is not used anymore" +
 					" and the attribute will be removed in the next major version of the provider.",
 			},
 			"use_primary_auth_domain": {
