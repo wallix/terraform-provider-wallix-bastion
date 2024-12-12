@@ -36,6 +36,9 @@ func testAccPreCheck(t *testing.T) {
 	if os.Getenv("WALLIX_BASTION_TOKEN") == "" {
 		t.Fatal("WALLIX_BASTION_TOKEN must be set for acceptance tests")
 	}
+	if os.Getenv("WALLIX_BASTION_USER") == "" {
+		t.Fatal("WALLIX_BASTION_USER must be set for acceptance tests")
+	}
 
 	if err := testAccProvider.Configure(context.Background(), terraform.NewResourceConfigRaw(nil)); err != nil {
 		t.Fatal(err)
