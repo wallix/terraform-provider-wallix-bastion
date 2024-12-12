@@ -156,11 +156,12 @@ func updateEncryption(
 	if code != http.StatusOK && code != http.StatusNoContent {
 		return fmt.Errorf("API didn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
+
 	return nil
 }
 
 func resourceEncryptionDelete(
-	_ context.Context, d *schema.ResourceData, m interface{},
+	_ context.Context, d *schema.ResourceData,
 ) diag.Diagnostics {
 	// Since the API does not support deletion, we simply remove the resource from the Terraform state
 	d.SetId("")

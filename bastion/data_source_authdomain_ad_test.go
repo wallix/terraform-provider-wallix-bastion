@@ -13,11 +13,11 @@ func TestAccDataSourceAuthDomainAD_basic(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				// Create the resource to be fetched by the datasource
+				// Create the resource to be fetched by the datasource.
 				Config: testAccDataSourceAuthDomainADConfigCreate(),
 			},
 			{
-				// Validate that the datasource correctly retrieves the resource
+				// Validate that the datasource correctly retrieves the resource.
 				Config: testAccDataSourceAuthDomainADConfigData(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.wallix-bastion_authdomain.testacc_dataDomain",
@@ -34,7 +34,7 @@ func TestAccDataSourceAuthDomainAD_basic(t *testing.T) {
 	})
 }
 
-// Resource creation configuration
+// Resource creation configuration.
 func testAccDataSourceAuthDomainADConfigCreate() string {
 	return `
 resource "wallix-bastion_authdomain_ad" "testacc_dataAuthDomain" {
@@ -47,7 +47,7 @@ resource "wallix-bastion_authdomain_ad" "testacc_dataAuthDomain" {
 `
 }
 
-// Datasource configuration to retrieve the created resource
+// Datasource configuration to retrieve the created resource.
 func testAccDataSourceAuthDomainADConfigData() string {
 	return `
 resource "wallix-bastion_authdomain_ad" "testacc_dataAuthDomain" {
