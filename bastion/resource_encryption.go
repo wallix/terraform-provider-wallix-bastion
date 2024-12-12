@@ -161,7 +161,7 @@ func updateEncryption(
 }
 
 func resourceEncryptionDelete(
-	_ context.Context, d *schema.ResourceData,
+	_ context.Context, d *schema.ResourceData, m interface{},
 ) diag.Diagnostics {
 	// Since the API does not support deletion, we simply remove the resource from the Terraform state
 	d.SetId("")
