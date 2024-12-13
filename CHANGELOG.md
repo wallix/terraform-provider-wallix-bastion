@@ -1,5 +1,17 @@
 # changelog
 
+## 0.14.1 (Decembner 13, 2024)
+
+FEATURES:
+
+* **datasource/wallix-bastion_authdomain_ad**: added the datasource to retrieve an existing authdomain
+* **resource/wallix-bastion_domain_account_credential**: added credential propagation to AD upon creation.
+
+BUG FIXES:
+
+* **resource/wallix-bastion_externalauth_kerberos**: deprecate `login_attribute` argument (it produces Bad Request with API v3.12)
+* **provider_test**: Added the user environment variable presence test for acceptance tests.
+
 ## 0.14.0 (November 08, 2024)
 
 BREAKING CHANGES:
