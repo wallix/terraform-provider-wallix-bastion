@@ -1,6 +1,6 @@
 # changelog
 
-## 0.14.1 (Decembner 13, 2024)
+## 0.14.1 (December 13, 2024)
 
 FEATURES:
 
