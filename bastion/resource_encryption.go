@@ -156,6 +156,7 @@ func updateEncryption(
 	if code != http.StatusOK && code != http.StatusNoContent {
 		return fmt.Errorf("API didn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
+
 	return nil
 }
 
