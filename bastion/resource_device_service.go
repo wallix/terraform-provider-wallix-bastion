@@ -302,6 +302,8 @@ func sshSubProtocolsValid() []string {
 		"SSH_DIRECT_TCPIP",
 		"SSH_REVERSE_TCPIP",
 		"SSH_AUTH_AGENT",
+		"SSH_DIRECT_UNIXSOCK",
+		"SSH_REVERSE_UNIXSOCK",
 	}
 }
 
@@ -314,6 +316,7 @@ func rdpSubProtocolsValid() []string {
 		"RDP_COM_PORT",
 		"RDP_DRIVE",
 		"RDP_SMARTCARD",
+		"RDP_AUDIO_OUTPUT",
 		"RDP_AUDIO_OUTPUT",
 	}
 }
