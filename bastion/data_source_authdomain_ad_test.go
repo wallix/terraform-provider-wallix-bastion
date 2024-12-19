@@ -59,7 +59,7 @@ resource "wallix-bastion_authdomain_ad" "testacc_dataAuthDomain" {
 }
 
 data "wallix-bastion_authdomain" "testacc_dataDomain" {
-  domain_name = wallix-bastion_domain.testacc_dataDomain.domain_name
+  domain_name      = wallix-bastion_domain.testacc_dataDomain.domain_name
   auth_domain_name = wallix-bastion_domain.testacc_dataDomain.domain_real_name
 }
 `
