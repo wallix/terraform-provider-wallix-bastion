@@ -61,7 +61,6 @@ func resourceConfigX509Create(ctx context.Context, d *schema.ResourceData, m int
 func resourceConfigX509Read(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	cfg, err := readConfigX509Options(ctx, m)
 	if err != nil {
-
 		return diag.FromErr(err)
 	}
 
@@ -113,6 +112,7 @@ func addConfigX509(ctx context.Context, d *schema.ResourceData, m interface{}) e
 	if code != http.StatusOK && code != http.StatusNoContent {
 		return fmt.Errorf("API returned error: %d with body:\n%s", code, body)
 	}
+
 	return nil
 }
 
@@ -133,6 +133,7 @@ func readConfigX509Options(ctx context.Context, m interface{}) (jsonConfigX509, 
 	if err != nil {
 		return result, fmt.Errorf("error unmarshaling JSON: %w", err)
 	}
+
 	return result, nil
 }
 
@@ -146,6 +147,7 @@ func updateConfigX509(ctx context.Context, d *schema.ResourceData, m interface{}
 	if code != http.StatusOK && code != http.StatusNoContent {
 		return fmt.Errorf("API returned error: %d with body:\n%s", code, body)
 	}
+
 	return nil
 }
 
@@ -158,6 +160,7 @@ func deleteConfigX509(ctx context.Context, m interface{}) error {
 	if code != http.StatusOK && code != http.StatusNoContent {
 		return fmt.Errorf("API returned error: %d with body:\n%s", code, body)
 	}
+
 	return nil
 }
 
