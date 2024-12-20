@@ -61,16 +61,19 @@ func resourceConfigX509Create(ctx context.Context, d *schema.ResourceData, m int
 func resourceConfigX509Read(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	cfg, err := readConfigX509Options(ctx, m)
 	if err != nil {
+
 		return diag.FromErr(err)
 	}
 
 	// If no config exists, mark the resource as deleted
 	if cfg.ServerPublicKey == "" && cfg.ServerPrivateKey == "" {
 		d.SetId("")
+
 		return nil
 	}
 
 	fillConfigX509(d, cfg)
+
 	return nil
 }
 
@@ -93,9 +96,10 @@ func resourceConfigX509Delete(ctx context.Context, d *schema.ResourceData, m int
 	return nil
 }
 
-func resourceConfigX509Import(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+func resourceConfigX509Import(d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
 	// Since the resource does not have a unique ID, use the static "x509Config" ID
 	d.SetId("x509Config")
+
 	return []*schema.ResourceData{d}, nil
 }
 
@@ -166,9 +170,19 @@ func prepareConfigX509JSON(d *schema.ResourceData) jsonConfigX509 {
 	}
 }
 
-func fillConfigX509(d *schema.ResourceData, jsonData jsonConfigX509) {
-	d.Set("ca_certificate", jsonData.CaCertificate)
-	d.Set("server_public_key", jsonData.ServerPublicKey)
-	d.Set("server_private_key", jsonData.ServerPrivateKey)
-	d.Set("enable", jsonData.Enable)
+func fillConfigX509(d *schema.ResourceData, jsonData jsonConfigX509) error {
+	if err := d.Set("ca_certificate", jsonData.CaCertificate); err != nil {
+		return err
+	}
+	if err := d.Set("server_public_key", jsonData.ServerPublicKey); err != nil {
+		return err
+	}
+	if err := d.Set("server_private_key", jsonData.ServerPrivateKey); err != nil {
+		return err
+	}
+	if err := d.Set("enable", jsonData.Enable); err != nil {
+		return err
+	}
+
+	return nil
 }

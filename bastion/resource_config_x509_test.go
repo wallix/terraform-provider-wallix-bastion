@@ -11,20 +11,20 @@ func TestAccResourceConfigX509_basic(t *testing.T) {
 	resourceName := "bastion_x509_config.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) }, // Ensures necessary environment variables are set
+		PreCheck:  func() { testAccPreCheck(t) }, // Ensures necessary environment variables are set.
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceConfigX509Basic(),
 				Check: resource.ComposeTestCheckFunc(
-					// Verify that the resource exists
+					// Verify that the resource exists.
 					resource.TestCheckResourceAttr(resourceName, "ca_certificate", "test-ca-cert"),
 					resource.TestCheckResourceAttr(resourceName, "server_public_key", "test-public-key"),
 					resource.TestCheckResourceAttr(resourceName, "server_private_key", "test-private-key"),
 					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
 				),
 			},
-			// Test updating the resource
+			// Test updating the resource.
 			{
 				Config: testAccResourceConfigX509Update(),
 				Check: resource.ComposeTestCheckFunc(
@@ -38,7 +38,7 @@ func TestAccResourceConfigX509_basic(t *testing.T) {
 	})
 }
 
-// Test configuration for creating the resource
+// Test configuration for creating the resource.
 func testAccResourceConfigX509Basic() string {
 	return (`
 resource "bastion_x509_config" "test" {
@@ -50,7 +50,7 @@ resource "bastion_x509_config" "test" {
 `)
 }
 
-// Test configuration for updating the resource
+// Test configuration for updating the resource.
 func testAccResourceConfigX509Update() string {
 	return (`
 resource "bastion_x509_config" "test" {
