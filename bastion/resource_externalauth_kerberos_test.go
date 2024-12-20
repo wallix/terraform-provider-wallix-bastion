@@ -47,7 +47,7 @@ func TestAccResourceExternalAuthKerberos_basic(t *testing.T) {
 
 func testAccResourceExternalAuthKerberosCreate() string {
 	k, _ := hex.DecodeString(keytabDataHexStr)
-	os.WriteFile("/tmp/testacc_data", k, 0644) //nolint: all
+	os.WriteFile("/tmp/testacc_data", k, 0o644) //nolint: all
 
 	return `
 data "wallix-bastion_version" "v" {}

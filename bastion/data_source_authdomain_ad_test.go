@@ -38,11 +38,11 @@ func TestAccDataSourceAuthDomainAD_basic(t *testing.T) {
 func testAccDataSourceAuthDomainADConfigCreate() string {
 	return `
 resource "wallix-bastion_authdomain_ad" "testacc_dataAuthDomain" {
-  domain_name         = "testacc-domain"
-  auth_domain_name    = "testacc-auth-domain"
-  default_language    = "en"
+  domain_name          = "testacc-domain"
+  auth_domain_name     = "testacc-auth-domain"
+  default_language     = "en"
   default_email_domain = "example.com"
-  external_auths      = ["auth1", "auth2"]
+  external_auths       = ["auth1", "auth2"]
 }
 `
 }
@@ -51,15 +51,15 @@ resource "wallix-bastion_authdomain_ad" "testacc_dataAuthDomain" {
 func testAccDataSourceAuthDomainADConfigData() string {
 	return `
 resource "wallix-bastion_authdomain_ad" "testacc_dataAuthDomain" {
-  domain_name         = "testacc-domain"
-  auth_domain_name    = "testacc-auth-domain"
-  default_language    = "en"
+  domain_name          = "testacc-domain"
+  auth_domain_name     = "testacc-auth-domain"
+  default_language     = "en"
   default_email_domain = "example.com"
-  external_auths      = ["auth1", "auth2"]
+  external_auths       = ["auth1", "auth2"]
 }
 
 data "wallix-bastion_authdomain" "testacc_dataDomain" {
-  domain_name = wallix-bastion_domain.testacc_dataDomain.domain_name
+  domain_name      = wallix-bastion_domain.testacc_dataDomain.domain_name
   auth_domain_name = wallix-bastion_domain.testacc_dataDomain.domain_real_name
 }
 `
