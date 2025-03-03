@@ -42,10 +42,10 @@ func TestAccResourceConfigX509_basic(t *testing.T) {
 func testAccResourceConfigX509Basic() string {
 	return (`
 resource "bastion_x509_config" "test" {
-  ca_certificate    = "test-ca-cert"
-  server_public_key = "test-public-key"
+  ca_certificate     = "test-ca-cert"
+  server_public_key  = "test-public-key"
   server_private_key = "test-private-key"
-  enable            = true
+  enable             = true
 }
 `)
 }
@@ -54,10 +54,10 @@ resource "bastion_x509_config" "test" {
 func testAccResourceConfigX509Update() string {
 	return (`
 resource "bastion_x509_config" "test" {
-  ca_certificate    = "updated-ca-cert"
-  server_public_key = "updated-public-key"
+  ca_certificate     = "updated-ca-cert"
+  server_public_key  = "updated-public-key"
   server_private_key = "updated-private-key"
-  enable            = false
+  enable             = false
 }
 `)
 }
