@@ -317,7 +317,7 @@ func rdpSubProtocolsValid() []string {
 		"RDP_DRIVE",
 		"RDP_SMARTCARD",
 		"RDP_AUDIO_OUTPUT",
-		"RDP_AUDIO_OUTPUT",
+		"RDP_AUDIO_INPUT",
 	}
 }
 
