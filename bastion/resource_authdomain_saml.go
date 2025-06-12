@@ -12,34 +12,31 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-type jsonAuthDomainAzureAD struct {
-	IsDefault          bool     `json:"is_default"`
+type jsonAuthDomainSAML struct {
 	ID                 string   `json:"id,omitempty"`
-	AuthDomainName     string   `json:"auth_domain_name"`
-	Certificate        string   `json:"certificate"`
-	ClientID           string   `json:"client_id"`
-	ClientSecret       string   `json:"client_secret"`
-	EntityID           string   `json:"entity_id"`
-	Label              string   `json:"label"`
-	DefaultEmailDomain string   `json:"default_email_domain"`
-	DefaultLanguage    string   `json:"default_language"`
-	Description        string   `json:"description"`
 	DomainName         string   `json:"domain_name"`
-	Passphrase         string   `json:"passphrase"`
-	PrivateKey         string   `json:"private_key"`
 	Type               string   `json:"type"`
+	Description        string   `json:"description"`
+	IsDefault          bool     `json:"is_default"`
+	AuthDomainName     string   `json:"auth_domain_name"`
 	ExternalAuths      []string `json:"external_auths"`
 	SecondaryAuth      []string `json:"secondary_auth"`
+	DefaultLanguage    string   `json:"default_language"`
+	DefaultEmailDomain string   `json:"default_email_domain"`
+	Label              string   `json:"label"`
+	ForceAuthn         bool     `json:"force_authn"`
+
+	IdpInitiatedURL string `json:"idp_initiated_url,omitempty"`
 }
 
-func resourceAuthDomainAzureAD() *schema.Resource {
+func resourceAuthDomainSAML() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAuthDomainAzureADCreate,
-		ReadContext:   resourceAuthDomainAzureADRead,
-		UpdateContext: resourceAuthDomainAzureADUpdate,
-		DeleteContext: resourceAuthDomainAzureADDelete,
+		CreateContext: resourceAuthDomainSAMLCreate,
+		ReadContext:   resourceAuthDomainSAMLRead,
+		UpdateContext: resourceAuthDomainSAMLUpdate,
+		DeleteContext: resourceAuthDomainSAMLDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAuthDomainAzureADImport,
+			State: resourceAuthDomainSAMLImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"domain_name": {
@@ -47,10 +44,6 @@ func resourceAuthDomainAzureAD() *schema.Resource {
 				Required: true,
 			},
 			"auth_domain_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"client_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -63,10 +56,6 @@ func resourceAuthDomainAzureAD() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"de", "en", "es", "fr", "ru"}, false),
 			},
-			"entity_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"external_auths": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -76,71 +65,58 @@ func resourceAuthDomainAzureAD() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"certificate": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-			},
-			"client_secret": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-			},
 			"description": {
 				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"force_authn": {
+				Type:     schema.TypeBool,
 				Optional: true,
 			},
 			"is_default": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"passphrase": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Sensitive:    true,
-				RequiredWith: []string{"private_key"},
-			},
-			"private_key": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-			},
 			"secondary_auth": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"idp_initiated_url": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
 
-func resourceAuthDomainAzureADVersionCheck(version string) error {
+func resourceAuthDomainSAMLVersionCheck(version string) error {
 	if slices.Contains(defaultVersionsValid(), version) {
 		return nil
 	}
 
-	return fmt.Errorf("resource wallix-bastion_authdomain_azuread not available with api version %s", version)
+	return fmt.Errorf("resource wallix-bastion_authdomain_saml not available with api version %s", version)
 }
 
-func resourceAuthDomainAzureADCreate(
+func resourceAuthDomainSAMLCreate(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourceAuthDomainAzureADVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceAuthDomainSAMLVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	_, ex, err := searchResourceAuthDomainAzureAD(ctx, d.Get("domain_name").(string), m)
+	_, ex, err := searchResourceAuthDomainSAML(ctx, d.Get("domain_name").(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if ex {
 		return diag.FromErr(fmt.Errorf("domain_name %s already exists", d.Get("domain_name").(string)))
 	}
-	err = addAuthDomainAzureAD(ctx, d, m)
+	err = addAuthDomainSAML(ctx, d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceAuthDomainAzureAD(ctx, d.Get("domain_name").(string), m)
+	id, ex, err := searchResourceAuthDomainSAML(ctx, d.Get("domain_name").(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -149,81 +125,81 @@ func resourceAuthDomainAzureADCreate(
 	}
 	d.SetId(id)
 
-	return resourceAuthDomainAzureADRead(ctx, d, m)
+	return resourceAuthDomainSAMLRead(ctx, d, m)
 }
 
-func resourceAuthDomainAzureADRead(
+func resourceAuthDomainSAMLRead(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourceAuthDomainAzureADVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceAuthDomainSAMLVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	cfg, err := readAuthDomainAzureADOptions(ctx, d.Id(), m)
+	cfg, err := readAuthDomainSAMLOptions(ctx, d.Id(), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if cfg.ID == "" {
 		d.SetId("")
 	} else {
-		fillAuthDomainAzureAD(d, cfg)
+		fillAuthDomainSAML(d, cfg)
 	}
 
 	return nil
 }
 
-func resourceAuthDomainAzureADUpdate(
+func resourceAuthDomainSAMLUpdate(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) diag.Diagnostics {
 	d.Partial(true)
 	c := m.(*Client)
-	if err := resourceAuthDomainAzureADVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceAuthDomainSAMLVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := updateAuthDomainAzureAD(ctx, d, m); err != nil {
+	if err := updateAuthDomainSAML(ctx, d, m); err != nil {
 		return diag.FromErr(err)
 	}
 	d.Partial(false)
 
-	return resourceAuthDomainAzureADRead(ctx, d, m)
+	return resourceAuthDomainSAMLRead(ctx, d, m)
 }
 
-func resourceAuthDomainAzureADDelete(
+func resourceAuthDomainSAMLDelete(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) diag.Diagnostics {
 	c := m.(*Client)
-	if err := resourceAuthDomainAzureADVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceAuthDomainSAMLVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := deleteAuthDomainAzureAD(ctx, d, m); err != nil {
+	if err := deleteAuthDomainSAML(ctx, d, m); err != nil {
 		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
-func resourceAuthDomainAzureADImport(
+func resourceAuthDomainSAMLImport(
 	d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
 	ctx := context.Background()
 	c := m.(*Client)
-	if err := resourceAuthDomainAzureADVersionCheck(c.bastionAPIVersion); err != nil {
+	if err := resourceAuthDomainSAMLVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
 	}
-	id, ex, err := searchResourceAuthDomainAzureAD(ctx, d.Id(), m)
+	id, ex, err := searchResourceAuthDomainSAML(ctx, d.Id(), m)
 	if err != nil {
 		return nil, err
 	}
 	if !ex {
 		return nil, fmt.Errorf("don't find domain_name with id %s (id must be <domain_name>)", d.Id())
 	}
-	cfg, err := readAuthDomainAzureADOptions(ctx, d.Id(), m)
+	cfg, err := readAuthDomainSAMLOptions(ctx, d.Id(), m)
 	if err != nil {
 		return nil, err
 	}
-	fillAuthDomainAzureAD(d, cfg)
+	fillAuthDomainSAML(d, cfg)
 	result := make([]*schema.ResourceData, 1)
 	d.SetId(id)
 	result[0] = d
@@ -231,7 +207,7 @@ func resourceAuthDomainAzureADImport(
 	return result, nil
 }
 
-func searchResourceAuthDomainAzureAD(
+func searchResourceAuthDomainSAML(
 	ctx context.Context, domainName string, m interface{},
 ) (
 	string, bool, error,
@@ -244,7 +220,7 @@ func searchResourceAuthDomainAzureAD(
 	if code != http.StatusOK {
 		return "", false, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}
-	var results []jsonAuthDomainAzureAD
+	var results []jsonAuthDomainSAML
 	err = json.Unmarshal([]byte(body), &results)
 	if err != nil {
 		return "", false, fmt.Errorf("unmarshaling json: %w", err)
@@ -256,11 +232,11 @@ func searchResourceAuthDomainAzureAD(
 	return "", false, nil
 }
 
-func addAuthDomainAzureAD(
+func addAuthDomainSAML(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) error {
 	c := m.(*Client)
-	jsonData := prepareAuthDomainAzureADJSON(d)
+	jsonData := prepareAuthDomainSAMLJSON(d)
 	body, code, err := c.newRequest(ctx, "/authdomains/", http.MethodPost, jsonData)
 	if err != nil {
 		return err
@@ -272,11 +248,11 @@ func addAuthDomainAzureAD(
 	return nil
 }
 
-func updateAuthDomainAzureAD(
+func updateAuthDomainSAML(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) error {
 	c := m.(*Client)
-	jsonData := prepareAuthDomainAzureADJSON(d)
+	jsonData := prepareAuthDomainSAMLJSON(d)
 	body, code, err := c.newRequest(ctx, "/authdomains/"+d.Id()+"?force=true", http.MethodPut, jsonData)
 	if err != nil {
 		return err
@@ -288,7 +264,7 @@ func updateAuthDomainAzureAD(
 	return nil
 }
 
-func deleteAuthDomainAzureAD(
+func deleteAuthDomainSAML(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) error {
 	c := m.(*Client)
@@ -303,22 +279,17 @@ func deleteAuthDomainAzureAD(
 	return nil
 }
 
-func prepareAuthDomainAzureADJSON(d *schema.ResourceData) jsonAuthDomainAzureAD {
-	jsonData := jsonAuthDomainAzureAD{
-		Type:               "AzureAD",
+func prepareAuthDomainSAMLJSON(d *schema.ResourceData) jsonAuthDomainSAML {
+	jsonData := jsonAuthDomainSAML{
 		DomainName:         d.Get("domain_name").(string),
-		AuthDomainName:     d.Get("auth_domain_name").(string),
-		ClientID:           d.Get("client_id").(string),
-		DefaultEmailDomain: d.Get("default_email_domain").(string),
-		DefaultLanguage:    d.Get("default_language").(string),
-		EntityID:           d.Get("entity_id").(string),
-		Label:              d.Get("label").(string),
-		Certificate:        d.Get("certificate").(string),
-		ClientSecret:       d.Get("client_secret").(string),
+		Type:               "SAML",
 		Description:        d.Get("description").(string),
 		IsDefault:          d.Get("is_default").(bool),
-		Passphrase:         d.Get("passphrase").(string),
-		PrivateKey:         d.Get("private_key").(string),
+		AuthDomainName:     d.Get("auth_domain_name").(string),
+		DefaultLanguage:    d.Get("default_language").(string),
+		DefaultEmailDomain: d.Get("default_email_domain").(string),
+		Label:              d.Get("label").(string),
+		ForceAuthn:         d.Get("force_authn").(bool),
 	}
 
 	listExternalAuths := d.Get("external_auths").([]interface{})
@@ -336,13 +307,13 @@ func prepareAuthDomainAzureADJSON(d *schema.ResourceData) jsonAuthDomainAzureAD 
 	return jsonData
 }
 
-func readAuthDomainAzureADOptions(
+func readAuthDomainSAMLOptions(
 	ctx context.Context, domainID string, m interface{},
 ) (
-	jsonAuthDomainAzureAD, error,
+	jsonAuthDomainSAML, error,
 ) {
 	c := m.(*Client)
-	var result jsonAuthDomainAzureAD
+	var result jsonAuthDomainSAML
 	body, code, err := c.newRequest(ctx, "/authdomains/"+domainID, http.MethodGet, nil)
 	if err != nil {
 		return result, err
@@ -361,23 +332,17 @@ func readAuthDomainAzureADOptions(
 	return result, nil
 }
 
-func fillAuthDomainAzureAD(d *schema.ResourceData, jsonData jsonAuthDomainAzureAD) {
+func fillAuthDomainSAML(d *schema.ResourceData, jsonData jsonAuthDomainSAML) {
 	if tfErr := d.Set("domain_name", jsonData.DomainName); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("auth_domain_name", jsonData.AuthDomainName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("client_id", jsonData.ClientID); tfErr != nil {
-		panic(tfErr)
-	}
-	if tfErr := d.Set("default_language", jsonData.DefaultLanguage); tfErr != nil {
-		panic(tfErr)
-	}
 	if tfErr := d.Set("default_email_domain", jsonData.DefaultEmailDomain); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("entity_id", jsonData.EntityID); tfErr != nil {
+	if tfErr := d.Set("default_language", jsonData.DefaultLanguage); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("external_auths", jsonData.ExternalAuths); tfErr != nil {
@@ -389,11 +354,16 @@ func fillAuthDomainAzureAD(d *schema.ResourceData, jsonData jsonAuthDomainAzureA
 	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
+	if tfErr := d.Set("force_authn", jsonData.ForceAuthn); tfErr != nil {
+		panic(tfErr)
+	}
 	if tfErr := d.Set("is_default", jsonData.IsDefault); tfErr != nil {
 		panic(tfErr)
 	}
-	// private_key hidden on API
 	if tfErr := d.Set("secondary_auth", jsonData.SecondaryAuth); tfErr != nil {
+		panic(tfErr)
+	}
+	if tfErr := d.Set("idp_initiated_url", jsonData.IdpInitiatedURL); tfErr != nil {
 		panic(tfErr)
 	}
 }

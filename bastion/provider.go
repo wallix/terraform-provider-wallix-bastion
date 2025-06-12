@@ -69,6 +69,7 @@ func Provider() *schema.Provider {
 			"wallix-bastion_authdomain_azuread":                    resourceAuthDomainAzureAD(),
 			"wallix-bastion_authdomain_ldap":                       resourceAuthDomainLdap(),
 			"wallix-bastion_authdomain_mapping":                    resourceAuthDomainMapping(),
+			"wallix-bastion_authdomain_saml":                       resourceAuthDomainSAML(),
 			"wallix-bastion_authorization":                         resourceAuthorization(),
 			"wallix-bastion_checkout_policy":                       resourceCheckoutPolicy(),
 			"wallix-bastion_cluster":                               resourceCluster(),
