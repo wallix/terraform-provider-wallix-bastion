@@ -1,0 +1,43 @@
+run:
+  timeout: 5m
+
+linters:
+  enable-all: true
+  disable:
+    # deprecated
+    - execinquery # deprecated 1.58.0
+    - gomnd # deprecated 1.58.0
+    - exportloopref # deprecated 1.60.2
+    # unwanted
+    - cyclop
+    - depguard
+    - dupl
+    - err113
+    - exhaustruct
+    - forcetypeassert
+    - funlen
+    - gomoddirectives
+    - mnd
+    - nestif
+    - paralleltest
+    - tagliatelle
+    - varnamelen
+    - wsl
+
+linters-settings:
+  gci:
+    custom-order: true
+    sections:
+      - standard
+      - localModule
+      - default
+  govet:
+    enable-all: true
+    disable:
+      - fieldalignment
+  gocognit:
+    # minimal code complexity to report, 30 by default
+    min-complexity: 30
+  gocyclo:
+    # minimal code complexity to report, 30 by default
+    min-complexity: 30
