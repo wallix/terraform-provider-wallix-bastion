@@ -1,5 +1,19 @@
 # changelog
 
+## 0.14.4 (March 3, 2025)
+
+FEATURES:
+
+- **resource/wallix-bastion_authdomain_saml**: added the possibilty to configure Other IDPs/SAML auth domain resource.
+
+BUG FIXES:
+
+## 0.14.3 (March 3, 2025)
+
+BUG FIXES:
+
+- **resource/wallix-config_x509**: Fixed previous build not including the resource
+
 ## 0.14.2 (December 20, 2024)
 
 FEATURES:

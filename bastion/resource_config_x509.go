@@ -71,7 +71,9 @@ func resourceConfigX509Read(ctx context.Context, d *schema.ResourceData, m inter
 		return nil
 	}
 
-	fillConfigX509(d, cfg)
+	if err := fillConfigX509(d, cfg); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
@@ -173,6 +175,7 @@ func prepareConfigX509JSON(d *schema.ResourceData) jsonConfigX509 {
 	}
 }
 
+//nolint:wrapcheck
 func fillConfigX509(d *schema.ResourceData, jsonData jsonConfigX509) error {
 	if err := d.Set("ca_certificate", jsonData.CaCertificate); err != nil {
 		return err

@@ -1,14 +1,7 @@
-run:
-  timeout: 5m
-
+version: "2"
 linters:
-  enable-all: true
+  default: all
   disable:
-    # deprecated
-    - execinquery # deprecated 1.58.0
-    - gomnd # deprecated 1.58.0
-    - exportloopref # deprecated 1.60.2
-    # unwanted
     - cyclop
     - depguard
     - dupl
@@ -23,21 +16,42 @@ linters:
     - tagliatelle
     - varnamelen
     - wsl
-
-linters-settings:
-  gci:
-    custom-order: true
-    sections:
-      - standard
-      - localModule
-      - default
-  govet:
-    enable-all: true
-    disable:
-      - fieldalignment
-  gocognit:
-    # minimal code complexity to report, 30 by default
-    min-complexity: 30
-  gocyclo:
-    # minimal code complexity to report, 30 by default
-    min-complexity: 30
+  settings:
+    gocognit:
+      min-complexity: 30
+    gocyclo:
+      min-complexity: 30
+    govet:
+      disable:
+        - fieldalignment
+      enable-all: true
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+  settings:
+    gci:
+      sections:
+        - standard
+        - localModule
+        - default
+      custom-order: true
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
