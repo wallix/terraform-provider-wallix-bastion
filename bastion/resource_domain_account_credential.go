@@ -361,9 +361,10 @@ func prepareDomainAccountCredentialJSON(
 		// Include the type and other fields based on the type
 		jsonData.Type = d.Get("type").(string)
 
-		if jsonData.Type == "password" {
+		switch jsonData.Type {
+		case "password":
 			jsonData.Password = d.Get("password").(string)
-		} else if jsonData.Type == "ssh_key" {
+		case "ssh_key":
 			jsonData.PrivateKey = d.Get("private_key").(string)
 			jsonData.Passphrase = d.Get("passphrase").(string)
 		}

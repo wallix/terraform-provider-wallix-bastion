@@ -16,7 +16,6 @@ linters:
     - tagliatelle
     - varnamelen
     - wsl
-    - staticcheck
   settings:
     gocognit:
       min-complexity: 30

@@ -191,12 +191,13 @@ func verifyEncryption(
 
 	// Check if encryption status exists
 	var encryptionStatus string
-	if c.bastionAPIVersion == "3.8" {
+	switch c.bastionAPIVersion {
+	case "3.8":
 		encryptionStatus, _ = result["encryption"].(string)
 		if encryptionStatus != "ready" {
 			return false, nil // Return false if encryption is not "ready"
 		}
-	} else if c.bastionAPIVersion == "3.12" {
+	case "3.12":
 		encryptionStatus, _ = result["sealed_state"].(string)
 		if encryptionStatus != "unsealed" {
 			return false, nil // Return false if encryption is not "unsealed"

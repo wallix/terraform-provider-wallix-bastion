@@ -321,9 +321,10 @@ func prepareDeviceLocalDomainAccountCredentialJSON(
 		Type: d.Get("type").(string),
 	}
 
-	if jsonData.Type == "password" {
+	switch jsonData.Type {
+	case "password":
 		jsonData.Password = d.Get("password").(string)
-	} else if jsonData.Type == "ssh_key" {
+	case "ssh_key":
 		jsonData.PrivateKey = d.Get("private_key").(string)
 		jsonData.Passphrase = d.Get("passphrase").(string)
 	}
