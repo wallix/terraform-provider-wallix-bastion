@@ -15,7 +15,7 @@ jobs:
         run: |
           echo "CGO_ENABLED=0" >> $GITHUB_ENV
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v8
         with:
@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Markdown files linting
         uses: avto-dev/markdown-lint@v1
@@ -48,9 +48,9 @@ jobs:
       - name: Show version
         run: go version
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Check out terrafmt code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: katbyte/terrafmt
           ref: v0.5.2
