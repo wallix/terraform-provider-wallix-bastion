@@ -195,8 +195,13 @@ make install
 
 # Test with your Terraform configuration
 cd examples/
+
+# Choose an example directory, e.g., authorization
+cd authorization
+
 terraform init
 terraform plan
+terraform apply
 ```
 
 ### 4. Submit Changes
@@ -217,10 +222,9 @@ git push origin feature/your-feature-name
 
 ```bash
 # Build commands
-# Quality commands
-make fmt            # Format Go code
-make lint           # Run linters
-make vet            # Run go vet
+make build          # Build the provider
+make build-all      # Build for all platforms
+
 # Quality commands
 make fmt            # Format Go code
 make lint           # Run linters
@@ -235,6 +239,7 @@ make test-all       # Run all tests
 # Development commands
 make clean          # Clean build artifacts
 make setup-dev      # Setup development environment
+make install        # Install the provider locally
 make docs           # Generate documentation
 ```
 
@@ -271,7 +276,7 @@ This project is licensed under the Mozilla Public License 2.0 - see the [LICENSE
 
 We would like to greatly thanks:
 
-- [Claranet](https://www.claranet.fr/) for their great work on this provider!
+- [Claranet](https://www.claranet.com/) for their great work on this provider!
 - The Terraform community for their continuous support and contributions
 
 ## Support
