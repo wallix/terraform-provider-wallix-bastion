@@ -1,5 +1,13 @@
 # changelog
 
+## 0.14.5 (August 25, 2025)
+
+ENHANCEMENTS:
+
+- **resource/wallix-bastion_authorization**: added support for session sharing functionality with new
+  `authorize_session_sharing` (boolean) and `session_sharing_mode` (enum: "view_only", "view_control")
+  arguments, enabling users to configure session sharing permissions for authorizations.
+
 ## 0.14.4 (March 3, 2025)
 
 FEATURES:
