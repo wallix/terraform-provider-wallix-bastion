@@ -30,57 +30,62 @@ The following arguments are supported:
 
 -> **Note:** At least one of `authorize_password_retrieval` or `authorize_sessions` arguments is required.
 
-- **authorization_name** (Required, String)  
+- **authorization_name** (Required, String)
   The authorization name.
-- **user_group** (Required, String, Forces new resource)  
+- **user_group** (Required, String, Forces new resource)
   The user group.
-- **target_group** (Required, String, Force new resource)  
+- **target_group** (Required, String, Force new resource)
   The target group.
-- **description** (Optional, String)  
+- **description** (Optional, String)
   The authorization description.
-- **authorize_password_retrieval** (Optional, Boolean)  
+- **authorize_password_retrieval** (Optional, Boolean)
   Authorize password retrieval.
-- **authorize_sessions** (Optional, Boolean)  
+- **authorize_sessions** (Optional, Boolean)
   Authorize sessions via proxies.
   `subprotocols` need to be set.
-- **subprotocols** (Optional, List of String)  
-  The authorization subprotocols.  
-- **is_critical** (Optional, Boolean)  
+- **authorize_session_sharing** (Optional, Boolean)
+  Enable Session Sharing.
+- **session_sharing_mode** (Optional, String)
+  The Session Sharing Mode. Must be `view_only` or `view_control`
+  `authorize_session_sharing` need to be enabled.
+- **subprotocols** (Optional, List of String)
+  The authorization subprotocols.
+- **is_critical** (Optional, Boolean)
   Define if it's critical.
-- **is_recorded** (Optional, Boolean)  
+- **is_recorded** (Optional, Boolean)
   Define if it's recorded.
-- **approval_required** (Optional, Boolean)  
+- **approval_required** (Optional, Boolean)
   Approval is required to connect to targets.
   `approvers` need to be set.
-- **approvers** (Optional, List of String)  
-  The approvers user groups.  
+- **approvers** (Optional, List of String)
+  The approvers user groups.
   `approval_required` need to be set.
-- **active_quorum** (Optional, Number)  
+- **active_quorum** (Optional, Number)
   The quorum for active periods (-1: approval workflow with automatic approval,
-  0: no approval workflow (direct connection), > 0: quorum to reach).  
+  0: no approval workflow (direct connection), > 0: quorum to reach).
   Defaults to `-1`.
-- **inactive_quorum** (Optional, Number)  
+- **inactive_quorum** (Optional, Number)
   The quorum for inactive periods (-1: approval workflow with automatic approval,
-  0: no connection allowed, > 0: quorum to reach).  
+  0: no connection allowed, > 0: quorum to reach).
   Defaults to `-1`.
-- **approval_timeout** (Optional, Number)  
+- **approval_timeout** (Optional, Number)
   Set a timeout in minutes after which the approval will be automatically closed info connection has
   been initiated (i.e. the user won't be able to connect). 0: no timeout.
-- **has_comment** (Optional, Boolean)  
+- **has_comment** (Optional, Boolean)
   Comment is allowed in approval.
-- **has_ticket** (Optional, Boolean)  
+- **has_ticket** (Optional, Boolean)
   Ticket is allowed in approval.
-- **mandatory_comment** (Optional, Boolean)  
+- **mandatory_comment** (Optional, Boolean)
   Comment is mandatory in approval.
-- **mandatory_ticket** (Optional, Boolean)  
+- **mandatory_ticket** (Optional, Boolean)
   Ticket is mandatory in approval.
-- **single_connection** (Optional, Boolean)  
+- **single_connection** (Optional, Boolean)
   Limit to one single connection during the approval period (i.e. if the user disconnects, he will
   not be allowed to start a new session during the original requested time).
 
 ## Attribute Reference
 
-- **id** (String)  
+- **id** (String)
   Internal id of authorization in bastion.
 
 ## Import

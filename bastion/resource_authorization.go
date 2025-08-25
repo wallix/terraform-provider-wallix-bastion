@@ -15,11 +15,13 @@ type jsonAuthorization struct {
 	ApprovalRequired           bool      `json:"approval_required"`
 	AuthorizePasswordRetrieval bool      `json:"authorize_password_retrieval"`
 	AuthorizeSessions          bool      `json:"authorize_sessions"`
+	AuthorizeSessionSharing    bool      `json:"authorize_session_sharing"`
 	IsCritical                 bool      `json:"is_critical"`
 	IsRecorded                 bool      `json:"is_recorded"`
 	ID                         string    `json:"id,omitempty"`
 	AuthorizationName          string    `json:"authorization_name"`
 	Description                string    `json:"description"`
+	SessionSharingMode         string    `json:"session_sharing_mode,omitempty"`
 	TargetGroup                string    `json:"target_group,omitempty"`
 	UserGroup                  string    `json:"user_group,omitempty"`
 	HasComment                 *bool     `json:"has_comment,omitempty"`
@@ -72,6 +74,25 @@ func resourceAuthorization() *schema.Resource {
 				Optional:     true,
 				RequiredWith: []string{"subprotocols"},
 				AtLeastOneOf: []string{"authorize_sessions", "authorize_password_retrieval"},
+			},
+			"authorize_session_sharing": {
+				Type:         schema.TypeBool,
+				Optional:     true,
+				RequiredWith: []string{"session_sharing_mode"},
+			},
+			"session_sharing_mode": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: func(val any, key string) ([]string, []error) {
+					v := val.(string)
+					var errs []error
+					if v != "" && v != "view_only" && v != "view_control" {
+						errs = append(errs, fmt.Errorf("%q must be either 'view_only' or 'view_control', got: %s", key, v))
+					}
+
+					return nil, errs
+				},
+				RequiredWith: []string{"authorize_session_sharing"},
 			},
 			"subprotocols": {
 				Type:     schema.TypeSet,
@@ -337,7 +358,9 @@ func prepareAuthorizationJSON(d *schema.ResourceData, newResource bool) jsonAuth
 		AuthorizationName:          d.Get("authorization_name").(string),
 		AuthorizePasswordRetrieval: d.Get("authorize_password_retrieval").(bool),
 		AuthorizeSessions:          d.Get("authorize_sessions").(bool),
+		AuthorizeSessionSharing:    d.Get("authorize_session_sharing").(bool),
 		Description:                d.Get("description").(string),
+		SessionSharingMode:         d.Get("session_sharing_mode").(string),
 		ApprovalRequired:           d.Get("approval_required").(bool),
 		IsCritical:                 d.Get("is_critical").(bool),
 		IsRecorded:                 d.Get("is_recorded").(bool),
@@ -426,6 +449,12 @@ func fillAuthorization(d *schema.ResourceData, jsonData jsonAuthorization) {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("authorize_sessions", jsonData.AuthorizeSessions); tfErr != nil {
+		panic(tfErr)
+	}
+	if tfErr := d.Set("authorize_session_sharing", jsonData.AuthorizeSessionSharing); tfErr != nil {
+		panic(tfErr)
+	}
+	if tfErr := d.Set("session_sharing_mode", jsonData.SessionSharingMode); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("subprotocols", jsonData.SubProtocols); tfErr != nil {
