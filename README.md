@@ -1,6 +1,6 @@
 # Terraform Provider for Wallix Bastion
 
-![Wallix Logo](https://raw.githubusercontent.com/wallix/terraform-provider-wallix-bastion/main/LOGO_WALLIX_2024_black+orange.png)
+![Wallix Logo](https://raw.githubusercontent.com/wallix/terraform-provider-wallix-bastion/refs/heads/main/assets/LOGO_WALLIX_2024_black%2Borange.png)
 
 A Terraform provider for managing Wallix Bastion resources
 
