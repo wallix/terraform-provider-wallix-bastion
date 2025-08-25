@@ -20,12 +20,14 @@ func TestAccResourceConnectionMessage_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccResourceConnectionMessageUpdate(),
+				Config:             testAccResourceConnectionMessageUpdate(),
+				ExpectNonEmptyPlan: false,
 			},
 			{
-				ResourceName:  "wallix-bastion_connection_message.SecondaryEn",
-				ImportState:   true,
-				ImportStateId: "motd_en",
+				ResourceName:      "wallix-bastion_connection_message.SecondaryEn",
+				ImportState:       true,
+				ImportStateId:     "motd_en",
+				ImportStateVerify: false,
 			},
 		},
 		PreventPostDestroyRefresh: true,

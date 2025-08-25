@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>go-test-report</title>
+    <style type="text/css">
+        body {
+            font-family: sans-serif;
+            background-color: #f3f3f3;
+            border-top: 2px #dee6e8 solid;
+            margin: 0;
+        }
+
+        div.pageHeader span.projectTitle {
+            font-family: serif;
+            font-size: 2em;
+            padding-left: 56px;
+            padding-top: 80px;
+            display: block;
+            color: #a5a5a5;
+            text-shadow: 0 -1px 1px white;
+        }
+
+        div.pageHeader div.testStats {
+            position: absolute;
+            top: 7px;
+            right: 52px;
+            font-size: 0.8em;
+            color: #a2a2a2;
+        }
+
+        div.pageHeader div.testStats span.indicator {
+            font-size: 2em;
+            position: relative;
+            top: 5px;
+            text-shadow: 0 1px 0 white;
+        }
+
+        div.pageHeader div.testStats span strong {
+            margin-right: 16px;
+        }
+
+        div.pageHeader div.testStats span.total {
+            border-right: 1px #afafaf dotted;
+            background: #8298af;
+        }
+
+        div.pageHeader div.testStats span.passed {
+            border-right: 1px #afafaf dotted;
+            background: #6fca83;
+        }
+
+        div.pageHeader div.testStats span.skipped {
+            background: #bababa;
+        }
+
+        div.pageHeader div.testStats span.failed {
+            background: #ff7676;
+        }
+
+        div.pageHeader div.testStats span {
+            margin-right: 1px;
+            height: 55px;
+            padding: 20px 8px 18px;
+            color: white;
+        }
+
+        div.pageHeader .testGroupsTitle {
+            margin: 16px 32px 8px 40px;
+            font-size: 0.9em;
+            color: darkgrey;
+            display: inline-block;
+        }
+
+        div.pageHeader .testExecutionDate {
+            display: inline-block;
+            position: absolute;
+            right: 10px;
+            margin: 14px 32px 8px 40px;
+            color: #9e9e9e;
+            font-size: 0.9em;
+        }
+
+        .testReportContainer {
+            padding: 0 32px 32px 32px;
+        }
+
+        .cardContainer {
+            padding: 16px 16px 16px;
+            box-shadow: 0 4px 4px #d4d4d4;
+            background-color: white;
+        }
+
+        #testResults {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .testResultGroup {
+            width: 24px;
+            height: 24px;
+            background-color: #43c143;
+            margin-left: 1px;
+            margin-bottom: 1px;
+            box-sizing: border-box;
+        }
+
+        .testResultGroup.selected {
+            border: 1px white solid;
+            background-color: black !important;
+        }
+
+        .testResultGroup.skipped {
+            border: 2px gray solid;
+        }
+
+        .testResultGroup.failed {
+            background-color: red;
+        }
+
+        .cardContainer.testGroupList,
+        .cardContainer.testDetail {
+            margin-top: 16px;
+            padding: 16px;
+        }
+
+        .cardContainer.testGroupList {
+            color: #9c9c9c;
+            padding: 0;
+        }
+
+        .cardContainer.testGroupList .testGroupRow {
+            cursor: default;
+            border-bottom: 1px #dadada dotted;
+        }
+
+        .cardContainer.testGroupList .testGroupRow span.testStatus {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #139e13;
+            pointer-events: none;
+            display: inline-block;
+            overflow: hidden;
+            float: left;
+            padding-top: 10px;
+            padding-left: 20px;
+            padding-right: 12px;
+        }
+
+        .cardContainer.testGroupList .testGroupRow span.testStatus.skipped {
+            color: gray;
+        }
+
+        .cardContainer.testGroupList .testGroupRow span.testStatus.failed {
+            color: red;
+        }
+
+        .cardContainer.testGroupList .testGroupRow span.testTitle {
+            font-size: 0.9em;
+            padding: 12px 0 10px;
+            display: inline-block;
+            pointer-events: none;
+            color: #525252;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            width: calc(100% - 110px);
+        }
+
+        .cardContainer.testGroupList .testGroupRow span.testDuration {
+            pointer-events: none;
+        }
+
+        .cardContainer.testGroupList .testGroupRow {
+            position: relative;
+            border-left: 4px #43c143 solid;
+        }
+
+        .cardContainer.testGroupList .testGroupRow.skipped {
+            color: gray;
+            border-left: 4px gray solid;
+        }
+
+        .cardContainer.testGroupList .testGroupRow.failed {
+            color: red;
+            border-left: 4px red solid;
+        }
+
+        .cardContainer.testGroupList .testGroupRow:hover {
+            background-color: #fffaea;
+            transition: 0.250s;
+        }
+
+        .cardContainer .testOutput {
+            padding: 8px 16px 24px 16px;
+        }
+
+        .cardContainer .console {
+            display: block;
+            font-family: monospace;
+            padding: 10px;
+            background-color: #424242;
+            color: #1aff00;
+            border-bottom: 1px #1aff00 dotted;
+            overflow: auto;
+            font-size: 1.1em;
+        }
+
+        .cardContainer .testOutput .testDetail {
+            border-bottom: 1px #d0d0d0 solid;
+            padding: 16px;
+            background-color: #e6e6e6;
+            border-radius: 0 0 4px 4px;
+            color: dimgrey;
+            font-size: 0.8em;
+        }
+
+        .cardContainer .console.skipped{
+            color: #d9d9d9;
+        }
+
+        .cardContainer .console.failed {
+            color: #ffb2b2;
+        }
+
+        .cardContainer .testDuration {
+            position: absolute;
+            top: 5px;
+            right: 8px;
+            text-align: right;
+            padding-right: 8px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+<div class="pageHeader">
+    <span class="projectTitle">go-test-report</span>
+    <div class="testStats">
+        <span class="total"><span class="indicator">&boxbox;</span> Total: <strong>42</strong>Duration: <strong>4m8.417s</strong>
+        </span><span class="passed"><span class="indicator">&check;</span> Passed: <strong>36</strong>
+        </span><span class="skipped"><span class="indicator">&dash;</span> Skipped: <strong>0</strong>
+        </span><span class="failed"><span class="indicator">&cross;</span> Failed: <strong>6</strong>
+        </span>
+    </div>
+    <span class="testGroupsTitle">Test Groups:</span>
+    <span class="testExecutionDate">August 25, 2025 16:45:58</span>
+</div>
+<div class="testReportContainer">
+    <div class="cardContainer">
+        <div id="testResults">
+            
+                <div class="testResultGroup failed " id="0"></div>
+            
+                <div class="testResultGroup failed " id="1"></div>
+            
+                <div class="testResultGroup  " id="2"></div>
+            
+        </div>
+    </div>
+    <div class="cardContainer testGroupList" id="testGroupList"></div>
+</div>
+<script type="application/javascript">
+    /**
+ * @typedef TestStatus
+ * @property {string} TestName
+ * @property {string} Package
+ * @property {number} ElapsedTime
+ * @property {Array.<string>} Output
+ * @property {boolean} Passed
+ * @property {boolean} Skipped
+ */
+class TestStatus {}
+
+/**
+ * @typedef TestGroupData
+ * @type {object}
+ * @property {string} FailureIndicator
+ * @property {string} SkippedIndicator
+ * @property {Array.<TestStatus>}
+ */
+class TestGroupData {}
+
+/**
+ * @typedef TestResults
+ * @type {Array.<TestGroupData>}
+ */
+class TestResults extends Array {}
+
+/**
+ * @typedef SelectedItems
+ * @property {HTMLElement|EventTarget} testResults
+ * @property {String} selectedTestGroupColor
+ */
+class SelectedItems {}
+
+/**
+ * @typedef GoTestReportElements
+ * @property {TestResults} data
+ * @property {HTMLElement} testResultsElem
+ * @property {HTMLElement} testGroupListElem
+ */
+class GoTestReportElements {}
+
+
+/**
+ * Main entry point for GoTestReport.
+ * @param {GoTestReportElements} elements
+ * @returns {{testResultsClickHandler: testResultsClickHandler}}
+ * @constructor
+ */
+window.GoTestReport = function (elements) {
+  const /**@type {SelectedItems}*/ selectedItems = {
+    testResults: null,
+    selectedTestGroupColor: null
+  }
+
+  function addEventData(event) {
+    if (event.data == null) {
+      event.data = {target: event.target}
+    }
+    return event
+  }
+
+
+  const goTestReport = {
+    /**
+     * Invoked when a user clicks on one of the test group div elements.
+     * @param {HTMLElement} target The element associated with the test group.
+     * @param {boolean} shiftKey If pressed, all of test detail associated to the test group is shown.
+     * @param {TestResults} data
+     * @param {SelectedItems} selectedItems
+     * @param {function(target: Element, data: TestResults)} testGroupListHandler
+     */
+    testResultsClickHandler: function (target,
+                                       shiftKey,
+                                       data,
+                                       selectedItems,
+                                       testGroupListHandler) {
+
+      if (target.classList.contains('testResultGroup') === false) {
+        return
+      }
+      if (selectedItems.testResults != null) {
+        let testResultsElement = /**@type {HTMLElement}*/ selectedItems.testResults
+        testResultsElement.classList.remove("selected")
+        testResultsElement.style.backgroundColor = selectedItems.selectedTestGroupColor
+      }
+      const testGroupId = /**@type {number}*/ target.id
+      if ((target.id === undefined)
+        || (data[testGroupId] === undefined)
+        || (data[testGroupId]['TestResults'] === undefined)) {
+        return
+      }
+      const testResults = /**@type {TestResults}*/ data[testGroupId]['TestResults']
+      let testGroupList = /**@type {string}*/ ''
+      selectedItems.selectedTestGroupColor = getComputedStyle(target).getPropertyValue('background-color')
+      selectedItems.testResults = target
+      target.classList.add("selected")
+      for (let i = 0; i < testResults.length; i++) {
+        const testResult = /**@type {TestGroupData}*/ testResults[i]
+        const testPassed = /**@type {boolean}*/ testResult.Passed
+        const testSkipped = /**@type {boolean}*/ testResult.Skipped
+        const testPassedStatus = /**@type {string}*/ (testPassed) ? '' : (testSkipped ? 'skipped' : 'failed')
+        const testId = /**@type {string}*/ target.attributes['id'].value
+        testGroupList += `<div class="testGroupRow ${testPassedStatus}" data-groupid="${testId}" data-index="${i}">
+        <span class="testStatus ${testPassedStatus}">${(testPassed) ? '&check' : (testSkipped ? '&dash' : '&cross')};</span>
+        <span class="testTitle">${testResult.TestName}</span>
+        <span class="testDuration"><span>${testResult.ElapsedTime}s </span>⏱</span>
+      </div>`
+      }
+      const testGroupListElem = elements.testGroupListElem
+      testGroupListElem.innerHTML = ''
+      testGroupListElem.innerHTML = testGroupList
+
+      if (shiftKey) {
+        testGroupListElem.querySelectorAll('.testGroupRow')
+                         .forEach((elem) => testGroupListHandler(elem, data))
+      } else if (testResults.length === 1) {
+        testGroupListHandler(testGroupListElem.querySelector('.testGroupRow'), data)
+      }
+    },
+
+    /**
+     *
+     * @param {Element} target
+     * @param {TestResults} data
+     */
+    testGroupListHandler: function (target, data) {
+      const attribs = target['attributes']
+      if (attribs.hasOwnProperty('data-groupid')) {
+        const groupId = /**@type {number}*/ attribs['data-groupid'].value
+        const testIndex = /**@type {number}*/ attribs['data-index'].value
+        const testStatus = /**@type {TestStatus}*/ data[groupId]['TestResults'][testIndex]
+        const testOutputDiv = /**@type {HTMLDivElement}*/ target.querySelector('div.testOutput')
+
+        if (testOutputDiv == null) {
+          const testOutputDiv = document.createElement('div')
+          testOutputDiv.classList.add('testOutput')
+          const consolePre = document.createElement('pre')
+          consolePre.classList.add('console')
+          const testDetailDiv = document.createElement('div')
+          testDetailDiv.classList.add('testDetail')
+          const packageNameDiv = document.createElement('div')
+          packageNameDiv.classList.add('package')
+          packageNameDiv.innerHTML = `<strong>Package:</strong> ${testStatus.Package}`
+          const testFileNameDiv = document.createElement('div')
+          testFileNameDiv.classList.add('filename')
+          if (testStatus.TestFileName.trim() === "") {
+            testFileNameDiv.innerHTML = `<strong>Filename:</strong> n/a &nbsp;&nbsp;`
+          } else {
+            testFileNameDiv.innerHTML = `<strong>Filename:</strong> ${testStatus.TestFileName} &nbsp;&nbsp;`
+            testFileNameDiv.innerHTML += `<strong>Line:</strong> ${testStatus.TestFunctionDetail.Line} `
+            testFileNameDiv.innerHTML += `<strong>Col:</strong> ${testStatus.TestFunctionDetail.Col}`
+          }
+          testDetailDiv.insertAdjacentElement('beforeend', packageNameDiv)
+          testDetailDiv.insertAdjacentElement('beforeend', testFileNameDiv)
+          testOutputDiv.insertAdjacentElement('afterbegin', consolePre)
+          testOutputDiv.insertAdjacentElement('beforeend', testDetailDiv)
+          target.insertAdjacentElement('beforeend', testOutputDiv)
+
+          if (testStatus.Passed) {
+            consolePre.classList.remove('skipped')
+            consolePre.classList.remove('failed')
+          } else if (testStatus.Skipped) {
+            consolePre.classList.add('skipped')
+            consolePre.classList.remove('failed')
+          } else {
+            consolePre.classList.remove('skipped')
+            consolePre.classList.add('failed')
+          }
+          consolePre.textContent = testStatus.Output.join('')
+        } else {
+          testOutputDiv.remove()
+        }
+      }
+    }
+  }
+
+  //+------------------------+
+  //|    setup DOM events    |
+  //+------------------------+
+  elements.testResultsElem
+          .addEventListener('click', event =>
+            goTestReport.testResultsClickHandler(/**@type {HTMLElement}*/ addEventData(event).data.target,
+                                                 event.shiftKey,
+                                                 elements.data,
+                                                 selectedItems,
+                                                 goTestReport.testGroupListHandler))
+
+  elements.testGroupListElem
+          .addEventListener('click', event =>
+            goTestReport.testGroupListHandler(/**@type {Element}*/ event.target,
+                                              elements.data))
+
+  return goTestReport
+}
+
+
+    
+
+    const data = [{"FailureIndicator":"failed","SkippedIndicator":"","TestResults":[{"TestName":"TestAccDataSourceAuthDomainAD_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":0.53,"Output":["","=== RUN   TestAccDataSourceAuthDomainAD_basic\n","    data_source_authdomain_ad_test.go:10: Step 1/2 error: Error running apply: exit status 1\n","        \n","        Error: api doesn't return OK or NoContent: 400 with body:\n","        {\n","            \"error\": \"Bad Request\",\n","            \"description\": \"UserAuth 'auth1' not found\"\n","        }\n","        \n","          with wallix-bastion_authdomain_ad.testacc_dataAuthDomain,\n","          on terraform_plugin_test.tf line 3, in resource \"wallix-bastion_authdomain_ad\" \"testacc_dataAuthDomain\":\n","           3: resource \"wallix-bastion_authdomain_ad\" \"testacc_dataAuthDomain\" {\n","        \n","--- FAIL: TestAccDataSourceAuthDomainAD_basic (0.53s)\n",""],"Passed":false,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccDataSourceConfigoption_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":0.98,"Output":["","=== RUN   TestAccDataSourceConfigoption_basic\n","--- PASS: TestAccDataSourceConfigoption_basic (0.98s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccDataSourceDomain_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":2.69,"Output":["","=== RUN   TestAccDataSourceDomain_basic\n","--- PASS: TestAccDataSourceDomain_basic (2.69s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccDataSourceLocalPasswordPolicy_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":0.97,"Output":["","=== RUN   TestAccDataSourceLocalPasswordPolicy_basic\n","--- PASS: TestAccDataSourceLocalPasswordPolicy_basic (0.97s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccDataSourceVersion_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":0.86,"Output":["","=== RUN   TestAccDataSourceVersion_basic\n","--- PASS: TestAccDataSourceVersion_basic (0.86s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceApplicationLocalDomainAccount_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":12.32,"Output":["","=== RUN   TestAccResourceApplicationLocalDomainAccount_basic\n","--- PASS: TestAccResourceApplicationLocalDomainAccount_basic (12.32s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceApplicationLocalDomain_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":12.78,"Output":["","=== RUN   TestAccResourceApplicationLocalDomain_basic\n","--- PASS: TestAccResourceApplicationLocalDomain_basic (12.78s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceApplication_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":7.52,"Output":["","=== RUN   TestAccResourceApplication_basic\n","--- PASS: TestAccResourceApplication_basic (7.52s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceApplication_jumphost","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":0,"Output":["","=== RUN   TestAccResourceApplication_jumphost\n","--- PASS: TestAccResourceApplication_jumphost (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceAuthDomainAD_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":3.77,"Output":["","=== RUN   TestAccResourceAuthDomainAD_basic\n","--- PASS: TestAccResourceAuthDomainAD_basic (3.77s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceAuthDomainLdap_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":4.32,"Output":["","=== RUN   TestAccResourceAuthDomainLdap_basic\n","--- PASS: TestAccResourceAuthDomainLdap_basic (4.32s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceAuthDomainMapping_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":6.14,"Output":["","=== RUN   TestAccResourceAuthDomainMapping_basic\n","--- PASS: TestAccResourceAuthDomainMapping_basic (6.14s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceAuthDomainSAML_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":3.74,"Output":["","=== RUN   TestAccResourceAuthDomainSAML_basic\n","--- PASS: TestAccResourceAuthDomainSAML_basic (3.74s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceAuthorization_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":4.25,"Output":["","=== RUN   TestAccResourceAuthorization_basic\n","--- PASS: TestAccResourceAuthorization_basic (4.25s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceAuthorization_sessionSharing","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":3.02,"Output":["","=== RUN   TestAccResourceAuthorization_sessionSharing\n","--- PASS: TestAccResourceAuthorization_sessionSharing (3.02s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceCheckoutPolicy_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":2.72,"Output":["","=== RUN   TestAccResourceCheckoutPolicy_basic\n","--- PASS: TestAccResourceCheckoutPolicy_basic (2.72s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceCluster_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":8.58,"Output":["","=== RUN   TestAccResourceCluster_basic\n","--- PASS: TestAccResourceCluster_basic (8.58s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceConfigX509_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":13.31,"Output":["","=== RUN   TestAccResourceConfigX509_basic\n","--- PASS: TestAccResourceConfigX509_basic (13.31s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceConfigX509_enableToggle","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":12.35,"Output":["","=== RUN   TestAccResourceConfigX509_enableToggle\n","    resource_config_x509_test.go:61: Step 1/2 error: After applying this test step, the plan was not empty.\n","        stdout:\n","        \n","        \n","        Terraform used the selected providers to generate the following execution\n","        plan. Resource actions are indicated with the following symbols:\n","          ~ update in-place\n","        \n","        Terraform will perform the following actions:\n","        \n","          # wallix-bastion_config_x509.test will be updated in-place\n","          ~ resource \"wallix-bastion_config_x509\" \"test\" {\n","              ~ ca_certificate     = \u003c\u003c-EOT\n","                  - /C=FR/O=Wallix Test/CN=Wallix Bastion Test CA\n","                  + -----BEGIN CERTIFICATE-----\n","                  + MIIFVTCCAz2gAwIBAgIRAMCmt99DLkAGCUOyx9rEVgswDQYJKoZIhvcNAQELBQAw\n","                  + RDELMAkGA1UEBhMCRlIxFDASBgNVBAoTC1dhbGxpeCBUZXN0MR8wHQYDVQQDExZX\n","                  + YWxsaXggQmFzdGlvbiBUZXN0IENBMB4XDTI1MDgyNTE0NDMyMFoXDTI2MDgyNTE0\n","                  + NDMyMFowRDELMAkGA1UEBhMCRlIxFDASBgNVBAoTC1dhbGxpeCBUZXN0MR8wHQYD\n","                  + VQQDExZXYWxsaXggQmFzdGlvbiBUZXN0IENBMIICIjANBgkqhkiG9w0BAQEFAAOC\n","                  + Ag8AMIICCgKCAgEAseP3ZpBzYNJiirT9gsOWwUff/AmEPoeRaDdFbXitWnuXM0Vi\n","                  + zP5tOhpLIrzmlSAT3MXDP5yz5SQUU+ShsTKmRbs2YpXCnqCV4csRK1FIZqLD2/1s\n","                  + cImZbVWLGCavuD0TTUXXzM5ciQhM4Zt+RE5GVez7LCotgKNZLkcnipG7GMTwMVRO\n","                  + azpFko3Zbm8yS1EJ1YZp38/GguLDNu2udIe2RY6HdDkxJg1J7NNqzP02pO1l/1Fq\n","                  + 5f3k4slLkSaSWPPEZO0YwD3ug+juCJK47SVs8D1ggZ1lfEYd1vR/9Es9/F+XLOY5\n","                  + Mf4UtKKiPF5r5BH2Gc7xOTVYbiWBmN7KdaLc7yVr6uaZAkoV5EyG+FD0i04J0MbO\n","                  + Vgvc00squnjHzUBZh0KDx7d2VaBNszhPoM1Vb/L9Aqrq+prMs6gX3J084fVA5Dmh\n","                  + IHSGj7hv3wgS55B+0zk/J/hxcQr2l0UbXwKt2PtKWM0jEHVx1d+QdeH7RZ3d/7Cf\n","                  + 7omJdMuM+BOnhnmVfVNA2PCyr7srdgX9Hs7zkOzlMGZMnGAn4YcZCCt9yA1Hdu3i\n","                  + vI65LjZd7miAeDIMdb/uwxgHB5WTG892O2LVrOhJjuxdwmv6ua88xwD51HsLiWSc\n","                  + Up/wYxNcFpDAiyhe4pP6MLGH9ON7YUrSp1ivGlwvd9COaZOILL2ZV/FzSXsCAwEA\n","                  + AaNCMEAwDgYDVR0PAQH/BAQDAgGmMA8GA1UdEwEB/wQFMAMBAf8wHQYDVR0OBBYE\n","                  + FJaqnNBNM6BF8R61h2MpQ5lIKVCrMA0GCSqGSIb3DQEBCwUAA4ICAQBSBJM5Hg+t\n","                  + NLsQJkRjzn7KQYUjHyZWVrTz9ELlP1eomrbGs1xx/DtBa27QFY41/xYDzhd/qSqL\n","                  + /TzdSTHpHPTrWjC6COYG+WxZnOwTGU9+wLdwVqYqnQJVkYcLihnBwytFxzs1tKaY\n","                  + e5z8LIFDEu++AJhBjyT79bzYfEwDIYLVVmSCM+Afeg61sPgPoelRfArJ1wPCo9mq\n","                  + GApvjZDeP0nL54sqtcU2BW54Qi+WlI1jskWTCjjCEt+GYccpEMo3gMPBrssvbhVt\n","                  + nl+ShZZR69CioldAuaeq/T9xPG8F7Qv0mc+zbx9vWtFEIRjQ5AUGzVYoSEyduM1s\n","                  + R2YF9LQ7bSwg3117qwIBlC1WMaQAYUy8+4SqGeKxjIuzEJF2KbqDtwm4fAukg8y5\n","                  + GrKpd8O7qXVBup5pIvocG8meMNVS5wNI38dPYpZDKdxLEymu2r8x4G1XQ1xSjAT7\n","                  + AP7iTqxptTqGYk8CHkkjeQgCqWPUbIiplmx0ty0l3n6relnXNarlyQtuSXGcuMSR\n","                  + qXQHwhwa5xSAzxY49oGc/8/4T/hvqYy7yBw40Yf/oFsBFKBOOsIbb05ZcoD2I49v\n","                  + tMyR5jRbdeMkshzzxeZB6Mp86Ibfob5XQR9HId6De54/IoezeR2K20ZlwdoOl94K\n","                  + 9UHH+PTpJ88mB8Ou9eBT9yJT82/iC+johQ==\n","                  + -----END CERTIFICATE-----\n","                EOT\n","                id                 = \"x509Config\"\n","              ~ server_private_key = (sensitive value)\n","              ~ server_public_key  = \u003c\u003c-EOT\n","                  - /C=FR/O=Wallix Test/CN=bastion.test.local\n","                  + -----BEGIN CERTIFICATE-----\n","                  + MIIFpzCCA4+gAwIBAgIRAODbgPT0zHax5/wKluvVFx8wDQYJKoZIhvcNAQELBQAw\n","                  + RDELMAkGA1UEBhMCRlIxFDASBgNVBAoTC1dhbGxpeCBUZXN0MR8wHQYDVQQDExZX\n","                  + YWxsaXggQmFzdGlvbiBUZXN0IENBMB4XDTI1MDgyNTE0NDMyMFoXDTI1MDkyNDE0\n","                  + NDMyMFowQDELMAkGA1UEBhMCRlIxFDASBgNVBAoTC1dhbGxpeCBUZXN0MRswGQYD\n","                  + VQQDExJiYXN0aW9uLnRlc3QubG9jYWwwggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAw\n","                  + ggIKAoICAQCpE/FO437Yd+XCjTRCCS3TRk1LXfVw5U7rbXzgbZIM31Uclak6ZOJw\n","                  + jTWxnrGD2X6SxHXzC1p3aR3XE7Pyo1Lo1iAY+bRUtsNvPOjN4B64CfcW30Rl4cQt\n","                  + 0RdufdNxgw9putjbGhgquQ6i3lB3/sgAQA/aGTCMY42nhD8AeYuwqYJMDuSX4oll\n","                  + R+6NdlLyZRGN860QQJapeTawxBxyO6NrqlEcvGQFhDG+J/LJLTQGY/vkKHs6avW1\n","                  + xSFtHjBgwnWfFR51a+cXeRynuGvLJu2zrhdsZJp6LLuUvytMl3mNnUghnCch9Qtm\n","                  + haMr9inB4LRS8EuCm1KqNSmcDayKFGOqWJQP8Xnv9tU6tl7MUK2QlJ7JjIwviz2M\n","                  + 4WO8IcalcyfIGqrj9t4VwhZ2A14ZFxLy1FXsgHxep20gU67TDdzbZLd5KBWQ9V11\n","                  + MUEPVvIejTCG7kUt6CXXFbFULSkFOYvd5BQCHYLKp6rLWJveZxxCacC0+g5VvQ0L\n","                  + j9eTMoQHCfIOJeBMlmjzDnn6N6vm7H4dYvU/X0gBK7HOhkPFYDZrH2nhJe3igD72\n","                  + iGjukQ5CUs10Cr4zY2t/Pnn72r296NqUBy1fsRlurhA+e+7ILgTZESD3LrSZ5fdN\n","                  + 7uUx2tbu9QjxVHSAsCc1PLtC3dY5Xtdz+aXzqAQUWKUlJZ/yk4JltwIDAQABo4GX\n","                  + MIGUMA4GA1UdDwEB/wQEAwIFoDAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUH\n","                  + AwIwDAYDVR0TAQH/BAIwADAfBgNVHSMEGDAWgBSWqpzQTTOgRfEetYdjKUOZSClQ\n","                  + qzA0BgNVHREELTArghJiYXN0aW9uLnRlc3QubG9jYWyCCWxvY2FsaG9zdIcEfwAA\n","                  + AYcEwKgBZDANBgkqhkiG9w0BAQsFAAOCAgEAATtUuvGwENmkDYdA0k+qkB8wJE/d\n","                  + zEhncJYlg+6Qn7YT4A79QbtZf9xG7NeJdDsaSzwP92Uw2geiBMvs5BKCTL9OFdKF\n","                  + dllsUa6x0ivvi95ud1AWV9PAmF4FKrIdAdxfq4qONUksLC4vvNV8yEZxoUt0Myad\n","                  + fVAieO3FYxogJawkstD+uVHRT0h5nNMuVH3hhQG4wnCjGBbOMiKCteQL12u8B01O\n","                  + 2/yxL/3B6ahlauEYvb5pTZiYz8KX1utJmMSB8BeowYqo5CpF9F7E8LORREDZKJhw\n","                  + AWsA3PKg71ZMPU0IEQFOJHdhnpQ4ZszhR+gtDIiSve+4+2DHBfDCUSputu7X2a1S\n","                  + 1dQL2N2OtUC1MB6K9b0vvVqlsQlRzKfhronC3nFv06xpw60IvjpsWaNpqWKTs/pF\n","                  + Nk/l0c0eAR7T2fHGZ2rXRl4R2fsAwm7z+Y/N96JcHagKu8SOQu1S72UF/S+TXtKc\n","                  + IYrM2HdN0Se+D1yI0Yzu3P2U6qYNvgzJInhrkwRVXQqnc+ZQj7R++DjWsL/HPWz3\n","                  + 0IEVKxENd+5w7XWTfFhBSEzyDauBHbI2t4vHYcgXD8ebZ4xpi5MN229eUV537Ayb\n","                  + oGU4RKXJhejZqzl5L4ncQR5ocQrsgaPhNb6Ga48B0TN+cgnaIPm72tmLtEM5mtGK\n","                  + k4ylMHuOv3+sPog=\n","                  + -----END CERTIFICATE-----\n","                EOT\n","                # (1 unchanged attribute hidden)\n","            }\n","        \n","        Plan: 0 to add, 1 to change, 0 to destroy.\n","    testing_new.go:85: Error running post-test destroy, there may be dangling resources: exit status 1\n","        \n","        Error: sending http request: Delete \"https://10.122.118.7:443/api/v3.12/config/x509\": EOF\n","        \n","--- FAIL: TestAccResourceConfigX509_enableToggle (12.35s)\n",""],"Passed":false,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceConnectionMessage_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":0.29,"Output":["","=== RUN   TestAccResourceConnectionMessage_basic\n","    resource_connection_message_test.go:10: Step 1/3 error: Error running apply: exit status 1\n","        \n","        Error: sending http request: Put \"https://10.122.118.7:443/api/v3.12/connectionmessages/login_en\": dial tcp 10.122.118.7:443: connect: connection refused\n","        \n","          with wallix-bastion_connection_message.PrimaryEn,\n","          on terraform_plugin_test.tf line 3, in resource \"wallix-bastion_connection_message\" \"PrimaryEn\":\n","           3: resource \"wallix-bastion_connection_message\" \"PrimaryEn\" {\n","        \n","        \n","        Error: sending http request: Put \"https://10.122.118.7:443/api/v3.12/connectionmessages/motd_en\": dial tcp 10.122.118.7:443: connect: connection refused\n","        \n","          with wallix-bastion_connection_message.SecondaryEn,\n","          on terraform_plugin_test.tf line 7, in resource \"wallix-bastion_connection_message\" \"SecondaryEn\":\n","           7: resource \"wallix-bastion_connection_message\" \"SecondaryEn\" {\n","        \n","--- FAIL: TestAccResourceConnectionMessage_basic (0.29s)\n",""],"Passed":false,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}}]},{"FailureIndicator":"failed","SkippedIndicator":"","TestResults":[{"TestName":"TestAccResourceConnectionPolicy_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":0.12,"Output":["","=== RUN   TestAccResourceConnectionPolicy_basic\n","    resource_connection_policy_test.go:10: Step 1/3 error: Error running pre-apply refresh: exit status 1\n","        \n","        Error: sending http request: Get \"https://10.122.118.7:443/api/version\": dial tcp 10.122.118.7:443: connect: connection refused\n","        \n","          with data.wallix-bastion_version.v,\n","          on terraform_plugin_test.tf line 217, in data \"wallix-bastion_version\" \"v\":\n","         217: data \"wallix-bastion_version\" \"v\" {}\n","        \n","--- FAIL: TestAccResourceConnectionPolicy_basic (0.12s)\n",""],"Passed":false,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceDeviceLocalDomainAccountCred_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":2.48,"Output":["","=== RUN   TestAccResourceDeviceLocalDomainAccountCred_basic\n","    resource_device_localdomain_account_credential_test.go:13: Step 1/3 error: Error running apply: exit status 1\n","        \n","        Error: sending http request: Get \"https://10.122.118.7:443/api/v3.12/devices/?q=device_name=testacc_DeviceLocalDomainAccountCred\": dial tcp 10.122.118.7:443: connect: connection refused\n","        \n","          with wallix-bastion_device.testacc_DeviceLocalDomainAccountCred,\n","          on terraform_plugin_test.tf line 18, in resource \"wallix-bastion_device\" \"testacc_DeviceLocalDomainAccountCred\":\n","          18: resource \"wallix-bastion_device\" \"testacc_DeviceLocalDomainAccountCred\" {\n","        \n","--- FAIL: TestAccResourceDeviceLocalDomainAccountCred_basic (2.48s)\n",""],"Passed":false,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceDeviceLocalDomainAccount_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":0.28,"Output":["","=== RUN   TestAccResourceDeviceLocalDomainAccount_basic\n","    resource_device_localdomain_account_test.go:13: Step 1/3 error: Error running apply: exit status 1\n","        \n","        Error: sending http request: Get \"https://10.122.118.7:443/api/v3.12/devices/?q=device_name=testacc_DeviceLocalDomainAccount\": dial tcp 10.122.118.7:443: connect: connection refused\n","        \n","          with wallix-bastion_device.testacc_DeviceLocalDomainAccount,\n","          on terraform_plugin_test.tf line 3, in resource \"wallix-bastion_device\" \"testacc_DeviceLocalDomainAccount\":\n","           3: resource \"wallix-bastion_device\" \"testacc_DeviceLocalDomainAccount\" {\n","        \n","--- FAIL: TestAccResourceDeviceLocalDomainAccount_basic (0.28s)\n",""],"Passed":false,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceDeviceLocalDomain_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":13.37,"Output":["","=== RUN   TestAccResourceDeviceLocalDomain_basic\n","--- PASS: TestAccResourceDeviceLocalDomain_basic (13.37s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceDeviceService_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":3.91,"Output":["","=== RUN   TestAccResourceDeviceService_basic\n","--- PASS: TestAccResourceDeviceService_basic (3.91s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceDevice_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":4.08,"Output":["","=== RUN   TestAccResourceDevice_basic\n","--- PASS: TestAccResourceDevice_basic (4.08s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceDomainAccountCred_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":15.03,"Output":["","=== RUN   TestAccResourceDomainAccountCred_basic\n","--- PASS: TestAccResourceDomainAccountCred_basic (15.03s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceDomainAccount_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":5.65,"Output":["","=== RUN   TestAccResourceDomainAccount_basic\n","--- PASS: TestAccResourceDomainAccount_basic (5.65s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceDomain_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":14.52,"Output":["","=== RUN   TestAccResourceDomain_basic\n","--- PASS: TestAccResourceDomain_basic (14.52s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceExternalAuthKerberos_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":39.98,"Output":["","=== RUN   TestAccResourceExternalAuthKerberos_basic\n","--- PASS: TestAccResourceExternalAuthKerberos_basic (39.98s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceExternalAuthLDAP_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":4.89,"Output":["","=== RUN   TestAccResourceExternalAuthLDAP_basic\n","--- PASS: TestAccResourceExternalAuthLDAP_basic (4.89s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceExternalAuthRadius_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":2.36,"Output":["","=== RUN   TestAccResourceExternalAuthRadius_basic\n","--- PASS: TestAccResourceExternalAuthRadius_basic (2.36s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceExternalAuthSaml_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":4.43,"Output":["","=== RUN   TestAccResourceExternalAuthSaml_basic\n","--- PASS: TestAccResourceExternalAuthSaml_basic (4.43s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceExternalAuthSaml_basic38","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":0,"Output":["","=== RUN   TestAccResourceExternalAuthSaml_basic38\n","--- PASS: TestAccResourceExternalAuthSaml_basic38 (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceExternalAuthTacacs_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":2.66,"Output":["","=== RUN   TestAccResourceExternalAuthTacacs_basic\n","--- PASS: TestAccResourceExternalAuthTacacs_basic (2.66s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceProfile_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":6.77,"Output":["","=== RUN   TestAccResourceProfile_basic\n","--- PASS: TestAccResourceProfile_basic (6.77s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceTargetgroup_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":11.43,"Output":["","=== RUN   TestAccResourceTargetgroup_basic\n","--- PASS: TestAccResourceTargetgroup_basic (11.43s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceTimeframe_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":2.4,"Output":["","=== RUN   TestAccResourceTimeframe_basic\n","--- PASS: TestAccResourceTimeframe_basic (2.40s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceUserGroup_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":5.01,"Output":["","=== RUN   TestAccResourceUserGroup_basic\n","--- PASS: TestAccResourceUserGroup_basic (5.01s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestAccResourceUser_basic","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":7.4,"Output":["","=== RUN   TestAccResourceUser_basic\n","--- PASS: TestAccResourceUser_basic (7.40s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}}]},{"FailureIndicator":"","SkippedIndicator":"","TestResults":[{"TestName":"TestProvider","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":0,"Output":["","=== RUN   TestProvider\n","--- PASS: TestProvider (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}},{"TestName":"TestProvider_impl","Package":"github.com/wallix/terraform-provider-wallix-bastion/bastion","ElapsedTime":0,"Output":["","=== RUN   TestProvider_impl\n","--- PASS: TestProvider_impl (0.00s)",""],"Passed":true,"Skipped":false,"TestFileName":"","TestFunctionDetail":{"Line":0,"Col":0}}]}]
+
+    const report = window.GoTestReport({
+                                         data: data,
+                                         testResultsElem: document.getElementById('testResults'),
+                                         testGroupListElem: document.getElementById('testGroupList')
+                                       });
+
+
+</script>
+</body>
+</html>

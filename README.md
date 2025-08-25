@@ -110,7 +110,8 @@ Acceptance tests require a running Wallix Bastion instance.
 
 ```bash
 # Set environment variables
-export WALLIX_BASTION_IP="your-bastion-host"
+export WALLIX_BASTION_HOST="your-bastion-host"
+export WALLIX_BASTION_USER="admin"
 export WALLIX_BASTION_TOKEN="<your-api-token>"
 export WALLIX_BASTION_API_VERSION="v3.12"
 
@@ -128,6 +129,7 @@ TF_ACC=1 go test -v ./bastion -run TestAccResourceAuthorization_sessionSharing
    ```bash
    export WALLIX_BASTION_HOST="your-test-bastion"
    export WALLIX_BASTION_TOKEN="<your-test-token>"
+   export WALLIX_BASTION_USER="admin"
    export WALLIX_BASTION_API_VERSION="v3.8"
    export TF_ACC=1
    ```
