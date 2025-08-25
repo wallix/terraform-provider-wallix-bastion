@@ -1,4 +1,5 @@
 testacc/
+test_report.html
 # Binaries for programs and plugins
 vendor/
 terraform-provider-wallix-bastion_v*

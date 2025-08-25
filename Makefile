@@ -33,13 +33,18 @@ build-all:
 # This target is now cross-platform, automatically detecting your OS and architecture
 install: build
 	# Use the Go environment variables directly to create the correct plugin path
-	mkdir -p ~/.terraform.d/plugins/terraform.local/local/$(PROVIDER_NAME)/$(PROVIDER_VERSION)/$(shell go env GOOS)_$(shell go env GOARCH)
+	mkdir -p ~/.terraform.d/plugins/local/$(PROVIDER_NAME)/$(PROVIDER_VERSION)/$(shell go env GOOS)_$(shell go env GOARCH)
 	# Copy the binary to the correct location
-	cp $(BINARY_NAME) ~/.terraform.d/plugins/terraform.local/local/$(PROVIDER_NAME)/$(PROVIDER_VERSION)/$(shell go env GOOS)_$(shell go env GOARCH)/
+	cp $(BINARY_NAME) ~/.terraform.d/plugins/local/$(PROVIDER_NAME)/$(PROVIDER_VERSION)/$(shell go env GOOS)_$(shell go env GOARCH)/
 
 # Run unit tests
 test:
-	go test -v ./...
+	@if command -v go-test-report >/dev/null 2>&1; then \
+		go test -v ./... -json | go-test-report; \
+	else \
+		echo "go-test-report not found, running tests without report generation"; \
+		go test -v ./...; \
+	fi
 
 # Run tests with coverage
 test-coverage:
