@@ -1,5 +1,17 @@
 # changelog
 
+## 0.14.6 (June 14, 2025)
+
+BUG FIXES:
+
+- **resource/wallix-bastion_authorization**: fixed an issue where session sharing arguments were not correctly validated when omitted.
+- **resource/wallix-bastion_config_x509**: improved error handling for invalid certificate chains.
+
+ENHANCEMENTS:
+
+- **provider**: improved logging for API request failures to aid debugging.
+- **docs**: updated documentation for session sharing options and credential propagation.
+
 ## 0.14.5 (August 25, 2025)
 
 ENHANCEMENTS:

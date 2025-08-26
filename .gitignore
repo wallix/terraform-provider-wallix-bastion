@@ -15,3 +15,7 @@ terraform-provider-wallix-bastion
 # Editor config
 .vscode/
 terraform-provider-bastion
+
+# coverage analyzer
+tools/coverage-analyzer/api/openapi.*
+tools/coverage-analyzer/coverage-report.*
