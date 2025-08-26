@@ -250,7 +250,8 @@ func analyzeProviderWithDebug(dir string, verbose bool) (map[string][]string, *D
 }
 
 func analyzeTerraformResources(dir string, verbose bool,
-	debugInfo *DebugInfo) (map[string]ResourceCoverage, map[string]ResourceCoverage, error) {
+	debugInfo *DebugInfo,
+) (map[string]ResourceCoverage, map[string]ResourceCoverage, error) {
 	resources := make(map[string]ResourceCoverage)
 	dataSources := make(map[string]ResourceCoverage)
 
@@ -384,7 +385,8 @@ func analyzeDataSourceFile(path, dataSourceName string, verbose bool) ResourceCo
 }
 
 func checkPropertyCoverage(coverage SchemaCoverage, resources,
-	dataSources map[string]ResourceCoverage, verbose bool) SchemaCoverage {
+	dataSources map[string]ResourceCoverage, verbose bool,
+) SchemaCoverage {
 	allCoverage := make(map[string]ResourceCoverage)
 	for k, v := range resources {
 		allCoverage[k] = v
@@ -1034,7 +1036,12 @@ func saveReport(report *CoverageReport, filename string) error {
 		return fmt.Errorf("failed to marshal report: %w", err)
 	}
 
-	return os.WriteFile(filename, data, 0600)
+	err = os.WriteFile(filename, data, 0o600)
+	if err != nil {
+		return fmt.Errorf("failed to write file %s: %w", filename, err)
+	}
+
+	return nil
 }
 
 // Helper function.
@@ -1050,7 +1057,8 @@ func contains(slice []string, item string) bool {
 
 // analyzeOpenAPISchemas analyzes OpenAPI schemas against Terraform resources.
 func analyzeOpenAPISchemas(spec *OpenAPISpec, resources,
-	dataSources map[string]ResourceCoverage, verbose bool) SchemaAnalysis {
+	dataSources map[string]ResourceCoverage, verbose bool,
+) SchemaAnalysis {
 	analysis := SchemaAnalysis{
 		SchemaDetails: make(map[string]SchemaCoverage),
 	}
@@ -1075,7 +1083,8 @@ func analyzeOpenAPISchemas(spec *OpenAPISpec, resources,
 
 // analyzeSingleSchema analyzes a single OpenAPI schema.
 func analyzeSingleSchema(schemaName string, schemaData interface{}, resources,
-	dataSources map[string]ResourceCoverage, verbose bool) SchemaCoverage {
+	dataSources map[string]ResourceCoverage, verbose bool,
+) SchemaCoverage {
 	coverage := SchemaCoverage{
 		SchemaName: schemaName,
 		Properties: make(map[string]Property),

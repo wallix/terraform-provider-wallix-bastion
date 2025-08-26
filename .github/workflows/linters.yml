@@ -1,5 +1,8 @@
 name: Linters
 on: [push, pull_request]
+permissions:
+  contents: read
+  pull-requests: read
 jobs:
   golangci-lint:
     name: golangci-lint
