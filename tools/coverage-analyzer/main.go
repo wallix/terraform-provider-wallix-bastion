@@ -7,7 +7,8 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"io/ioutil"
+	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -15,7 +16,7 @@ import (
 	"strings"
 )
 
-// OpenAPISpec represents a simplified structure of an OpenAPI specification
+// OpenAPISpec represents a simplified structure of an OpenAPI specification.
 type OpenAPISpec struct {
 	Paths      map[string]map[string]interface{} `json:"paths"`
 	Components struct {
@@ -23,7 +24,7 @@ type OpenAPISpec struct {
 	} `json:"components"`
 }
 
-// CoverageReport provides a comprehensive summary of API and schema coverage
+// CoverageReport provides a comprehensive summary of API and schema coverage.
 type CoverageReport struct {
 	TotalEndpoints     int                         `json:"total_endpoints"`
 	CoveredEndpoints   int                         `json:"covered_endpoints"`
@@ -35,7 +36,7 @@ type CoverageReport struct {
 	DebugInfo          DebugInfo                   `json:"debug_info"`
 }
 
-// Coverage details the status of a single API endpoint
+// Coverage details the status of a single API endpoint.
 type Coverage struct {
 	Path    string   `json:"path"`
 	Methods []string `json:"methods"`
@@ -43,7 +44,7 @@ type Coverage struct {
 	Missing []string `json:"missing"`
 }
 
-// SchemaAnalysis provides analysis of OpenAPI schemas vs Terraform schemas
+// SchemaAnalysis provides analysis of OpenAPI schemas vs Terraform schemas.
 type SchemaAnalysis struct {
 	TotalSchemas          int                       `json:"total_schemas"`
 	CoveredSchemas        int                       `json:"covered_schemas"`
@@ -51,7 +52,7 @@ type SchemaAnalysis struct {
 	SchemaDetails         map[string]SchemaCoverage `json:"schema_details"`
 }
 
-// SchemaCoverage details the coverage of a single schema
+// SchemaCoverage details the coverage of a single schema.
 type SchemaCoverage struct {
 	SchemaName        string              `json:"schema_name"`
 	TotalProperties   int                 `json:"total_properties"`
@@ -61,7 +62,7 @@ type SchemaCoverage struct {
 	ExtraProperties   []string            `json:"extra_properties"`
 }
 
-// Property represents a schema property
+// Property represents a schema property.
 type Property struct {
 	Name          string `json:"name"`
 	Type          string `json:"type"`
@@ -70,7 +71,7 @@ type Property struct {
 	TerraformType string `json:"terraform_type,omitempty"`
 }
 
-// ResourceCoverage details the coverage of a Terraform resource or data source
+// ResourceCoverage details the coverage of a Terraform resource or data source.
 type ResourceCoverage struct {
 	ResourceName        string              `json:"resource_name"`
 	SchemaProperties    map[string]Property `json:"schema_properties"`
@@ -79,7 +80,7 @@ type ResourceCoverage struct {
 	CoverageScore       float64             `json:"coverage_score"`
 }
 
-// DebugInfo provides debugging information about the analysis
+// DebugInfo provides debugging information about the analysis.
 type DebugInfo struct {
 	FilesAnalyzed      int                 `json:"files_analyzed"`
 	FilesWithErrors    int                 `json:"files_with_errors"`
@@ -91,6 +92,16 @@ type DebugInfo struct {
 	FoundDataSources   []string            `json:"found_data_sources"`
 }
 
+// Constants to avoid repetition.
+const (
+	trueString   = "true"
+	postMethod   = "POST"
+	getMethod    = "GET"
+	putMethod    = "PUT"
+	deleteMethod = "DELETE"
+	patchMethod  = "PATCH"
+)
+
 func main() {
 	openAPIFile := flag.String("openapi", "api/openapi.json", "Path to the OpenAPI JSON file")
 	providerDir := flag.String("provider", "bastion/", "Path to the provider's source code directory")
@@ -100,22 +111,24 @@ func main() {
 
 	flag.Parse()
 
-	if err := run(*openAPIFile, *providerDir, *outputFile, *verbose, *analyzeSchemas); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
+	err := run(*openAPIFile, *providerDir, *outputFile, *verbose, *analyzeSchemas)
+	if err != nil {
+		log.Fatalf("Error: %v", err)
 	}
 }
 
 func run(openAPIFile, providerDir, outputFile string, verbose, analyzeSchemas bool) error {
-	fmt.Printf("Analyzing OpenAPI spec from %s...\n", openAPIFile)
+	log.Printf("Analyzing OpenAPI spec from %s...", openAPIFile)
+
 	spec, err := parseOpenAPI(openAPIFile)
 	if err != nil {
 		return fmt.Errorf("error parsing OpenAPI spec: %w", err)
 	}
 
-	fmt.Printf("Analyzing provider code in %s...\n", providerDir)
+	log.Printf("Analyzing provider code in %s...", providerDir)
 
-	if _, err := os.Stat(providerDir); os.IsNotExist(err) {
+	_, statErr := os.Stat(providerDir)
+	if os.IsNotExist(statErr) {
 		return fmt.Errorf("provider directory '%s' does not exist", providerDir)
 	}
 
@@ -131,37 +144,50 @@ func run(openAPIFile, providerDir, outputFile string, verbose, analyzeSchemas bo
 	}
 
 	var schemaAnalysis SchemaAnalysis
+
 	if analyzeSchemas {
-		fmt.Println("Analyzing schemas...")
-		schemaAnalysis = analyzeSchemas_(spec, resourceAnalysis, dataSourceAnalysis, verbose)
+		log.Println("Analyzing schemas...")
+
+		schemaAnalysis = analyzeOpenAPISchemas(spec, resourceAnalysis, dataSourceAnalysis, verbose)
 	}
 
 	if verbose {
-		fmt.Printf("Debug: Analyzed %d files\n", debugInfo.FilesAnalyzed)
-		fmt.Printf("Debug: Found %d API calls\n", debugInfo.TotalAPICallsFound)
-		fmt.Printf("Debug: Found %d resources\n", len(debugInfo.FoundResources))
-		fmt.Printf("Debug: Found %d data sources\n", len(debugInfo.FoundDataSources))
+		log.Printf("Debug: Analyzed %d files", debugInfo.FilesAnalyzed)
+		log.Printf("Debug: Found %d API calls", debugInfo.TotalAPICallsFound)
+		log.Printf("Debug: Found %d resources", len(debugInfo.FoundResources))
+		log.Printf("Debug: Found %d data sources", len(debugInfo.FoundDataSources))
 	}
 
-	fmt.Println("Generating comprehensive coverage report...")
-	report := generateComprehensiveCoverageReport(spec, providerEndpoints, schemaAnalysis, resourceAnalysis, dataSourceAnalysis, debugInfo)
+	log.Println("Generating comprehensive coverage report...")
 
-	fmt.Println("\n=== Comprehensive Coverage Report ===")
+	report := generateComprehensiveCoverageReport(spec, providerEndpoints, schemaAnalysis,
+		resourceAnalysis, dataSourceAnalysis, debugInfo)
+
+	log.Println("\n=== Comprehensive Coverage Report ===")
 	printComprehensiveReport(report)
 
-	fmt.Printf("Saving report to %s...\n", outputFile)
+	log.Printf("Saving report to %s...", outputFile)
+
 	return saveReport(report, outputFile)
 }
 
 func parseOpenAPI(filename string) (*OpenAPISpec, error) {
-	data, err := ioutil.ReadFile(filename)
+	file, err := os.Open(filename)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to open file %s: %w", filename, err)
+	}
+	defer file.Close()
+
+	data, err := io.ReadAll(file)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read file %s: %w", filename, err)
 	}
 
 	var spec OpenAPISpec
-	if err = json.Unmarshal(data, &spec); err != nil {
-		return nil, err
+
+	err = json.Unmarshal(data, &spec)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
 	}
 
 	return &spec, nil
@@ -177,9 +203,11 @@ func analyzeProviderWithDebug(dir string, verbose bool) (map[string][]string, *D
 		FoundDataSources: []string{},
 	}
 
-	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+	walkErr := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			debugInfo.Errors = append(debugInfo.Errors, fmt.Sprintf("Walk error in %s: %v", path, err))
+			errMsg := fmt.Sprintf("Walk error in %s: %v", path, err)
+			debugInfo.Errors = append(debugInfo.Errors, errMsg)
+
 			return nil
 		}
 
@@ -191,14 +219,17 @@ func analyzeProviderWithDebug(dir string, verbose bool) (map[string][]string, *D
 		debugInfo.AnalyzedFiles = append(debugInfo.AnalyzedFiles, path)
 
 		if verbose {
-			fmt.Printf("Analyzing file: %s\n", path)
+			log.Printf("Analyzing file: %s", path)
 		}
 
 		fset := token.NewFileSet()
-		node, err := parser.ParseFile(fset, path, nil, parser.ParseComments)
-		if err != nil {
+
+		node, parseErr := parser.ParseFile(fset, path, nil, parser.ParseComments)
+		if parseErr != nil {
 			debugInfo.FilesWithErrors++
-			debugInfo.Errors = append(debugInfo.Errors, fmt.Sprintf("Parse error in %s: %v", path, err))
+			errMsg := fmt.Sprintf("Parse error in %s: %v", path, parseErr)
+			debugInfo.Errors = append(debugInfo.Errors, errMsg)
+
 			return nil
 		}
 
@@ -211,16 +242,21 @@ func analyzeProviderWithDebug(dir string, verbose bool) (map[string][]string, *D
 	// Normalize endpoints
 	normalizedEndpoints := normalizeEndpoints(endpoints, debugInfo, verbose)
 
-	return normalizedEndpoints, debugInfo, err
+	if walkErr != nil {
+		return normalizedEndpoints, debugInfo, fmt.Errorf("error walking provider directory: %w", walkErr)
+	}
+
+	return normalizedEndpoints, debugInfo, nil
 }
 
-func analyzeTerraformResources(dir string, verbose bool, debugInfo *DebugInfo) (map[string]ResourceCoverage, map[string]ResourceCoverage, error) {
+func analyzeTerraformResources(dir string, verbose bool,
+	debugInfo *DebugInfo) (map[string]ResourceCoverage, map[string]ResourceCoverage, error) {
 	resources := make(map[string]ResourceCoverage)
 	dataSources := make(map[string]ResourceCoverage)
 
-	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+	walkErr := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			return nil
+			return err
 		}
 
 		if info.IsDir() || !strings.HasSuffix(path, ".go") || strings.HasSuffix(path, "_test.go") {
@@ -251,8 +287,11 @@ func analyzeTerraformResources(dir string, verbose bool, debugInfo *DebugInfo) (
 
 		return nil
 	})
+	if walkErr != nil {
+		return resources, dataSources, fmt.Errorf("error walking provider directory: %w", walkErr)
+	}
 
-	return resources, dataSources, err
+	return resources, dataSources, nil
 }
 
 func analyzeResourceFile(path, resourceName string, verbose bool) ResourceCoverage {
@@ -263,7 +302,13 @@ func analyzeResourceFile(path, resourceName string, verbose bool) ResourceCovera
 		RelatedEndpoints:    []string{},
 	}
 
-	content, err := ioutil.ReadFile(path)
+	file, err := os.Open(path)
+	if err != nil {
+		return coverage
+	}
+	defer file.Close()
+
+	content, err := io.ReadAll(file)
 	if err != nil {
 		return coverage
 	}
@@ -271,7 +316,7 @@ func analyzeResourceFile(path, resourceName string, verbose bool) ResourceCovera
 	fileContent := string(content)
 
 	if verbose {
-		fmt.Printf("Analyzing resource file: %s\n", path)
+		log.Printf("Analyzing resource file: %s", path)
 	}
 
 	// Extract schema properties from the file
@@ -281,9 +326,9 @@ func analyzeResourceFile(path, resourceName string, verbose bool) ResourceCovera
 	operations := []string{"Create", "Read", "Update", "Delete"}
 	for _, op := range operations {
 		patterns := []string{
-			fmt.Sprintf("resource%s", op),
-			fmt.Sprintf("%s:", op),
-			fmt.Sprintf("func.*%s", op),
+			"resource" + op,
+			op + ":",
+			"func.*" + op,
 		}
 
 		for _, pattern := range patterns {
@@ -291,6 +336,7 @@ func analyzeResourceFile(path, resourceName string, verbose bool) ResourceCovera
 				if !contains(coverage.SupportedOperations, strings.ToUpper(op)) {
 					coverage.SupportedOperations = append(coverage.SupportedOperations, strings.ToUpper(op))
 				}
+
 				break
 			}
 		}
@@ -300,7 +346,7 @@ func analyzeResourceFile(path, resourceName string, verbose bool) ResourceCovera
 	coverage.RelatedEndpoints = extractRelatedEndpoints(fileContent)
 
 	if verbose {
-		fmt.Printf("  Found %d properties, %d operations, %d endpoints\n",
+		log.Printf("  Found %d properties, %d operations, %d endpoints",
 			len(coverage.SchemaProperties), len(coverage.SupportedOperations), len(coverage.RelatedEndpoints))
 	}
 
@@ -315,7 +361,13 @@ func analyzeDataSourceFile(path, dataSourceName string, verbose bool) ResourceCo
 		RelatedEndpoints:    []string{},
 	}
 
-	content, err := ioutil.ReadFile(path)
+	file, err := os.Open(path)
+	if err != nil {
+		return coverage
+	}
+	defer file.Close()
+
+	content, err := io.ReadAll(file)
 	if err != nil {
 		return coverage
 	}
@@ -331,84 +383,32 @@ func analyzeDataSourceFile(path, dataSourceName string, verbose bool) ResourceCo
 	return coverage
 }
 
-func checkPropertyCoverage(coverage SchemaCoverage, resources, dataSources map[string]ResourceCoverage, verbose bool) SchemaCoverage {
-	// Combiner toutes les couvertures de ressources et data sources
+func checkPropertyCoverage(coverage SchemaCoverage, resources,
+	dataSources map[string]ResourceCoverage, verbose bool) SchemaCoverage {
 	allCoverage := make(map[string]ResourceCoverage)
 	for k, v := range resources {
 		allCoverage[k] = v
 	}
+
 	for k, v := range dataSources {
 		allCoverage[k] = v
 	}
 
 	if verbose {
-		fmt.Printf("  Checking coverage for schema '%s' with %d properties\n", coverage.SchemaName, len(coverage.Properties))
-		fmt.Printf("  Available resources/datasources: %d\n", len(allCoverage))
+		log.Printf("  Checking coverage for schema '%s' with %d properties", coverage.SchemaName, len(coverage.Properties))
+		log.Printf("  Available resources/datasources: %d", len(allCoverage))
 	}
 
 	for propName, property := range coverage.Properties {
-		found := false
+		found, updatedProperty := findPropertyCoverage(propName, property, coverage.SchemaName, allCoverage, verbose)
 
-		// Recherche directe par nom de propriété
-		for resourceName, resourceCoverage := range allCoverage {
-			if _, exists := resourceCoverage.SchemaProperties[propName]; exists {
-				property.Covered = true
-				found = true
-				if verbose {
-					fmt.Printf("    ✓ Property %s.%s found in resource %s\n",
-						coverage.SchemaName, propName, resourceName)
-				}
-				break
-			}
-		}
-
-		// Si pas trouvé, essayer des correspondances approximatives
-		if !found {
-			for resourceName, resourceCoverage := range allCoverage {
-				for terraformProp := range resourceCoverage.SchemaProperties {
-					// Correspondances possibles (snake_case vs camelCase, etc.)
-					if isPropertyMatch(propName, terraformProp) {
-						property.Covered = true
-						found = true
-						if verbose {
-							fmt.Printf("    ≈ Property %s.%s matches %s in resource %s\n",
-								coverage.SchemaName, propName, terraformProp, resourceName)
-						}
-						break
-					}
-				}
-				if found {
-					break
-				}
-			}
-		}
-
-		// Recherche basée sur le nom du schéma
-		if !found {
-			schemaBaseName := extractSchemaBaseName(coverage.SchemaName)
-			for resourceName, resourceCoverage := range allCoverage {
-				if strings.Contains(resourceName, schemaBaseName) || strings.Contains(schemaBaseName, resourceName) {
-					if _, exists := resourceCoverage.SchemaProperties[propName]; exists {
-						property.Covered = true
-						found = true
-						if verbose {
-							fmt.Printf("    ~ Property %s.%s found via schema match in resource %s\n",
-								coverage.SchemaName, propName, resourceName)
-						}
-						break
-					}
-				}
-			}
-		}
-
-		coverage.Properties[propName] = property
-
+		coverage.Properties[propName] = updatedProperty
 		if found {
 			coverage.CoveredProperties++
 		} else {
 			coverage.MissingProperties = append(coverage.MissingProperties, propName)
 			if verbose {
-				fmt.Printf("    ✗ Property %s.%s not found in any resource\n",
+				log.Printf("    ✗ Property %s.%s not found in any resource",
 					coverage.SchemaName, propName)
 			}
 		}
@@ -417,26 +417,82 @@ func checkPropertyCoverage(coverage SchemaCoverage, resources, dataSources map[s
 	return coverage
 }
 
-// isPropertyMatch vérifie si deux noms de propriétés correspondent
+// findPropertyCoverage checks if a property is covered in resources/dataSources.
+func findPropertyCoverage(
+	propName string,
+	property Property,
+	schemaName string,
+	allCoverage map[string]ResourceCoverage,
+	verbose bool,
+) (bool, Property) {
+	// Direct search by property name
+	for resourceName, resourceCoverage := range allCoverage {
+		if _, exists := resourceCoverage.SchemaProperties[propName]; exists {
+			property.Covered = true
+
+			if verbose {
+				log.Printf("    ✓ Property %s.%s found in resource %s",
+					schemaName, propName, resourceName)
+			}
+
+			return true, property
+		}
+	}
+	// Approximate matches
+	for resourceName, resourceCoverage := range allCoverage {
+		for terraformProp := range resourceCoverage.SchemaProperties {
+			if isPropertyMatch(propName, terraformProp) {
+				property.Covered = true
+
+				if verbose {
+					log.Printf("    ≈ Property %s.%s matches %s in resource %s",
+						schemaName, propName, terraformProp, resourceName)
+				}
+
+				return true, property
+			}
+		}
+	}
+	// Search based on schema name
+	schemaBaseName := extractSchemaBaseName(schemaName)
+	for resourceName, resourceCoverage := range allCoverage {
+		if strings.Contains(resourceName, schemaBaseName) || strings.Contains(schemaBaseName, resourceName) {
+			if _, exists := resourceCoverage.SchemaProperties[propName]; exists {
+				property.Covered = true
+
+				if verbose {
+					log.Printf("    ~ Property %s.%s found via schema match in resource %s",
+						schemaName, propName, resourceName)
+				}
+
+				return true, property
+			}
+		}
+	}
+
+	return false, property
+}
+
+// isPropertyMatch checks if two property names match.
 func isPropertyMatch(openAPIProp, terraformProp string) bool {
-	// Normalisation des noms
+	// Normalize names
 	openAPILower := strings.ToLower(openAPIProp)
 	terraformLower := strings.ToLower(terraformProp)
 
-	// Correspondance exacte
+	// Exact match
 	if openAPILower == terraformLower {
 		return true
 	}
 
-	// Conversion snake_case <-> camelCase
+	// Convert snake_case <-> camelCase
 	openAPISnake := camelToSnake(openAPIProp)
 	terraformSnake := camelToSnake(terraformProp)
 
-	if strings.ToLower(openAPISnake) == strings.ToLower(terraformSnake) {
+	if strings.EqualFold(openAPISnake, terraformSnake) {
 		return true
 	}
 
-	// Correspondances communes
+	// Common mappings
 	commonMappings := map[string][]string{
 		"id":          {"identifier", "uuid"},
 		"name":        {"display_name", "title", "label"},
@@ -461,22 +517,24 @@ func isPropertyMatch(openAPIProp, terraformProp string) bool {
 	return false
 }
 
-// camelToSnake convertit camelCase en snake_case
+// camelToSnake converts camelCase to snake_case.
 func camelToSnake(str string) string {
 	snake := regexp.MustCompile("(.)([A-Z][a-z]+)").ReplaceAllString(str, "${1}_${2}")
 	snake = regexp.MustCompile("([a-z0-9])([A-Z])").ReplaceAllString(snake, "${1}_${2}")
+
 	return strings.ToLower(snake)
 }
 
-// extractSchemaBaseName extrait le nom de base d'un schéma
+// extractSchemaBaseName extracts the base name of a schema.
 func extractSchemaBaseName(schemaName string) string {
-	// Supprimer les suffixes communs
+	// Remove common suffixes
 	suffixes := []string{"_get", "_post", "_put", "_delete", "_patch"}
 	base := schemaName
 
 	for _, suffix := range suffixes {
 		if strings.HasSuffix(base, suffix) {
 			base = strings.TrimSuffix(base, suffix)
+
 			break
 		}
 	}
@@ -484,20 +542,25 @@ func extractSchemaBaseName(schemaName string) string {
 	return base
 }
 
-// extractSchemaProperties amélioré pour une meilleure extraction
+// extractSchemaProperties enhanced for better extraction.
 func extractSchemaProperties(content string, verbose bool) map[string]Property {
-	properties := make(map[string]Property)
+	properties := extractSchemaBlockProperties(content, verbose)
+	if len(properties) == 0 {
+		properties = extractSimpleProperties(content, verbose)
+	}
 
-	// Patterns regex améliorés
+	return properties
+}
+
+func extractSchemaBlockProperties(content string, verbose bool) map[string]Property {
+	properties := make(map[string]Property)
 	schemaPattern := regexp.MustCompile(`"([a-zA-Z_][a-zA-Z0-9_]*)"\s*:\s*&?schema\.Schema\s*{([^}]+)}`)
 	typePattern := regexp.MustCompile(`Type:\s*schema\.Type([A-Za-z]+)`)
-	requiredPattern := regexp.MustCompile(`Required:\s*(true|false)`)
-	optionalPattern := regexp.MustCompile(`Optional:\s*(true|false)`)
-	computedPattern := regexp.MustCompile(`Computed:\s*(true|false)`)
+	requiredPattern := regexp.MustCompile(`Required:\s*(` + trueString + `|false)`)
+	optionalPattern := regexp.MustCompile(`Optional:\s*(` + trueString + `|false)`)
+	computedPattern := regexp.MustCompile(`Computed:\s*(` + trueString + `|false)`)
 
-	// Recherche des définitions de schéma avec contenu
 	matches := schemaPattern.FindAllStringSubmatch(content, -1)
-
 	for _, match := range matches {
 		if len(match) > 2 {
 			propertyName := match[1]
@@ -507,56 +570,52 @@ func extractSchemaProperties(content string, verbose bool) map[string]Property {
 				Name:     propertyName,
 				Type:     "unknown",
 				Required: false,
-				Covered:  true, // La propriété existe dans Terraform
+				Covered:  true,
 			}
-
-			// Extraction du type
 			if typeMatch := typePattern.FindStringSubmatch(schemaBlock); len(typeMatch) > 1 {
 				property.Type = strings.ToLower(typeMatch[1])
 				property.TerraformType = "Type" + typeMatch[1]
 			}
 
-			// Extraction required/optional
 			if requiredMatch := requiredPattern.FindStringSubmatch(schemaBlock); len(requiredMatch) > 1 {
-				property.Required = requiredMatch[1] == "true"
+				property.Required = requiredMatch[1] == trueString
 			} else if optionalMatch := optionalPattern.FindStringSubmatch(schemaBlock); len(optionalMatch) > 1 {
-				property.Required = optionalMatch[1] != "true"
+				property.Required = optionalMatch[1] != trueString
 			}
 
-			// Si c'est computed, généralement pas required
-			if computedMatch := computedPattern.FindStringSubmatch(schemaBlock); len(computedMatch) > 1 && computedMatch[1] == "true" {
+			computedMatch := computedPattern.FindStringSubmatch(schemaBlock)
+			if len(computedMatch) > 1 && computedMatch[1] == trueString {
 				property.Required = false
 			}
 
 			properties[propertyName] = property
-
 			if verbose {
-				fmt.Printf("    Found property: %s (type: %s, required: %t)\n",
+				log.Printf("    Found property: %s (type: %s, required: %t)",
 					propertyName, property.Type, property.Required)
 			}
 		}
 	}
 
-	// Recherche alternative avec pattern plus simple
-	if len(properties) == 0 {
-		simplePattern := regexp.MustCompile(`"([a-zA-Z_][a-zA-Z0-9_]*)"\s*:`)
-		simpleMatches := simplePattern.FindAllStringSubmatch(content, -1)
+	return properties
+}
 
-		for _, match := range simpleMatches {
-			if len(match) > 1 {
-				propertyName := match[1]
-				// Éviter les mots-clés Go et autres patterns non-propriétés
-				if !isGoKeyword(propertyName) && !strings.HasPrefix(propertyName, "Test") {
-					properties[propertyName] = Property{
-						Name:     propertyName,
-						Type:     "unknown",
-						Required: false,
-						Covered:  true,
-					}
+func extractSimpleProperties(content string, verbose bool) map[string]Property {
+	properties := make(map[string]Property)
+	simplePattern := regexp.MustCompile(`"([a-zA-Z_][a-zA-Z0-9_]*)"\s*:`)
 
-					if verbose {
-						fmt.Printf("    Found simple property: %s\n", propertyName)
-					}
+	simpleMatches := simplePattern.FindAllStringSubmatch(content, -1)
+	for _, match := range simpleMatches {
+		if len(match) > 1 {
+			propertyName := match[1]
+			if !isGoKeyword(propertyName) && !strings.HasPrefix(propertyName, "Test") {
+				properties[propertyName] = Property{
+					Name:     propertyName,
+					Type:     "unknown",
+					Required: false,
+					Covered:  true,
+				}
+				if verbose {
+					log.Printf("    Found simple property: %s", propertyName)
 				}
 			}
 		}
@@ -565,7 +624,7 @@ func extractSchemaProperties(content string, verbose bool) map[string]Property {
 	return properties
 }
 
-// isGoKeyword vérifie si c'est un mot-clé Go à éviter
+// isGoKeyword checks if it's a Go keyword to avoid.
 func isGoKeyword(word string) bool {
 	keywords := []string{
 		"package", "import", "func", "var", "const", "type", "struct",
@@ -579,69 +638,64 @@ func isGoKeyword(word string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
-// Existing functions (analyzeFileContent, extractAPICall, normalizeEndpoints, etc.) remain the same...
-// [Rest of the previous functions would go here - keeping them unchanged]
-
-func analyzeFileContent(node *ast.File, filepath string, endpoints map[string][]string, debugInfo *DebugInfo, verbose bool) {
-	// Strategy 1: AST analysis for function calls
-	ast.Inspect(node, func(n ast.Node) bool {
-		if callExpr, ok := n.(*ast.CallExpr); ok {
-			method, url := extractAPICall(callExpr, verbose)
-			if method != "" && url != "" {
-				debugInfo.TotalAPICallsFound++
-				if verbose {
-					fmt.Printf("  AST Found: %s %s\n", method, url)
-				}
-				endpoints[url] = append(endpoints[url], method)
-				debugInfo.FoundEndpoints[url] = append(debugInfo.FoundEndpoints[url], method)
-			}
-		}
-		return true
-	})
-
-	// Strategy 2: String analysis for URL patterns
-	analyzeStringLiterals(node, filepath, endpoints, debugInfo, verbose)
+func analyzeFileContent(
+	_ *ast.File,
+	filePath string,
+	endpoints map[string][]string,
+	debugInfo *DebugInfo,
+	verbose bool,
+) {
+	// Strategy 1: String analysis for URL patterns
+	analyzeStringLiterals(filePath, endpoints, debugInfo, verbose)
 }
 
-func analyzeStringLiterals(node *ast.File, filepath string, endpoints map[string][]string, debugInfo *DebugInfo, verbose bool) {
-	// Regex patterns pour identifier les endpoints d'API
+func analyzeStringLiterals(filePath string, endpoints map[string][]string, debugInfo *DebugInfo, verbose bool) {
+	// Regex patterns to identify API endpoints
 	apiPatterns := []*regexp.Regexp{
-		regexp.MustCompile(`"(/[a-zA-Z0-9_/-]*[a-zA-Z0-9_])"`),               // "/path/to/endpoint"
-		regexp.MustCompile(`"/api/v\d+\.\d+(/[a-zA-Z0-9_/-]*[a-zA-Z0-9_])"`), // "/api/v3.12/endpoint"
-		regexp.MustCompile(`"(/config/[a-zA-Z0-9_/-]*)"`),                    // "/config/something"
-		regexp.MustCompile(`"(/auth[a-zA-Z0-9_/-]*)"`),                       // "/auth..." patterns
-		regexp.MustCompile(`"(/users?[a-zA-Z0-9_/-]*)"`),                     // "/users" patterns
-		regexp.MustCompile(`"(/devices?[a-zA-Z0-9_/-]*)"`),                   // "/devices" patterns
-		regexp.MustCompile(`"(/domains?[a-zA-Z0-9_/-]*)"`),                   // "/domains" patterns
-		regexp.MustCompile(`"(/applications?[a-zA-Z0-9_/-]*)"`),              // "/applications" patterns
+		regexp.MustCompile(`"(/[a-zA-Z0-9_/-]*[a-zA-Z0-9_])"`),
+		regexp.MustCompile(`"/api/v\d+\.\d+(/[a-zA-Z0-9_/-]*[a-zA-Z0-9_])"`),
+		regexp.MustCompile(`"(/config/[a-zA-Z0-9_/-]*)"`),
+		regexp.MustCompile(`"(/auth[a-zA-Z0-9_/-]*)"`),
+		regexp.MustCompile(`"(/users?[a-zA-Z0-9_/-]*)"`),
+		regexp.MustCompile(`"(/devices?[a-zA-Z0-9_/-]*)"`),
+		regexp.MustCompile(`"(/domains?[a-zA-Z0-9_/-]*)"`),
+		regexp.MustCompile(`"(/applications?[a-zA-Z0-9_/-]*)"`),
 	}
 
 	methodPatterns := map[*regexp.Regexp]string{
-		regexp.MustCompile(`http\.MethodGet`):    "GET",
-		regexp.MustCompile(`http\.MethodPost`):   "POST",
-		regexp.MustCompile(`http\.MethodPut`):    "PUT",
-		regexp.MustCompile(`http\.MethodDelete`): "DELETE",
-		regexp.MustCompile(`http\.MethodPatch`):  "PATCH",
-		regexp.MustCompile(`"GET"`):              "GET",
-		regexp.MustCompile(`"POST"`):             "POST",
-		regexp.MustCompile(`"PUT"`):              "PUT",
-		regexp.MustCompile(`"DELETE"`):           "DELETE",
-		regexp.MustCompile(`"PATCH"`):            "PATCH",
+		regexp.MustCompile(`http\.MethodGet`):        getMethod,
+		regexp.MustCompile(`http\.MethodPost`):       postMethod,
+		regexp.MustCompile(`http\.MethodPut`):        putMethod,
+		regexp.MustCompile(`http\.MethodDelete`):     deleteMethod,
+		regexp.MustCompile(`http\.MethodPatch`):      patchMethod,
+		regexp.MustCompile(`"` + getMethod + `"`):    getMethod,
+		regexp.MustCompile(`"` + postMethod + `"`):   postMethod,
+		regexp.MustCompile(`"` + putMethod + `"`):    putMethod,
+		regexp.MustCompile(`"` + deleteMethod + `"`): deleteMethod,
+		regexp.MustCompile(`"` + patchMethod + `"`):  patchMethod,
 	}
 
-	// Lire le contenu du fichier pour l'analyse regex
-	content, err := ioutil.ReadFile(filepath)
+	// Read file content for regex analysis
+	file, err := os.Open(filePath)
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	content, err := io.ReadAll(file)
 	if err != nil {
 		return
 	}
 
 	fileContent := string(content)
 
-	// Chercher les URLs
+	// Search for URLs
 	var foundURLs []string
+
 	for _, pattern := range apiPatterns {
 		matches := pattern.FindAllStringSubmatch(fileContent, -1)
 		for _, match := range matches {
@@ -652,33 +706,38 @@ func analyzeStringLiterals(node *ast.File, filepath string, endpoints map[string
 		}
 	}
 
-	// Chercher les méthodes HTTP dans le contexte
+	// Search for HTTP methods in context
 	var foundMethods []string
+
 	for pattern, method := range methodPatterns {
 		if pattern.MatchString(fileContent) {
 			foundMethods = append(foundMethods, method)
 		}
 	}
 
-	// Associer les URLs trouvées avec des méthodes
+	// Associate found URLs with methods
 	if len(foundURLs) > 0 {
 		for _, url := range foundURLs {
 			if len(foundMethods) > 0 {
 				for _, method := range foundMethods {
 					debugInfo.TotalAPICallsFound++
+
 					if verbose {
-						fmt.Printf("  String Found: %s %s\n", method, url)
+						log.Printf("  String Found: %s %s", method, url)
 					}
+
 					endpoints[url] = append(endpoints[url], method)
 					debugInfo.FoundEndpoints[url] = append(debugInfo.FoundEndpoints[url], method)
 				}
 			} else {
-				// Si aucune méthode trouvée, essayer de deviner basé sur le contexte
+				// If no method found, try to guess based on context
 				method := guessHTTPMethod(fileContent, url)
 				debugInfo.TotalAPICallsFound++
+
 				if verbose {
-					fmt.Printf("  String Found (guessed): %s %s\n", method, url)
+					log.Printf("  String Found (guessed): %s %s", method, url)
 				}
+
 				endpoints[url] = append(endpoints[url], method)
 				debugInfo.FoundEndpoints[url] = append(debugInfo.FoundEndpoints[url], method)
 			}
@@ -686,109 +745,64 @@ func analyzeStringLiterals(node *ast.File, filepath string, endpoints map[string
 	}
 }
 
-func guessHTTPMethod(content string, url string) string {
+func guessHTTPMethod(content string, _ string) string {
 	lowerContent := strings.ToLower(content)
 
-	// Patterns pour deviner la méthode HTTP basée sur le contexte
+	// Patterns to guess HTTP method based on context
 	if strings.Contains(lowerContent, "create") || strings.Contains(lowerContent, "add") {
-		return "POST"
+		return postMethod
 	}
+
 	if strings.Contains(lowerContent, "update") || strings.Contains(lowerContent, "modify") {
-		return "PUT"
+		return putMethod
 	}
+
 	if strings.Contains(lowerContent, "delete") || strings.Contains(lowerContent, "remove") {
-		return "DELETE"
-	}
-	if strings.Contains(lowerContent, "read") || strings.Contains(lowerContent, "get") || strings.Contains(lowerContent, "fetch") {
-		return "GET"
+		return deleteMethod
 	}
 
-	// Par défaut, supposer GET pour les data sources et POST pour les resources
+	if strings.Contains(lowerContent, "read") ||
+		strings.Contains(lowerContent, "get") ||
+		strings.Contains(lowerContent, "fetch") {
+		return getMethod
+	}
+
+	// By default, assume GET for data sources and POST for resources
 	if strings.Contains(lowerContent, "data_source") {
-		return "GET"
+		return getMethod
 	}
+
 	if strings.Contains(lowerContent, "resource") {
-		return "POST"
+		return postMethod
 	}
 
-	return "GET" // Par défaut
+	return getMethod // Default
 }
 
-func extractAPICall(callExpr *ast.CallExpr, verbose bool) (method, url string) {
-	// Pattern 1: client.newRequest ou client.doRequest
-	if selExpr, ok := callExpr.Fun.(*ast.SelectorExpr); ok {
-		if selExpr.Sel.Name == "newRequest" || selExpr.Sel.Name == "doRequest" {
-			if len(callExpr.Args) >= 3 {
-				// URL argument
-				if urlLit, ok := callExpr.Args[1].(*ast.BasicLit); ok {
-					url = strings.Trim(urlLit.Value, `"`)
-				}
-
-				// Method argument
-				if methodExpr, ok := callExpr.Args[2].(*ast.SelectorExpr); ok {
-					if methodExpr.Sel != nil {
-						methodName := methodExpr.Sel.Name
-						switch methodName {
-						case "MethodGet":
-							method = "GET"
-						case "MethodPost":
-							method = "POST"
-						case "MethodPut":
-							method = "PUT"
-						case "MethodDelete":
-							method = "DELETE"
-						case "MethodPatch":
-							method = "PATCH"
-						default:
-							method = methodName
-						}
-					}
-				} else if methodLit, ok := callExpr.Args[2].(*ast.BasicLit); ok {
-					method = strings.Trim(methodLit.Value, `"`)
-				}
-			}
-		}
-	}
-
-	// Pattern 2: http.NewRequest
-	if selExpr, ok := callExpr.Fun.(*ast.SelectorExpr); ok && selExpr.Sel.Name == "NewRequest" {
-		if len(callExpr.Args) >= 2 {
-			// Method is first argument
-			if methodLit, ok := callExpr.Args[0].(*ast.BasicLit); ok {
-				method = strings.Trim(methodLit.Value, `"`)
-			}
-			// URL is second argument
-			if urlLit, ok := callExpr.Args[1].(*ast.BasicLit); ok {
-				url = strings.Trim(urlLit.Value, `"`)
-			}
-		}
-	}
-
-	return method, url
-}
-
-func normalizeEndpoints(endpoints map[string][]string, debugInfo *DebugInfo, verbose bool) map[string][]string {
+func normalizeEndpoints(endpoints map[string][]string, _ *DebugInfo, verbose bool) map[string][]string {
 	normalized := make(map[string][]string)
 
 	for rawURL, methods := range endpoints {
-		// Nettoyer l'URL
+		// Clean URL
 		cleanURL := strings.TrimSpace(rawURL)
 		cleanURL = strings.TrimSuffix(cleanURL, "/")
 
-		// Ignorer les URLs trop courtes ou invalides
+		// Ignore URLs that are too short or invalid
 		if len(cleanURL) < 2 || !strings.HasPrefix(cleanURL, "/") {
 			continue
 		}
 
-		// Supprimer les préfixes d'API si présents
+		// Remove API prefixes if present
 		cleanURL = regexp.MustCompile(`^/api/v\d+\.\d+`).ReplaceAllString(cleanURL, "")
 		if cleanURL == "" {
 			cleanURL = "/"
 		}
 
-		// Dédupliquer les méthodes
+		// Deduplicate methods
 		uniqueMethods := make(map[string]bool)
+
 		var result []string
+
 		for _, method := range methods {
 			methodUpper := strings.ToUpper(strings.TrimSpace(method))
 			if methodUpper != "" && methodUpper != "UNKNOWN" {
@@ -802,7 +816,7 @@ func normalizeEndpoints(endpoints map[string][]string, debugInfo *DebugInfo, ver
 		if len(result) > 0 {
 			normalized[cleanURL] = result
 			if verbose {
-				fmt.Printf("  Normalized: %s -> %s with methods %v\n", rawURL, cleanURL, result)
+				log.Printf("  Normalized: %s -> %s with methods %v", rawURL, cleanURL, result)
 			}
 		}
 	}
@@ -810,7 +824,13 @@ func normalizeEndpoints(endpoints map[string][]string, debugInfo *DebugInfo, ver
 	return normalized
 }
 
-func generateComprehensiveCoverageReport(spec *OpenAPISpec, providerEndpoints map[string][]string, schemaAnalysis SchemaAnalysis, resourceAnalysis, dataSourceAnalysis map[string]ResourceCoverage, debugInfo *DebugInfo) *CoverageReport {
+func generateComprehensiveCoverageReport(
+	spec *OpenAPISpec,
+	providerEndpoints map[string][]string,
+	schemaAnalysis SchemaAnalysis,
+	resourceAnalysis, dataSourceAnalysis map[string]ResourceCoverage,
+	debugInfo *DebugInfo,
+) *CoverageReport {
 	report := &CoverageReport{
 		EndpointDetails:    make(map[string]Coverage),
 		SchemaAnalysis:     schemaAnalysis,
@@ -820,72 +840,11 @@ func generateComprehensiveCoverageReport(spec *OpenAPISpec, providerEndpoints ma
 	}
 
 	for path, methods := range spec.Paths {
-		var availableMethods []string
-		for method := range methods {
-			if method != "parameters" && method != "x-amazon-apigateway-integration" {
-				availableMethods = append(availableMethods, strings.ToUpper(method))
-			}
-		}
-
-		if len(availableMethods) == 0 {
-			continue
-		}
-
-		coverage := Coverage{
-			Path:    path,
-			Methods: availableMethods,
-			Covered: []string{},
-			Missing: []string{},
-		}
-
-		// Vérification exacte ET approximative
-		if providerMethods, exists := providerEndpoints[path]; exists {
-			for _, method := range availableMethods {
-				found := false
-				for _, providerMethod := range providerMethods {
-					if strings.ToUpper(providerMethod) == method {
-						coverage.Covered = append(coverage.Covered, method)
-						found = true
-						break
-					}
-				}
-				if !found {
-					coverage.Missing = append(coverage.Missing, method)
-				}
-			}
-		} else {
-			// Vérification approximative (sans paramètres)
-			basePath := regexp.MustCompile(`\{[^}]+\}`).ReplaceAllString(path, "")
-			basePath = strings.TrimSuffix(basePath, "/")
-
-			for endpoint, providerMethods := range providerEndpoints {
-				if strings.HasPrefix(endpoint, basePath) || strings.HasPrefix(basePath, endpoint) {
-					for _, method := range availableMethods {
-						found := false
-						for _, providerMethod := range providerMethods {
-							if strings.ToUpper(providerMethod) == method {
-								coverage.Covered = append(coverage.Covered, method)
-								found = true
-								break
-							}
-						}
-						if !found {
-							coverage.Missing = append(coverage.Missing, method)
-						}
-					}
-					break
-				}
-			}
-
-			// Si toujours rien trouvé, tout est manquant
-			if len(coverage.Covered) == 0 {
-				coverage.Missing = availableMethods
-			}
-		}
-
+		coverage, covered := calculateEndpointCoverage(path, methods, providerEndpoints)
 		report.EndpointDetails[path] = coverage
+
 		report.TotalEndpoints++
-		if len(coverage.Covered) > 0 {
+		if covered {
 			report.CoveredEndpoints++
 		}
 	}
@@ -897,65 +856,173 @@ func generateComprehensiveCoverageReport(spec *OpenAPISpec, providerEndpoints ma
 	return report
 }
 
+// calculateEndpointCoverage handles the endpoint coverage logic for a single path.
+func calculateEndpointCoverage(
+	path string,
+	methods map[string]interface{},
+	providerEndpoints map[string][]string,
+) (Coverage, bool) {
+	availableMethods := extractAvailableMethods(methods)
+	if len(availableMethods) == 0 {
+		return Coverage{
+			Path:    path,
+			Methods: availableMethods,
+			Covered: []string{},
+			Missing: []string{},
+		}, false
+	}
+
+	coverage := Coverage{
+		Path:    path,
+		Methods: availableMethods,
+		Covered: []string{},
+		Missing: []string{},
+	}
+
+	providerMethods, exists := providerEndpoints[path]
+	if exists {
+		coverage = matchMethods(coverage, availableMethods, providerMethods)
+	} else {
+		coverage = matchMethodsWithBasePath(coverage, path, availableMethods, providerEndpoints)
+	}
+
+	return coverage, len(coverage.Covered) > 0
+}
+
+// extractAvailableMethods extracts valid HTTP methods from the OpenAPI methods map.
+func extractAvailableMethods(methods map[string]interface{}) []string {
+	var availableMethods []string
+
+	for method := range methods {
+		if method != "parameters" && method != "x-amazon-apigateway-integration" {
+			availableMethods = append(availableMethods, strings.ToUpper(method))
+		}
+	}
+
+	return availableMethods
+}
+
+// matchMethods matches available methods with provider methods for a given path.
+func matchMethods(coverage Coverage, availableMethods, providerMethods []string) Coverage {
+	for _, method := range availableMethods {
+		found := false
+
+		for _, providerMethod := range providerMethods {
+			if strings.ToUpper(providerMethod) == method {
+				coverage.Covered = append(coverage.Covered, method)
+				found = true
+
+				break
+			}
+		}
+
+		if !found {
+			coverage.Missing = append(coverage.Missing, method)
+		}
+	}
+
+	return coverage
+}
+
+// matchMethodsWithBasePath tries to match methods using a base path if an exact match is not found.
+func matchMethodsWithBasePath(
+	coverage Coverage,
+	path string,
+	availableMethods []string,
+	providerEndpoints map[string][]string,
+) Coverage {
+	basePath := regexp.MustCompile(`\{[^}]+\}`).ReplaceAllString(path, "")
+	basePath = strings.TrimSuffix(basePath, "/")
+	foundAny := false
+
+	for endpoint, providerMethods := range providerEndpoints {
+		if strings.HasPrefix(endpoint, basePath) || strings.HasPrefix(basePath, endpoint) {
+			coverage = matchMethods(coverage, availableMethods, providerMethods)
+			if len(coverage.Covered) > 0 {
+				foundAny = true
+			}
+
+			break
+		}
+	}
+
+	if !foundAny && len(coverage.Covered) == 0 {
+		coverage.Missing = availableMethods
+	}
+
+	return coverage
+}
+
 func printComprehensiveReport(report *CoverageReport) {
-	fmt.Printf("=== ENDPOINT COVERAGE ===\n")
-	fmt.Printf("Total Endpoints: %d\n", report.TotalEndpoints)
-	fmt.Printf("Covered Endpoints: %d\n", report.CoveredEndpoints)
-	fmt.Printf("Coverage Percentage: %.2f%%\n", report.CoveragePercent)
+	log.Printf("=== ENDPOINT COVERAGE ===")
+	log.Printf("Total Endpoints: %d", report.TotalEndpoints)
+	log.Printf("Covered Endpoints: %d", report.CoveredEndpoints)
+	log.Printf("Coverage Percentage: %.2f%%", report.CoveragePercent)
 
-	fmt.Printf("\n=== SCHEMA COVERAGE ===\n")
-	fmt.Printf("Total Schemas: %d\n", report.SchemaAnalysis.TotalSchemas)
-	fmt.Printf("Covered Schemas: %d\n", report.SchemaAnalysis.CoveredSchemas)
-	fmt.Printf("Schema Coverage Percentage: %.2f%%\n", report.SchemaAnalysis.SchemaCoveragePercent)
+	log.Printf("\n=== SCHEMA COVERAGE ===")
+	log.Printf("Total Schemas: %d", report.SchemaAnalysis.TotalSchemas)
+	log.Printf("Covered Schemas: %d", report.SchemaAnalysis.CoveredSchemas)
+	log.Printf("Schema Coverage Percentage: %.2f%%", report.SchemaAnalysis.SchemaCoveragePercent)
 
-	fmt.Printf("\n=== RESOURCE ANALYSIS ===\n")
-	fmt.Printf("Total Resources: %d\n", len(report.ResourceAnalysis))
+	log.Printf("\n=== RESOURCE ANALYSIS ===")
+	log.Printf("Total Resources: %d", len(report.ResourceAnalysis))
+
 	resourceNames := make([]string, 0, len(report.ResourceAnalysis))
 	for name := range report.ResourceAnalysis {
 		resourceNames = append(resourceNames, name)
 	}
+
 	sort.Strings(resourceNames)
 
 	for _, name := range resourceNames {
 		resource := report.ResourceAnalysis[name]
-		fmt.Printf("- %s: %d properties, %v operations\n",
+		log.Printf("- %s: %d properties, %v operations",
 			name, len(resource.SchemaProperties), resource.SupportedOperations)
 	}
 
-	fmt.Printf("\n=== DATA SOURCE ANALYSIS ===\n")
-	fmt.Printf("Total Data Sources: %d\n", len(report.DataSourceAnalysis))
+	log.Printf("\n=== DATA SOURCE ANALYSIS ===")
+	log.Printf("Total Data Sources: %d", len(report.DataSourceAnalysis))
+
 	dataSourceNames := make([]string, 0, len(report.DataSourceAnalysis))
 	for name := range report.DataSourceAnalysis {
 		dataSourceNames = append(dataSourceNames, name)
 	}
+
 	sort.Strings(dataSourceNames)
 
 	for _, name := range dataSourceNames {
 		dataSource := report.DataSourceAnalysis[name]
-		fmt.Printf("- %s: %d properties\n", name, len(dataSource.SchemaProperties))
+		log.Printf("- %s: %d properties", name, len(dataSource.SchemaProperties))
 	}
 
-	fmt.Printf("\n=== TOP MISSING ENDPOINTS ===\n")
+	log.Printf("\n=== TOP MISSING ENDPOINTS ===")
+
 	missingCount := 0
+
 	for path, coverage := range report.EndpointDetails {
 		if len(coverage.Missing) > 0 && missingCount < 10 {
-			fmt.Printf("- %s (%s)\n", path, strings.Join(coverage.Missing, ", "))
+			log.Printf("- %s (%s)", path, strings.Join(coverage.Missing, ", "))
+
 			missingCount++
 		}
 	}
 
 	if len(report.SchemaAnalysis.SchemaDetails) > 0 {
-		fmt.Printf("\n=== SCHEMA DETAILS (Top 5) ===\n")
+		log.Printf("\n=== SCHEMA DETAILS (Top 5) ===")
+
 		count := 0
+
 		for schemaName, schema := range report.SchemaAnalysis.SchemaDetails {
 			if count >= 5 {
 				break
 			}
-			fmt.Printf("Schema: %s\n", schemaName)
-			fmt.Printf("  Total Properties: %d\n", schema.TotalProperties)
-			fmt.Printf("  Covered Properties: %d\n", schema.CoveredProperties)
-			fmt.Printf("  Missing Properties: %v\n", schema.MissingProperties)
-			fmt.Println()
+
+			log.Printf("Schema: %s", schemaName)
+			log.Printf("  Total Properties: %d", schema.TotalProperties)
+			log.Printf("  Covered Properties: %d", schema.CoveredProperties)
+			log.Printf("  Missing Properties: %v", schema.MissingProperties)
+			log.Println()
+
 			count++
 		}
 	}
@@ -964,30 +1031,31 @@ func printComprehensiveReport(report *CoverageReport) {
 func saveReport(report *CoverageReport, filename string) error {
 	data, err := json.MarshalIndent(report, "", "  ")
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to marshal report: %w", err)
 	}
-	return ioutil.WriteFile(filename, data, 0644)
+
+	return os.WriteFile(filename, data, 0600)
 }
 
-// Helper function
+// Helper function.
 func contains(slice []string, item string) bool {
 	for _, s := range slice {
 		if s == item {
 			return true
 		}
 	}
+
 	return false
 }
 
-// Ajouter ces fonctions manquantes à la fin du fichier
-
-// analyzeSchemas_ analyse les schémas OpenAPI par rapport aux ressources Terraform
-func analyzeSchemas_(spec *OpenAPISpec, resources, dataSources map[string]ResourceCoverage, verbose bool) SchemaAnalysis {
+// analyzeOpenAPISchemas analyzes OpenAPI schemas against Terraform resources.
+func analyzeOpenAPISchemas(spec *OpenAPISpec, resources,
+	dataSources map[string]ResourceCoverage, verbose bool) SchemaAnalysis {
 	analysis := SchemaAnalysis{
 		SchemaDetails: make(map[string]SchemaCoverage),
 	}
 
-	// Analyser les schémas OpenAPI
+	// Analyze OpenAPI schemas
 	for schemaName, schemaData := range spec.Components.Schemas {
 		coverage := analyzeSingleSchema(schemaName, schemaData, resources, dataSources, verbose)
 		analysis.SchemaDetails[schemaName] = coverage
@@ -1005,20 +1073,21 @@ func analyzeSchemas_(spec *OpenAPISpec, resources, dataSources map[string]Resour
 	return analysis
 }
 
-// analyzeSingleSchema analyse un seul schéma OpenAPI
-func analyzeSingleSchema(schemaName string, schemaData interface{}, resources, dataSources map[string]ResourceCoverage, verbose bool) SchemaCoverage {
+// analyzeSingleSchema analyzes a single OpenAPI schema.
+func analyzeSingleSchema(schemaName string, schemaData interface{}, resources,
+	dataSources map[string]ResourceCoverage, verbose bool) SchemaCoverage {
 	coverage := SchemaCoverage{
 		SchemaName: schemaName,
 		Properties: make(map[string]Property),
 	}
 
-	// Convertir les données du schéma en map
+	// Convert schema data to map
 	schemaMap, ok := schemaData.(map[string]interface{})
 	if !ok {
 		return coverage
 	}
 
-	// Extraire les propriétés du schéma OpenAPI
+	// Extract properties from OpenAPI schema
 	if properties, exists := schemaMap["properties"]; exists {
 		if propMap, ok := properties.(map[string]interface{}); ok {
 			for propName, propData := range propMap {
@@ -1029,13 +1098,13 @@ func analyzeSingleSchema(schemaName string, schemaData interface{}, resources, d
 		}
 	}
 
-	// Vérifier la couverture par rapport aux ressources Terraform
+	// Check coverage against Terraform resources
 	coverage = checkPropertyCoverage(coverage, resources, dataSources, verbose)
 
 	return coverage
 }
 
-// extractPropertyFromOpenAPI extrait une propriété depuis les données OpenAPI
+// extractPropertyFromOpenAPI extracts a property from OpenAPI data.
 func extractPropertyFromOpenAPI(propName string, propData interface{}) Property {
 	property := Property{
 		Name:    propName,
@@ -1054,27 +1123,29 @@ func extractPropertyFromOpenAPI(propName string, propData interface{}) Property 
 	return property
 }
 
-// extractResourceName extrait le nom d'une ressource à partir du nom de fichier
+// extractResourceName extracts the resource name from a filename.
 func extractResourceName(filename string) string {
-	// Extraire le nom de ressource depuis un nom de fichier comme "resource_application.go"
+	// Extract resource name from a filename like "resource_application.go"
 	name := strings.TrimPrefix(filename, "resource_")
 	name = strings.TrimSuffix(name, ".go")
+
 	return name
 }
 
-// extractDataSourceName extrait le nom d'une source de données à partir du nom de fichier
+// extractDataSourceName extracts the data source name from a filename.
 func extractDataSourceName(filename string) string {
-	// Extraire le nom de source de données depuis un nom de fichier comme "data_source_version.go"
+	// Extract data source name from a filename like "data_source_version.go"
 	name := strings.TrimPrefix(filename, "data_source_")
 	name = strings.TrimSuffix(name, ".go")
+
 	return name
 }
 
-// extractRelatedEndpoints extrait les endpoints liés depuis le contenu d'un fichier
+// extractRelatedEndpoints extracts related endpoints from file content.
 func extractRelatedEndpoints(content string) []string {
 	var endpoints []string
 
-	// Patterns regex pour trouver les endpoints d'API dans le code
+	// Regex patterns to find API endpoints in code
 	patterns := []*regexp.Regexp{
 		regexp.MustCompile(`"(/[a-zA-Z0-9_/-]+)"`),
 		regexp.MustCompile(`client\.newRequest\([^,]+,\s*"([^"]+)"`),
@@ -1087,7 +1158,7 @@ func extractRelatedEndpoints(content string) []string {
 			if len(match) > 1 {
 				endpoint := match[1]
 				if strings.HasPrefix(endpoint, "/") && len(endpoint) > 1 {
-					// Nettoyer et normaliser l'endpoint
+					// Clean and normalize endpoint
 					endpoint = strings.TrimSuffix(endpoint, "/")
 					if !contains(endpoints, endpoint) {
 						endpoints = append(endpoints, endpoint)

@@ -48,7 +48,7 @@ cd terraform-provider-wallix-bastion
 make install
 ```
 
-> **Note:** When testing your locally built provider, you may need to explicitly specify the local source and version in your Terraform configuration.  
+> **Note:** When testing your locally built provider, you may need to explicitly specify the local source and version in your Terraform configuration.
 > This ensures Terraform uses your development build instead of the published version.
 
 **Example:**
