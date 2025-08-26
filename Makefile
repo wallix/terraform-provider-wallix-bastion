@@ -86,3 +86,18 @@ setup-dev:
 # Generate documentation
 docs:
 	go generate ./...
+
+# Analyze API coverage
+coverage-api:
+	@echo "Analyzing API coverage..."
+	@if [ ! -f "tools/coverage-analyzer/main.go" ]; then \
+		echo "Coverage analyzer not found. Please create it first."; \
+		exit 1; \
+	fi
+	@cd tools/coverage-analyzer && go run main.go -provider ../../ -verbose
+
+# Setup coverage analysis tools
+setup-coverage:
+	@mkdir -p tools/coverage-analyzer
+	@echo "Coverage analyzer directory created"
+	@echo "Please add the coverage analyzer code to tools/coverage-analyzer/main.go"
