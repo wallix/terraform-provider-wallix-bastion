@@ -1,11 +1,19 @@
 # Define variables for maintainability
 PROVIDER_NAME := wallix-bastion
-PROVIDER_VERSION := 1.0.0
+# Version dynamique basée sur git
+VERSION := $(shell git describe --tags --exact-match 2>/dev/null || echo "dev")
+
+# Ou version avec branche pour dev
+DEV_VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "0.0.0-dev")
+
+# Version conditionnelle
+ifeq ($(ENV),production)
+    PROVIDER_VERSION := 1.0.0
+else
+    PROVIDER_VERSION := 0.0.0-dev
+endif
 # The go build output binary name
 BINARY_NAME := terraform-provider-$(PROVIDER_NAME)
-
-# Get the version from git, defaulting to "dev"
-VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 
 # Use a -ldflags string for versioning during compilation
 LDFLAGS_STRING := "-X main.version=$(VERSION)"
@@ -33,9 +41,9 @@ build-all:
 # This target is now cross-platform, automatically detecting your OS and architecture
 install: build
 	# Use the Go environment variables directly to create the correct plugin path
-	mkdir -p ~/.terraform.d/plugins/local/$(PROVIDER_NAME)/$(PROVIDER_VERSION)/$(shell go env GOOS)_$(shell go env GOARCH)
+	mkdir -p  ~/.terraform.d/plugins/terraform.local/local/$(PROVIDER_NAME)/$(PROVIDER_VERSION)/$(shell go env GOOS)_$(shell go env GOARCH)
 	# Copy the binary to the correct location
-	cp $(BINARY_NAME) ~/.terraform.d/plugins/local/$(PROVIDER_NAME)/$(PROVIDER_VERSION)/$(shell go env GOOS)_$(shell go env GOARCH)/
+	cp $(BINARY_NAME) ~/.terraform.d/plugins/terraform.local/local/$(PROVIDER_NAME)/$(PROVIDER_VERSION)/$(shell go env GOOS)_$(shell go env GOARCH)/
 
 # Run unit tests
 test:

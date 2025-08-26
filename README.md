@@ -43,8 +43,25 @@ provider "wallix-bastion" {
 git clone https://github.com/wallix/terraform-provider-wallix-bastion.git
 cd terraform-provider-wallix-bastion
 
-# Build and install locally
+```bash
+# Build and install the provider locally
 make install
+```
+
+> **Note:** When testing your locally built provider, you may need to explicitly specify the local source and version in your Terraform configuration.  
+> This ensures Terraform uses your development build instead of the published version.
+
+**Example:**
+
+```hcl
+terraform {
+  required_providers {
+    wallix-bastion = {
+      source  = "terraform.local/local/wallix-bastion"
+      version = "0.0.0-dev"
+    }
+  }
+}
 ```
 
 ## Building the Provider
@@ -127,7 +144,7 @@ TF_ACC=1 go test -v ./bastion -run TestAccResourceAuthorization_sessionSharing
    export WALLIX_BASTION_HOST="your-test-bastion"
    export WALLIX_BASTION_TOKEN="<your-test-token>"
    export WALLIX_BASTION_USER="admin"
-   export WALLIX_BASTION_API_VERSION="v3.8"
+   export WALLIX_BASTION_API_VERSION="v3.12"
    export TF_ACC=1
    ```
 
@@ -262,7 +279,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 | Provider Version | Terraform Version | Go Version | Wallix Bastion API |
 |------------------|-------------------|------------|-------------------|
-| >= 0.14.0        | >= 1.0           | 1.22-1.24  | v3.8, v3.12      |
+| >= 0.14.0        | >= 1.0           | 1.22-1.24  | v3.12, v3.12      |
 | 0.13.x           | >= 0.14          | 1.19-1.21  | v3.3, v3.6       |
 
 ## License

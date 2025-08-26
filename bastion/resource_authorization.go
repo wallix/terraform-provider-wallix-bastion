@@ -15,7 +15,7 @@ type jsonAuthorization struct {
 	ApprovalRequired           bool      `json:"approval_required"`
 	AuthorizePasswordRetrieval bool      `json:"authorize_password_retrieval"`
 	AuthorizeSessions          bool      `json:"authorize_sessions"`
-	AuthorizeSessionSharing    bool      `json:"authorize_session_sharing"`
+	AuthorizeSessionSharing    bool      `json:"authorize_session_sharing,omitempty"`
 	IsCritical                 bool      `json:"is_critical"`
 	IsRecorded                 bool      `json:"is_recorded"`
 	ID                         string    `json:"id,omitempty"`
@@ -358,9 +358,7 @@ func prepareAuthorizationJSON(d *schema.ResourceData, newResource bool) jsonAuth
 		AuthorizationName:          d.Get("authorization_name").(string),
 		AuthorizePasswordRetrieval: d.Get("authorize_password_retrieval").(bool),
 		AuthorizeSessions:          d.Get("authorize_sessions").(bool),
-		AuthorizeSessionSharing:    d.Get("authorize_session_sharing").(bool),
 		Description:                d.Get("description").(string),
-		SessionSharingMode:         d.Get("session_sharing_mode").(string),
 		ApprovalRequired:           d.Get("approval_required").(bool),
 		IsCritical:                 d.Get("is_critical").(bool),
 		IsRecorded:                 d.Get("is_recorded").(bool),
@@ -371,6 +369,13 @@ func prepareAuthorizationJSON(d *schema.ResourceData, newResource bool) jsonAuth
 		jsonData.TargetGroup = d.Get("target_group").(string)
 	}
 
+	// Only include authorize_session_sharing if it is enabled
+	if d.Get("authorize_session_sharing").(bool) {
+		jsonData.AuthorizeSessionSharing = true
+		jsonData.SessionSharingMode = d.Get("session_sharing_mode").(string)
+	}
+
+	// Only include approval fields if approval_required is true
 	if d.Get("approval_required").(bool) {
 		activeQuorum := d.Get("active_quorum").(int)
 		jsonData.ActiveQuorum = &activeQuorum
@@ -378,12 +383,14 @@ func prepareAuthorizationJSON(d *schema.ResourceData, newResource bool) jsonAuth
 		jsonData.InactiveQuorum = &inactiveQuorum
 		approvalTimeout := d.Get("approval_timeout").(int)
 		jsonData.ApprovalTimeout = &approvalTimeout
+
 		listApprovers := d.Get("approvers").([]interface{})
 		approvers := make([]string, len(listApprovers))
 		for i, v := range listApprovers {
 			approvers[i] = v.(string)
 		}
 		jsonData.Approvers = &approvers
+
 		hasComment := d.Get("has_comment").(bool)
 		jsonData.HasComment = &hasComment
 		hasTicket := d.Get("has_ticket").(bool)
@@ -396,6 +403,7 @@ func prepareAuthorizationJSON(d *schema.ResourceData, newResource bool) jsonAuth
 		jsonData.SingleConnection = &singleConnection
 	}
 
+	// Only include subprotocols if protocols are defined
 	if listSubProtocols := d.Get("subprotocols").(*schema.Set).List(); len(listSubProtocols) > 0 {
 		subProtocols := make([]string, len(listSubProtocols))
 		for i, v := range listSubProtocols {
