@@ -1,42 +1,87 @@
-# This GitHub action can publish assets for release when a tag is created.
-# Currently its setup to run on any tag that matches the pattern "v*" (ie. v0.1.0).
-name: release
-on:
-  push:
-    tags:
-      - v*
-permissions:
-  contents: write  # Changed from 'read' to 'write' for release creation
-  packages: write
-  issues: read
-  pull-requests: read
-jobs:
-  goreleaser:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0  # Full history needed for changelog generation
-      
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: 'go.mod'  # Use Go version from go.mod instead of hardcoded
-          cache: true  # Enable Go module caching
-      
-      - name: Import GPG key
-        uses: crazy-max/ghaction-import-gpg@v6.3.0
-        id: import_gpg
-        with:
-          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.PASSPHRASE }}
-      
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v6.4.0
-        with:
-          version: v2.12.0  # Lock to specific version instead of 'latest'
-          args: release --clean
-        env:
-          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    flags:
+      - -trimpath
+    goos:
+      - freebsd
+      - windows
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - '386'
+      - arm64
+    ignore:
+      - goos: darwin
+        goarch: '386'
+      - goos: windows
+        goarch: arm  # Remove problematic windows_arm_6 target
+    binary: '{{ .ProjectName }}_v{{ .Version }}'
+
+archives:
+  - id: default
+    name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - README.md
+      - LICENSE
+      - CHANGELOG.md
+
+checksum:
+  name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
+  algorithm: sha256
+
+signs:
+  - artifacts: checksum
+    args:
+      - --batch
+      - --local-user
+      - "{{ .Env.GPG_FINGERPRINT }}"
+      - --output
+      - ${signature}
+      - --detach-sign
+      - ${artifact}
+
+release:
+  draft: false  # Changed from true to false for automatic release
+  prerelease: auto
+  name_template: "Release {{ .Tag }}"
+  
+changelog:
+  disable: false  # Enable changelog generation
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^ci:'
+      - '^refactor:'
+      - merge conflict
+      - Merge pull request
+      - Merge branch
+  groups:
+    - title: 'New Features'
+      regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
+      order: 0
+    - title: 'Bug Fixes'
+      regexp: '^.*?fix(\([[:word:]]+\))??!?:.+$'
+      order: 1
+    - title: 'Performance Improvements'
+      regexp: '^.*?perf(\([[:word:]]+\))??!?:.+$'
+      order: 2
+    - title: 'Enhancements'
+      regexp: '^.*?(enhancement|improve)(\([[:word:]]+\))??!?:.+$'
+      order: 3
+    - title: Others
+      order: 999
