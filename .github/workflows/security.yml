@@ -79,14 +79,9 @@ jobs:
           check-latest: false
       
       - name: Run OSV Scanner (dependency vulnerability scanner)
-        uses: google/osv-scanner-action@v1.8.5
-        with:
-          scan-args: |-
-            --recursive
-            --skip-git
-            --format=sarif
-            --output=osv-results.sarif
-            ./
+        run: |
+          go install github.com/google/osv-scanner/cmd/osv-scanner@latest
+          osv-scanner --recursive --skip-git --format=sarif --output=osv-results.sarif ./
         continue-on-error: true  # Don't fail the job on vulnerabilities, just report them
       
       - name: Upload OSV scan results to GitHub Security tab
