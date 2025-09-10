@@ -34,6 +34,9 @@ jobs:
           go-version: ${{ matrix.go-version }}
           check-latest: true
           cache: true  # Enable caching for better performance
+          cache-dependency-path: |
+            go.sum
+            go.mod
       
       - name: Download dependencies
         run: go mod download
@@ -46,13 +49,13 @@ jobs:
       
       - name: Run tests
         run: |
-          go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+          go test -v -race -coverprofile=coverage-${{ matrix.go-version }}.out -covermode=atomic ./...
       
       - name: Upload coverage to Codecov
         if: matrix.go-version == '1.23'  # Only upload once
         uses: codecov/codecov-action@v5
         with:
-          file: ./coverage.out
+          file: ./coverage-${{ matrix.go-version }}.out
           fail_ci_if_error: false
   
   # Integration tests (if you have any)
