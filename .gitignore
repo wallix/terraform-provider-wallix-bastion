@@ -16,6 +16,7 @@ terraform-provider-wallix-bastion
 .vscode/
 terraform-provider-bastion
 
-# coverage analyzer
-tools/coverage-analyzer/api/openapi.*
-tools/coverage-analyzer/coverage-report.*
+# Work In progress
+*.wip
+*.swp
+WIP/

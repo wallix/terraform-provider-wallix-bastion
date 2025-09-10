@@ -1,109 +1,102 @@
-name: Go Tests
-on: [push, pull_request]
+name: CI Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
 permissions:
   contents: read
+  checks: write  # For test reporting
+  pull-requests: write  # For PR comments
+
+env:
+  CGO_ENABLED: 0
+
 jobs:
-  build-1_22:
-    name: Build 1.22
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set up Go 1.22
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.22'
-          check-latest: true
-          cache: false
-        id: go
-      - name: Disable cgo
-        run: |
-          echo "CGO_ENABLED=0" >> $GITHUB_ENV
-      - name: Show version
-        run: go version
-      - name: Check out code
-        uses: actions/checkout@v5
-      - name: Build
-        run: go build -v .
-
-  build-1_23:
-    name: Build 1.23
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set up Go 1.23
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.23'
-          check-latest: true
-          cache: false
-        id: go
-      - name: Disable cgo
-        run: |
-          echo "CGO_ENABLED=0" >> $GITHUB_ENV
-      - name: Show version
-        run: go version
-      - name: Check out code
-        uses: actions/checkout@v5
-      - name: Build
-        run: go build -v .
-
-  build-1_24:
-    name: Build 1.24
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set up Go 1.24
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.24'
-          check-latest: true
-          cache: false
-        id: go
-      - name: Disable cgo
-        run: |
-          echo "CGO_ENABLED=0" >> $GITHUB_ENV
-      - name: Show version
-        run: go version
-      - name: Check out code
-        uses: actions/checkout@v5
-      - name: Build
-        run: go build -v .
-
-  build-1_25:
-    name: Build 1.25
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set up Go 1.25
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.25'
-          check-latest: true
-          cache: false
-        id: go
-      - name: Disable cgo
-        run: |
-          echo "CGO_ENABLED=0" >> $GITHUB_ENV
-      - name: Show version
-        run: go version
-      - name: Check out code
-        uses: actions/checkout@v5
-      - name: Build
-        run: go build -v .
-
+  # Matrix strategy for testing multiple Go versions efficiently
   test:
-    name: Test
+    name: Test Go ${{ matrix.go-version }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        go-version: ['1.22', '1.23', '1.24', '1.25']
+    
     steps:
-      - name: Set up Go 1.23
+      - name: Checkout code
+        uses: actions/checkout@v5
+      
+      - name: Set up Go ${{ matrix.go-version }}
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          go-version: ${{ matrix.go-version }}
           check-latest: true
-          cache: false
-        id: go
-      - name: Disable cgo
+          cache: true  # Enable caching for better performance
+      
+      - name: Download dependencies
+        run: go mod download
+      
+      - name: Verify dependencies
+        run: go mod verify
+      
+      - name: Build
+        run: go build -v ./...
+      
+      - name: Run tests
         run: |
-          echo "CGO_ENABLED=0" >> $GITHUB_ENV
-      - name: Show version
-        run: go version
-      - name: Check out code
+          go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+      
+      - name: Upload coverage to Codecov
+        if: matrix.go-version == '1.23'  # Only upload once
+        uses: codecov/codecov-action@v5
+        with:
+          file: ./coverage.out
+          fail_ci_if_error: false
+  
+  # Integration tests (if you have any)
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
         uses: actions/checkout@v5
-      - name: Test
-        run: go test -v ./...
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+      
+      - name: Run integration tests
+        run: |
+          # Add integration test commands here when available
+          echo "Integration tests would run here"
+  
+  # Security scanning
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+      
+      - name: Run Gosec Security Scanner
+        uses: securecodewarrior/github-action-gosec@master
+        with:
+          args: '-no-fail -fmt sarif -out results.sarif ./...'
+      
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif

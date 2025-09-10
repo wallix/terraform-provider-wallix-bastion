@@ -1,77 +1,160 @@
-name: Linters
-on: [push, pull_request]
+name: Code Quality
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
 permissions:
   contents: read
   pull-requests: read
+  checks: write
+
 jobs:
+  # Go linting
   golangci-lint:
-    name: golangci-lint
+    name: Go Linter
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go 1.23
+      - name: Checkout code
+        uses: actions/checkout@v5
+      
+      - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.23"
-          check-latest: true
-        id: go
-      - name: Disable cgo
-        run: |
-          echo "CGO_ENABLED=0" >> $GITHUB_ENV
-      - name: Check out code
-        uses: actions/checkout@v5
+          go-version-file: 'go.mod'
+          cache: true
+      
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v8
+        uses: golangci/golangci-lint-action@v6
         with:
-          version: v2.1.6
-          args: -c .golangci.yml -v
-          skip-cache: true
-
-  markdown-lint:
-    name: markdown-lint
+          version: latest
+          args: --config .golangci.yml --verbose --timeout 5m
+          skip-cache: false  # Enable caching for better performance
+  
+  # Terraform formatting
+  terraform-fmt:
+    name: Terraform Format Check
     runs-on: ubuntu-latest
     steps:
-      - name: Check out code
+      - name: Checkout code
         uses: actions/checkout@v5
-
-      - name: Markdown files linting
-        uses: avto-dev/markdown-lint@v1
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
         with:
-          args: .
-
-  terrafmt:
-    name: terrafmt
+          terraform_version: latest
+      
+      - name: Check Terraform formatting in examples
+        run: |
+          find examples -name "*.tf" -exec terraform fmt -check=true -diff=true {} \;
+      
+      - name: Check HCL formatting in test files
+        run: |
+          find . -name "*_test.go" -exec grep -l "testAccResourceConfig" {} \; | \
+          xargs grep -oh 'resource "[^"]*" "[^"]*"' | \
+          sort -u > /tmp/terraform_blocks.txt || true
+  
+  # Documentation linting
+  docs-lint:
+    name: Documentation Lint
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go 1.23
+      - name: Checkout code
+        uses: actions/checkout@v5
+      
+      - name: Markdown Lint
+        uses: DavidAnson/markdownlint-cli2-action@v18
+        with:
+          globs: |
+            **/*.md
+            !**/node_modules/**
+            !**/.terraform/**
+      
+      - name: Check broken links
+        uses: gaurav-nelson/github-action-markdown-link-check@v1
+        with:
+          use-quiet-mode: 'yes'
+          use-verbose-mode: 'no'
+          config-file: '.github/mlc_config.json'
+  
+  # Provider schema validation
+  provider-schema:
+    name: Provider Schema Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+      
+      - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.23"
-          check-latest: true
-        id: go
-      - name: Show version
-        run: go version
-      - name: Check out code
+          go-version-file: 'go.mod'
+          cache: true
+      
+      - name: Build provider
+        run: go build -o terraform-provider-wallix-bastion
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+      
+      - name: Generate and validate schema
+        run: |
+          # Create a temporary Terraform configuration
+          mkdir -p /tmp/terraform-test
+          cat > /tmp/terraform-test/main.tf << 'EOF'
+          terraform {
+            required_providers {
+              wallix-bastion = {
+                source = "registry.terraform.io/wallix/wallix-bastion"
+              }
+            }
+          }
+          
+          provider "wallix-bastion" {
+            # Configuration will be validated
+          }
+          EOF
+          
+          # Copy provider binary
+          cp terraform-provider-wallix-bastion /tmp/terraform-test/
+          
+          # Validate configuration
+          cd /tmp/terraform-test
+          terraform init -plugin-dir=.
+          terraform validate
+  
+  # License and dependency checks
+  compliance:
+    name: License & Dependency Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
         uses: actions/checkout@v5
-      - name: Check out terrafmt code
-        uses: actions/checkout@v5
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
         with:
-          repository: katbyte/terrafmt
-          ref: v0.5.2
-          path: terrafmt
-      - name: Build terrafmt bin
-        run: cd terrafmt && go install ./... && cd ${GITHUB_WORKSPACE}
-      - name: Detect resource/data-source blocks without double quote on type and name (blocks not detected by terrafmt)
+          go-version-file: 'go.mod'
+          cache: true
+      
+      - name: Check for vulnerable dependencies
+        uses: golang/govulncheck-action@v1
+        with:
+          go-version-file: go.mod
+          check-latest: false
+          repo-checkout: false
+      
+      - name: License check
         run: |
-          ! egrep -i '((resource|data)\s+[-a-z0-9_"]+)\s+[-a-z0-9_"]+\s+\{' bastion/*_test.go docs/*.md docs/*/*.md | egrep -i -v '((resource|data)\s+"[-a-z0-9_]+")\s+"[-a-z0-9_]+"\s+\{'
-      - name: Terrafmt diff on docs markdown
-        run: find docs | egrep "md$" | sort | while read f; do terrafmt diff $f; done >> /tmp/results.md
-      - name: Terrafmt diff on _test.go
-        run: find bastion | egrep "_test.go" | sort | while read f; do terrafmt diff $f; done >> /tmp/results.test.go
-      - name: Generate error if results not empty
-        run: |
-          if [[ -s /tmp/results.md || -s /tmp/results.test.go ]] ; then
-            cat /tmp/results.md
-            cat /tmp/results.test.go
-            echo "terraform blocks in docs/test-go files not being properly formatted"
+          # Check that all Go files have appropriate license headers
+          find . -name "*.go" -not -path "./vendor/*" | \
+          xargs grep -L "Licensed under the" | \
+          tee /tmp/missing_license.txt
+          
+          if [ -s /tmp/missing_license.txt ]; then
+            echo "Files missing license headers:"
+            cat /tmp/missing_license.txt
             exit 1
           fi

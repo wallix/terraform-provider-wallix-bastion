@@ -1,0 +1,135 @@
+name: Documentation
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'docs/**'
+      - 'examples/**'
+      - '*.md'
+      - '.github/workflows/docs.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'docs/**'
+      - 'examples/**'
+      - '*.md'
+      - '.github/workflows/docs.yml'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  # Generate and validate provider documentation
+  generate-docs:
+    name: Generate Provider Documentation
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+      
+      - name: Install tfplugindocs
+        run: go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@latest
+      
+      - name: Generate documentation
+        run: tfplugindocs generate
+      
+      - name: Check for documentation changes
+        run: |
+          if ! git diff --exit-code docs/; then
+            echo "Documentation is out of date. Please run 'tfplugindocs generate' and commit the changes."
+            git diff docs/
+            exit 1
+          fi
+  
+  # Validate examples
+  validate-examples:
+    name: Validate Examples
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: latest
+      
+      - name: Validate example configurations
+        run: |
+          find examples -name "*.tf" -execdir terraform init -backend=false \; -execdir terraform validate \;
+      
+      - name: Check Terraform formatting
+        run: |
+          find examples -name "*.tf" -exec terraform fmt -check=true -diff=true {} \;
+  
+  # Documentation site deployment (GitHub Pages)
+  deploy-docs:
+    name: Deploy Documentation Site
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    needs: [generate-docs, validate-examples]
+    
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: docs/package-lock.json
+      
+      - name: Install documentation dependencies
+        run: |
+          cd docs
+          npm ci
+      
+      - name: Build documentation site
+        run: |
+          cd docs
+          npm run build
+      
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+      
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/build
+      
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+  
+  # Check documentation links
+  link-check:
+    name: Documentation Link Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+      
+      - name: Check markdown links
+        uses: gaurav-nelson/github-action-markdown-link-check@v1
+        with:
+          use-quiet-mode: 'yes'
+          config-file: '.github/mlc_config.json'
+          folder-path: 'docs, examples'
+          file-path: './README.md, ./CONTRIBUTING.md, ./CHANGELOG.md'
