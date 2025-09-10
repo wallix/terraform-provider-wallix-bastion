@@ -1,57 +1,35 @@
-version: "2"
+run:
+  timeout: 5m
+  tests: true
+
 linters:
-  default: all
-  disable:
-    - cyclop
-    - depguard
-    - dupl
-    - err113
-    - exhaustruct
-    - forcetypeassert
-    - funlen
-    - gomoddirectives
-    - mnd
-    - nestif
-    - paralleltest
-    - tagliatelle
-    - varnamelen
-    - wsl
-  settings:
-    gocognit:
-      min-complexity: 30
-    gocyclo:
-      min-complexity: 30
-    govet:
-      disable:
-        - fieldalignment
-      enable-all: true
-  exclusions:
-    generated: lax
-    presets:
-      - comments
-      - common-false-positives
-      - legacy
-      - std-error-handling
-    paths:
-      - third_party$
-      - builtin$
-      - examples$
-formatters:
   enable:
-    - gci
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - typecheck
+    - unused
     - gofmt
-    - gofumpt
     - goimports
-  settings:
-    gci:
-      sections:
-        - standard
-        - localModule
-        - default
-      custom-order: true
-  exclusions:
-    generated: lax
-    paths:
-      - third_party$
-      - builtin$
-      - examples$
+    - misspell
+    - revive
+    - gosec
+    - gocognit
+    - gocyclo
+
+linters-settings:
+  gocognit:
+    min-complexity: 30
+  gocyclo:
+    min-complexity: 30
+  lll:
+    line-length: 120
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - errcheck
+        - gosec

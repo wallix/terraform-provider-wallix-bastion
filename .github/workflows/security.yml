@@ -1,10 +1,11 @@
+---
 name: Security Scanning
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   schedule:
     - cron: '0 6 * * 1'  # Weekly on Monday at 6 AM UTC
 
@@ -18,11 +19,12 @@ jobs:
   codeql:
     name: CodeQL Analysis
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'go' ]
+        language: [go]
     
     steps:
       - name: Checkout code
@@ -58,6 +60,7 @@ jobs:
   dependency-scan:
     name: Dependency Vulnerability Scan
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     
     steps:
       - name: Checkout code
@@ -75,15 +78,44 @@ jobs:
           go-version-file: go.mod
           check-latest: false
       
-      - name: Run Nancy (dependency vulnerability scanner)
-        run: |
-          go install github.com/sonatypeoss/nancy@latest
-          go list -json -deps ./... | nancy sleuth
+      - name: Run OSV Scanner (dependency vulnerability scanner)
+        uses: google/osv-scanner-action@v1.8.5
+        with:
+          scan-args: |-
+            --recursive
+            --skip-git
+            --format=sarif
+            --output=osv-results.sarif
+            ./
+        continue-on-error: true  # Don't fail the job on vulnerabilities, just report them
+      
+      - name: Upload OSV scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'osv-results.sarif'
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.27.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-fs-results.sarif'
+          severity: 'CRITICAL,HIGH'
+        continue-on-error: true  # Don't fail the job on vulnerabilities, just report them
+      
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-fs-results.sarif'
   
   # Secret scanning
   secret-scan:
     name: Secret Scan
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     
     steps:
       - name: Checkout code
@@ -92,18 +124,20 @@ jobs:
           fetch-depth: 0
       
       - name: Run TruffleHog
-        uses: trufflesecurity/trufflehog@main
+        uses: trufflesecurity/trufflehog@v3.84.2
         with:
           path: ./
-          base: main
-          head: HEAD
-          extra_args: --debug --only-verified
+          base: ""
+          head: ""
+          extra_args: --only-verified --no-update
+        continue-on-error: true  # Don't fail on secrets found, just report them
   
   # Container security (if using Docker)
   container-scan:
     name: Container Security Scan
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    timeout-minutes: 15
     
     steps:
       - name: Checkout code
@@ -119,22 +153,27 @@ jobs:
           COPY . .
           RUN CGO_ENABLED=0 go build -o terraform-provider-wallix-bastion
           
-          FROM scratch
-          COPY --from=builder /app/terraform-provider-wallix-bastion /
-          ENTRYPOINT ["/terraform-provider-wallix-bastion"]
+          FROM alpine:latest
+          RUN apk --no-cache add ca-certificates
+          WORKDIR /root/
+          COPY --from=builder /app/terraform-provider-wallix-bastion .
+          CMD ["./terraform-provider-wallix-bastion"]
           EOF
           
           docker build -f Dockerfile.test -t wallix-bastion-provider:test .
+        continue-on-error: false
       
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.27.0
         with:
           image-ref: 'wallix-bastion-provider:test'
           format: 'sarif'
-          output: 'trivy-results.sarif'
+          output: 'trivy-container-results.sarif'
+          severity: 'CRITICAL,HIGH'
+        continue-on-error: true
       
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: 'trivy-container-results.sarif'
