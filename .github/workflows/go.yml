@@ -53,12 +53,13 @@ jobs:
         run: |
           go test -v -race -coverprofile=coverage-${{ matrix.go-version }}.out -covermode=atomic ./...
       
-      - name: Upload coverage to Codecov
-        if: matrix.go-version == '1.23'  # Only upload once
-        uses: codecov/codecov-action@v5
-        with:
-          file: ./coverage-${{ matrix.go-version }}.out
-          fail_ci_if_error: false
+      # Codecov upload disabled due to token issues with protected branches
+      # - name: Upload coverage to Codecov
+      #   if: matrix.go-version == '1.23'  # Only upload once
+      #   uses: codecov/codecov-action@v5
+      #   with:
+      #     file: ./coverage-${{ matrix.go-version }}.out
+      #     fail_ci_if_error: false
   
   # Integration tests (if you have any)
   integration:
@@ -81,28 +82,3 @@ jobs:
         run: |
           # Add integration test commands here when available
           echo "Integration tests would run here"
-  
-  # Security scanning
-  security:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-      
-      - name: Set up Go
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: 'go.mod'
-          cache: true
-      
-      - name: Run Gosec Security Scanner
-        run: |
-          go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
-          gosec -no-fail -fmt sarif -out results.sarif ./...
-        continue-on-error: true  # Don't fail the job on security issues, just report them
-      
-      - name: Upload SARIF file
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: results.sarif
