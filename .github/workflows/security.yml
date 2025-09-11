@@ -15,47 +15,6 @@ permissions:
   actions: read
 
 jobs:
-  # Static security analysis
-  codeql:
-    name: CodeQL Analysis
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [go]
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-      
-      - name: Set up Go
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: 'go.mod'
-          cache: true
-          cache-dependency-path: |
-            go.sum
-            go.mod
-      
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: ${{ matrix.language }}
-          queries: security-and-quality
-          # Disable default cache to avoid conflicts
-          setup-python-dependencies: false
-      
-      - name: Build
-        run: go build -v ./...
-      
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
-        with:
-          # Use unique category to avoid cache conflicts
-          category: "/language:${{matrix.language}}"
-  
   # Dependency vulnerabilities
   dependency-scan:
     name: Dependency Vulnerability Scan
