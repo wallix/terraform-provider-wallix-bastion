@@ -48,6 +48,8 @@ jobs:
         run: go build -v ./...
       
       - name: Run tests
+        env:
+          CGO_ENABLED: 1
         run: |
           go test -v -race -coverprofile=coverage-${{ matrix.go-version }}.out -covermode=atomic ./...
       

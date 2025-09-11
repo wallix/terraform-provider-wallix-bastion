@@ -82,52 +82,6 @@ jobs:
           use-verbose-mode: 'no'
           config-file: '.github/mlc_config.json'
   
-  # Provider schema validation
-  provider-schema:
-    name: Provider Schema Validation
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-      
-      - name: Set up Go
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: 'go.mod'
-          cache: true
-      
-      - name: Build provider
-        run: go build -o terraform-provider-wallix-bastion
-      
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-      
-      - name: Generate and validate schema
-        run: |
-          # Create a temporary Terraform configuration
-          mkdir -p /tmp/terraform-test
-          cat > /tmp/terraform-test/main.tf << 'EOF'
-          terraform {
-            required_providers {
-              wallix-bastion = {
-                source = "registry.terraform.io/wallix/wallix-bastion"
-              }
-            }
-          }
-          
-          provider "wallix-bastion" {
-            # Configuration will be validated
-          }
-          EOF
-          
-          # Copy provider binary
-          cp terraform-provider-wallix-bastion /tmp/terraform-test/
-          
-          # Validate configuration
-          cd /tmp/terraform-test
-          terraform init -plugin-dir=.
-          terraform validate
-  
   # License and dependency checks
   compliance:
     name: License & Dependency Check

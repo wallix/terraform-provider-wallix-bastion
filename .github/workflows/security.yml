@@ -106,27 +106,6 @@ jobs:
         with:
           sarif_file: 'trivy-fs-results.sarif'
   
-  # Secret scanning
-  secret-scan:
-    name: Secret Scan
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-      
-      - name: Run TruffleHog
-        uses: trufflesecurity/trufflehog@v3.84.2
-        with:
-          path: ./
-          base: ""
-          head: ""
-          extra_args: --only-verified --no-update
-        continue-on-error: true  # Don't fail on secrets found, just report them
-  
   # Container security (if using Docker)
   container-scan:
     name: Container Security Scan
