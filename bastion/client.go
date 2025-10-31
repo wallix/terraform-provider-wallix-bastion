@@ -56,7 +56,7 @@ func (c *Client) cookieValid() bool {
 	return true
 }
 
-func (c *Client) authenticate() error {
+func (c *Client) authenticate(ctx context.Context) error {
 	c.authMu.Lock()
 
 	defer c.authMu.Unlock()
@@ -70,11 +70,11 @@ func (c *Client) authenticate() error {
 	authURL := fmt.Sprintf("https://%s/api", net.JoinHostPort(c.bastionIP, strconv.Itoa(c.bastionPort)))
 	client := *defaultHTTPClient
 	client.Jar = c.jar
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	authCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(ctx, "POST", authURL, nil)
+	req, err := http.NewRequestWithContext(authCtx, http.MethodPost, authURL, nil)
 	if err != nil {
 		return fmt.Errorf("creating auth request: %w", err)
 	}
@@ -122,14 +122,15 @@ func (c *Client) authenticate() error {
 
 func (c *Client) newRequest(ctx context.Context, uri, method string, jsonBody interface{}) (string, int, error) {
 	if !c.isAuthenticated || !c.cookieValid() {
-		if err := c.authenticate(); err != nil {
+		if err := c.authenticate(ctx); err != nil {
 			return "", http.StatusUnauthorized, fmt.Errorf("authentication failed: %w", err)
 		}
 	}
 
 	c.initJar()
 
-	urlStr := fmt.Sprintf("https://%s/api/%s", net.JoinHostPort(c.bastionIP, strconv.Itoa(c.bastionPort)), c.bastionAPIVersion)
+	bastionHost := net.JoinHostPort(c.bastionIP, strconv.Itoa(c.bastionPort))
+	urlStr := fmt.Sprintf("https://%s/api/%s", bastionHost, c.bastionAPIVersion)
 	if strings.HasPrefix(uri, "/") {
 		urlStr += uri
 	} else {
@@ -172,7 +173,7 @@ func (c *Client) newRequest(ctx context.Context, uri, method string, jsonBody in
 		c.cookie = http.Cookie{}
 		c.authMu.Unlock()
 
-		if err := c.authenticate(); err != nil {
+		if err := c.authenticate(ctx); err != nil {
 			return "", http.StatusUnauthorized, fmt.Errorf("re-authentication failed: %w", err)
 		}
 
