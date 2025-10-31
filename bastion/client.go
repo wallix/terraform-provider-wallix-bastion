@@ -20,6 +20,13 @@ import (
 	"github.com/hashicorp/go-cleanhttp"
 )
 
+const (
+	userAgentHeader   = "User-Agent"
+	userAgentValue    = "terraform-provider-wallix-bastion"
+	contentTypeHeader = "Content-Type"
+	contentTypeJSON   = "application/json"
+)
+
 type Client struct {
 	bastionPort       int
 	bastionAPIVersion string
@@ -79,9 +86,9 @@ func (c *Client) authenticate(ctx context.Context) error {
 		return fmt.Errorf("creating auth request: %w", err)
 	}
 
-	req.Header.Set("User-Agent", "terraform-provider-wallix-bastion")
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set(userAgentHeader, userAgentValue)
+	req.Header.Set("Accept", contentTypeJSON)
+	req.Header.Set(contentTypeHeader, contentTypeJSON)
 
 	if c.bastionToken != "" {
 		req.Header.Set("X-Auth-Key", c.bastionToken)
@@ -150,8 +157,8 @@ func (c *Client) newRequest(ctx context.Context, uri, method string, jsonBody in
 	if err != nil {
 		return "", http.StatusInternalServerError, fmt.Errorf("preparing http request: %w", err)
 	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User-Agent", "terraform-provider-wallix-bastion")
+	req.Header.Set(contentTypeHeader, contentTypeJSON)
+	req.Header.Set(userAgentHeader, userAgentValue)
 
 	client := *defaultHTTPClient
 	client.Jar = c.jar
@@ -178,8 +185,8 @@ func (c *Client) newRequest(ctx context.Context, uri, method string, jsonBody in
 		}
 
 		req2, _ := http.NewRequestWithContext(ctx, method, urlStr, body)
-		req2.Header.Set("Content-Type", "application/json")
-		req2.Header.Set("User-Agent", "terraform-provider-wallix-bastion")
+		req2.Header.Set(contentTypeHeader, contentTypeJSON)
+		req2.Header.Set(userAgentHeader, userAgentValue)
 
 		client2 := *defaultHTTPClient
 		client2.Jar = c.jar
