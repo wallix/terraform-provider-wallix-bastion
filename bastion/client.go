@@ -69,6 +69,7 @@ func (c *Client) getHTTPClient() *http.Client {
 
 func (c *Client) buildURL(path string) string {
 	host := net.JoinHostPort(c.bastionIP, strconv.Itoa(c.bastionPort))
+
 	return fmt.Sprintf("https://%s%s", host, path)
 }
 
@@ -123,6 +124,7 @@ func (c *Client) authenticate(ctx context.Context) error {
 	// Check for non-2xx status code before processing cookies
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		body, _ := io.ReadAll(resp.Body)
+
 		return fmt.Errorf("authentication failed: status %d: %s", resp.StatusCode, strings.TrimSpace(string(body)))
 	}
 
