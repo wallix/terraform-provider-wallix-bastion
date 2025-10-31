@@ -20,3 +20,4 @@ terraform-provider-bastion
 *.wip
 *.swp
 WIP/
+test_doc/

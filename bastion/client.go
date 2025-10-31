@@ -50,7 +50,6 @@ func (c *Client) initJar() {
 
 func (c *Client) cookieValid() bool {
 	if c.cookie.Name != "wab_session_id" || c.cookie.Value == "" {
-
 		return false
 	}
 
@@ -63,7 +62,6 @@ func (c *Client) authenticate() error {
 	defer c.authMu.Unlock()
 
 	if c.isAuthenticated && c.cookieValid() {
-
 		return nil
 	}
 
@@ -78,7 +76,6 @@ func (c *Client) authenticate() error {
 
 	req, err := http.NewRequestWithContext(ctx, "POST", authURL, nil)
 	if err != nil {
-
 		return fmt.Errorf("creating auth request: %w", err)
 	}
 
@@ -95,7 +92,6 @@ func (c *Client) authenticate() error {
 
 	resp, err := client.Do(req)
 	if err != nil {
-
 		return fmt.Errorf("auth request failed: %w", err)
 	}
 
@@ -115,7 +111,6 @@ func (c *Client) authenticate() error {
 	}
 
 	if found == nil {
-
 		return errors.New("authentication failed: no wab_session_id cookie returned")
 	}
 
@@ -128,7 +123,6 @@ func (c *Client) authenticate() error {
 func (c *Client) newRequest(ctx context.Context, uri, method string, jsonBody interface{}) (string, int, error) {
 	if !c.isAuthenticated || !c.cookieValid() {
 		if err := c.authenticate(); err != nil {
-
 			return "", http.StatusUnauthorized, fmt.Errorf("authentication failed: %w", err)
 		}
 	}
@@ -146,7 +140,6 @@ func (c *Client) newRequest(ctx context.Context, uri, method string, jsonBody in
 	if jsonBody != nil {
 		buf := new(bytes.Buffer)
 		if err := json.NewEncoder(buf).Encode(jsonBody); err != nil {
-
 			return "", http.StatusInternalServerError, fmt.Errorf("encoding json: %w", err)
 		}
 		body = buf
@@ -154,7 +147,6 @@ func (c *Client) newRequest(ctx context.Context, uri, method string, jsonBody in
 
 	req, err := http.NewRequestWithContext(ctx, method, urlStr, body)
 	if err != nil {
-
 		return "", http.StatusInternalServerError, fmt.Errorf("preparing http request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
@@ -165,14 +157,12 @@ func (c *Client) newRequest(ctx context.Context, uri, method string, jsonBody in
 
 	resp, err := client.Do(req)
 	if err != nil {
-
 		return "", http.StatusInternalServerError, fmt.Errorf("sending http request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-
 		return "", http.StatusInternalServerError, fmt.Errorf("reading http response: %w", err)
 	}
 
@@ -183,7 +173,6 @@ func (c *Client) newRequest(ctx context.Context, uri, method string, jsonBody in
 		c.authMu.Unlock()
 
 		if err := c.authenticate(); err != nil {
-
 			return "", http.StatusUnauthorized, fmt.Errorf("re-authentication failed: %w", err)
 		}
 
@@ -196,7 +185,6 @@ func (c *Client) newRequest(ctx context.Context, uri, method string, jsonBody in
 
 		resp2, err := client2.Do(req2)
 		if err != nil {
-
 			return "", http.StatusInternalServerError, fmt.Errorf("sending http request after reauth: %w", err)
 		}
 
@@ -204,7 +192,6 @@ func (c *Client) newRequest(ctx context.Context, uri, method string, jsonBody in
 
 		respBody, err = io.ReadAll(resp2.Body)
 		if err != nil {
-
 			return "", http.StatusInternalServerError, fmt.Errorf("reading http response after reauth: %w", err)
 		}
 
