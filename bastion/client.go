@@ -51,8 +51,25 @@ func init() { //nolint:gochecknoinits
 
 func (c *Client) initJar() {
 	if c.jar == nil {
-		c.jar, _ = cookiejar.New(nil)
+		jar, err := cookiejar.New(nil)
+		if err != nil {
+			// This should never happen with nil options, but panic if it does
+			panic(fmt.Sprintf("failed to create cookie jar: %v", err))
+		}
+		c.jar = jar
 	}
+}
+
+func (c *Client) getHTTPClient() *http.Client {
+	return &http.Client{
+		Transport: defaultHTTPClient.Transport,
+		Jar:       c.jar,
+	}
+}
+
+func (c *Client) buildURL(path string) string {
+	host := net.JoinHostPort(c.bastionIP, strconv.Itoa(c.bastionPort))
+	return fmt.Sprintf("https://%s%s", host, path)
 }
 
 func (c *Client) cookieValid() bool {
@@ -74,9 +91,8 @@ func (c *Client) authenticate(ctx context.Context) error {
 
 	c.initJar()
 
-	authURL := fmt.Sprintf("https://%s/api", net.JoinHostPort(c.bastionIP, strconv.Itoa(c.bastionPort)))
-	client := *defaultHTTPClient
-	client.Jar = c.jar
+	authURL := c.buildURL("/api")
+	client := c.getHTTPClient()
 	authCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 
 	defer cancel()
@@ -104,7 +120,16 @@ func (c *Client) authenticate(ctx context.Context) error {
 
 	defer resp.Body.Close()
 
-	u, _ := url.Parse(authURL)
+	// Check for non-2xx status code before processing cookies
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("authentication failed: status %d: %s", resp.StatusCode, strings.TrimSpace(string(body)))
+	}
+
+	u, err := url.Parse(authURL)
+	if err != nil {
+		return fmt.Errorf("parsing authURL: %w", err)
+	}
 	cookies := c.jar.Cookies(u)
 
 	var found *http.Cookie
@@ -128,7 +153,11 @@ func (c *Client) authenticate(ctx context.Context) error {
 }
 
 func (c *Client) newRequest(ctx context.Context, uri, method string, jsonBody interface{}) (string, int, error) {
-	if !c.isAuthenticated || !c.cookieValid() {
+	c.authMu.Lock()
+	needAuth := !c.isAuthenticated || !c.cookieValid()
+	c.authMu.Unlock()
+
+	if needAuth {
 		if err := c.authenticate(ctx); err != nil {
 			return "", http.StatusUnauthorized, fmt.Errorf("authentication failed: %w", err)
 		}
@@ -136,8 +165,7 @@ func (c *Client) newRequest(ctx context.Context, uri, method string, jsonBody in
 
 	c.initJar()
 
-	bastionHost := net.JoinHostPort(c.bastionIP, strconv.Itoa(c.bastionPort))
-	urlStr := fmt.Sprintf("https://%s/api/%s", bastionHost, c.bastionAPIVersion)
+	urlStr := c.buildURL("/api/" + c.bastionAPIVersion)
 	if strings.HasPrefix(uri, "/") {
 		urlStr += uri
 	} else {
@@ -160,8 +188,7 @@ func (c *Client) newRequest(ctx context.Context, uri, method string, jsonBody in
 	req.Header.Set(contentTypeHeader, contentTypeJSON)
 	req.Header.Set(userAgentHeader, userAgentValue)
 
-	client := *defaultHTTPClient
-	client.Jar = c.jar
+	client := c.getHTTPClient()
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -184,12 +211,24 @@ func (c *Client) newRequest(ctx context.Context, uri, method string, jsonBody in
 			return "", http.StatusUnauthorized, fmt.Errorf("re-authentication failed: %w", err)
 		}
 
-		req2, _ := http.NewRequestWithContext(ctx, method, urlStr, body)
+		// Recreate the body reader for the retry request
+		var retryBody io.Reader
+		if jsonBody != nil {
+			buf := new(bytes.Buffer)
+			if err := json.NewEncoder(buf).Encode(jsonBody); err != nil {
+				return "", http.StatusInternalServerError, fmt.Errorf("encoding json for retry: %w", err)
+			}
+			retryBody = buf
+		}
+
+		req2, err := http.NewRequestWithContext(ctx, method, urlStr, retryBody)
+		if err != nil {
+			return "", http.StatusInternalServerError, fmt.Errorf("creating http request after reauth: %w", err)
+		}
 		req2.Header.Set(contentTypeHeader, contentTypeJSON)
 		req2.Header.Set(userAgentHeader, userAgentValue)
 
-		client2 := *defaultHTTPClient
-		client2.Jar = c.jar
+		client2 := c.getHTTPClient()
 
 		resp2, err := client2.Do(req2)
 		if err != nil {
