@@ -108,7 +108,7 @@ lint-fix:
 
 lint-markdown:
 	@if command -v markdownlint >/dev/null 2>&1; then \
-	  markdownlint **/*.md --ignore node_modules --ignore .terraform; \
+	  markdownlint **/*.md --ignore node_modules --ignore .terraform --ignore WIP --config .markdownlint.json; \
 	else \
 	  echo "Warning: markdownlint not found. Install with: npm install -g markdownlint-cli"; \
 	  exit 1; \
