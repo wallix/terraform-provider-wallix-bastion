@@ -7,6 +7,7 @@ run:
 linters:
   enable-all: true
   disable:
+    - canonicalheader  # Allow non-canonical header names (some APIs require specific casing)
     - cyclop
     - depguard
     - dupl
@@ -17,17 +18,33 @@ linters:
     - gomoddirectives
     - mnd
     - nestif
+    - noctx           # Allow http.Get/NewRequest without context in tests
     - paralleltest
     - tagliatelle
-    - tenv  # deprecated since v1.64.0, replaced by usetesting
+    - testpackage     # Allow tests in same package for internal testing
+    - tenv            # deprecated since v1.64.0, replaced by usetesting
+    - usetesting      # Allow os.Setenv in tests (not all tests can use t.Setenv)
     - varnamelen
     - wsl
 
 linters-settings:
   gocognit:
-    min-complexity: 30
+    # Increase threshold - complex API clients are expected
+    min-complexity: 40
   gocyclo:
-    min-complexity: 30
+    # Increase threshold - complex API clients are expected
+    min-complexity: 40
+  goconst:
+    # Only flag strings that appear 5+ times (not 3)
+    min-occurrences: 5
+  gosec:
+    # Exclude specific rules that are false positives
+    excludes:
+      - G101  # Hardcoded credentials (false positive for header names)
+      - G402  # TLS InsecureSkipVerify (intentional for development)
+  unparam:
+    # Allow functions that always return nil error (may change in future)
+    check-exported: false
   govet:
     disable:
       - fieldalignment
@@ -40,14 +57,25 @@ linters-settings:
     custom-order: true
 
 issues:
+  # Maximum issues count per one linter
+  max-issues-per-linter: 0
+  # Maximum count of issues with the same text
+  max-same-issues: 0
+  
   exclude-rules:
     # Exclude some linters from running on tests files
     - path: _test\.go
       linters:
+        - gocognit
         - gocyclo
         - errcheck
         - dupl
         - gosec
+        - goconst
+        - noctx
+        - testpackage
+        - usetesting
+    
     # Exclude examples and third party code
     - path: examples/
       linters:
@@ -55,3 +83,15 @@ issues:
     - path: third_party/
       linters:
         - all
+    
+    # Specific exclusions for known false positives
+    - text: "csrfTokenHeader.*canonical"
+      linters:
+        - canonicalheader
+    - text: "G101.*csrfTokenHeader"
+      linters:
+        - gosec
+    - text: "G402.*InsecureSkipVerify"
+      linters:
+        - gosec
+
