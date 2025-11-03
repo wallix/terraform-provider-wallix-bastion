@@ -71,7 +71,7 @@ func testAccResourceApplicationCreate() string {
 	return `
 resource "wallix-bastion_device" "testacc_App" {
   device_name = "testacc_App"
-  host        = "testacc_App"
+  host        = "192.168.100.9"
 }
 
 resource "wallix-bastion_device_service" "testacc_App" {
@@ -122,7 +122,7 @@ func testAccResourceApplicationUpdate() string {
 	return `
 resource "wallix-bastion_device" "testacc_App" {
   device_name = "testacc_App"
-  host        = "testacc_App"
+  host        = "192.168.100.9"
 }
 
 resource "wallix-bastion_device_service" "testacc_App" {

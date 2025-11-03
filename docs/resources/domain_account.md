@@ -213,7 +213,6 @@ resource "wallix-bastion_domain_account" "complete" {
 - `id` (String) The ID of this resource.
 
 <a id="nestedatt--credentials"></a>
-
 ### Nested Schema for `credentials`
 
 Read-Only:
@@ -227,7 +226,6 @@ Read-Only:
 ### Prerequisites
 
 Before creating a domain account:
-
 1. Create the domain: `wallix-bastion_domain`
 2. Ensure the domain is properly configured
 3. Set up any required authentication mechanisms
@@ -235,7 +233,6 @@ Before creating a domain account:
 ### Service Configuration
 
 **Common Services:**
-
 - **ssh**: Secure Shell protocol
 - **rdp**: Remote Desktop Protocol (Windows)
 - **vnc**: Virtual Network Computing
@@ -253,7 +250,6 @@ Before creating a domain account:
 ### Account Types by Use Case
 
 **Administrative Accounts:**
-
 ```terraform
 resource "wallix-bastion_domain_account" "admin" {
   account_name = "administrator"
@@ -266,7 +262,6 @@ resource "wallix-bastion_domain_account" "admin" {
 ```
 
 **Service Accounts:**
-
 ```terraform
 resource "wallix-bastion_domain_account" "service" {
   account_name = "service_account"
@@ -279,7 +274,6 @@ resource "wallix-bastion_domain_account" "service" {
 ```
 
 **Database Accounts:**
-
 ```terraform
 resource "wallix-bastion_domain_account" "db_admin" {
   account_name = "db_administrator"
@@ -291,7 +285,6 @@ resource "wallix-bastion_domain_account" "db_admin" {
 ```
 
 **Network Accounts:**
-
 ```terraform
 resource "wallix-bastion_domain_account" "network" {
   account_name = "network_admin"
@@ -305,19 +298,16 @@ resource "wallix-bastion_domain_account" "network" {
 ### Security Settings
 
 **Password Management:**
-
 ```terraform
 auto_change_password = true   # Enable automatic password rotation
 ```
 
 **SSH Key Management:**
-
 ```terraform
 auto_change_ssh_key = true    # Enable automatic SSH key rotation
 ```
 
 **Certificate Management:**
-
 ```terraform
 can_edit_certificate_validity = true  # Allow certificate validity editing
 certificate_validity          = "24h" # Set certificate validity period
@@ -326,7 +316,6 @@ certificate_validity          = "24h" # Set certificate validity period
 ### Certificate Validity Periods
 
 **Common Validity Periods:**
-
 - `1h`: High security, short-lived access
 - `8h`: Business day access
 - `24h`: Daily renewal
@@ -335,7 +324,6 @@ certificate_validity          = "24h" # Set certificate validity period
 - `90d`: Quarterly renewal
 
 **Security Considerations:**
-
 - Shorter periods increase security
 - Longer periods reduce administrative overhead
 - Balance based on risk assessment
@@ -343,7 +331,6 @@ certificate_validity          = "24h" # Set certificate validity period
 ### Checkout Policies
 
 Assign checkout policies to control access:
-
 ```terraform
 checkout_policy = wallix-bastion_checkout_policy.restricted.policy_name
 ```
@@ -351,7 +338,6 @@ checkout_policy = wallix-bastion_checkout_policy.restricted.policy_name
 ### Integration with Credentials
 
 After creating a domain account, add credentials:
-
 ```terraform
 resource "wallix-bastion_domain_account_credential" "admin_cred" {
   device_id    = var.device_id
@@ -373,7 +359,6 @@ CORP_AD → john.doe → password/ssh_key
 ### Service-Specific Configurations
 
 **Web Server Administration:**
-
 ```terraform
 resource "wallix-bastion_domain_account" "web_admin" {
   services = ["ssh", "sftp", "http", "https"]
@@ -385,7 +370,6 @@ resource "wallix-bastion_domain_account" "web_admin" {
 ```
 
 **Database Administration:**
-
 ```terraform
 resource "wallix-bastion_domain_account" "dba" {
   services = ["ssh", "database", "https"]
@@ -397,7 +381,6 @@ resource "wallix-bastion_domain_account" "dba" {
 ```
 
 **Network Equipment Management:**
-
 ```terraform
 resource "wallix-bastion_domain_account" "network_mgmt" {
   services = ["ssh", "telnet", "snmp", "https"]
@@ -420,7 +403,6 @@ resource "wallix-bastion_domain_account" "network_mgmt" {
 ### Automation and Integration
 
 **Automated Account Management:**
-
 ```terraform
 # Create accounts for each environment
 locals {
@@ -445,14 +427,12 @@ resource "wallix-bastion_domain_account" "env_admin" {
 ### Monitoring and Compliance
 
 **Account Usage Tracking:**
-
 - Monitor service usage patterns
 - Track certificate issuance and renewal
 - Log password/key rotation events
 - Audit account access patterns
 
 **Compliance Reporting:**
-
 - Regular access reviews
 - Service permission audits
 - Certificate validity monitoring
@@ -461,14 +441,12 @@ resource "wallix-bastion_domain_account" "env_admin" {
 ### Troubleshooting
 
 **Common Issues:**
-
 1. **Service Access Denied**: Check service configuration and permissions
 2. **Certificate Issues**: Verify validity periods and CA configuration
 3. **Checkout Failures**: Review checkout policy requirements
 4. **Credential Problems**: Validate associated credentials
 
 **Debugging Steps:**
-
 1. Verify domain configuration
 2. Check service permissions
 3. Validate checkout policies

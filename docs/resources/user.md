@@ -92,7 +92,6 @@ resource "wallix-bastion_user" "temp_user" {
 ### Authentication Methods
 
 Configure authentication via `user_auths`:
-
 - **local_password**: Password stored in Bastion
 - **ssh_key**: SSH public key authentication
 - **x509_certificate**: X.509 certificate authentication
@@ -103,7 +102,6 @@ Configure authentication via `user_auths`:
 ### User Profiles
 
 Assign appropriate profiles:
-
 - **user**: Standard user access
 - **admin**: Administrative privileges
 - **operator**: Operational access
@@ -131,7 +129,6 @@ Assign appropriate profiles:
 ### Language Settings
 
 Available languages:
-
 - `en` (English)
 - `fr` (French)
 - `de` (German)

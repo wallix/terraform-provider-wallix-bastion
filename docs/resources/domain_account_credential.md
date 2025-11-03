@@ -109,13 +109,11 @@ resource "wallix-bastion_domain_account_credential" "complete_ssh" {
 ### Credential Types
 
 **Password Credentials (`type = "password"`):**
-
 - Provide the `password` field
 - Used for password-based authentication
 - Can be auto-rotated if domain supports it
 
 **SSH Key Credentials (`type = "ssh_key"`):**
-
 - Provide `private_key` for authentication
 - Optionally provide `public_key` for verification
 - Use `passphrase` if the private key is encrypted
@@ -124,7 +122,6 @@ resource "wallix-bastion_domain_account_credential" "complete_ssh" {
 ### Prerequisites
 
 Before creating domain account credentials:
-
 1. Create the device: `wallix-bastion_device`
 2. Create the domain: `wallix-bastion_domain`
 3. Create the domain account: `wallix-bastion_domain_account`
@@ -132,13 +129,11 @@ Before creating domain account credentials:
 ### SSH Key Management
 
 **Private Key Formats:**
-
 - PEM format (RSA, DSA, ECDSA, Ed25519)
 - OpenSSH format supported
 - Encrypted keys require passphrase
 
 **Key Generation with Terraform:**
-
 ```terraform
 resource "tls_private_key" "example" {
   algorithm = "RSA"
@@ -155,7 +150,6 @@ resource "wallix-bastion_domain_account_credential" "ssh" {
 ### Certificate Authentication
 
 For certificate-based SSH authentication:
-
 ```terraform
 resource "tls_locally_signed_cert" "example" {
   cert_request_pem   = tls_cert_request.example.cert_request_pem
@@ -188,7 +182,6 @@ resource "wallix-bastion_domain_account_credential" "cert_ssh" {
 ### Variable Management
 
 Store sensitive data securely:
-
 ```terraform
 variable "db_password" {
   description = "Database password"
@@ -214,7 +207,6 @@ Server → AD_Domain → john.doe → password/ssh_key
 ### Common Patterns
 
 **Service Account Password:**
-
 ```terraform
 resource "random_password" "service" {
   length  = 32
@@ -228,7 +220,6 @@ resource "wallix-bastion_domain_account_credential" "service" {
 ```
 
 **Shared SSH Key:**
-
 ```terraform
 data "local_file" "shared_key" {
   filename = "/secure/keys/shared_rsa"
@@ -242,7 +233,6 @@ resource "wallix-bastion_domain_account_credential" "shared" {
 ```
 
 **Automated Key Pair:**
-
 ```terraform
 resource "tls_private_key" "automated" {
   algorithm = "Ed25519"

@@ -134,7 +134,6 @@ resource "wallix-bastion_profile" "operator_profile" {
 - `id` (String) The ID of this resource.
 
 <a id="nestedblock--gui_features"></a>
-
 ### Nested Schema for `gui_features`
 
 Optional:
@@ -153,8 +152,8 @@ Optional:
 - `wab_audit` (String)
 - `wab_settings` (String)
 
-<a id="nestedblock--gui_transmission"></a>
 
+<a id="nestedblock--gui_transmission"></a>
 ### Nested Schema for `gui_transmission`
 
 Optional:
@@ -172,8 +171,8 @@ Optional:
 - `users` (String)
 - `wab_settings` (String)
 
-<a id="nestedblock--target_groups_limitation"></a>
 
+<a id="nestedblock--target_groups_limitation"></a>
 ### Nested Schema for `target_groups_limitation`
 
 Required:
@@ -181,8 +180,8 @@ Required:
 - `default_target_group` (String)
 - `target_groups` (Set of String)
 
-<a id="nestedblock--user_groups_limitation"></a>
 
+<a id="nestedblock--user_groups_limitation"></a>
 ### Nested Schema for `user_groups_limitation`
 
 Required:
@@ -227,7 +226,6 @@ Required:
 ### Group Limitations
 
 Restrict profile scope:
-
 - **user_groups_limitation**: Limit which user groups can be managed
 - **target_groups_limitation**: Limit which target groups can be accessed
 

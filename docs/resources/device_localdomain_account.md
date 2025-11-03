@@ -96,7 +96,6 @@ resource "wallix-bastion_device_localdomain_account" "complete" {
 - `id` (String) The ID of this resource.
 
 <a id="nestedatt--credentials"></a>
-
 ### Nested Schema for `credentials`
 
 Read-Only:
@@ -114,31 +113,26 @@ Local domain accounts are specific to a device and its local domain.
 ### Prerequisites
 
 Before creating a device local domain account:
-
 1. Create the device: `wallix-bastion_device`
 2. Create the local domain: `wallix-bastion_device_localdomain`
 
 ### Authentication Methods
 
 **Password Authentication:**
-
 - Use `auto_change_password = true` for managed passwords
 - Requires password change capability on the domain
 
 **SSH Key Authentication:**
-
 - Use `auto_change_ssh_key = true` for managed SSH keys
 - Requires SSH CA configuration on the domain
 
 **Certificate Authentication:**
-
 - Configure `certificate_validity` (e.g., "30d", "7d", "1h")
 - Use `can_edit_certificate_validity = true` for user control
 
 ### Service Configuration
 
 Specify supported protocols in the `services` array:
-
 - **ssh**: Secure Shell protocol
 - **telnet**: Telnet protocol
 - **rlogin**: Remote login
@@ -149,7 +143,6 @@ Specify supported protocols in the `services` array:
 ### Checkout Policies
 
 Reference checkout policies to control account access:
-
 ```terraform
 checkout_policy = wallix-bastion_checkout_policy.restricted.policy_name
 ```
@@ -172,7 +165,6 @@ Server1 → local_domain → admin_account
 ### Common Patterns
 
 **Administrator Accounts:**
-
 ```terraform
 resource "wallix-bastion_device_localdomain_account" "admin" {
   account_name = "Administrator"
@@ -183,7 +175,6 @@ resource "wallix-bastion_device_localdomain_account" "admin" {
 ```
 
 **Service Accounts:**
-
 ```terraform
 resource "wallix-bastion_device_localdomain_account" "service" {
   account_name = "Service Account"
@@ -194,7 +185,6 @@ resource "wallix-bastion_device_localdomain_account" "service" {
 ```
 
 **Database Accounts:**
-
 ```terraform
 resource "wallix-bastion_device_localdomain_account" "dba" {
   account_name = "Database Admin"

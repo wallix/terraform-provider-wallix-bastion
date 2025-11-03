@@ -4,9 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
-	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -78,28 +76,15 @@ func readVersionOptions(
 ) {
 	c := m.(*Client)
 	var result jsonVersion
-	url := "https://" + c.bastionIP + ":" + strconv.Itoa(c.bastionPort) + "/api/version"
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-	req.Header.Add("Content-Type", "application/json; charset=utf-8")
-	req.Header.Add("X-Auth-Key", c.bastionToken)
-	req.Header.Add("X-Auth-User", c.bastionUser)
-	if err != nil {
-		return result, fmt.Errorf("preparing http request: %w", err)
-	}
-	resp, err := defaultHTTPClient.Do(req)
-	if err != nil {
-		return result, fmt.Errorf("sending http request: %w", err)
-	}
-	defer resp.Body.Close()
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return result, fmt.Errorf("reading http response: %w", err)
-	}
 
-	if resp.StatusCode != http.StatusOK {
-		return result, fmt.Errorf("api doesn't return OK: %d with body:\n%s", resp.StatusCode, string(respBody))
+	body, code, err := c.newRequest(ctx, "/version", http.MethodGet, nil)
+	if err != nil {
+		return result, err
 	}
-	err = json.Unmarshal(respBody, &result)
+	if code != http.StatusOK {
+		return result, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
+	}
+	err = json.Unmarshal([]byte(body), &result)
 	if err != nil {
 		return result, fmt.Errorf("unmarshaling json: %w", err)
 	}

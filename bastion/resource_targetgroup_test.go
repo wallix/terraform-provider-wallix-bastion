@@ -80,7 +80,7 @@ resource "wallix-bastion_targetgroup" "testacc_Targetgroup" {
 }
 resource "wallix-bastion_device" "testacc_Targetgroup" {
   device_name = "testacc_Targetgroup"
-  host        = "testacc_Targetgroup.device"
+  host        = "192.168.100.5"
 }
 resource "wallix-bastion_device_service" "testacc_Targetgroup" {
   device_id         = wallix-bastion_device.testacc_Targetgroup.id
@@ -93,7 +93,7 @@ resource "wallix-bastion_device_service" "testacc_Targetgroup" {
 }
 resource "wallix-bastion_device" "testacc_Targetgroup2" {
   device_name = "testacc_Targetgroup2"
-  host        = "testacc_Targetgroup2.device"
+  host        = "192.168.100.6"
 }
 resource "wallix-bastion_device_service" "testacc_Targetgroup2" {
   device_id         = wallix-bastion_device.testacc_Targetgroup2.id

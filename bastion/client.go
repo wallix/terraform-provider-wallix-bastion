@@ -25,28 +25,26 @@ const (
 	userAgentValue    = "terraform-provider-wallix-bastion"
 	contentTypeHeader = "Content-Type"
 	contentTypeJSON   = "application/json"
+	csrfTokenHeader   = "X-CSRF-Token"
+	csrfCookieName    = "api_csrf_token"
 )
 
 type Client struct {
-	bastionPort       int
-	bastionAPIVersion string
-	bastionIP         string
-	bastionToken      string
-	bastionUser       string
-	bastionPwd        string
+	bastionPort        int
+	bastionAPIVersion  string
+	bastionIP          string
+	bastionToken       string
+	bastionUser        string
+	bastionPwd         string
+	insecureSkipVerify bool
 
 	jar             http.CookieJar
 	cookie          http.Cookie
 	isAuthenticated bool
+	csrfToken       string
+	sessionTimeout  int
+	csrfEnabled     bool
 	authMu          sync.Mutex
-}
-
-var defaultHTTPClient *http.Client //nolint:gochecknoglobals
-
-func init() { //nolint:gochecknoinits
-	transport := cleanhttp.DefaultPooledTransport()
-	transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //nolint:gosec
-	defaultHTTPClient = &http.Client{Transport: transport}
 }
 
 func (c *Client) initJar() {
@@ -61,8 +59,11 @@ func (c *Client) initJar() {
 }
 
 func (c *Client) getHTTPClient() *http.Client {
+	transport := cleanhttp.DefaultPooledTransport()
+	transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: c.insecureSkipVerify}
+
 	return &http.Client{
-		Transport: defaultHTTPClient.Transport,
+		Transport: transport,
 		Jar:       c.jar,
 	}
 }
@@ -149,9 +150,46 @@ func (c *Client) authenticate(ctx context.Context) error {
 	}
 
 	c.cookie = *found
+
+	// Extract CSRF token from response headers or cookies
+	if err := c.extractCSRFToken(resp); err != nil {
+		return fmt.Errorf("extracting CSRF token: %w", err)
+	}
+
 	c.isAuthenticated = true
 
 	return nil
+}
+
+func (c *Client) extractCSRFToken(resp *http.Response) error {
+	if !c.csrfEnabled {
+		return nil
+	}
+
+	// Try to extract from X-CSRF-Token header first.
+	if token := resp.Header.Get(csrfTokenHeader); token != "" {
+		c.csrfToken = token
+
+		return nil
+	}
+
+	// Fall back to api_csrf_token cookie (Bastion 12.0.3+).
+	for _, cookie := range resp.Cookies() {
+		if cookie.Name == csrfCookieName {
+			c.csrfToken = cookie.Value
+
+			return nil
+		}
+	}
+
+	// CSRF token is optional - some Bastion versions don't require it.
+	return nil
+}
+
+func (c *Client) addCSRFHeader(req *http.Request) {
+	if c.csrfEnabled && c.csrfToken != "" {
+		req.Header.Set(csrfTokenHeader, c.csrfToken)
+	}
 }
 
 func (c *Client) newRequest(ctx context.Context, uri, method string, jsonBody interface{}) (string, int, error) {
@@ -189,6 +227,7 @@ func (c *Client) newRequest(ctx context.Context, uri, method string, jsonBody in
 	}
 	req.Header.Set(contentTypeHeader, contentTypeJSON)
 	req.Header.Set(userAgentHeader, userAgentValue)
+	c.addCSRFHeader(req)
 
 	client := c.getHTTPClient()
 
@@ -229,6 +268,7 @@ func (c *Client) newRequest(ctx context.Context, uri, method string, jsonBody in
 		}
 		req2.Header.Set(contentTypeHeader, contentTypeJSON)
 		req2.Header.Set(userAgentHeader, userAgentValue)
+		c.addCSRFHeader(req2)
 
 		client2 := c.getHTTPClient()
 
@@ -242,6 +282,31 @@ func (c *Client) newRequest(ctx context.Context, uri, method string, jsonBody in
 		respBody, err = io.ReadAll(resp2.Body)
 		if err != nil {
 			return "", http.StatusInternalServerError, fmt.Errorf("reading http response after reauth: %w", err)
+		}
+
+		return string(respBody), resp2.StatusCode, nil
+	}
+
+	// Handle 403 Forbidden - CSRF token invalid/expired, refresh token and retry
+	if resp.StatusCode == http.StatusForbidden && c.csrfEnabled && c.csrfToken != "" {
+		// Clear CSRF token and extract new one from response
+		c.csrfToken = ""
+		_ = c.extractCSRFToken(resp) // Try to extract new token, ignore errors
+
+		// If we still have no CSRF token after extraction, retry with what we have
+		// If we do have a new CSRF token, add it to the request
+		c.addCSRFHeader(req)
+
+		// Retry the original request with the new CSRF token
+		resp2, err := c.getHTTPClient().Do(req)
+		if err != nil {
+			return "", http.StatusInternalServerError, fmt.Errorf("retrying request after CSRF refresh: %w", err)
+		}
+		defer resp2.Body.Close()
+
+		respBody, err = io.ReadAll(resp2.Body)
+		if err != nil {
+			return "", http.StatusInternalServerError, fmt.Errorf("reading http response after CSRF refresh: %w", err)
 		}
 
 		return string(respBody), resp2.StatusCode, nil

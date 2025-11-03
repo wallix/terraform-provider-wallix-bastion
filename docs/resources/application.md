@@ -99,7 +99,6 @@ Read-Only:
 ### Path Configuration
 
 When `category = "standard"`, the `paths` block is required and should specify:
-
 - **target**: The application target (format: `Interactive@device:service`)
 - **program**: The full path to the application executable
 - **working_dir**: The working directory for the application
@@ -107,7 +106,6 @@ When `category = "standard"`, the `paths` block is required and should specify:
 ### Target Specification
 
 The `target` field should reference:
-
 - A cluster name for clustered targets
 - A device name for single device targets
 

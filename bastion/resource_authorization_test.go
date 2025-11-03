@@ -102,12 +102,12 @@ resource "wallix-bastion_authorization" "testacc_Authorization" {
 }
 
 resource "wallix-bastion_usergroup" "testacc_Authorization" {
-  group_name = "testacc_Authorization"
+  group_name = "testacc_Authorization_ug"
   timeframes = ["allthetime"]
 }
 
 resource "wallix-bastion_targetgroup" "testacc_Authorization" {
-  group_name = "testacc_Authorization"
+  group_name = "testacc_Authorization_tg"
 }
 `
 }
@@ -162,17 +162,17 @@ resource "wallix-bastion_authorization" "testacc_Authorization" {
 }
 
 resource "wallix-bastion_usergroup" "testacc_Authorization" {
-  group_name = "testacc_Authorization"
+  group_name = "testacc_Authorization_ug"
   timeframes = ["allthetime"]
 }
 
 resource "wallix-bastion_usergroup" "testacc_Authorization2" {
-  group_name = "testacc_Authorization2"
+  group_name = "testacc_Authorization2_ug"
   timeframes = ["allthetime"]
 }
 
 resource "wallix-bastion_targetgroup" "testacc_Authorization" {
-  group_name = "testacc_Authorization"
+  group_name = "testacc_Authorization_tg"
 }
 `
 }
@@ -194,12 +194,12 @@ resource "wallix-bastion_authorization" "testacc_Authorization_sharing" {
 }
 
 resource "wallix-bastion_usergroup" "testacc_Authorization_sharing" {
-  group_name = "testacc_Authorization_sharing"
+  group_name = "testacc_Authorization_sharing_ug"
   timeframes = ["allthetime"]
 }
 
 resource "wallix-bastion_targetgroup" "testacc_Authorization_sharing" {
-  group_name = "testacc_Authorization_sharing"
+  group_name = "testacc_Authorization_sharing_tg"
 }
 `
 }
@@ -221,12 +221,12 @@ resource "wallix-bastion_authorization" "testacc_Authorization_sharing" {
 }
 
 resource "wallix-bastion_usergroup" "testacc_Authorization_sharing" {
-  group_name = "testacc_Authorization_sharing"
+  group_name = "testacc_Authorization_sharing_ug"
   timeframes = ["allthetime"]
 }
 
 resource "wallix-bastion_targetgroup" "testacc_Authorization_sharing" {
-  group_name = "testacc_Authorization_sharing"
+  group_name = "testacc_Authorization_sharing_tg"
 }
 `
 }

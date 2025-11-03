@@ -160,7 +160,6 @@ resource "wallix-bastion_authdomain_ldap" "complete" {
 ### LDAP Server Configuration
 
 **Basic Connection:**
-
 - **ldap_hosts**: List of LDAP server hostnames/IPs
 - **ldap_port**: Standard ports (389 for LDAP, 636 for LDAPS)
 - **ldap_base**: Base DN for LDAP searches
@@ -170,7 +169,6 @@ resource "wallix-bastion_authdomain_ldap" "complete" {
 ### Security Configuration
 
 **SSL/TLS Encryption:**
-
 ```terraform
 use_ssl          = true    # Enable SSL/TLS
 verify_certificate = true  # Verify server certificate
@@ -178,7 +176,6 @@ ldap_port        = 636     # LDAPS port
 ```
 
 **Service Account Security:**
-
 - Use dedicated service account with minimal privileges
 - Store passwords in variables marked as sensitive
 - Consider using read-only service accounts
@@ -188,7 +185,6 @@ ldap_port        = 636     # LDAPS port
 Map LDAP attributes to bastion user properties:
 
 **Common Active Directory Mappings:**
-
 ```terraform
 user_cn    = "sAMAccountName"      # Username
 user_dn    = "distinguishedName"   # Full DN
@@ -197,7 +193,6 @@ user_group = "memberOf"            # Group membership
 ```
 
 **Common OpenLDAP Mappings:**
-
 ```terraform
 user_cn    = "uid"                 # Username
 user_dn    = "dn"                  # Distinguished Name
@@ -208,20 +203,17 @@ user_group = "memberOf"            # Group membership
 ### Search Filters
 
 **User Filtering:**
-
 ```terraform
 user_source        = "objectCategory"
 user_source_filter = "(objectCategory=person)"
 ```
 
 **Group Filtering:**
-
 ```terraform
 group_source_filter = "(objectClass=group)"
 ```
 
 **Custom Filters:**
-
 ```terraform
 user_source_filter = "(&(objectCategory=person)(!(userAccountControl:1.2.840.113556.1.4.803:=2)))"
 ```
@@ -229,7 +221,6 @@ user_source_filter = "(&(objectCategory=person)(!(userAccountControl:1.2.840.113
 ### Group Validation
 
 Enable group membership checking:
-
 ```terraform
 check_user_group = true
 user_group       = "memberOf"
@@ -239,7 +230,6 @@ group_source_filter = "(objectClass=group)"
 ### High Availability
 
 Configure multiple LDAP servers:
-
 ```terraform
 ldap_hosts = [
   "ldap1.corporate.local",
@@ -251,7 +241,6 @@ ldap_hosts = [
 ### External LDAP References
 
 Reference external LDAP servers:
-
 ```terraform
 external_ldaps = [
   "partner-ldap.example.com:389",
@@ -262,7 +251,6 @@ external_ldaps = [
 ### Domain Languages
 
 Supported languages for user interface:
-
 - `en`: English
 - `fr`: French
 - `es`: Spanish
@@ -277,7 +265,6 @@ Supported languages for user interface:
 ### Common LDAP Configurations
 
 **Active Directory:**
-
 ```terraform
 resource "wallix-bastion_authdomain_ldap" "ad" {
   domain_name     = "ad.company.com"
@@ -298,7 +285,6 @@ resource "wallix-bastion_authdomain_ldap" "ad" {
 ```
 
 **OpenLDAP:**
-
 ```terraform
 resource "wallix-bastion_authdomain_ldap" "openldap" {
   domain_name     = "openldap.company.com"
@@ -319,7 +305,6 @@ resource "wallix-bastion_authdomain_ldap" "openldap" {
 ```
 
 **389 Directory Server:**
-
 ```terraform
 resource "wallix-bastion_authdomain_ldap" "ds389" {
   domain_name     = "ds389.company.com"
@@ -341,21 +326,18 @@ resource "wallix-bastion_authdomain_ldap" "ds389" {
 ### Troubleshooting
 
 **Connection Issues:**
-
 1. Verify LDAP server connectivity
 2. Check firewall rules for LDAP ports
 3. Validate service account credentials
 4. Test SSL certificate validity
 
 **Authentication Issues:**
-
 1. Verify user attribute mappings
 2. Check search base and filters
 3. Validate group membership requirements
 4. Review user permissions
 
 **Performance Optimization:**
-
 1. Use specific search filters
 2. Configure multiple LDAP servers
 3. Optimize LDAP base DN scope

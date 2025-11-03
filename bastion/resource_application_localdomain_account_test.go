@@ -55,7 +55,7 @@ func testAccResourceApplicationLocalDomainAccountCreate() string {
 	return `
 resource "wallix-bastion_device" "testacc_AppLocalDomAccount" {
   device_name = "testacc_AppLocalDomAccount"
-  host        = "testacc_AppLocalDomAccount"
+  host        = "192.168.100.7"
 }
 
 resource "wallix-bastion_device_service" "testacc_AppLocalDomAccount" {
@@ -104,7 +104,7 @@ func testAccResourceApplicationLocalDomainAccountUpdate() string {
 	return `
 resource "wallix-bastion_device" "testacc_AppLocalDomAccount" {
   device_name = "testacc_AppLocalDomAccount"
-  host        = "testacc_AppLocalDomAccount"
+  host        = "192.168.100.7"
 }
 
 resource "wallix-bastion_device_service" "testacc_AppLocalDomAccount" {
