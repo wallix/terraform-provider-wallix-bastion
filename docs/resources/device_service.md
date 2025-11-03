@@ -118,6 +118,7 @@ resource "wallix-bastion_device_service" "vnc" {
 Configure allowed subprotocols based on protocol:
 
 **SSH subprotocols:**
+
 - `SSH_SHELL_SESSION`: Interactive shell access
 - `SSH_REMOTE_COMMAND`: Execute remote commands
 - `SSH_SCP_UP`: Upload files via SCP
@@ -128,6 +129,7 @@ Configure allowed subprotocols based on protocol:
 - `SSH_AUTH_AGENT`: SSH agent forwarding
 
 **RDP subprotocols:**
+
 - `RDP_CLIPBOARD_UP`: Upload to clipboard
 - `RDP_CLIPBOARD_DOWN`: Download from clipboard
 - `RDP_PRINTER`: Printer redirection
@@ -139,6 +141,7 @@ Configure allowed subprotocols based on protocol:
 - `RDP`: Basic RDP access
 
 **Other protocols:**
+
 - `SFTP_SESSION`: SFTP file transfer
 - `TELNET`: Telnet access
 - `RLOGIN`: Remote login access
@@ -154,6 +157,7 @@ Configure allowed subprotocols based on protocol:
 ### Connection Policies
 
 Reference existing connection policies that define:
+
 - Authentication methods
 - Protocol-specific options
 - Security settings

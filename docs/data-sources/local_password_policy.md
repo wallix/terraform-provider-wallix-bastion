@@ -235,10 +235,12 @@ resource "wallix-bastion_user" "role_based_users" {
 ### Password Policy Attributes
 
 **Length Requirements:**
+
 - `minimum_length`: Minimum number of characters required
 - `maximum_length`: Maximum number of characters allowed
 
 **Complexity Requirements:**
+
 - `complexity_level`: Overall complexity (low, medium, high, maximum)
 - `require_uppercase`: Requires uppercase letters (A-Z)
 - `require_lowercase`: Requires lowercase letters (a-z)
@@ -246,18 +248,21 @@ resource "wallix-bastion_user" "role_based_users" {
 - `require_symbols`: Requires special characters
 
 **Advanced Complexity:**
+
 - `min_uppercase`: Minimum number of uppercase letters
 - `min_lowercase`: Minimum number of lowercase letters
 - `min_numbers`: Minimum number of numeric digits
 - `min_symbols`: Minimum number of special characters
 
 **Password Aging:**
+
 - `max_age_days`: Maximum password age (0 = never expires)
 - `min_age_days`: Minimum age before password can be changed
 - `warning_days`: Days before expiration to warn users
 - `password_history`: Number of previous passwords to remember
 
 **Security Features:**
+
 - `dictionary_check`: Check against common passwords
 - `personal_info_check`: Check against user personal information
 - `forbidden_chars`: List of prohibited characters
@@ -266,6 +271,7 @@ resource "wallix-bastion_user" "role_based_users" {
 ### Policy Compliance Checking
 
 **NIST Guidelines:**
+
 ```terraform
 locals {
   nist_compliance = {
@@ -282,6 +288,7 @@ locals {
 ```
 
 **PCI DSS Compliance:**
+
 ```terraform
 locals {
   pci_compliance = {
@@ -298,6 +305,7 @@ locals {
 ```
 
 **ISO 27001 Compliance:**
+
 ```terraform
 locals {
   iso_compliance = {
@@ -312,6 +320,7 @@ locals {
 ### Policy Analysis
 
 **Policy Comparison:**
+
 ```terraform
 locals {
   policy_comparison = {
@@ -327,6 +336,7 @@ locals {
 ```
 
 **Security Score Calculation:**
+
 ```terraform
 locals {
   security_score = (
@@ -344,6 +354,7 @@ locals {
 ### Role-Based Policy Assignment
 
 **Dynamic Policy Selection:**
+
 ```terraform
 locals {
   role_policies = {
@@ -364,6 +375,7 @@ data "wallix-bastion_local_password_policy" "role_policies" {
 ### Policy Validation
 
 **Validation Functions:**
+
 ```terraform
 locals {
   validation_results = {
@@ -389,6 +401,7 @@ locals {
 ### Integration with User Management
 
 **Conditional User Creation:**
+
 ```terraform
 resource "wallix-bastion_user" "conditional_user" {
   count = local.all_validations_pass ? 1 : 0
@@ -399,6 +412,7 @@ resource "wallix-bastion_user" "conditional_user" {
 ```
 
 **Policy-Aware User Templates:**
+
 ```terraform
 locals {
   user_templates = {
@@ -417,6 +431,7 @@ locals {
 ### Monitoring and Reporting
 
 **Policy Health Report:**
+
 ```terraform
 output "policy_health_report" {
   description = "Health assessment of password policies"
@@ -436,6 +451,7 @@ output "policy_health_report" {
 ### Error Handling
 
 **Policy Existence Validation:**
+
 ```terraform
 data "wallix-bastion_local_password_policy" "validated_policy" {
   policy_name = var.policy_name

@@ -171,6 +171,7 @@ resource "wallix-bastion_externalauth_radius" "staging" {
 ### RADIUS Protocol Basics
 
 **Authentication Process:**
+
 1. User provides credentials to bastion
 2. Bastion sends Access-Request to RADIUS server
 3. RADIUS server validates credentials
@@ -180,6 +181,7 @@ resource "wallix-bastion_externalauth_radius" "staging" {
 ### Connection Configuration
 
 **Basic Settings:**
+
 ```terraform
 host    = "radius.example.com"  # RADIUS server hostname/IP
 port    = 1812                 # Standard RADIUS auth port
@@ -189,6 +191,7 @@ retries = 3                    # Number of retry attempts
 ```
 
 **Standard RADIUS Ports:**
+
 - **1812**: Authentication (RFC 2865)
 - **1813**: Accounting (RFC 2866)
 - **1645/1646**: Legacy ports (still used by some vendors)
@@ -196,6 +199,7 @@ retries = 3                    # Number of retry attempts
 ### High Availability
 
 **Secondary Server Configuration:**
+
 ```terraform
 secondary_host   = "radius-backup.example.com"
 secondary_port   = 1812
@@ -203,6 +207,7 @@ secondary_secret = var.backup_secret
 ```
 
 **Failover Behavior:**
+
 1. Primary server is tried first
 2. If primary fails after retries, secondary is used
 3. Automatic failback to primary when available
@@ -210,6 +215,7 @@ secondary_secret = var.backup_secret
 ### NAS (Network Access Server) Configuration
 
 **NAS Identification:**
+
 ```terraform
 nas_identifier = "bastion.company.com"    # Logical NAS name
 nas_ip_address = "192.168.1.100"         # NAS IP address
@@ -217,6 +223,7 @@ nas_port_type  = "Virtual"               # Port type
 ```
 
 **Common NAS Port Types:**
+
 - **Virtual**: Virtual connections (SSH, RDP)
 - **Ethernet**: Ethernet connections
 - **Wireless**: Wi-Fi connections
@@ -226,6 +233,7 @@ nas_port_type  = "Virtual"               # Port type
 ### RADIUS Attributes
 
 **Standard Attributes Sent:**
+
 - User-Name (1)
 - User-Password (2) or CHAP-Password (3)
 - NAS-IP-Address (4)
@@ -238,6 +246,7 @@ nas_port_type  = "Virtual"               # Port type
 ### Authentication Protocols
 
 **Supported Protocols:**
+
 - **PAP (Password Authentication Protocol)**: Simple cleartext
 - **CHAP (Challenge Handshake Authentication Protocol)**: Challenge-response
 - **MS-CHAP**: Microsoft's CHAP variant
@@ -250,6 +259,7 @@ auth_protocol = "CHAP"  # Use CHAP instead of PAP
 ### Accounting Configuration
 
 **Enable Accounting:**
+
 ```terraform
 accounting_enabled = true
 accounting_port    = 1813
@@ -257,6 +267,7 @@ accounting_secret  = var.accounting_secret  # Can differ from auth secret
 ```
 
 **Accounting Messages:**
+
 - **Accounting-Start**: Session begins
 - **Accounting-Stop**: Session ends
 - **Accounting-Interim**: Periodic updates (if configured)
@@ -272,6 +283,7 @@ accounting_secret  = var.accounting_secret  # Can differ from auth secret
 ### Common RADIUS Servers
 
 **FreeRADIUS:**
+
 ```terraform
 resource "wallix-bastion_externalauth_radius" "freeradius" {
   host         = "freeradius.company.local"
@@ -281,6 +293,7 @@ resource "wallix-bastion_externalauth_radius" "freeradius" {
 ```
 
 **Microsoft NPS (Network Policy Server):**
+
 ```terraform
 resource "wallix-bastion_externalauth_radius" "nps" {
   host         = "nps.company.local"
@@ -290,6 +303,7 @@ resource "wallix-bastion_externalauth_radius" "nps" {
 ```
 
 **Cisco ISE (Identity Services Engine):**
+
 ```terraform
 resource "wallix-bastion_externalauth_radius" "ise" {
   host           = "ise.company.local"
@@ -302,6 +316,7 @@ resource "wallix-bastion_externalauth_radius" "ise" {
 ### Integration with Multi-Factor Authentication
 
 **RADIUS with MFA:**
+
 ```terraform
 resource "wallix-bastion_externalauth_radius" "mfa" {
   auth_name    = "mfa_radius"
@@ -317,6 +332,7 @@ resource "wallix-bastion_externalauth_radius" "mfa" {
 ### Variable Management
 
 **Secure Secret Storage:**
+
 ```terraform
 variable "radius_shared_secret" {
   description = "RADIUS shared secret"
@@ -334,6 +350,7 @@ variable "radius_backup_secret" {
 ### Performance Tuning
 
 **Timeout and Retry Settings:**
+
 ```terraform
 timeout = 3   # Fast timeout for responsive networks
 retries = 2   # Minimal retries for quick failover
@@ -346,12 +363,14 @@ retries = 5   # More retries for reliability
 ### Monitoring and Troubleshooting
 
 **Common Issues:**
+
 1. **Shared Secret Mismatch**: Authentication fails immediately
 2. **Network Connectivity**: Timeouts and connection failures
 3. **NAS Configuration**: Server rejects based on NAS attributes
 4. **User Database**: Valid RADIUS auth but user not found in directory
 
 **Monitoring Points:**
+
 - Authentication success/failure rates
 - Response times
 - Server availability
@@ -360,6 +379,7 @@ retries = 5   # More retries for reliability
 ### Integration Examples
 
 **With Active Directory via NPS:**
+
 ```terraform
 resource "wallix-bastion_externalauth_radius" "ad_nps" {
   auth_name    = "ad_via_nps"
@@ -375,6 +395,7 @@ resource "wallix-bastion_externalauth_radius" "ad_nps" {
 ```
 
 **With RSA SecurID via RADIUS:**
+
 ```terraform
 resource "wallix-bastion_externalauth_radius" "securid" {
   auth_name    = "rsa_securid"
@@ -391,6 +412,7 @@ resource "wallix-bastion_externalauth_radius" "securid" {
 ### Load Balancing
 
 **Multiple Primary Servers:**
+
 ```terraform
 # Primary server
 resource "wallix-bastion_externalauth_radius" "primary" {

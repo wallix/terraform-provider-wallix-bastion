@@ -297,6 +297,7 @@ output "integration_test_commands" {
 ### Active Directory Domain Attributes
 
 **Connection Configuration:**
+
 - `domain_name`: The AD domain name
 - `ldap_hosts`: List of domain controllers/LDAP servers
 - `ldap_port`: LDAP port (389 for LDAP, 636 for LDAPS)
@@ -306,11 +307,13 @@ output "integration_test_commands" {
 - `verify_certificate`: Whether to verify server certificates
 
 **Domain Settings:**
+
 - `default_domain`: Default domain identifier
 - `is_default`: Whether this is the default authentication domain
 - `default_language`: Default language for domain users
 
 **User Attribute Mapping:**
+
 - `user_cn`: Common name attribute (typically "sAMAccountName")
 - `user_dn`: Distinguished name attribute
 - `user_email`: Email attribute (typically "mail")
@@ -319,15 +322,18 @@ output "integration_test_commands" {
 - `user_source_filter`: LDAP filter for user searches
 
 **Group Configuration:**
+
 - `check_user_group`: Whether group membership validation is enabled
 - `group_source_filter`: LDAP filter for group searches
 
 **External References:**
+
 - `external_ldaps`: List of external LDAP server references
 
 ### Domain Analysis
 
 **Security Assessment:**
+
 ```terraform
 locals {
   security_features = {
@@ -340,6 +346,7 @@ locals {
 ```
 
 **Configuration Validation:**
+
 ```terraform
 locals {
   config_validation = {
@@ -354,6 +361,7 @@ locals {
 ### High Availability Analysis
 
 **Redundancy Check:**
+
 ```terraform
 locals {
   ha_status = {
@@ -367,6 +375,7 @@ locals {
 ### Integration with Resources
 
 **User Creation:**
+
 ```terraform
 resource "wallix-bastion_user" "ad_users" {
   for_each = toset(["user1", "user2", "user3"])
@@ -378,6 +387,7 @@ resource "wallix-bastion_user" "ad_users" {
 ```
 
 **Domain Mapping:**
+
 ```terraform
 resource "wallix-bastion_authdomain_mapping" "ad_mapping" {
   domain_name  = data.wallix-bastion_authdomain_ad.corporate.domain_name
@@ -390,6 +400,7 @@ resource "wallix-bastion_authdomain_mapping" "ad_mapping" {
 ### Monitoring and Health Checks
 
 **Domain Health Monitoring:**
+
 ```terraform
 output "ad_domain_status" {
   value = {
@@ -410,6 +421,7 @@ output "ad_domain_status" {
 ### Compliance and Security
 
 **Security Compliance:**
+
 ```terraform
 locals {
   security_compliance = {
@@ -427,6 +439,7 @@ locals {
 ### Configuration Backup
 
 **Export Configuration:**
+
 ```terraform
 output "ad_domain_backup" {
   description = "AD domain configuration for backup purposes"
@@ -451,6 +464,7 @@ output "ad_domain_backup" {
 ### Troubleshooting Information
 
 **Diagnostic Data:**
+
 ```terraform
 output "ad_domain_diagnostics" {
   description = "Diagnostic information for AD domain troubleshooting"
@@ -474,6 +488,7 @@ output "ad_domain_diagnostics" {
 ### Best Practices Validation
 
 **Configuration Best Practices:**
+
 ```terraform
 locals {
   best_practices = {

@@ -117,11 +117,13 @@ resource "wallix-bastion_device_localdomain_account_credential" "db_service" {
 ### Credential Types
 
 **Password Credentials (`type = "password"`):**
+
 - Use for local accounts with password authentication
 - Store passwords securely using variables
 - Consider auto-generation with `random_password`
 
 **SSH Key Credentials (`type = "ssh_key"`):**
+
 - Support both private and public keys
 - Private key enables authentication from bastion
 - Public key enables authentication to bastion
@@ -130,6 +132,7 @@ resource "wallix-bastion_device_localdomain_account_credential" "db_service" {
 ### Prerequisites
 
 Before creating device localdomain account credentials:
+
 1. Create the device: `wallix-bastion_device`
 2. Create the local domain: `wallix-bastion_device_localdomain`
 3. Create the local domain account: `wallix-bastion_device_localdomain_account`
@@ -137,12 +140,14 @@ Before creating device localdomain account credentials:
 ### SSH Key Management
 
 **Supported Key Types:**
+
 - RSA (1024, 2048, 4096, 8192 bits)
 - DSA (1024 bits)
 - ECDSA (256, 384, 521 bits)
 - Ed25519
 
 **Key Generation with Terraform:**
+
 ```terraform
 # RSA 4096 key
 resource "tls_private_key" "rsa" {
@@ -165,6 +170,7 @@ resource "tls_private_key" "ecdsa" {
 ### Password Management
 
 **Strong Password Generation:**
+
 ```terraform
 resource "random_password" "strong" {
   length      = 32
@@ -177,6 +183,7 @@ resource "random_password" "strong" {
 ```
 
 **Variable-based Passwords:**
+
 ```terraform
 variable "sensitive_password" {
   description = "Sensitive account password"
@@ -188,6 +195,7 @@ variable "sensitive_password" {
 ### Certificate Authentication
 
 For SSH certificate-based authentication:
+
 ```terraform
 # Generate CA key
 resource "tls_private_key" "ca" {
@@ -241,6 +249,7 @@ resource "wallix-bastion_device_localdomain_account_credential" "cert_user" {
 ### Common Patterns
 
 **Administrator Account:**
+
 ```terraform
 resource "wallix-bastion_device_localdomain_account_credential" "admin" {
   account_name = "administrator"
@@ -251,6 +260,7 @@ resource "wallix-bastion_device_localdomain_account_credential" "admin" {
 ```
 
 **Service Account with Key:**
+
 ```terraform
 resource "tls_private_key" "service" {
   algorithm = "Ed25519"
@@ -266,6 +276,7 @@ resource "wallix-bastion_device_localdomain_account_credential" "service" {
 ```
 
 **Backup Account:**
+
 ```terraform
 resource "random_password" "backup" {
   length  = 32
@@ -291,6 +302,7 @@ Server1 → local_domain → admin_account → password/ssh_key
 ### File-based Keys
 
 **Loading from Files:**
+
 ```terraform
 data "local_file" "private_key" {
   filename = "/secure/keys/device_key"

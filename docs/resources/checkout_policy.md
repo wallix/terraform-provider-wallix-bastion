@@ -67,12 +67,14 @@ resource "wallix-bastion_checkout_policy" "maintenance" {
 ### Basic vs Locked Checkout
 
 **Basic Checkout (`enable_lock = false`)**:
+
 - Simple password retrieval
 - No time limits
 - Multiple simultaneous checkouts possible
 - No automatic password changes
 
 **Locked Checkout (`enable_lock = true`)**:
+
 - Exclusive password access
 - Time-limited sessions
 - Automatic password rotation options
@@ -115,6 +117,7 @@ resource "wallix-bastion_checkout_policy" "example" {
 ### Policy Assignment
 
 Use checkout policies in:
+
 - `wallix-bastion_domain_account`: Assign to domain accounts
 - `wallix-bastion_device_localdomain_account`: Assign to device accounts
 - Account resources default to "default" policy if not specified

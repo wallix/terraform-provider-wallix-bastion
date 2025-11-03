@@ -128,12 +128,14 @@ Application local domains are specific to applications, providing isolated crede
 ### Prerequisites
 
 Before creating an application local domain:
+
 1. Create the application: `wallix-bastion_application`
 2. Configure the application with appropriate connection details
 
 ### Password Management
 
 **Basic Password Management:**
+
 ```terraform
 enable_password_change = true
 password_change_policy = "policy_name"
@@ -141,6 +143,7 @@ password_change_plugin = "plugin_name"
 ```
 
 **Plugin Configuration:**
+
 ```terraform
 password_change_plugin_parameters = jsonencode({
   method   = "api"
@@ -152,12 +155,14 @@ password_change_plugin_parameters = jsonencode({
 ### SSH Certificate Authority
 
 **Auto-generation Options:**
+
 - `generate:RSA_1024`, `generate:RSA_2048`, `generate:RSA_4096`, `generate:RSA_8192`
 - `generate:DSA_1024`
 - `generate:ECDSA_256`, `generate:ECDSA_384`, `generate:ECDSA_521`
 - `generate:ED25519`
 
 **Using Existing Keys:**
+
 ```terraform
 ca_private_key = file("/path/to/ca_private_key")
 passphrase     = var.ca_passphrase
@@ -166,6 +171,7 @@ passphrase     = var.ca_passphrase
 ### Application-Specific Plugins
 
 **Database Applications:**
+
 ```terraform
 password_change_plugin = "database_plugin"
 password_change_plugin_parameters = jsonencode({
@@ -176,6 +182,7 @@ password_change_plugin_parameters = jsonencode({
 ```
 
 **Web Applications:**
+
 ```terraform
 password_change_plugin = "web_api_plugin"
 password_change_plugin_parameters = jsonencode({
@@ -186,6 +193,7 @@ password_change_plugin_parameters = jsonencode({
 ```
 
 **LDAP Applications:**
+
 ```terraform
 password_change_plugin = "ldap_plugin"
 password_change_plugin_parameters = jsonencode({
@@ -198,6 +206,7 @@ password_change_plugin_parameters = jsonencode({
 ### Account Management
 
 After creating an application local domain:
+
 ```terraform
 resource "wallix-bastion_application_localdomain_account" "app_user" {
   application_id = wallix-bastion_application_localdomain.web_app.application_id
@@ -210,6 +219,7 @@ resource "wallix-bastion_application_localdomain_account" "app_user" {
 ### Common Use Cases
 
 **Web Application Domain:**
+
 ```terraform
 resource "wallix-bastion_application_localdomain" "web" {
   application_id = wallix-bastion_application.webapp.id
@@ -224,6 +234,7 @@ resource "wallix-bastion_application_localdomain" "web" {
 ```
 
 **Database Application Domain:**
+
 ```terraform
 resource "wallix-bastion_application_localdomain" "database" {
   application_id = wallix-bastion_application.db.id
@@ -243,6 +254,7 @@ resource "wallix-bastion_application_localdomain" "database" {
 ```
 
 **SSH Application Domain:**
+
 ```terraform
 resource "wallix-bastion_application_localdomain" "ssh_app" {
   application_id = wallix-bastion_application.ssh_server.id
@@ -266,6 +278,7 @@ resource "wallix-bastion_application_localdomain" "ssh_app" {
 ### Integration with Applications
 
 **Application Relationship:**
+
 ```
 Application → Application Local Domain → Application Local Domain Account
      ↓                 ↓                           ↓
@@ -275,6 +288,7 @@ Application → Application Local Domain → Application Local Domain Account
 ### Plugin Development
 
 For custom password change plugins:
+
 1. Implement the required plugin interface
 2. Handle authentication to the target application
 3. Implement password validation and updates
@@ -283,12 +297,14 @@ For custom password change plugins:
 ### Monitoring and Maintenance
 
 **Password Rotation Monitoring:**
+
 - Track password change success rates
 - Monitor plugin execution times
 - Alert on failed password rotations
 - Regular plugin health checks
 
 **CA Certificate Management:**
+
 - Monitor certificate validity periods
 - Plan for CA key rotation
 - Backup CA private keys securely
@@ -297,12 +313,14 @@ For custom password change plugins:
 ### Troubleshooting
 
 **Common Issues:**
+
 1. **Plugin Failures**: Check plugin configuration and target application connectivity
 2. **CA Issues**: Verify private key format and passphrase
 3. **Permission Errors**: Ensure proper access rights to applications
 4. **Network Connectivity**: Test connectivity to target applications
 
 **Debugging Steps:**
+
 1. Verify application configuration
 2. Test plugin parameters manually
 3. Check network connectivity

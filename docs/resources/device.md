@@ -49,6 +49,7 @@ resource "wallix-bastion_device" "database" {
 - `services` (List of Object) (see [below for nested schema](#nestedatt--services))
 
 <a id="nestedatt--local_domains"></a>
+
 ### Nested Schema for `local_domains`
 
 Read-Only:
@@ -63,8 +64,8 @@ Read-Only:
 - `password_change_plugin_parameters` (String)
 - `password_change_policy` (String)
 
-
 <a id="nestedatt--services"></a>
+
 ### Nested Schema for `services`
 
 Read-Only:
@@ -88,6 +89,7 @@ Read-Only:
 ### Local Domains and Services
 
 After creating a device, you can:
+
 - Add local domains using `wallix-bastion_device_localdomain`
 - Configure services using `wallix-bastion_device_service`
 - Manage accounts with `wallix-bastion_device_localdomain_account`

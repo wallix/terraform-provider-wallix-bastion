@@ -117,6 +117,7 @@ resource "wallix-bastion_timeframe" "summer_hours" {
 - `id` (String) The ID of this resource.
 
 <a id="nestedblock--periods"></a>
+
 ### Nested Schema for `periods`
 
 Required:
@@ -135,6 +136,7 @@ Optional:
 ### Period Configuration
 
 Each period defines when access is allowed:
+
 - **start_date/end_date**: Date range in "yyyy-mm-dd" format
 - **start_time/end_time**: Time range in "hh:mm" format (24-hour)
 - **week_days**: Days when this period applies
@@ -142,6 +144,7 @@ Each period defines when access is allowed:
 ### Week Days
 
 Valid week day values:
+
 - `monday`, `tuesday`, `wednesday`, `thursday`, `friday`, `saturday`, `sunday`
 
 ### Overtime Behavior
@@ -152,6 +155,7 @@ Valid week day values:
 ### Multiple Periods
 
 You can define multiple periods for complex schedules:
+
 - Different hours for different days
 - Seasonal variations
 - Split shifts
@@ -193,6 +197,7 @@ resource "wallix-bastion_usergroup" "maintenance_team" {
 ### Common Patterns
 
 **24/7 Access:**
+
 ```terraform
 periods {
   start_date = "2024-01-01"
@@ -204,6 +209,7 @@ periods {
 ```
 
 **Weekdays Only:**
+
 ```terraform
 periods {
   start_date = "2024-01-01"
@@ -215,6 +221,7 @@ periods {
 ```
 
 **Weekends Only:**
+
 ```terraform
 periods {
   start_date = "2024-01-01"

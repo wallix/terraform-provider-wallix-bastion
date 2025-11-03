@@ -170,6 +170,7 @@ resource "wallix-bastion_connection_message" "formatted" {
 ### Message Types
 
 **Message Type Categories:**
+
 - **info**: Informational messages (default)
 - **warning**: Warning messages with attention-grabbing styling
 - **notice**: Important notices and announcements
@@ -179,6 +180,7 @@ resource "wallix-bastion_connection_message" "formatted" {
 ### Language Support
 
 **Supported Languages:**
+
 - `en`: English
 - `fr`: French (Français)
 - `es`: Spanish (Español)
@@ -193,12 +195,14 @@ resource "wallix-bastion_connection_message" "formatted" {
 ### Display Configuration
 
 **Display Time:**
+
 - Measured in seconds
 - Range: 1-60 seconds
 - Default: 5 seconds
 - Set to 0 for no auto-dismiss
 
 **Message Properties:**
+
 ```terraform
 display_time = 10        # Show for 10 seconds
 mandatory    = true      # User must acknowledge
@@ -208,11 +212,13 @@ enabled      = true      # Message is active
 ### Message Formatting
 
 **Plain Text:**
+
 ```terraform
 message_text = "Simple welcome message"
 ```
 
 **Multi-line Text:**
+
 ```terraform
 message_text = <<-EOT
   Line 1: Welcome
@@ -222,6 +228,7 @@ EOT
 ```
 
 **Formatted Text:**
+
 ```terraform
 message_text = <<-EOT
   ===== SECURITY NOTICE =====
@@ -237,6 +244,7 @@ EOT
 ### Multi-Language Strategy
 
 **Language-Specific Messages:**
+
 ```terraform
 locals {
   welcome_messages = {
@@ -260,6 +268,7 @@ resource "wallix-bastion_connection_message" "welcome" {
 ### Use Cases
 
 **Compliance and Legal:**
+
 ```terraform
 resource "wallix-bastion_connection_message" "legal_notice" {
   message_name = "legal_compliance"
@@ -271,6 +280,7 @@ resource "wallix-bastion_connection_message" "legal_notice" {
 ```
 
 **Security Awareness:**
+
 ```terraform
 resource "wallix-bastion_connection_message" "security_tips" {
   message_name = "security_awareness"
@@ -281,6 +291,7 @@ resource "wallix-bastion_connection_message" "security_tips" {
 ```
 
 **Operational Notices:**
+
 ```terraform
 resource "wallix-bastion_connection_message" "maintenance" {
   message_name = "maintenance_window"
@@ -291,6 +302,7 @@ resource "wallix-bastion_connection_message" "maintenance" {
 ```
 
 **Emergency Information:**
+
 ```terraform
 resource "wallix-bastion_connection_message" "emergency" {
   message_name = "emergency_contact"
@@ -304,6 +316,7 @@ resource "wallix-bastion_connection_message" "emergency" {
 ### Message Management
 
 **Enabling/Disabling Messages:**
+
 ```terraform
 # Temporarily disable a message
 resource "wallix-bastion_connection_message" "temporary" {
@@ -356,11 +369,13 @@ resource "wallix-bastion_connection_message" "dynamic" {
 ### Security Considerations
 
 **Information Disclosure:**
+
 - Avoid revealing sensitive system information
 - Don't include internal hostnames or IP addresses
 - Keep security warnings generic but clear
 
 **Message Integrity:**
+
 - Store message content securely
 - Implement proper access controls
 - Log message modifications
@@ -368,6 +383,7 @@ resource "wallix-bastion_connection_message" "dynamic" {
 ### Integration with User Experience
 
 **Message Sequencing:**
+
 ```terraform
 # Primary welcome message
 resource "wallix-bastion_connection_message" "welcome_primary" {
@@ -387,6 +403,7 @@ resource "wallix-bastion_connection_message" "security_secondary" {
 ### Monitoring and Analytics
 
 Track message effectiveness:
+
 - Monitor user acknowledgment rates
 - Measure time to acknowledge
 - Track message view statistics

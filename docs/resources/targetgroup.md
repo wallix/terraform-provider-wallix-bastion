@@ -112,6 +112,7 @@ resource "wallix-bastion_targetgroup" "restricted_access" {
 - `id` (String) The ID of this resource.
 
 <a id="nestedblock--password_retrieval_accounts"></a>
+
 ### Nested Schema for `password_retrieval_accounts`
 
 Required:
@@ -125,8 +126,8 @@ Optional:
 - `application` (String)
 - `device` (String)
 
-
 <a id="nestedblock--restrictions"></a>
+
 ### Nested Schema for `restrictions`
 
 Required:
@@ -135,8 +136,8 @@ Required:
 - `rules` (String)
 - `subprotocol` (String)
 
-
 <a id="nestedblock--session_account_mappings"></a>
+
 ### Nested Schema for `session_account_mappings`
 
 Optional:
@@ -145,8 +146,8 @@ Optional:
 - `device` (String)
 - `service` (String)
 
-
 <a id="nestedblock--session_accounts"></a>
+
 ### Nested Schema for `session_accounts`
 
 Required:
@@ -161,8 +162,8 @@ Optional:
 - `device` (String)
 - `service` (String)
 
-
 <a id="nestedblock--session_interactive_logins"></a>
+
 ### Nested Schema for `session_interactive_logins`
 
 Optional:
@@ -171,8 +172,8 @@ Optional:
 - `device` (String)
 - `service` (String)
 
-
 <a id="nestedblock--session_scenario_accounts"></a>
+
 ### Nested Schema for `session_scenario_accounts`
 
 Required:
@@ -201,12 +202,14 @@ Configure different types of accounts based on your access needs:
 ### Domain Types
 
 Specify the correct domain type:
+
 - **local**: Device-specific local domains
 - **global**: Global domains shared across devices
 
 ### Account Format
 
 For accounts, specify:
+
 - **account**: The account name on the target
 - **domain**: The domain name containing the account
 - **domain_type**: Either "local" or "global"
@@ -217,6 +220,7 @@ For accounts, specify:
 ### Restrictions
 
 Apply security restrictions to limit dangerous operations:
+
 - **action**: Either "kill" (terminate session) or "notify" (alert only)
 - **rules**: Regular expression pattern to match commands
 - **subprotocol**: The protocol to monitor (SSH_SHELL_SESSION, RDP, etc.)

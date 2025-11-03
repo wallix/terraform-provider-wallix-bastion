@@ -170,6 +170,7 @@ output "network_configuration" {
 ### Configuration Option Categories
 
 **System Configuration:**
+
 - `session_timeout`: Default session timeout in minutes
 - `max_concurrent_sessions`: Maximum concurrent sessions per user
 - `log_level`: System logging level (debug, info, warning, error)
@@ -177,6 +178,7 @@ output "network_configuration" {
 - `system_timezone`: System timezone setting
 
 **Security Configuration:**
+
 - `default_password_policy`: Default password policy name
 - `default_encryption_algorithm`: Default encryption algorithm
 - `default_certificate_validity`: Default certificate validity period
@@ -184,6 +186,7 @@ output "network_configuration" {
 - `password_history_count`: Number of previous passwords to remember
 
 **Network Configuration:**
+
 - `ssh_listen_port`: SSH service listening port
 - `rdp_listen_port`: RDP service listening port
 - `https_listen_port`: HTTPS service listening port
@@ -191,6 +194,7 @@ output "network_configuration" {
 - `max_concurrent_connections`: Maximum concurrent connections
 
 **Authentication Configuration:**
+
 - `authentication_timeout`: Authentication timeout in seconds
 - `ldap_connection_timeout`: LDAP connection timeout
 - `radius_timeout`: RADIUS authentication timeout
@@ -198,6 +202,7 @@ output "network_configuration" {
 - `kerberos_timeout`: Kerberos authentication timeout
 
 **Audit and Logging:**
+
 - `audit_log_retention_days`: Audit log retention period
 - `syslog_server_address`: Syslog server address
 - `log_output_format`: Log format (text, json, syslog)
@@ -207,6 +212,7 @@ output "network_configuration" {
 ### Common Configuration Options
 
 **Performance and Limits:**
+
 ```terraform
 data "wallix-bastion_configoption" "performance" {
   for_each = toset([
@@ -222,6 +228,7 @@ data "wallix-bastion_configoption" "performance" {
 ```
 
 **Security Settings:**
+
 ```terraform
 data "wallix-bastion_configoption" "security" {
   for_each = toset([
@@ -237,6 +244,7 @@ data "wallix-bastion_configoption" "security" {
 ```
 
 **Network Settings:**
+
 ```terraform
 data "wallix-bastion_configoption" "network" {
   for_each = toset([
@@ -254,6 +262,7 @@ data "wallix-bastion_configoption" "network" {
 ### Using Configuration in Resources
 
 **Connection Policies:**
+
 ```terraform
 resource "wallix-bastion_connection_policy" "default" {
   policy_name     = "default_policy"
@@ -263,6 +272,7 @@ resource "wallix-bastion_connection_policy" "default" {
 ```
 
 **User Accounts:**
+
 ```terraform
 resource "wallix-bastion_user" "default_user" {
   user_name       = "testuser"
@@ -271,6 +281,7 @@ resource "wallix-bastion_user" "default_user" {
 ```
 
 **Encryption Settings:**
+
 ```terraform
 resource "wallix-bastion_encryption" "default" {
   type     = data.wallix-bastion_configoption.encryption_algorithm.value
@@ -281,6 +292,7 @@ resource "wallix-bastion_encryption" "default" {
 ### Configuration Validation
 
 **Type Checking:**
+
 ```terraform
 locals {
   # Validate numeric configuration
@@ -298,6 +310,7 @@ locals {
 ### Configuration Monitoring
 
 **System Health Dashboard:**
+
 ```terraform
 output "system_health" {
   value = {
@@ -313,6 +326,7 @@ output "system_health" {
 ### Configuration Templates
 
 **Development Environment:**
+
 ```terraform
 locals {
   dev_overrides = {
@@ -324,6 +338,7 @@ locals {
 ```
 
 **Production Environment:**
+
 ```terraform
 locals {
   prod_requirements = {
@@ -337,6 +352,7 @@ locals {
 ### Error Handling
 
 **Configuration Existence Check:**
+
 ```terraform
 data "wallix-bastion_configoption" "optional_setting" {
   option_name = "optional_feature_enabled"
@@ -354,6 +370,7 @@ data "wallix-bastion_configoption" "optional_setting" {
 ### Configuration Documentation
 
 **System Information:**
+
 ```terraform
 output "bastion_configuration_summary" {
   description = "Summary of key bastion configuration settings"
@@ -380,6 +397,7 @@ output "bastion_configuration_summary" {
 ### Integration with Monitoring
 
 **Grafana Dashboard Data:**
+
 ```terraform
 locals {
   monitoring_config = {
@@ -398,6 +416,7 @@ output "monitoring_endpoints" {
 ### Configuration Compliance
 
 **Security Compliance Check:**
+
 ```terraform
 locals {
   security_compliance = {

@@ -1,5 +1,11 @@
 testacc/
 test_report.html
+
+# Environment files (test configuration)
+.env.test
+.env.local
+.env*.local
+
 # Binaries for programs and plugins
 vendor/
 terraform-provider-wallix-bastion_v*

@@ -63,6 +63,7 @@ resource "wallix-bastion_application" "jumphost_app" {
 - `local_domains` (List of Object) (see [below for nested schema](#nestedatt--local_domains))
 
 <a id="nestedblock--paths"></a>
+
 ### Nested Schema for `paths`
 
 Required:
@@ -74,8 +75,8 @@ Optional:
 
 - `working_dir` (String)
 
-
 <a id="nestedatt--local_domains"></a>
+
 ### Nested Schema for `local_domains`
 
 Read-Only:
@@ -99,6 +100,7 @@ Read-Only:
 ### Path Configuration
 
 When `category = "standard"`, the `paths` block is required and should specify:
+
 - **target**: The application target (format: `Interactive@device:service`)
 - **program**: The full path to the application executable
 - **working_dir**: The working directory for the application
@@ -106,6 +108,7 @@ When `category = "standard"`, the `paths` block is required and should specify:
 ### Target Specification
 
 The `target` field should reference:
+
 - A cluster name for clustered targets
 - A device name for single device targets
 

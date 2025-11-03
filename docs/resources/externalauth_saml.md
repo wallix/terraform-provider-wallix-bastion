@@ -506,6 +506,7 @@ resource "wallix-bastion_externalauth_saml" "dev_saml" {
 - `sp_single_logout_service` (String)
 
 <a id="nestedblock--claim_customization"></a>
+
 ### Nested Schema for `claim_customization`
 
 Required:

@@ -95,6 +95,7 @@ resource "wallix-bastion_domain" "vault_domain" {
 ### Password Management
 
 When `enable_password_change = true`:
+
 - `password_change_policy`: Reference to password policy
 - `password_change_plugin`: Plugin for password changes
 - `password_change_plugin_parameters`: JSON configuration for plugin
@@ -102,6 +103,7 @@ When `enable_password_change = true`:
 ### SSH Certificate Authority
 
 Configure SSH CA for certificate-based authentication:
+
 - `ca_private_key`: Private key for signing certificates
   - Use file path or generate automatically: `generate:RSA_2048`, `generate:RSA_4096`, etc.
   - Supported types: RSA_1024, RSA_2048, RSA_4096, RSA_8192, DSA_1024, ECDSA_256, ECDSA_384, ECDSA_521, ED25519
@@ -111,6 +113,7 @@ Configure SSH CA for certificate-based authentication:
 ### Vault Integration
 
 For vault-managed domains:
+
 - `vault_plugin`: Name of the vault plugin
 - `vault_plugin_parameters`: JSON configuration for vault connection
 - Cannot be combined with `enable_password_change` or `ca_private_key`
@@ -118,6 +121,7 @@ For vault-managed domains:
 ### Plugin Conflicts
 
 The following options are mutually exclusive:
+
 - `vault_plugin` cannot be used with `enable_password_change` or `ca_private_key`
 - Use either vault management OR traditional password change, not both
 

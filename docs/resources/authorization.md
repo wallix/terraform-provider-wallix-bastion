@@ -105,12 +105,14 @@ resource "wallix-bastion_authorization" "password_only" {
 ### Required Configuration
 
 At least one of the following must be enabled:
+
 - `authorize_password_retrieval`: Allow password checkout/checkin
 - `authorize_sessions`: Allow interactive sessions via proxies
 
 ### Session Authorization
 
 When `authorize_sessions = true`:
+
 - `subprotocols` must be specified
 - Available subprotocols include:
   - **SSH**: `SSH_SHELL_SESSION`, `SSH_REMOTE_COMMAND`, `SSH_SCP_UP`, `SSH_SCP_DOWN`, `SSH_X11`, `SSH_DIRECT_TCPIP`, `SSH_REVERSE_TCPIP`, `SSH_AUTH_AGENT`
@@ -121,6 +123,7 @@ When `authorize_sessions = true`:
 ### Approval Workflow
 
 Configure approval requirements:
+
 - `approval_required = true`: Enable approval workflow
 - `approvers`: List of user groups that can approve requests
 - `active_quorum`: Number of approvals needed during active periods (-1: automatic, 0: no approval, >0: required approvals)
@@ -130,12 +133,14 @@ Configure approval requirements:
 ### Session Sharing
 
 Enable collaborative sessions:
+
 - `authorize_session_sharing = true`: Enable session sharing
 - `session_sharing_mode`: Set to `view_only` or `view_control`
 
 ### Comments and Tickets
 
 Control approval metadata:
+
 - `has_comment`/`has_ticket`: Allow comments/tickets in approval requests
 - `mandatory_comment`/`mandatory_ticket`: Require comments/tickets
 

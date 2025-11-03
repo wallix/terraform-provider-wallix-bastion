@@ -234,6 +234,7 @@ resource "wallix-bastion_authdomain_ad" "rodc" {
 ### Active Directory Configuration
 
 **Basic Connection:**
+
 - **ldap_hosts**: List of domain controllers (DCs)
 - **ldap_port**: 389 (LDAP), 636 (LDAPS), 3268 (Global Catalog)
 - **ldap_base**: Domain base DN (e.g., "dc=company,dc=com")
@@ -243,6 +244,7 @@ resource "wallix-bastion_authdomain_ad" "rodc" {
 ### Security Configuration
 
 **SSL/TLS Encryption:**
+
 ```terraform
 use_ssl          = true    # Enable LDAPS
 verify_certificate = true  # Verify server certificates
@@ -250,6 +252,7 @@ ldap_port        = 636     # LDAPS port
 ```
 
 **Service Account Security:**
+
 - Use dedicated service account with minimal privileges
 - Grant "Log on as a service" right
 - Add to "Read" permissions on domain
@@ -258,6 +261,7 @@ ldap_port        = 636     # LDAPS port
 ### Active Directory Attribute Mapping
 
 **Standard AD Mappings:**
+
 ```terraform
 user_cn    = "sAMAccountName"      # Username (pre-Windows 2000)
 user_dn    = "distinguishedName"   # Full distinguished name
@@ -266,6 +270,7 @@ user_group = "memberOf"            # Group membership
 ```
 
 **Alternative Mappings:**
+
 ```terraform
 user_cn    = "userPrincipalName"   # UPN format (user@domain.com)
 user_email = "proxyAddresses"      # All email addresses
@@ -275,17 +280,20 @@ user_group = "primaryGroupID"      # Primary group only
 ### LDAP Filters
 
 **User Filtering:**
+
 ```terraform
 user_source        = "objectCategory"
 user_source_filter = "(&(objectCategory=person)(objectClass=user)(!(userAccountControl:1.2.840.113556.1.4.803:=2)))"
 ```
 
 **Group Filtering:**
+
 ```terraform
 group_source_filter = "(&(objectClass=group)(groupType:1.2.840.113556.1.4.803:=2147483648))"
 ```
 
 **Common AD Filters:**
+
 - Active users only: `(!(userAccountControl:1.2.840.113556.1.4.803:=2))`
 - Security groups only: `(groupType:1.2.840.113556.1.4.803:=2147483648)`
 - Distribution groups: `(groupType:1.2.840.113556.1.4.803:=2)`
@@ -293,6 +301,7 @@ group_source_filter = "(&(objectClass=group)(groupType:1.2.840.113556.1.4.803:=2
 ### Group-Based Access Control
 
 **Enable Group Validation:**
+
 ```terraform
 check_user_group = true
 user_group       = "memberOf"
@@ -300,6 +309,7 @@ group_source_filter = "(objectClass=group)"
 ```
 
 **Specific Group Requirements:**
+
 ```terraform
 required_groups = [
   "CN=Bastion Users,OU=Security Groups,DC=company,DC=com",
@@ -310,6 +320,7 @@ required_groups = [
 ### High Availability
 
 **Multiple Domain Controllers:**
+
 ```terraform
 ldap_hosts = [
   "dc1.company.com",
@@ -319,6 +330,7 @@ ldap_hosts = [
 ```
 
 **Site-Aware Configuration:**
+
 ```terraform
 ldap_hosts = [
   "dc-site1.company.com",  # Local site
@@ -330,6 +342,7 @@ ldap_hosts = [
 ### Multi-Forest and Trust Configurations
 
 **Cross-Forest References:**
+
 ```terraform
 external_ldaps = [
   "dc1.partner.com:389",
@@ -340,6 +353,7 @@ external_ldaps = [
 ### Global Catalog Configuration
 
 **Global Catalog Servers:**
+
 ```terraform
 ldap_hosts = ["gc1.company.com", "gc2.company.com"]
 ldap_port  = 3268  # Global Catalog port (3269 for SSL)
@@ -348,6 +362,7 @@ ldap_port  = 3268  # Global Catalog port (3269 for SSL)
 ### Common AD Configurations
 
 **Standard Corporate AD:**
+
 ```terraform
 resource "wallix-bastion_authdomain_ad" "corporate" {
   domain_name = "company.com"
@@ -364,6 +379,7 @@ resource "wallix-bastion_authdomain_ad" "corporate" {
 ```
 
 **Secure AD with Groups:**
+
 ```terraform
 resource "wallix-bastion_authdomain_ad" "secure" {
   domain_name = "secure.company.com"
@@ -381,12 +397,14 @@ resource "wallix-bastion_authdomain_ad" "secure" {
 ### Performance Optimization
 
 **Connection Optimization:**
+
 - Use closest domain controllers
 - Implement connection pooling
 - Configure appropriate timeouts
 - Use Global Catalog for cross-domain queries
 
 **Query Optimization:**
+
 - Use specific LDAP filters
 - Limit search scope
 - Index frequently queried attributes
@@ -395,18 +413,21 @@ resource "wallix-bastion_authdomain_ad" "secure" {
 ### Troubleshooting
 
 **Connection Issues:**
+
 1. Verify network connectivity to DCs
 2. Check firewall rules (ports 389, 636, 3268, 3269)
 3. Validate service account credentials
 4. Test DNS resolution of DC names
 
 **Authentication Issues:**
+
 1. Verify user attribute mappings
 2. Check group membership requirements
 3. Validate LDAP filters
 4. Review AD user account status
 
 **SSL/TLS Issues:**
+
 1. Verify certificate validity
 2. Check certificate chain
 3. Validate certificate subject names
@@ -415,12 +436,14 @@ resource "wallix-bastion_authdomain_ad" "secure" {
 ### Monitoring and Maintenance
 
 **Health Checks:**
+
 - Monitor DC availability
 - Track authentication success rates
 - Monitor service account status
 - Check certificate expiration
 
 **Regular Maintenance:**
+
 - Rotate service account passwords
 - Update SSL certificates
 - Review group memberships
@@ -438,6 +461,7 @@ resource "wallix-bastion_authdomain_ad" "secure" {
 ### Integration Examples
 
 **With User Management:**
+
 ```terraform
 resource "wallix-bastion_user" "ad_user" {
   user_name   = "john.doe"
@@ -447,6 +471,7 @@ resource "wallix-bastion_user" "ad_user" {
 ```
 
 **With Domain Mapping:**
+
 ```terraform
 resource "wallix-bastion_authdomain_mapping" "ad_mapping" {
   domain_name  = wallix-bastion_authdomain_ad.corporate.domain_name

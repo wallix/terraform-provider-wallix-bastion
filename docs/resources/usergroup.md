@@ -75,6 +75,7 @@ resource "wallix-bastion_usergroup" "administrators" {
 - `id` (String) The ID of this resource.
 
 <a id="nestedblock--restrictions"></a>
+
 ### Nested Schema for `restrictions`
 
 Required:
@@ -88,6 +89,7 @@ Required:
 ### Timeframes
 
 User groups must be associated with timeframes that define when access is allowed:
+
 - Use existing timeframe names (e.g., "allthetime", "business_hours")
 - Create custom timeframes with `wallix-bastion_timeframe` resource
 - Multiple timeframes can be specified for flexible access control
@@ -95,6 +97,7 @@ User groups must be associated with timeframes that define when access is allowe
 ### Profiles
 
 Assign appropriate profiles to control GUI and API access:
+
 - **user**: Standard user profile with limited administrative access
 - **admin**: Administrative profile with full system access
 - Custom profiles created with `wallix-bastion_profile` resource
@@ -107,6 +110,7 @@ When specified, it controls which users belong to this group.
 ### Restrictions
 
 Apply command restrictions to limit user actions:
+
 - **action**: "kill" terminates sessions, "notify" sends alerts
 - **rules**: Regular expression to match restricted commands
 - **subprotocol**: Protocol to monitor (SSH_SHELL_SESSION, RDP, SFTP_SESSION, etc.)

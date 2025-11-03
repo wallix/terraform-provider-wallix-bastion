@@ -98,6 +98,7 @@ resource "wallix-bastion_cluster" "mixed_cluster" {
 ### Cluster Types
 
 At least one of the following must be specified:
+
 - **accounts**: Specific account/domain combinations
 - **account_mappings**: Mapped account access
 - **interactive_logins**: Direct interactive access
@@ -105,26 +106,33 @@ At least one of the following must be specified:
 ### Target Formats
 
 **Accounts Format:**
+
 ```
 account@domain:device:service
 ```
+
 Example: `admin@corp.local:web01:SSH`
 
 **Account Mappings Format:**
+
 ```
 device:service
 ```
+
 Example: `web01:HTTP`
 
 **Interactive Logins Format:**
+
 ```
 device:service
 ```
+
 Example: `web01:RDP`
 
 ### Service Types
 
 Common service types:
+
 - **SSH**: Secure Shell access
 - **RDP**: Remote Desktop Protocol
 - **HTTP/HTTPS**: Web application access
@@ -179,6 +187,7 @@ resource "wallix-bastion_targetgroup" "web_targets" {
 ### Load Balancing
 
 Clusters provide automatic load balancing:
+
 - Sessions distribute across available targets
 - Failed targets are automatically bypassed
 - Health checks ensure target availability

@@ -11,6 +11,7 @@ description: |-
 Manages WALLIX Bastion encryption configuration including passphrase setup and management.
 
 This resource handles the encryption state of the Bastion system, allowing you to:
+
 - Set up initial encryption with or without a passphrase
 - Change the encryption passphrase
 - Unlock the system after a reboot (when passphrase is required)
@@ -122,6 +123,7 @@ resource "wallix-bastion_encryption" "main" {
 ### Passphrase Management
 
 **DO:**
+
 - ✅ Use a strong passphrase (minimum 20 characters)
 - ✅ Store passphrases in a secure secret management system (OpenBao, Vault, AWS Secrets Manager, etc.)
 - ✅ Rotate passphrases regularly
@@ -129,6 +131,7 @@ resource "wallix-bastion_encryption" "main" {
 - ✅ Document the passphrase recovery process
 
 **DON'T:**
+
 - ❌ Store passphrases in plain text in Terraform files
 - ❌ Commit passphrases to version control
 - ❌ Use weak or easily guessable passphrases
@@ -140,6 +143,7 @@ resource "wallix-bastion_encryption" "main" {
 Since this resource stores sensitive passphrase information in Terraform state:
 
 1. **Encrypt Terraform state at rest**:
+
    ```terraform
    terraform {
      backend "s3" {
@@ -241,11 +245,13 @@ Regular passphrase rotation process:
 ### Disaster Recovery
 
 **Important**: If you lose the passphrase and the Bastion is sealed:
+
 - You will NOT be able to unlock the Bastion
 - Data may be lost unless you have proper backups
 - Always maintain secure backups of passphrases
 
 **Recovery Plan:**
+
 1. Maintain passphrase backups in multiple secure locations
 2. Document the recovery process
 3. Test recovery procedures regularly
@@ -254,6 +260,7 @@ Regular passphrase rotation process:
 ### High Availability
 
 For HA deployments:
+
 - All nodes should use the same passphrase
 - Coordinate passphrase changes across all nodes
 - Test failover scenarios with encryption
@@ -283,6 +290,7 @@ If changing the passphrase fails:
 The Bastion will be in "sealed" state after a reboot if a passphrase is configured. This is expected behavior and requires manual intervention or automation to unlock.
 
 **Note**: Terraform is typically not used for unlocking after reboot. Consider:
+
 - Manual unlock via Bastion UI
 - Automation scripts for unlock
 - Configuration management tools

@@ -86,6 +86,7 @@ Local domains are device-specific, unlike global domains which are shared across
 ### Password Management
 
 When `enable_password_change = true`, configure:
+
 - **password_change_policy**: Reference to password policy
 - **password_change_plugin**: Plugin for password operations
 - **password_change_plugin_parameters**: JSON configuration for the plugin
@@ -95,12 +96,14 @@ When `enable_password_change = true`, configure:
 Configure SSH CA for certificate-based authentication:
 
 **Auto-generation options:**
+
 - `generate:RSA_1024`, `generate:RSA_2048`, `generate:RSA_4096`, `generate:RSA_8192`
 - `generate:DSA_1024`
 - `generate:ECDSA_256`, `generate:ECDSA_384`, `generate:ECDSA_521`
 - `generate:ED25519`
 
 **Security considerations:**
+
 - Use strong key types (RSA_4096 or ED25519 recommended)
 - Always use a passphrase to protect the private key
 - Store passphrases securely (use variables, not hardcoded)

@@ -200,6 +200,7 @@ Configure allowed authentication methods based on protocol:
 The `options` field accepts a JSON object with protocol-specific settings:
 
 **SSH Options:**
+
 ```json
 {
   "general": {
@@ -217,6 +218,7 @@ The `options` field accepts a JSON object with protocol-specific settings:
 ```
 
 **RDP Options:**
+
 ```json
 {
   "general": {
@@ -235,6 +237,7 @@ The `options` field accepts a JSON object with protocol-specific settings:
 ```
 
 **VNC Options:**
+
 ```json
 {
   "general": {

@@ -73,6 +73,7 @@ locals {
 ### Compatibility Checks
 
 This data source is useful for:
+
 - Feature availability checks
 - API compatibility validation
 - Conditional resource configuration

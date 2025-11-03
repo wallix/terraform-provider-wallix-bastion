@@ -207,16 +207,19 @@ resource "wallix-bastion_externalauth_ldap" "complete" {
 ### LDAP Server Types
 
 **OpenLDAP:**
+
 - Open-source LDAP implementation
 - Standard LDAP v3 protocol
 - Common in Linux environments
 
 **Active Directory:**
+
 - Microsoft's directory service
 - Extended LDAP with AD-specific features
 - Common in Windows environments
 
 **389 Directory Server:**
+
 - Red Hat's directory server
 - Fork of Netscape Directory Server
 - Enterprise-grade LDAP solution
@@ -224,6 +227,7 @@ resource "wallix-bastion_externalauth_ldap" "complete" {
 ### Connection Configuration
 
 **Basic Connection:**
+
 ```terraform
 host     = "ldap.example.com"  # LDAP server hostname/IP
 port     = 389                 # Standard LDAP port
@@ -233,6 +237,7 @@ domain   = "dc=example,dc=com" # Base DN for searches
 ```
 
 **Secure Connection:**
+
 ```terraform
 host        = "ldaps.example.com"
 port        = 636                # LDAPS port
@@ -243,6 +248,7 @@ verify_cert = true               # Verify server certificate
 ### User Attribute Mapping
 
 **Standard Mappings:**
+
 ```terraform
 user_dn        = "uid"           # Username attribute
 user_email     = "mail"          # Email attribute
@@ -253,6 +259,7 @@ user_phone     = "telephoneNumber" # Phone number
 ```
 
 **Active Directory Mappings:**
+
 ```terraform
 user_dn        = "sAMAccountName"      # AD username
 user_email     = "mail"                # Email address
@@ -264,20 +271,25 @@ user_lastname  = "sn"                  # Last name
 ### Group-Based Access Control
 
 **Required Group:**
+
 ```terraform
 required_group = "cn=bastion_users,ou=groups,dc=example,dc=com"
 ```
+
 Only users in this group can authenticate.
 
 **Admin Group:**
+
 ```terraform
 admin_group = "cn=bastion_admins,ou=groups,dc=example,dc=com"
 ```
+
 Users in this group receive administrative privileges.
 
 ### High Availability
 
 **Multiple Servers:**
+
 ```terraform
 secondary_auth = [
   {
@@ -295,6 +307,7 @@ secondary_auth = [
 ### Performance Tuning
 
 **Connection Settings:**
+
 ```terraform
 timeout                = 30    # Authentication timeout (seconds)
 connection_timeout     = 15    # Connection establishment timeout
@@ -313,6 +326,7 @@ connection_pool_size   = 10    # Connection pool size
 ### Common Configurations
 
 **Corporate Active Directory:**
+
 ```terraform
 resource "wallix-bastion_externalauth_ldap" "corporate_ad" {
   auth_name    = "corporate_ad"
@@ -331,6 +345,7 @@ resource "wallix-bastion_externalauth_ldap" "corporate_ad" {
 ```
 
 **Secure OpenLDAP:**
+
 ```terraform
 resource "wallix-bastion_externalauth_ldap" "secure_openldap" {
   auth_name    = "secure_openldap"
@@ -350,6 +365,7 @@ resource "wallix-bastion_externalauth_ldap" "secure_openldap" {
 ```
 
 **389 Directory Server:**
+
 ```terraform
 resource "wallix-bastion_externalauth_ldap" "ds389" {
   auth_name    = "ds389"
@@ -369,6 +385,7 @@ resource "wallix-bastion_externalauth_ldap" "ds389" {
 ### Integration with Authentication Domains
 
 Use external auth with authentication domains:
+
 ```terraform
 resource "wallix-bastion_authdomain_ldap" "domain" {
   domain_name         = "company.local"
@@ -380,18 +397,21 @@ resource "wallix-bastion_authdomain_ldap" "domain" {
 ### Troubleshooting
 
 **Connection Issues:**
+
 1. Verify network connectivity to LDAP server
 2. Check firewall rules for LDAP ports (389, 636)
 3. Validate service account credentials
 4. Test SSL certificate validity
 
 **Authentication Issues:**
+
 1. Verify user DN format and attribute mapping
 2. Check group membership requirements
 3. Validate search base and scope
 4. Review LDAP server logs
 
 **Performance Issues:**
+
 1. Optimize connection pool settings
 2. Adjust timeout values
 3. Consider multiple LDAP servers
@@ -400,6 +420,7 @@ resource "wallix-bastion_authdomain_ldap" "domain" {
 ### Monitoring and Maintenance
 
 **Regular Tasks:**
+
 1. Monitor service account status
 2. Rotate service account passwords
 3. Review group membership changes
@@ -407,6 +428,7 @@ resource "wallix-bastion_authdomain_ldap" "domain" {
 5. Monitor authentication success rates
 
 **Health Checks:**
+
 ```terraform
 # Test connection settings
 timeout            = 10  # Quick timeout for monitoring

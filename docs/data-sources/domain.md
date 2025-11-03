@@ -75,6 +75,7 @@ This data source provides comprehensive domain information:
 ### Password Management
 
 Check password change capabilities:
+
 - **enable_password_change**: Whether password changes are enabled
 - **password_change_policy**: Associated password policy
 - **password_change_plugin**: Plugin used for password changes
@@ -82,11 +83,13 @@ Check password change capabilities:
 ### Vault Integration
 
 For vault-managed domains:
+
 - **vault_plugin**: Name of the vault plugin in use
 
 ### Usage in Resources
 
 Use the domain ID in other resources:
+
 - `wallix-bastion_domain_account`: Create accounts in this domain
 - `wallix-bastion_targetgroup`: Reference domain in target groups
 - `wallix-bastion_authorization`: Configure authorizations
@@ -94,5 +97,6 @@ Use the domain ID in other resources:
 ### SSH Certificate Authority
 
 If the domain has SSH CA configured:
+
 - **ca_public_key**: Contains the public key for certificate validation
 - Use this to verify if certificate-based authentication is available
