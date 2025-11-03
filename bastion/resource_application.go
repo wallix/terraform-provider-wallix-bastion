@@ -463,7 +463,7 @@ func readApplicationOptions(
 	return result, nil
 }
 
-func fillApplication(d *schema.ResourceData, jsonData jsonApplication) { //nolint:gocognit
+func fillApplication(d *schema.ResourceData, jsonData jsonApplication) {
 	if tfErr := d.Set("application_name", jsonData.ApplicationName); tfErr != nil {
 		panic(tfErr)
 	}

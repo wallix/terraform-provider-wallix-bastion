@@ -152,25 +152,23 @@ func (c *Client) authenticate(ctx context.Context) error {
 	c.cookie = *found
 
 	// Extract CSRF token from response headers or cookies
-	if err := c.extractCSRFToken(resp); err != nil {
-		return fmt.Errorf("extracting CSRF token: %w", err)
-	}
+	c.extractCSRFToken(resp)
 
 	c.isAuthenticated = true
 
 	return nil
 }
 
-func (c *Client) extractCSRFToken(resp *http.Response) error {
+func (c *Client) extractCSRFToken(resp *http.Response) {
 	if !c.csrfEnabled {
-		return nil
+		return
 	}
 
 	// Try to extract from X-CSRF-Token header first.
 	if token := resp.Header.Get(csrfTokenHeader); token != "" {
 		c.csrfToken = token
 
-		return nil
+		return
 	}
 
 	// Fall back to api_csrf_token cookie (Bastion 12.0.3+).
@@ -178,12 +176,11 @@ func (c *Client) extractCSRFToken(resp *http.Response) error {
 		if cookie.Name == csrfCookieName {
 			c.csrfToken = cookie.Value
 
-			return nil
+			return
 		}
 	}
 
 	// CSRF token is optional - some Bastion versions don't require it.
-	return nil
 }
 
 func (c *Client) addCSRFHeader(req *http.Request) {
@@ -291,7 +288,7 @@ func (c *Client) newRequest(ctx context.Context, uri, method string, jsonBody in
 	if resp.StatusCode == http.StatusForbidden && c.csrfEnabled && c.csrfToken != "" {
 		// Clear CSRF token and extract new one from response
 		c.csrfToken = ""
-		_ = c.extractCSRFToken(resp) // Try to extract new token, ignore errors
+		c.extractCSRFToken(resp) // Try to extract new token
 
 		// If we still have no CSRF token after extraction, retry with what we have
 		// If we do have a new CSRF token, add it to the request
