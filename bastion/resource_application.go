@@ -59,7 +59,7 @@ func resourceApplication() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				Default:      "standard",
-				ValidateFunc: validation.StringInSlice([]string{"standard", "jumphost"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"standard", "jumphost", "web_application"}, false),
 			},
 			"application_url": {
 				Type:     schema.TypeString,
@@ -350,6 +350,7 @@ func deleteApplication(
 	return nil
 }
 
+//nolint:gocognit
 func prepareApplicationJSON(
 	d *schema.ResourceData, newResource bool, apiVersion string,
 ) (
@@ -406,8 +407,12 @@ func prepareApplicationJSON(
 		jsonData.GlobalDomains = &jsonDataGlobalDomains
 
 	case "jumphost":
-		if semver.Compare(apiVersion, VersionWallixAPI312) < 0 {
-			return jsonData, fmt.Errorf("category = jumphost not available with api version %s", apiVersion)
+		// jumphost was introduced in API v3.9 and deprecated/removed in API v3.12
+		if apiVersion != "" && semver.Compare(apiVersion, VersionWallixAPI312) >= 0 {
+			return jsonData, fmt.Errorf(
+				"category = jumphost is no longer supported in API version %s (deprecated in v3.12, use 'web_application' instead)",
+				apiVersion,
+			)
 		}
 		if d.Get("target").(string) != "" {
 			return jsonData, errors.New("target cannot be configured when category = jumphost")
@@ -416,7 +421,7 @@ func prepareApplicationJSON(
 			return jsonData, errors.New("paths cannot be configured when category = jumphost")
 		}
 		if len(d.Get("global_domains").(*schema.Set).List()) > 0 {
-			return jsonData, errors.New("paths cannot be configured when category = jumphost")
+			return jsonData, errors.New("global_domains cannot be configured when category = jumphost")
 		}
 
 		applicationURL := d.Get("application_url").(string)
@@ -433,6 +438,40 @@ func prepareApplicationJSON(
 
 		browserVersion := d.Get("browser_version").(string)
 		jsonData.BrowserVersion = &browserVersion
+
+	case "web_application":
+		// web_application category was introduced in API v3.12 to replace jumphost
+		if apiVersion != "" && semver.Compare(apiVersion, VersionWallixAPI312) < 0 {
+			return jsonData, fmt.Errorf(
+				"category = web_application not available with API version %s (requires v3.12+)",
+				apiVersion,
+			)
+		}
+		if d.Get("target").(string) != "" {
+			return jsonData, errors.New("target cannot be configured when category = web_application")
+		}
+		if len(d.Get("paths").(*schema.Set).List()) > 0 {
+			return jsonData, errors.New("paths cannot be configured when category = web_application")
+		}
+		if d.Get("browser").(string) != "" {
+			return jsonData, errors.New("browser cannot be configured when category = web_application")
+		}
+		if d.Get("browser_version").(string) != "" {
+			return jsonData, errors.New("browser_version cannot be configured when category = web_application")
+		}
+
+		applicationURL := d.Get("application_url").(string)
+		if applicationURL == "" {
+			return jsonData, errors.New("application_url must be specified when category = web_application")
+		}
+		jsonData.ApplicationURL = &applicationURL
+
+		listGlobalDomains := d.Get("global_domains").(*schema.Set).List()
+		jsonDataGlobalDomains := make([]string, len(listGlobalDomains))
+		for i, v := range listGlobalDomains {
+			jsonDataGlobalDomains[i] = v.(string)
+		}
+		jsonData.GlobalDomains = &jsonDataGlobalDomains
 	}
 
 	return jsonData, nil
