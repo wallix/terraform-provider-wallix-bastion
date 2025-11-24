@@ -358,7 +358,6 @@ func prepareDeviceJSON(d *schema.ResourceData) jsonDevice {
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-
 		tagsSet := v.(*schema.Set)
 		tagsList := tagsSet.List()
 
@@ -460,7 +459,6 @@ func fillDevice(d *schema.ResourceData, jsonData jsonDevice) {
 	}
 
 	if jsonData.Tags != nil && len(*jsonData.Tags) > 0 {
-
 		apiTags := *jsonData.Tags
 
 		stateTags := make([]interface{}, len(apiTags))
