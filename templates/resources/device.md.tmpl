@@ -27,6 +27,28 @@ resource "wallix-bastion_device" "database" {
   alias       = "production-database"
   description = "Main production database server"
 }
+
+# Configure a device with tags for categorization
+resource "wallix-bastion_device" "web_server" {
+  device_name = "web-prod-01"
+  host        = "10.0.1.50"
+  description = "Production web server"
+
+  tags {
+    key   = "environment"
+    value = "production"
+  }
+
+  tags {
+    key   = "department"
+    value = "engineering"
+  }
+
+  tags {
+    key   = "os"
+    value = "linux"
+  }
+}
 ```
 
 {{ .SchemaMarkdown | trimspace }}
@@ -38,6 +60,17 @@ resource "wallix-bastion_device" "database" {
 - **device_name**: Unique identifier within Bastion (required)
 - **host**: IP address, FQDN, or hostname for connection (required)
 - **alias**: Alternative name for display purposes (optional)
+
+### Tags
+
+Tags allow you to categorize and filter devices using key-value pairs. Common use cases include:
+- Environment classification (production, staging, development)
+- Department or team ownership
+- Operating system type
+- Cost center allocation
+- Compliance requirements
+
+Each tag consists of a **key** and a **value**, both required. You can add multiple tags to a device by repeating the `tags` block.
 
 ### Local Domains and Services
 

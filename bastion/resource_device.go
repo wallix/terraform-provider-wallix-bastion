@@ -145,6 +145,16 @@ func resourceDevice() *schema.Resource {
 						},
 					},
 				},
+				Set: schema.HashResource(&schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key": {
+							Type: schema.TypeString,
+						},
+						"value": {
+							Type: schema.TypeString,
+						},
+					},
+				}),
 			},
 		},
 	}

@@ -20,7 +20,7 @@ func TestAccResourceDevice_basic(t *testing.T) {
 
 					resource.TestCheckResourceAttr(
 						"wallix-bastion_device.testacc_Device",
-						"tags.#", "1"),
+						"tags.#", "2"),
 					resource.TestCheckResourceAttr(
 						"wallix-bastion_device.testacc_Device",
 						"tags.0.key", "testkey"),
@@ -41,7 +41,7 @@ func TestAccResourceDevice_basic(t *testing.T) {
 
 					resource.TestCheckResourceAttr(
 						"wallix-bastion_device.testacc_Device",
-						"tags.#", "1"),
+						"tags.#", "2"),
 					resource.TestCheckResourceAttr(
 						"wallix-bastion_device.testacc_Device",
 						"tags.0.key", "testkey"),
