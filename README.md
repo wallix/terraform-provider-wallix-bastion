@@ -68,13 +68,25 @@ terraform {
 
 ### Prerequisites
 
-Ensure you have the following installed:
+For basic building and testing:
 
-- Go 1.22 to 1.24
-- Make
-- Git
+- **Go** 1.22 to 1.24
+- **Make**
+- **Git**
 
-### Build Commands
+For full development environment (installed via `make setup-dev`):
+
+- **golangci-lint** - Code linting
+- **govulncheck** - Security vulnerability scanning
+- **tfplugindocs** - Documentation generation
+
+Optional tools:
+
+- **Terraform CLI** - For manual testing
+- **markdownlint** - Markdown linting (`npm install -g markdownlint-cli`)
+- **go-test-report** - Enhanced test output
+
+### Quick Build
 
 ```bash
 # Build the provider
@@ -89,34 +101,43 @@ make clean
 
 ### Development Build
 
+For manual development without using Makefile:
+
 ```bash
-# Install development dependencies
+# Install dependencies
 go mod download
 
 # Format code
-make fmt
+go fmt ./...
 
 # Run linters
-make lint
+golangci-lint run --config .golangci.yml
 
-# Build development version
-go build -o terraform-provider-wallix-bastion
+# Build with version info
+go build -ldflags="-X main.version=dev" -o terraform-provider-wallix-bastion
 ```
+
+**Recommended:** Use `make` commands instead for a consistent development experience.
 
 ## Testing
 
 ### Running Unit Tests
 
 ```bash
-# Run all tests
+# Run all unit tests
 make test
 
-# Run tests with coverage
+# Run tests with HTML coverage report
 make test-coverage
 
 # Run specific test
 go test -v ./bastion -run TestAccResourceAuthorization_basic
+
+# Run all tests (unit + acceptance)
+make test-all
 ```
+
+**Note:** If `go-test-report` is installed, `make test` will generate a formatted test report.
 
 ### Running Acceptance Tests
 
@@ -138,34 +159,48 @@ TF_ACC=1 go test -v ./bastion -run TestAccResourceAuthorization_sessionSharing
 
 ### Test Environment Setup
 
-1. **Set up test environment variables:**
+1. **Create environment file from template:**
 
    ```bash
-   export WALLIX_BASTION_HOST="your-test-bastion"
-   export WALLIX_BASTION_TOKEN="<your-test-token>"
-   export WALLIX_BASTION_USER="admin"
-   export WALLIX_BASTION_API_VERSION="v3.12"
-   export TF_ACC=1
+   # Copy the example environment file
+   cp .env.test.example .env.test
+   
+   # Edit with your Bastion credentials
+   vim .env.test  # or use your preferred editor
    ```
 
-2. **Create test configuration:**
+2. **Load environment variables:**
 
    ```bash
-   # Copy example configuration
-   cp examples/authorization_test.tf test.tf
-
-   # Edit with your test values
-   vim test.tf
+   # Source the environment file
+   source .env.test
+   
+   # Verify configuration
+   echo "Testing against: $WALLIX_BASTION_HOST"
+   echo "API Version: $WALLIX_BASTION_API_VERSION"
    ```
 
-3. **Run manual tests:**
+3. **Verify Bastion connectivity:**
 
    ```bash
-   terraform init
-   terraform plan
-   terraform apply
-   terraform destroy
+   # Test API endpoint
+   curl -k https://$WALLIX_BASTION_HOST/api/version
    ```
+
+4. **Run tests:**
+
+   ```bash
+   # Run unit tests
+   make test
+   
+   # Run acceptance tests (requires configured .env.test)
+   make testacc
+   
+   # Run all tests
+   make test-all
+   ```
+
+**Security Note:** Never commit `.env.test` to version control. It's already in `.gitignore`.
 
 ## Local Development Workflow
 
@@ -176,12 +211,11 @@ TF_ACC=1 go test -v ./bastion -run TestAccResourceAuthorization_sessionSharing
 git clone https://github.com/wallix/terraform-provider-wallix-bastion.git
 cd terraform-provider-wallix-bastion
 
-# Install dependencies
-go mod download
-go mod tidy
-
-# Setup pre-commit hooks (optional)
+# Install dependencies and development tools
 make setup-dev
+
+# Verify installation
+make setup-check
 ```
 
 ### 2. Make Changes
@@ -199,6 +233,9 @@ make lint
 
 # Run tests
 make test
+
+# Run security checks
+make lint-security
 ```
 
 ### 3. Test Locally
@@ -235,7 +272,10 @@ terraform apply
 ### 4. Submit Changes
 
 ```bash
-# Run full test suite
+# Run full checks (like CI)
+make ci-check
+
+# Or run all tests
 make test-all
 
 # Commit changes
@@ -248,32 +288,55 @@ git push origin feature/your-feature-name
 
 ## Makefile Commands
 
+### Build Commands
+
 ```bash
-# Build commands
-make build          # Build the provider
-make build-all      # Build for all platforms
+make build          # Build the provider with version info
+make build-all      # Build for all platforms (darwin/linux/windows, amd64/arm64)
+make install        # Install the provider locally for development
+make clean          # Clean build artifacts and coverage files
+```
 
-# Quality commands
+### Code Quality Commands
+
+```bash
 make fmt            # Format Go code and Terraform examples
-make lint           # Run linters
+make lint           # Run golangci-lint with CI configuration
+make lint-fix       # Run golangci-lint and auto-fix issues
+make lint-markdown  # Lint markdown files (requires markdownlint)
+make lint-security  # Run vulnerability checks with govulncheck
 make vet            # Run go vet
+```
 
-# Test commands
-make test           # Run unit tests
-make test-coverage  # Run tests with coverage
-make testacc        # Run acceptance tests
-make test-all       # Run all tests
+### Test Commands
 
-# Development commands
-make clean          # Clean build artifacts
-make setup-dev      # Setup development environment
-make install        # Install the provider locally
-make docs           # Generate documentation
-make docs-verify    # Verify documentation quality
+```bash
+make test           # Run unit tests (with go-test-report if available)
+make test-coverage  # Run tests with coverage report (HTML output)
+make testacc        # Run acceptance tests (requires Bastion instance)
+make test-all       # Run all tests (unit + acceptance)
+```
 
-# Maintenance and release commands
-make maintenance    # Run maintenance tasks (deps, lint, test, build)
-make dev-check      # Quick development checks (lint, test, build)
+### Development Commands
+
+```bash
+make setup-dev      # Setup development environment (install tools)
+make setup-check    # Verify development environment setup
+make dev-check      # Quick development checks (lint + test + build)
+make ci-check       # Run CI-style checks (lint + security + test)
+```
+
+### Documentation Commands
+
+```bash
+make docs           # Generate documentation with tfplugindocs
+make docs-verify    # Verify and lint documentation quality
+```
+
+### Maintenance and Release Commands
+
+```bash
+make maintenance    # Run maintenance tasks (deps + lint + test + build)
 make update-deps    # Update Go dependencies only
 make prepare-release # Dry-run release preparation
 make release-patch  # Prepare patch release (X.Y.Z+1)
@@ -281,7 +344,7 @@ make release-minor  # Prepare minor release (X.Y+1.0)
 make release-major  # Prepare major release (X+1.0.0)
 ```
 
-See [RELEASE.md](./RELEASE.md) for detailed release process documentation.
+**Note:** See [RELEASE.md](./RELEASE.md) for detailed release process documentation.
 
 ## Documentation
 
@@ -294,20 +357,32 @@ See [RELEASE.md](./RELEASE.md) for detailed release process documentation.
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
+### Quick Start for Contributors
+
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes and add tests
-4. Run the test suite (`make test-all`)
+4. Run quality checks (`make dev-check` or `make ci-check`)
 5. Commit your changes (`git commit -m 'Add amazing feature'`)
 6. Push to the branch (`git push origin feature/amazing-feature`)
 7. Open a Pull Request
+
+### Development Tools Setup
+
+```bash
+# Install all development tools
+make setup-dev
+
+# Verify your setup
+make setup-check
+```
 
 ## Version Compatibility
 
 | Provider Version | Terraform Version | Go Version | Wallix Bastion API |
 |------------------|-------------------|------------|-------------------|
-| >= 0.14.0        | >= 1.0           | 1.22-1.24  | v3.12, v3.12      |
-| 0.13.x           | >= 0.14          | 1.19-1.21  | v3.3, v3.6       |
+| >= 0.14.0        | >= 1.0           | 1.22-1.24  | v3.8, v3.12       |
+| 0.13.x           | >= 0.14          | 1.19-1.21  | v3.3, v3.6        |
 
 ## License
 

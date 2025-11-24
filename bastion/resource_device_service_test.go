@@ -50,7 +50,7 @@ func testAccResourceDeviceServiceCreate() string {
 	return `
 resource "wallix-bastion_device" "testacc_DeviceService" {
   device_name = "testacc_DeviceService"
-  host        = "testacc_service.device"
+  host        = "192.168.100.2"
 }
 resource "wallix-bastion_domain" "testacc_DeviceService" {
   domain_name = "testacc_DeviceService"
@@ -71,7 +71,7 @@ func testAccResourceDeviceServiceUpdate() string {
 	return `
 resource "wallix-bastion_device" "testacc_DeviceService" {
   device_name = "testacc_DeviceService"
-  host        = "testacc_service.device"
+  host        = "192.168.100.2"
 }
 resource "wallix-bastion_domain" "testacc_DeviceService" {
   domain_name = "testacc_DeviceService"

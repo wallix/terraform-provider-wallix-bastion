@@ -37,7 +37,7 @@ func testAccResourceClusterCreate() string {
 	return `
 resource "wallix-bastion_device" "testacc_Cluster" {
   device_name = "testacc_Cluster"
-  host        = "testacc_Cluster"
+  host        = "192.168.100.10"
 }
 
 resource "wallix-bastion_device_service" "testacc_Cluster" {
@@ -63,7 +63,7 @@ func testAccResourceClusterUpdate() string {
 	return `
 resource "wallix-bastion_device" "testacc_Cluster" {
   device_name = "testacc_Cluster"
-  host        = "testacc_Cluster"
+  host        = "192.168.100.10"
 }
 
 resource "wallix-bastion_device_service" "testacc_Cluster" {

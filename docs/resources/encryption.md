@@ -8,75 +8,54 @@ description: |-
 
 # wallix-bastion_encryption (Resource)
 
-Provides an encryption resource for configuration of encryption settings.
+Manages WALLIX Bastion encryption configuration including passphrase setup and management.
+
+This resource handles the encryption state of the Bastion system, allowing you to:
+
+- Set up initial encryption with or without a passphrase
+- Change the encryption passphrase
+- Unlock the system after a reboot (when passphrase is required)
 
 ## Example Usage
 
+### Initial Setup with Passphrase
+
 ```terraform
-# Basic RSA encryption configuration
-resource "wallix-bastion_encryption" "rsa_2048" {
-  type        = "RSA"
-  key_size    = 2048
-  description = "RSA 2048-bit encryption for standard operations"
+# Setup Bastion encryption with a passphrase (recommended)
+resource "wallix-bastion_encryption" "main" {
+  new_passphrase = var.bastion_passphrase
+}
+```
+
+### Initial Setup without Passphrase
+
+```terraform
+# Setup Bastion encryption without a passphrase (not recommended for production)
+resource "wallix-bastion_encryption" "main" {
+  new_passphrase = ""
+}
+```
+
+### Changing the Passphrase
+
+```terraform
+# Change the encryption passphrase
+resource "wallix-bastion_encryption" "main" {
+  current_passphrase = var.old_passphrase
+  new_passphrase     = var.new_passphrase
+}
+```
+
+### Using with OpenBao
+
+```terraform
+# Retrieve passphrase from OpenBao
+data "vault_generic_secret" "bastion_passphrase" {
+  path = "secret/bastion/encryption"
 }
 
-# High-security RSA encryption
-resource "wallix-bastion_encryption" "rsa_4096" {
-  type        = "RSA"
-  key_size    = 4096
-  description = "RSA 4096-bit encryption for high-security environments"
-}
-
-# DSA encryption configuration
-resource "wallix-bastion_encryption" "dsa_1024" {
-  type        = "DSA"
-  key_size    = 1024
-  description = "DSA 1024-bit encryption for legacy compatibility"
-}
-
-# ECDSA encryption with P-256 curve
-resource "wallix-bastion_encryption" "ecdsa_256" {
-  type        = "ECDSA"
-  key_size    = 256
-  description = "ECDSA P-256 encryption for modern cryptography"
-}
-
-# ECDSA encryption with P-384 curve
-resource "wallix-bastion_encryption" "ecdsa_384" {
-  type        = "ECDSA"
-  key_size    = 384
-  description = "ECDSA P-384 encryption for enhanced security"
-}
-
-# ECDSA encryption with P-521 curve
-resource "wallix-bastion_encryption" "ecdsa_521" {
-  type        = "ECDSA"
-  key_size    = 521
-  description = "ECDSA P-521 encryption for maximum security"
-}
-
-# Ed25519 encryption (recommended)
-resource "wallix-bastion_encryption" "ed25519" {
-  type        = "Ed25519"
-  description = "Ed25519 encryption for optimal security and performance"
-}
-
-# Multiple encryption configurations for different use cases
-resource "wallix-bastion_encryption" "web_services" {
-  type        = "RSA"
-  key_size    = 2048
-  description = "RSA encryption for web services and APIs"
-}
-
-resource "wallix-bastion_encryption" "database_access" {
-  type        = "ECDSA"
-  key_size    = 384
-  description = "ECDSA encryption for database connections"
-}
-
-resource "wallix-bastion_encryption" "admin_access" {
-  type        = "Ed25519"
-  description = "Ed25519 encryption for administrative access"
+resource "wallix-bastion_encryption" "main" {
+  new_passphrase = data.vault_generic_secret.bastion_passphrase.data["passphrase"]
 }
 ```
 
@@ -95,197 +74,239 @@ resource "wallix-bastion_encryption" "admin_access" {
 
 - `id` (String) The ID of this resource.
 
-## Usage Notes
+## Encryption States
 
-### Encryption Types
+The Bastion encryption can be in one of the following states (visible via API GET `/encryption`):
 
-**RSA (Rivest-Shamir-Adleman):**
+### Seal State
 
-- **Supported Key Sizes**: 1024, 2048, 4096, 8192 bits
-- **Use Cases**: General-purpose encryption, web services, legacy compatibility
-- **Recommendation**: Use 2048 bits minimum, 4096 bits for high security
+- **need_setup**: The Bastion encryption must be set up (fresh install)
+- **sealed**: The passphrase must be entered (e.g., after a reboot)
+- **unsealed**: The Bastion encryption is ready for use
 
-**DSA (Digital Signature Algorithm):**
+### Encryption Mode
 
-- **Supported Key Sizes**: 1024 bits
-- **Use Cases**: Digital signatures, legacy system compatibility
-- **Note**: Limited to 1024 bits, consider newer algorithms for new deployments
+- **need_setup**: The Bastion encryption must be set up (fresh install)
+- **unprotected**: The Bastion is NOT protected with a passphrase
+- **passphrase**: The Bastion is protected with a passphrase
+- **[hidden]**: The user does not have permissions to read the security level
 
-**ECDSA (Elliptic Curve Digital Signature Algorithm):**
+## Usage Scenarios
 
-- **Supported Key Sizes**: 256, 384, 521 bits (corresponding to P-256, P-384, P-521 curves)
-- **Use Cases**: Modern applications requiring smaller key sizes with equivalent security
-- **Advantages**: Faster operations, smaller keys, equivalent security to larger RSA keys
+### Fresh Installation
 
-**Ed25519 (Edwards-curve Digital Signature Algorithm):**
-
-- **Key Size**: Fixed (no key_size parameter needed)
-- **Use Cases**: Modern applications, high-performance requirements
-- **Advantages**: Fast, secure, resistant to timing attacks
-- **Recommendation**: Preferred for new deployments
-
-### Security Recommendations
-
-**Algorithm Selection Priority:**
-
-1. **Ed25519**: Best choice for new deployments
-2. **ECDSA P-384**: Good balance of security and compatibility
-3. **RSA 4096**: For environments requiring RSA
-4. **RSA 2048**: Minimum acceptable for RSA
-5. **DSA 1024**: Legacy only, avoid for new deployments
-
-### Key Size Guidelines
-
-**RSA Key Sizes:**
-
-- **1024 bits**: Deprecated, not recommended
-- **2048 bits**: Minimum acceptable, widely compatible
-- **4096 bits**: High security, recommended for sensitive data
-- **8192 bits**: Maximum security, may impact performance
-
-**ECDSA Key Sizes:**
-
-- **256 bits (P-256)**: Equivalent to RSA 3072, good for most applications
-- **384 bits (P-384)**: Equivalent to RSA 7680, high security
-- **521 bits (P-521)**: Maximum security, equivalent to RSA 15360
-
-### Performance Considerations
-
-**Speed Comparison (fastest to slowest):**
-
-1. Ed25519
-2. ECDSA
-3. RSA (smaller keys faster)
-4. DSA
-
-**Resource Usage:**
-
-- **Ed25519**: Minimal CPU and memory usage
-- **ECDSA**: Low resource usage, scales well
-- **RSA**: Higher resource usage, especially with larger keys
-- **DSA**: Moderate resource usage
-
-### Use Case Examples
-
-**Web Application Encryption:**
+When setting up a new Bastion:
 
 ```terraform
-resource "wallix-bastion_encryption" "web_app" {
-  type        = "ECDSA"
-  key_size    = 256
-  description = "Web application encryption"
+resource "wallix-bastion_encryption" "main" {
+  new_passphrase = "my_secure_passphrase"
 }
 ```
 
-**Database Security:**
+### Unlocking After Reboot
+
+When the Bastion is in "sealed" state after a reboot, you need to provide the passphrase to unlock it. This is typically done manually via the Bastion UI or API, as Terraform is not usually used for this operational task.
+
+### Passphrase Rotation
+
+To change an existing passphrase:
 
 ```terraform
-resource "wallix-bastion_encryption" "database" {
-  type        = "ECDSA"
-  key_size    = 384
-  description = "Database connection encryption"
+resource "wallix-bastion_encryption" "main" {
+  current_passphrase = "old_passphrase"
+  new_passphrase     = "new_passphrase"
 }
 ```
 
-**Administrative Access:**
+## Security Best Practices
+
+### Passphrase Management
+
+**DO:**
+
+- ✅ Use a strong passphrase (minimum 20 characters)
+- ✅ Store passphrases in a secure secret management system (OpenBao, Vault, AWS Secrets Manager, etc.)
+- ✅ Rotate passphrases regularly
+- ✅ Use different passphrases for different environments
+- ✅ Document the passphrase recovery process
+
+**DON'T:**
+
+- ❌ Store passphrases in plain text in Terraform files
+- ❌ Commit passphrases to version control
+- ❌ Use weak or easily guessable passphrases
+- ❌ Share passphrases via unsecured channels
+- ❌ Reuse passphrases across systems
+
+### Terraform State Security
+
+Since this resource stores sensitive passphrase information in Terraform state:
+
+1. **Encrypt Terraform state at rest**:
+
+   ```terraform
+   terraform {
+     backend "s3" {
+       bucket         = "terraform-state"
+       key            = "bastion/encryption.tfstate"
+       encrypt        = true
+       kms_key_id     = "arn:aws:kms:region:account:key/key-id"
+     }
+   }
+   ```
+
+2. **Use remote state with encryption**:
+   - AWS S3 with KMS encryption
+   - Azure Storage with encryption
+   - Terraform Cloud with encryption enabled
+
+3. **Restrict state file access**:
+   - Limit IAM/RBAC permissions
+   - Enable audit logging
+   - Use MFA for state access
+
+### Secret Management Integration
+
+#### OpenBao / HashiCorp Vault
 
 ```terraform
-resource "wallix-bastion_encryption" "admin" {
-  type        = "Ed25519"
-  description = "Administrative access encryption"
+data "vault_generic_secret" "bastion" {
+  path = "secret/bastion/encryption"
+}
+
+resource "wallix-bastion_encryption" "main" {
+  new_passphrase = data.vault_generic_secret.bastion.data["passphrase"]
 }
 ```
 
-**Legacy System Support:**
+#### AWS Secrets Manager
 
 ```terraform
-resource "wallix-bastion_encryption" "legacy" {
-  type        = "RSA"
-  key_size    = 2048
-  description = "Legacy system compatibility"
+data "aws_secretsmanager_secret_version" "bastion" {
+  secret_id = "bastion/encryption/passphrase"
+}
+
+resource "wallix-bastion_encryption" "main" {
+  new_passphrase = jsondecode(data.aws_secretsmanager_secret_version.bastion.secret_string)["passphrase"]
 }
 ```
 
-### Compliance Considerations
-
-**FIPS 140-2 Compliance:**
-
-- Use RSA 2048+ or ECDSA P-256+
-- Avoid DSA for new implementations
-
-**Common Criteria:**
-
-- ECDSA P-384 or RSA 4096 recommended
-- Ed25519 may require specific validation
-
-**Industry Standards:**
-
-- **Banking**: Often requires RSA 2048+ or ECDSA P-256+
-- **Government**: May mandate specific algorithms and key sizes
-- **Healthcare**: HIPAA compliance often satisfied with RSA 2048+ or ECDSA
-
-### Migration Strategies
-
-**Upgrading from Legacy:**
+#### Azure Key Vault
 
 ```terraform
-# Current legacy encryption
-resource "wallix-bastion_encryption" "legacy" {
-  type        = "RSA"
-  key_size    = 1024
-  description = "Legacy RSA encryption (to be replaced)"
+data "azurerm_key_vault_secret" "bastion" {
+  name         = "bastion-encryption-passphrase"
+  key_vault_id = var.key_vault_id
 }
 
-# New modern encryption
-resource "wallix-bastion_encryption" "modern" {
-  type        = "Ed25519"
-  description = "Modern Ed25519 encryption"
+resource "wallix-bastion_encryption" "main" {
+  new_passphrase = data.azurerm_key_vault_secret.bastion.value
 }
 ```
 
-### Integration with Other Resources
+### Environment Separation
 
-Encryption configurations can be referenced by:
+Use different passphrases for different environments:
 
-- SSH key generation
-- Certificate authorities
-- Connection policies
-- Authentication domains
+```terraform
+# Development
+resource "wallix-bastion_encryption" "dev" {
+  new_passphrase = var.dev_passphrase
+}
 
-### Monitoring and Maintenance
+# Production
+resource "wallix-bastion_encryption" "prod" {
+  new_passphrase = var.prod_passphrase
+}
+```
 
-**Key Rotation:**
+## Operational Considerations
 
-- Plan regular key rotation schedules
-- Monitor key age and usage
-- Implement automated rotation where possible
+### Initial Deployment
 
-**Security Monitoring:**
+For new Bastion installations:
 
-- Monitor for deprecated algorithms
-- Track key usage patterns
-- Alert on weak encryption usage
+1. Create the encryption resource with a secure passphrase
+2. Document the passphrase in your secret management system
+3. Verify the encryption state is "unsealed"
+4. Test access to ensure proper configuration
 
-### Troubleshooting
+### Passphrase Rotation
 
-**Compatibility Issues:**
+Regular passphrase rotation process:
 
-1. Check client/server algorithm support
-2. Verify key size requirements
-3. Test with legacy systems
-4. Review protocol specifications
+1. Generate a new secure passphrase
+2. Store it in your secret management system
+3. Update the Terraform configuration
+4. Apply the change with both current and new passphrases
+5. Verify the new passphrase works
+6. Keep the old passphrase safe as it may be needed for rollback from backups
 
-**Performance Issues:**
+### Disaster Recovery
 
-1. Monitor CPU usage during encryption operations
-2. Consider key size vs. performance trade-offs
-3. Test with expected load patterns
-4. Optimize based on use case requirements
+**Important**: If you lose the passphrase and the Bastion is sealed:
+
+- You will NOT be able to unlock the Bastion
+- Data may be lost unless you have proper backups
+- Always maintain secure backups of passphrases
+
+**Recovery Plan:**
+
+1. Maintain passphrase backups in multiple secure locations
+2. Document the recovery process
+3. Test recovery procedures regularly
+4. Have a backup restoration plan
+
+### High Availability
+
+For HA deployments:
+
+- All nodes should use the same passphrase
+- Coordinate passphrase changes across all nodes
+- Test failover scenarios with encryption
+
+## Troubleshooting
+
+### State Synchronization Issues
+
+If Terraform state is out of sync with actual Bastion state:
+
+```bash
+# Re-import the resource
+terraform import wallix-bastion_encryption.main encryption
+```
+
+### Passphrase Change Failures
+
+If changing the passphrase fails:
+
+1. Verify the current passphrase is correct
+2. Check Bastion logs for specific errors
+3. Ensure the new passphrase meets complexity requirements
+4. Verify API connectivity and authentication
+
+### Sealed State After Reboot
+
+The Bastion will be in "sealed" state after a reboot if a passphrase is configured. This is expected behavior and requires manual intervention or automation to unlock.
+
+**Note**: Terraform is typically not used for unlocking after reboot. Consider:
+
+- Manual unlock via Bastion UI
+- Automation scripts for unlock
+- Configuration management tools
+
+## Limitations
+
+- **No Delete Operation**: The encryption cannot be "deleted" once configured. The resource will be removed from Terraform state on destroy, but the Bastion encryption remains configured.
+- **Manual Unlock**: After a reboot, if a passphrase is set, the Bastion must be manually unlocked. This cannot be automated via Terraform.
+- **Single Resource**: Only one encryption configuration exists per Bastion (the resource ID is always "encryption").
 
 ## Import
 
-Encryption configuration can be imported using the encryption id, e.g.
+Encryption configuration can be imported using the static ID "encryption":
 
-```shell
-terraform import wallix-bastion_encryption.rsa_2048 xxxxxxxx
+```bash
+terraform import wallix-bastion_encryption.main encryption
 ```
+
+**Note**: After import, you must manually set the `new_passphrase` in your Terraform configuration to match the current passphrase to avoid unintended changes.

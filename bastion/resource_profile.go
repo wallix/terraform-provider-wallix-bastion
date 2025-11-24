@@ -462,7 +462,7 @@ func deleteProfile(
 	return nil
 }
 
-func prepareProfileJSON( //nolint: gocognit,gocyclo
+func prepareProfileJSON( //nolint:gocognit
 	d *schema.ResourceData, newResource bool,
 ) jsonProfile {
 	jsonData := jsonProfile{
