@@ -54,6 +54,25 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("WALLIX_BASTION_API_VERSION", VersionWallixAPI38),
 			},
+			"session_timeout": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("WALLIX_SESSION_TIMEOUT", 120),
+				Description: "Session timeout in seconds (default: 120)",
+			},
+			"csrf_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("WALLIX_CSRF_ENABLED", true),
+				Description: "Enable CSRF token protection (default: true)",
+			},
+			"insecure_skip_verify": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("WALLIX_INSECURE_SKIP_VERIFY", false),
+				Description: "Skip TLS certificate verification (default: false). " +
+					"Only for development with self-signed certificates.",
+			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"wallix-bastion_configoption":          dataSourceConfigoption(),
@@ -107,22 +126,25 @@ func configureProvider(
 	interface{}, diag.Diagnostics,
 ) {
 	config := Config{
-		bastionAPIVersion: d.Get("api_version").(string),
-		bastionIP:         d.Get("ip").(string),
-		bastionPort:       d.Get("port").(int),
-		bastionToken:      d.Get("token").(string),
-		bastionUser:       d.Get("user").(string),
-		bastionPwd:        d.Get("password").(string),
+		BastionAPIVersion:  d.Get("api_version").(string),
+		BastionIP:          d.Get("ip").(string),
+		BastionPort:        d.Get("port").(int),
+		BastionToken:       d.Get("token").(string),
+		BastionUser:        d.Get("user").(string),
+		BastionPwd:         d.Get("password").(string),
+		SessionTimeout:     d.Get("session_timeout").(int),
+		CSRFEnabled:        d.Get("csrf_enabled").(bool),
+		InsecureSkipVerify: d.Get("insecure_skip_verify").(bool),
 	}
 
-	if config.bastionIP == "" {
+	if config.BastionIP == "" {
 		return nil, diag.Errorf("missing 'ip' configuration to configure provider")
 	}
-	if config.bastionUser == "" {
+	if config.BastionUser == "" {
 		return nil, diag.Errorf("missing 'user' configuration to configure provider")
 	}
-	if config.bastionPort < 0 || config.bastionPort > math.MaxUint16 {
-		return nil, diag.Errorf("invalid value %d for 'port' configuration to configure provider", config.bastionPort)
+	if config.BastionPort < 0 || config.BastionPort > math.MaxUint16 {
+		return nil, diag.Errorf("invalid value %d for 'port' configuration to configure provider", config.BastionPort)
 	}
 
 	return config.Client()

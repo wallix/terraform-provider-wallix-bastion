@@ -1,0 +1,29 @@
+# Markdown lint ignore file
+
+# Work in progress - not production code
+
+WIP/
+
+# Node modules
+
+node_modules/
+
+# Terraform directories
+
+.terraform/
+.terraform.lock.hcl
+
+# Build artifacts
+
+dist/
+build/
+
+# Temporary files
+
+*.tmp
+*.temp
+
+# Test directories
+
+testacc/
+test_doc/

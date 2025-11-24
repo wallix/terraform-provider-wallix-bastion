@@ -59,7 +59,7 @@ resource "wallix-bastion_authdomain_ldap" "testacc_AuthDomainMapping" {
 resource "wallix-bastion_externalauth_ldap" "testacc_AuthDomainMapping" {
   authentication_name = "testacc_AuthDomainMapping"
   cn_attribute        = "sAMAccountName"
-  host                = "server1"
+  host                = "192.168.100.20"
   ldap_base           = "OU=FR,DC=test,DC=com"
   login_attribute     = "sAMAccountName"
   port                = 636
@@ -92,7 +92,7 @@ resource "wallix-bastion_authdomain_ldap" "testacc_AuthDomainMapping" {
 resource "wallix-bastion_externalauth_ldap" "testacc_AuthDomainMapping" {
   authentication_name = "testacc_AuthDomainMapping"
   cn_attribute        = "sAMAccountName"
-  host                = "server1"
+  host                = "192.168.100.20"
   ldap_base           = "OU=FR,DC=test,DC=com"
   login_attribute     = "sAMAccountName"
   port                = 636

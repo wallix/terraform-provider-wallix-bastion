@@ -53,7 +53,7 @@ func testAccResourceExternalAuthKerberosCreate() string {
 data "wallix-bastion_version" "v" {}
 resource "wallix-bastion_externalauth_kerberos" "testacc_ExternalAuthKerberos" {
   authentication_name = "testacc_ExternalAuthKerberos"
-  host                = "server1"
+  host                = "192.168.100.20"
   ker_dom_controller  = "EXAMPLE.COM"
   port                = 88
   keytab              = split(".", data.wallix-bastion_version.v.wab_version)[0] == "8" ? "" : filebase64("/tmp/testacc_data")
@@ -66,7 +66,7 @@ func testAccResourceExternalAuthKerberosUpdate() string {
 data "wallix-bastion_version" "v" {}
 resource "wallix-bastion_externalauth_kerberos" "testacc_ExternalAuthKerberos" {
   authentication_name     = "testacc_ExternalAuthKerberos"
-  host                    = "server1"
+  host                    = "192.168.100.20"
   ker_dom_controller      = "EXAMPLE.COM"
   port                    = 188
   description             = "testacc ExternalAuthKerberos"
@@ -81,7 +81,7 @@ func testAccResourceExternalAuthKerberosCreate2() string {
 data "wallix-bastion_version" "v" {}
 resource "wallix-bastion_externalauth_kerberos" "testacc_ExternalAuthKerberosPassword" {
   authentication_name = "testacc_ExternalAuthKerberosPassword"
-  host                = "server2"
+  host                = "192.168.100.21"
   ker_dom_controller  = "EXAMPLE.COM"
   kerberos_password   = true
   port                = 88
@@ -95,7 +95,7 @@ func testAccResourceExternalAuthKerberosUpdate2() string {
 data "wallix-bastion_version" "v" {}
 resource "wallix-bastion_externalauth_kerberos" "testacc_ExternalAuthKerberosPassword" {
   authentication_name     = "testacc_ExternalAuthKerberosPassword"
-  host                    = "server2"
+  host                    = "192.168.100.21"
   ker_dom_controller      = "EXAMPLE.COM"
   kerberos_password       = true
   port                    = 188
