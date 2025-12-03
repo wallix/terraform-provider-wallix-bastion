@@ -379,7 +379,6 @@ func prepareApplicationJSON(
 		Parameters:       d.Get("parameters").(string),
 	}
 	if v, ok := d.GetOk("tags"); ok {
-
 		tagsSet := v.(*schema.Set)
 		tagsList := tagsSet.List()
 
@@ -589,7 +588,6 @@ func fillApplication(d *schema.ResourceData, jsonData jsonApplication) {
 		panic(tfErr)
 	}
 	if jsonData.Tags != nil && len(*jsonData.Tags) > 0 {
-
 		apiTags := *jsonData.Tags
 
 		stateTags := make([]interface{}, len(apiTags))
