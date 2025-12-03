@@ -28,6 +28,7 @@ type jsonApplication struct {
 	GlobalDomains    *[]string                     `json:"global_domains,omitempty"`
 	Paths            *[]jsonApplicationPath        `json:"paths,omitempty"`
 	LocalDomains     *[]jsonApplicationLocalDomain `json:"local_domains,omitempty"`
+	Tags             *[]map[string]string          `json:"tags,omitempty"`
 }
 
 type jsonApplicationPath struct {
@@ -147,6 +148,22 @@ func resourceApplication() *schema.Resource {
 						"password_change_plugin_parameters": {
 							Type:     schema.TypeString,
 							Computed: true,
+						},
+					},
+				},
+			},
+			"tags": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"value": {
+							Type:     schema.TypeString,
+							Required: true,
 						},
 					},
 				},
@@ -361,6 +378,24 @@ func prepareApplicationJSON(
 		Description:      d.Get("description").(string),
 		Parameters:       d.Get("parameters").(string),
 	}
+	if v, ok := d.GetOk("tags"); ok {
+
+		tagsSet := v.(*schema.Set)
+		tagsList := tagsSet.List()
+
+		tags := make([]map[string]string, len(tagsList))
+
+		for i, tagData := range tagsList {
+			tagMap := tagData.(map[string]interface{})
+
+			tags[i] = map[string]string{
+				"key":   tagMap["key"].(string),
+				"value": tagMap["value"].(string),
+			}
+		}
+		jsonData.Tags = &tags
+	}
+
 	if newResource &&
 		semver.Compare(apiVersion, VersionWallixAPI312) >= 0 {
 		jsonData.Category = d.Get("category").(string)
@@ -552,5 +587,27 @@ func fillApplication(d *schema.ResourceData, jsonData jsonApplication) {
 	}
 	if tfErr := d.Set("local_domains", localDomains); tfErr != nil {
 		panic(tfErr)
+	}
+	if jsonData.Tags != nil && len(*jsonData.Tags) > 0 {
+
+		apiTags := *jsonData.Tags
+
+		stateTags := make([]interface{}, len(apiTags))
+
+		for i, tagMap := range apiTags {
+			stateMap := map[string]interface{}{
+				"key":   tagMap["key"],
+				"value": tagMap["value"],
+			}
+			stateTags[i] = stateMap
+		}
+
+		if tfErr := d.Set("tags", stateTags); tfErr != nil {
+			panic(tfErr)
+		}
+	} else {
+		if tfErr := d.Set("tags", make([]interface{}, 0)); tfErr != nil {
+			panic(tfErr)
+		}
 	}
 }
