@@ -575,19 +575,22 @@ func fillApplication(d *schema.ResourceData, jsonData jsonApplication) {
 			panic(tfErr)
 		}
 	}
-	localDomains := make([]map[string]interface{}, len(*jsonData.LocalDomains))
-	for i, v := range *jsonData.LocalDomains {
-		localDomains[i] = map[string]interface{}{
-			"id":                     v.ID,
-			"admin_account":          v.AdminAccount,
-			"domain_name":            v.DomainName,
-			"description":            v.Description,
-			"enable_password_change": v.EnablePasswordChange,
-			"password_change_policy": v.PasswordChangePolicy,
-			"password_change_plugin": v.PasswordChangePlugin,
+	localDomains := make([]map[string]interface{}, 0)
+	if jsonData.LocalDomains != nil {
+		localDomains = make([]map[string]interface{}, len(*jsonData.LocalDomains))
+		for i, v := range *jsonData.LocalDomains {
+			localDomains[i] = map[string]interface{}{
+				"id":                     v.ID,
+				"admin_account":          v.AdminAccount,
+				"domain_name":            v.DomainName,
+				"description":            v.Description,
+				"enable_password_change": v.EnablePasswordChange,
+				"password_change_policy": v.PasswordChangePolicy,
+				"password_change_plugin": v.PasswordChangePlugin,
+			}
+			pluginParameters, _ := json.Marshal(v.PasswordChangePluginParameters) //nolint: errchkjson
+			localDomains[i]["password_change_plugin_parameters"] = string(pluginParameters)
 		}
-		pluginParameters, _ := json.Marshal(v.PasswordChangePluginParameters) //nolint: errchkjson
-		localDomains[len(localDomains)-1]["password_change_plugin_parameters"] = string(pluginParameters)
 	}
 	if tfErr := d.Set("local_domains", localDomains); tfErr != nil {
 		panic(tfErr)

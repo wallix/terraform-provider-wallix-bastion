@@ -157,7 +157,7 @@ resource "wallix-bastion_application" "testacc_Appli" {
 // nolint: lll, nolintlint
 func testAccResourceApplicationCreateJumphost() string {
 	return `
-resource "wallix-bastion_application" "testacc_Appli" {
+resource "wallix-bastion_application" "testacc_Appli_jumphost" {
   application_name  = "testacc_Appli_jumphost"
   category          = "jumphost"
   connection_policy = "JumpHost"
