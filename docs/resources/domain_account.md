@@ -21,15 +21,15 @@ resource "wallix-bastion_domain_account" "admin" {
   description   = "Domain administrator account"
 }
 
-# Service account with specific services
+# Service account (device-level services and/or application access)
 resource "wallix-bastion_domain_account" "service" {
   domain_id     = wallix-bastion_domain.production.id
   account_name  = "service_account"
   account_login = "svc_prod"
   description   = "Production service account"
-  
-  # Specify allowed services
-  services = ["ssh", "rdp", "database"]
+
+  # resources may be either device:<service> or application:<name>
+  resources = ["device:ssh", "device:rdp", "application:database_app"]
 }
 
 # Database administrator account
@@ -38,11 +38,9 @@ resource "wallix-bastion_domain_account" "dba" {
   account_name  = "database_admin"
   account_login = "dba"
   description   = "Database administrator"
-  
-  # Database-specific services
-  services = ["ssh", "telnet", "database", "sql"]
-  
-  # Account settings
+
+  resources = ["device:ssh", "application:db_admin_app"]
+
   auto_change_password = true
   checkout_policy      = "database_checkout"
 }
@@ -53,14 +51,11 @@ resource "wallix-bastion_domain_account" "webapp" {
   account_name  = "web_administrator"
   account_login = "webadmin"
   description   = "Web application administrator"
-  
-  # Web-specific services
-  services = ["ssh", "sftp", "http", "https"]
-  
-  # Certificate management
-  auto_change_ssh_key           = true
-  can_edit_certificate_validity = true
-  certificate_validity          = "30d"
+
+  resources = ["device:ssh", "device:sftp", "application:web_app"]
+
+  auto_change_ssh_key  = true
+  certificate_validity = "30d"
 }
 
 # Network administrator account
@@ -69,45 +64,12 @@ resource "wallix-bastion_domain_account" "netadmin" {
   account_name  = "network_admin"
   account_login = "netadmin"
   description   = "Network equipment administrator"
-  
-  # Network management services
-  services = ["ssh", "telnet", "snmp", "https"]
-  
-  # Enhanced security for network access
+
+  resources = ["device:ssh", "device:telnet", "device:snmp"]
+
   auto_change_password = true
   auto_change_ssh_key  = true
   checkout_policy      = "network_privileged"
-}
-
-# Multi-protocol support account
-resource "wallix-bastion_domain_account" "multiprotocol" {
-  domain_id     = wallix-bastion_domain.infrastructure.id
-  account_name  = "infrastructure_admin"
-  account_login = "infra_admin"
-  description   = "Infrastructure administrator with multi-protocol access"
-  
-  # Comprehensive protocol support
-  services = [
-    "ssh",      # Secure Shell
-    "rdp",      # Remote Desktop Protocol
-    "vnc",      # Virtual Network Computing
-    "telnet",   # Telnet
-    "rlogin",   # Remote Login
-    "sftp",     # SSH File Transfer Protocol
-    "scp",      # Secure Copy Protocol
-    "http",     # HTTP Protocol
-    "https",    # HTTPS Protocol
-    "database", # Database protocols
-    "ldap",     # LDAP Protocol
-    "kerberos"  # Kerberos Authentication
-  ]
-  
-  # Security settings
-  auto_change_password          = true
-  auto_change_ssh_key           = true
-  can_edit_certificate_validity = true
-  certificate_validity          = "7d"
-  checkout_policy               = "infrastructure_access"
 }
 
 # Temporary contractor account
@@ -116,75 +78,31 @@ resource "wallix-bastion_domain_account" "contractor" {
   account_name  = "contractor_temp"
   account_login = "contractor001"
   description   = "Temporary contractor access account"
-  
-  # Limited services for contractors
-  services = ["ssh", "sftp"]
-  
-  # Temporary account settings
-  auto_change_password = false  # Manual password management
-  certificate_validity = "1d"   # Short certificate validity
+
+  resources = ["device:ssh", "device:sftp"]
+
+  auto_change_password = false
+  certificate_validity = "1d"
   checkout_policy      = "contractor_limited"
 }
 
-# API service account
-resource "wallix-bastion_domain_account" "api_service" {
-  domain_id     = wallix-bastion_domain.api_access.id
-  account_name  = "api_service"
-  account_login = "api_svc"
-  description   = "API service account for automated access"
-  
-  # API-specific protocols
-  services = ["https", "http", "ssh"]
-  
-  # Automated account management
-  auto_change_password = true
-  auto_change_ssh_key  = true
-  certificate_validity = "1h"  # Short-lived certificates for APIs
-}
-
-# Backup operator account
-resource "wallix-bastion_domain_account" "backup" {
-  domain_id     = wallix-bastion_domain.backup_systems.id
-  account_name  = "backup_operator"
-  account_login = "backup_op"
-  description   = "Backup system operator account"
-  
-  # Backup-related services
-  services = ["ssh", "sftp", "scp", "rsync"]
-  
-  # Backup-specific settings
-  auto_change_ssh_key  = true
-  certificate_validity = "24h"
-  checkout_policy      = "backup_operations"
-}
-
-# Complete domain account with all features
+# Complete domain account (example)
 resource "wallix-bastion_domain_account" "complete" {
   domain_id     = wallix-bastion_domain.complete_domain.id
   account_name  = "complete_admin"
   account_login = "complete_admin"
   description   = "Complete domain account with all configuration options"
-  
-  # Comprehensive service access
-  services = [
-    "ssh", "rdp", "vnc", "telnet", "rlogin",
-    "sftp", "scp", "http", "https",
-    "database", "ldap", "kerberos", "snmp"
+
+  resources = [
+    "device:ssh", "device:rdp", "device:vnc", "device:telnet",
+    "device:sftp", "device:scp", "device:http", "device:https",
+    "application:erp", "application:db", "device:snmp",
   ]
-  
-  # Security and automation settings
-  auto_change_password          = true
-  auto_change_ssh_key           = true
-  can_edit_certificate_validity = true
-  certificate_validity          = "12h"
-  checkout_policy               = "complete_access_policy"
-  
-  # Additional metadata
-  tags = {
-    environment = "production"
-    role        = "administrator"
-    team        = "infrastructure"
-  }
+
+  auto_change_password = true
+  auto_change_ssh_key  = true
+  certificate_validity = "12h"
+  checkout_policy      = "complete_access_policy"
 }
 ```
 
@@ -232,115 +150,30 @@ Before creating a domain account:
 2. Ensure the domain is properly configured
 3. Set up any required authentication mechanisms
 
-### Service Configuration
+### Resource configuration
 
-**Common Services:**
+The provider exposes a `resources` attribute which accepts items in either of these formats:
 
-- **ssh**: Secure Shell protocol
-- **rdp**: Remote Desktop Protocol (Windows)
-- **vnc**: Virtual Network Computing
-- **telnet**: Telnet protocol (legacy)
-- **rlogin**: Remote login (legacy)
-- **sftp**: SSH File Transfer Protocol
-- **scp**: Secure Copy Protocol
-- **http**: HTTP protocol
-- **https**: HTTPS protocol (secure)
-- **database**: Database-specific protocols
-- **ldap**: LDAP protocol
-- **kerberos**: Kerberos authentication
-- **snmp**: Simple Network Management Protocol
+- `device:<service>` - device-scoped service, for example `device:ssh` or `device:rdp`.
+- `application:<name>` - application-level access controlled by the Bastion, for example `application:erp`.
 
-### Account Types by Use Case
+Examples: `"device:ssh"`, `"device:rdp"`, `"application:my_app"`.
 
-**Administrative Accounts:**
+### Account types by use case
+
+Use the `resources` attribute to grant device-level services and/or application access. Examples above show typical patterns for admins, service accounts, database and network accounts.
+
+### Security settings
+
+Password and SSH key management are supported by the resource via:
 
 ```terraform
-resource "wallix-bastion_domain_account" "admin" {
-  account_name = "administrator"
-  services     = ["ssh", "rdp", "https"]
-  
-  auto_change_password = true
-  certificate_validity = "8h"
-  checkout_policy      = "admin_access"
-}
+auto_change_password = true
+auto_change_ssh_key  = true
+certificate_validity = "24h"
 ```
 
-**Service Accounts:**
-
-```terraform
-resource "wallix-bastion_domain_account" "service" {
-  account_name = "service_account"
-  services     = ["ssh", "https"]
-  
-  auto_change_password = true
-  auto_change_ssh_key  = true
-  certificate_validity = "1h"
-}
-```
-
-**Database Accounts:**
-
-```terraform
-resource "wallix-bastion_domain_account" "db_admin" {
-  account_name = "db_administrator"
-  services     = ["ssh", "database", "https"]
-  
-  auto_change_password = true
-  checkout_policy      = "database_access"
-}
-```
-
-**Network Accounts:**
-
-```terraform
-resource "wallix-bastion_domain_account" "network" {
-  account_name = "network_admin"
-  services     = ["ssh", "telnet", "snmp", "https"]
-  
-  auto_change_ssh_key = true
-  checkout_policy     = "network_access"
-}
-```
-
-### Security Settings
-
-**Password Management:**
-
-```terraform
-auto_change_password = true   # Enable automatic password rotation
-```
-
-**SSH Key Management:**
-
-```terraform
-auto_change_ssh_key = true    # Enable automatic SSH key rotation
-```
-
-**Certificate Management:**
-
-```terraform
-can_edit_certificate_validity = true  # Allow certificate validity editing
-certificate_validity          = "24h" # Set certificate validity period
-```
-
-### Certificate Validity Periods
-
-**Common Validity Periods:**
-
-- `1h`: High security, short-lived access
-- `8h`: Business day access
-- `24h`: Daily renewal
-- `7d`: Weekly renewal
-- `30d`: Monthly renewal
-- `90d`: Quarterly renewal
-
-**Security Considerations:**
-
-- Shorter periods increase security
-- Longer periods reduce administrative overhead
-- Balance based on risk assessment
-
-### Checkout Policies
+### Checkout policies
 
 Assign checkout policies to control access:
 
@@ -348,137 +181,22 @@ Assign checkout policies to control access:
 checkout_policy = wallix-bastion_checkout_policy.restricted.policy_name
 ```
 
-### Integration with Credentials
+### Integration with credentials
 
-After creating a domain account, add credentials:
+After creating a domain account, add credentials with the `wallix-bastion_domain_account_credential` resource (see its documentation).
 
-```terraform
-resource "wallix-bastion_domain_account_credential" "admin_cred" {
-  device_id    = var.device_id
-  domain_id    = wallix-bastion_domain_account.admin.domain_id
-  account_name = wallix-bastion_domain_account.admin.account_name
-  type         = "password"
-  password     = var.admin_password
-}
-```
+### Best practices
 
-### Account Relationship Hierarchy
+1. Principle of Least Privilege: only grant required resources.
+2. Regular Rotation: enable auto-change for passwords/keys where possible.
+3. Short Certificate Validity: prefer shorter lifetimes for high-risk accounts.
+4. Checkout Policies: implement approval workflows for sensitive accounts.
+5. Account Naming: use descriptive and consistent names.
 
-```
-Domain → Domain Account → Domain Account Credential
-  ↓           ↓                     ↓
-CORP_AD → john.doe → password/ssh_key
-```
+### Automation and integration
 
-### Service-Specific Configurations
+When creating multiple accounts programmatically, use `for_each` or `count` and assign `resources` per environment as shown in examples above.
 
-**Web Server Administration:**
+### Monitoring and compliance
 
-```terraform
-resource "wallix-bastion_domain_account" "web_admin" {
-  services = ["ssh", "sftp", "http", "https"]
-  
-  # Web-specific settings
-  auto_change_password = true
-  certificate_validity = "12h"
-}
-```
-
-**Database Administration:**
-
-```terraform
-resource "wallix-bastion_domain_account" "dba" {
-  services = ["ssh", "database", "https"]
-  
-  # Database-specific settings
-  auto_change_password = true
-  checkout_policy      = "database_privileged"
-}
-```
-
-**Network Equipment Management:**
-
-```terraform
-resource "wallix-bastion_domain_account" "network_mgmt" {
-  services = ["ssh", "telnet", "snmp", "https"]
-  
-  # Network-specific settings
-  auto_change_ssh_key = true
-  certificate_validity = "4h"
-}
-```
-
-### Best Practices
-
-1. **Principle of Least Privilege**: Only assign necessary services
-2. **Regular Rotation**: Enable auto-change for passwords/keys
-3. **Short Certificate Validity**: Use shorter periods for high-security environments
-4. **Checkout Policies**: Implement approval workflows for sensitive accounts
-5. **Service Limitation**: Restrict services to what's actually needed
-6. **Account Naming**: Use descriptive, consistent naming conventions
-
-### Automation and Integration
-
-**Automated Account Management:**
-
-```terraform
-# Create accounts for each environment
-locals {
-  environments = ["dev", "staging", "prod"]
-}
-
-resource "wallix-bastion_domain_account" "env_admin" {
-  for_each = toset(local.environments)
-  
-  domain_id     = wallix-bastion_domain.env[each.key].id
-  account_name  = "${each.key}_administrator"
-  account_login = "${each.key}_admin"
-  description   = "Administrator for ${each.key} environment"
-  
-  services = ["ssh", "rdp", "https"]
-  
-  auto_change_password = each.key == "prod" ? true : false
-  certificate_validity = each.key == "prod" ? "4h" : "24h"
-}
-```
-
-### Monitoring and Compliance
-
-**Account Usage Tracking:**
-
-- Monitor service usage patterns
-- Track certificate issuance and renewal
-- Log password/key rotation events
-- Audit account access patterns
-
-**Compliance Reporting:**
-
-- Regular access reviews
-- Service permission audits
-- Certificate validity monitoring
-- Checkout policy compliance
-
-### Troubleshooting
-
-**Common Issues:**
-
-1. **Service Access Denied**: Check service configuration and permissions
-2. **Certificate Issues**: Verify validity periods and CA configuration
-3. **Checkout Failures**: Review checkout policy requirements
-4. **Credential Problems**: Validate associated credentials
-
-**Debugging Steps:**
-
-1. Verify domain configuration
-2. Check service permissions
-3. Validate checkout policies
-4. Test certificate configuration
-5. Review account credentials
-
-## Import
-
-Domain account can be imported using an id made up of `<domain_id>/<account_name>`, e.g.
-
-```shell
-terraform import wallix-bastion_domain_account.admin xxxxxxxx/administrator
-```
+Track certificate issuance, password/key rotations and checkout events using your monitoring and audit tooling.
