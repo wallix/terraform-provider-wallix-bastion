@@ -82,6 +82,7 @@ func Provider() *schema.Provider {
 			"wallix-bastion_authdomain_ad":         dataSourceAuthDomainAD(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
+			"wallix-bastion_apikey":                                     resourceAPIKey(),
 			"wallix-bastion_application":                                resourceApplication(),
 			"wallix-bastion_application_localdomain":                    resourceApplicationLocalDomain(),
 			"wallix-bastion_application_localdomain_account":            resourceApplicationLocalDomainAccount(),
