@@ -83,6 +83,7 @@ func Provider() *schema.Provider {
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"wallix-bastion_apikey":                                     resourceAPIKey(),
+			"wallix-bastion_apikey_v2":                                  resourceAPIKeyV2(),
 			"wallix-bastion_application":                                resourceApplication(),
 			"wallix-bastion_application_localdomain":                    resourceApplicationLocalDomain(),
 			"wallix-bastion_application_localdomain_account":            resourceApplicationLocalDomainAccount(),
