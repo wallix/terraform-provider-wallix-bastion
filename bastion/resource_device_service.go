@@ -107,17 +107,20 @@ func resourceDeviceServiceCreate(
 		return diag.FromErr(fmt.Errorf("service_name %s on device_id %s already exists",
 			d.Get("service_name").(string), d.Get("device_id").(string)))
 	}
-	err = addDeviceService(ctx, d, m)
+	id, err := addDeviceService(ctx, d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceDeviceService(ctx, d.Get("device_id").(string), d.Get("service_name").(string), m)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if !ex {
-		return diag.FromErr(fmt.Errorf("service_name %s on device_id %s not found after POST",
-			d.Get("service_name").(string), d.Get("device_id").(string)))
+	if id == "" {
+		// Fallback for Bastion versions that don't return the X-Object-Id header on creation.
+		id, ex, err = searchResourceDeviceService(ctx, d.Get("device_id").(string), d.Get("service_name").(string), m)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if !ex {
+			return diag.FromErr(fmt.Errorf("service_name %s on device_id %s not found after POST",
+				d.Get("service_name").(string), d.Get("device_id").(string)))
+		}
 	}
 	d.SetId(id)
 
@@ -238,21 +241,22 @@ func searchResourceDeviceService(
 
 func addDeviceService(
 	ctx context.Context, d *schema.ResourceData, m interface{},
-) error {
+) (string, error) {
 	c := m.(*Client)
-	json, err := prepareDeviceServiceJSON(d, true)
+	jsonData, err := prepareDeviceServiceJSON(d, true)
 	if err != nil {
-		return err
+		return "", err
 	}
-	body, code, err := c.newRequest(ctx, "/devices/"+d.Get("device_id").(string)+"/services/", http.MethodPost, json)
+	body, headers, code, err := c.newRequestWithHeaders(
+		ctx, "/devices/"+d.Get("device_id").(string)+"/services/", http.MethodPost, jsonData)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
+		return "", fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
-	return nil
+	return headers.Get("X-Object-Id"), nil
 }
 
 func updateDeviceService(

@@ -82,16 +82,19 @@ func resourceClusterCreate(
 	if ex {
 		return diag.FromErr(fmt.Errorf("cluster_name %s already exists", d.Get("cluster_name").(string)))
 	}
-	err = addCluster(ctx, d, m)
+	id, err := addCluster(ctx, d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceCluster(ctx, d.Get("cluster_name").(string), m)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if !ex {
-		return diag.FromErr(fmt.Errorf("cluster_name %s not found after POST", d.Get("cluster_name").(string)))
+	if id == "" {
+		// Fallback for Bastion versions that don't return the X-Object-Id header on creation.
+		id, ex, err = searchResourceCluster(ctx, d.Get("cluster_name").(string), m)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if !ex {
+			return diag.FromErr(fmt.Errorf("cluster_name %s not found after POST", d.Get("cluster_name").(string)))
+		}
 	}
 	d.SetId(id)
 
@@ -204,18 +207,18 @@ func searchResourceCluster(
 
 func addCluster(
 	ctx context.Context, d *schema.ResourceData, m interface{},
-) error {
+) (string, error) {
 	c := m.(*Client)
 	jsonData := prepareClusterJSON(d)
-	body, code, err := c.newRequest(ctx, "/clusters/", http.MethodPost, jsonData)
+	body, headers, code, err := c.newRequestWithHeaders(ctx, "/clusters/", http.MethodPost, jsonData)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
+		return "", fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
-	return nil
+	return headers.Get("X-Object-Id"), nil
 }
 
 func updateCluster(

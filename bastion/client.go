@@ -190,13 +190,23 @@ func (c *Client) addCSRFHeader(req *http.Request) {
 }
 
 func (c *Client) newRequest(ctx context.Context, uri, method string, jsonBody interface{}) (string, int, error) {
+	body, _, code, err := c.newRequestWithHeaders(ctx, uri, method, jsonBody)
+
+	return body, code, err
+}
+
+// newRequestWithHeaders behaves like newRequest but also returns the response headers,
+// e.g. to let callers read the X-Object-Id header the Bastion API sets on resource creation.
+func (c *Client) newRequestWithHeaders(
+	ctx context.Context, uri, method string, jsonBody interface{},
+) (string, http.Header, int, error) {
 	c.authMu.Lock()
 	needAuth := !c.isAuthenticated || !c.cookieValid()
 	c.authMu.Unlock()
 
 	if needAuth {
 		if err := c.authenticate(ctx); err != nil {
-			return "", http.StatusUnauthorized, fmt.Errorf("authentication failed: %w", err)
+			return "", nil, http.StatusUnauthorized, fmt.Errorf("authentication failed: %w", err)
 		}
 	}
 
@@ -213,14 +223,14 @@ func (c *Client) newRequest(ctx context.Context, uri, method string, jsonBody in
 	if jsonBody != nil {
 		buf := new(bytes.Buffer)
 		if err := json.NewEncoder(buf).Encode(jsonBody); err != nil {
-			return "", http.StatusInternalServerError, fmt.Errorf("encoding json: %w", err)
+			return "", nil, http.StatusInternalServerError, fmt.Errorf("encoding json: %w", err)
 		}
 		body = buf
 	}
 
 	req, err := http.NewRequestWithContext(ctx, method, urlStr, body)
 	if err != nil {
-		return "", http.StatusInternalServerError, fmt.Errorf("preparing http request: %w", err)
+		return "", nil, http.StatusInternalServerError, fmt.Errorf("preparing http request: %w", err)
 	}
 	req.Header.Set(contentTypeHeader, contentTypeJSON)
 	req.Header.Set(userAgentHeader, userAgentValue)
@@ -230,13 +240,13 @@ func (c *Client) newRequest(ctx context.Context, uri, method string, jsonBody in
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", http.StatusInternalServerError, fmt.Errorf("sending http request: %w", err)
+		return "", nil, http.StatusInternalServerError, fmt.Errorf("sending http request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", http.StatusInternalServerError, fmt.Errorf("reading http response: %w", err)
+		return "", nil, http.StatusInternalServerError, fmt.Errorf("reading http response: %w", err)
 	}
 
 	if resp.StatusCode == http.StatusUnauthorized {
@@ -246,7 +256,7 @@ func (c *Client) newRequest(ctx context.Context, uri, method string, jsonBody in
 		c.authMu.Unlock()
 
 		if err := c.authenticate(ctx); err != nil {
-			return "", http.StatusUnauthorized, fmt.Errorf("re-authentication failed: %w", err)
+			return "", nil, http.StatusUnauthorized, fmt.Errorf("re-authentication failed: %w", err)
 		}
 
 		// Recreate the body reader for the retry request
@@ -254,14 +264,14 @@ func (c *Client) newRequest(ctx context.Context, uri, method string, jsonBody in
 		if jsonBody != nil {
 			buf := new(bytes.Buffer)
 			if err := json.NewEncoder(buf).Encode(jsonBody); err != nil {
-				return "", http.StatusInternalServerError, fmt.Errorf("encoding json for retry: %w", err)
+				return "", nil, http.StatusInternalServerError, fmt.Errorf("encoding json for retry: %w", err)
 			}
 			retryBody = buf
 		}
 
 		req2, err := http.NewRequestWithContext(ctx, method, urlStr, retryBody)
 		if err != nil {
-			return "", http.StatusInternalServerError, fmt.Errorf("creating http request after reauth: %w", err)
+			return "", nil, http.StatusInternalServerError, fmt.Errorf("creating http request after reauth: %w", err)
 		}
 		req2.Header.Set(contentTypeHeader, contentTypeJSON)
 		req2.Header.Set(userAgentHeader, userAgentValue)
@@ -271,17 +281,17 @@ func (c *Client) newRequest(ctx context.Context, uri, method string, jsonBody in
 
 		resp2, err := client2.Do(req2)
 		if err != nil {
-			return "", http.StatusInternalServerError, fmt.Errorf("sending http request after reauth: %w", err)
+			return "", nil, http.StatusInternalServerError, fmt.Errorf("sending http request after reauth: %w", err)
 		}
 
 		defer resp2.Body.Close()
 
 		respBody, err = io.ReadAll(resp2.Body)
 		if err != nil {
-			return "", http.StatusInternalServerError, fmt.Errorf("reading http response after reauth: %w", err)
+			return "", nil, http.StatusInternalServerError, fmt.Errorf("reading http response after reauth: %w", err)
 		}
 
-		return string(respBody), resp2.StatusCode, nil
+		return string(respBody), resp2.Header, resp2.StatusCode, nil
 	}
 
 	// Handle 403 Forbidden - CSRF token invalid/expired, refresh token and retry
@@ -297,17 +307,17 @@ func (c *Client) newRequest(ctx context.Context, uri, method string, jsonBody in
 		// Retry the original request with the new CSRF token
 		resp2, err := c.getHTTPClient().Do(req)
 		if err != nil {
-			return "", http.StatusInternalServerError, fmt.Errorf("retrying request after CSRF refresh: %w", err)
+			return "", nil, http.StatusInternalServerError, fmt.Errorf("retrying request after CSRF refresh: %w", err)
 		}
 		defer resp2.Body.Close()
 
 		respBody, err = io.ReadAll(resp2.Body)
 		if err != nil {
-			return "", http.StatusInternalServerError, fmt.Errorf("reading http response after CSRF refresh: %w", err)
+			return "", nil, http.StatusInternalServerError, fmt.Errorf("reading http response after CSRF refresh: %w", err)
 		}
 
-		return string(respBody), resp2.StatusCode, nil
+		return string(respBody), resp2.Header, resp2.StatusCode, nil
 	}
 
-	return string(respBody), resp.StatusCode, nil
+	return string(respBody), resp.Header, resp.StatusCode, nil
 }

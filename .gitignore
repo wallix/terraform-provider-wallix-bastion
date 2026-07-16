@@ -27,3 +27,4 @@ terraform-provider-bastion
 *.swp
 WIP/
 test_doc/
+.claude/

@@ -177,16 +177,19 @@ func resourceApplicationCreate(
 	if ex {
 		return diag.FromErr(fmt.Errorf("application_name %s already exists", d.Get("application_name").(string)))
 	}
-	err = addApplication(ctx, d, m, c.bastionAPIVersion)
+	id, err := addApplication(ctx, d, m, c.bastionAPIVersion)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceApplication(ctx, d.Get("application_name").(string), m)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if !ex {
-		return diag.FromErr(fmt.Errorf("application_name %s not found after POST", d.Get("application_name").(string)))
+	if id == "" {
+		// Fallback for Bastion versions that don't return the X-Object-Id header on creation.
+		id, ex, err = searchResourceApplication(ctx, d.Get("application_name").(string), m)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if !ex {
+			return diag.FromErr(fmt.Errorf("application_name %s not found after POST", d.Get("application_name").(string)))
+		}
 	}
 	d.SetId(id)
 
@@ -299,21 +302,21 @@ func searchResourceApplication(
 
 func addApplication(
 	ctx context.Context, d *schema.ResourceData, m interface{}, apiVersion string,
-) error {
+) (string, error) {
 	c := m.(*Client)
 	jsonData, err := prepareApplicationJSON(d, true, apiVersion)
 	if err != nil {
-		return err
+		return "", err
 	}
-	body, code, err := c.newRequest(ctx, "/applications/", http.MethodPost, jsonData)
+	body, headers, code, err := c.newRequestWithHeaders(ctx, "/applications/", http.MethodPost, jsonData)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
+		return "", fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
-	return nil
+	return headers.Get("X-Object-Id"), nil
 }
 
 func updateApplication(
