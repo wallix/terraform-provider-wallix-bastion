@@ -12,7 +12,7 @@ Please note we have a [code of conduct](CODE_OF_CONDUCT.md), please follow it in
 
 Before you begin contributing, ensure you have the following installed:
 
-- [Go](https://golang.org/doc/install) version 1.22 or 1.23
+- [Go](https://golang.org/doc/install) version 1.25 or 1.26
 - [Terraform](https://www.terraform.io/downloads.html) version 1.0 or later
 - [Git](https://git-scm.com/downloads)
 - Access to a Wallix Bastion instance for testing (recommended)
@@ -541,7 +541,7 @@ examples/
 
    | Name | Description | Type | Required |
    |------|-------------|------|----------|
-   | ... | ... | ... | ... |
+   | ...  | ...         | ...  | ...      |
 
    ```text
    (End of README)
@@ -606,7 +606,7 @@ For security-related issues, please follow our [Security Policy](SECURITY.md) ra
    # Check Go version
    go version
    
-   # Update if needed (requires Go 1.22 or 1.23)
+   # Update if needed (requires Go 1.25 or 1.26)
    ```
 
 2. **Dependency Issues**
