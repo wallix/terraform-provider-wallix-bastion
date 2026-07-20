@@ -405,12 +405,15 @@ func fillDeviceLocalDomainAccount(d *schema.ResourceData, jsonData jsonDeviceLoc
 	if tfErr := d.Set("certificate_validity", jsonData.CertificateValidity); tfErr != nil {
 		panic(tfErr)
 	}
-	credentials := make([]map[string]interface{}, len(*jsonData.Credentials))
-	for i, v := range *jsonData.Credentials {
-		credentials[i] = map[string]interface{}{
-			"id":         v.ID,
-			"public_key": v.PublicKey,
-			"type":       v.Type,
+	credentials := make([]map[string]interface{}, 0)
+	if jsonData.Credentials != nil {
+		credentials = make([]map[string]interface{}, len(*jsonData.Credentials))
+		for i, v := range *jsonData.Credentials {
+			credentials[i] = map[string]interface{}{
+				"id":         v.ID,
+				"public_key": v.PublicKey,
+				"type":       v.Type,
+			}
 		}
 	}
 	if tfErr := d.Set("credentials", credentials); tfErr != nil {

@@ -24,6 +24,11 @@ func TestAccResourceDeviceService_basic(t *testing.T) {
 			},
 			{
 				Config: testAccResourceDeviceServiceUpdate(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						resourceName,
+						"port", "2242"),
+				),
 			},
 			{
 				ResourceName: resourceName,
