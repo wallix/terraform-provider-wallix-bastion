@@ -15,7 +15,7 @@ The Terraform Wallix Bastion provider allows you to manage Wallix Bastion resour
 ## Requirements
 
 - Visit the official [Terraform website](https://www.terraform.io/) for downloads
-- [Go](https://golang.org/doc/install) `v1.22` or `v1.23` (for development)
+- [Go](https://golang.org/doc/install) `v1.25` or `v1.26` (for development)
 
 ### From Terraform Registry
 
@@ -70,7 +70,7 @@ terraform {
 
 For basic building and testing:
 
-- **Go** 1.22 to 1.24
+- **Go** 1.25 to 1.26
 - **Make**
 - **Git**
 
@@ -380,9 +380,9 @@ make setup-check
 ## Version Compatibility
 
 | Provider Version | Terraform Version | Go Version | Wallix Bastion API |
-|------------------|-------------------|------------|-------------------|
-| >= 0.14.0        | >= 1.0           | 1.22-1.24  | v3.8, v3.12       |
-| 0.13.x           | >= 0.14          | 1.19-1.21  | v3.3, v3.6        |
+|------------------|-------------------|------------|------------------- |
+| >= 0.14.0        | >= 1.0            | 1.22-1.24  | v3.8, v3.12        |
+| 0.13.x           | >= 0.14           | 1.19-1.21  | v3.3, v3.6         |
 
 ## License
 
