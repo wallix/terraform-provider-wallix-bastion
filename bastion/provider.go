@@ -95,6 +95,7 @@ func Provider() *schema.Provider {
 			"wallix-bastion_authdomain_saml":                            resourceAuthDomainSAML(),
 			"wallix-bastion_authorization":                              resourceAuthorization(),
 			"wallix-bastion_checkout_policy":                            resourceCheckoutPolicy(),
+			"wallix-bastion_certificate_authority":                      resourceCertificateAuthority(),
 			"wallix-bastion_cluster":                                    resourceCluster(),
 			"wallix-bastion_config_x509":                                resourceConfigX509(),
 			"wallix-bastion_connection_message":                         resourceConnectionMessage(),
