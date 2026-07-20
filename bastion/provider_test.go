@@ -43,7 +43,8 @@ func TestProvider(t *testing.T) {
 func TestProvider_impl(t *testing.T) {
 	t.Parallel()
 
-	var _ *schema.Provider = bastion.Provider()
+	// Explicit type is the point of this compile-time assertion.
+	var _ *schema.Provider = bastion.Provider() //nolint:staticcheck
 }
 
 func testAccPreCheck(t *testing.T) {
