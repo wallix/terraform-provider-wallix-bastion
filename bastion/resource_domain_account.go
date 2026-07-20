@@ -332,8 +332,8 @@ func prepareDomainAccountJSON(d *schema.ResourceData) (jsonDomainAccount, error)
 		Description:         d.Get("description").(string),
 	}
 
-	if d.HasChange("resources") {
-		listResources := d.Get("resources").(*schema.Set).List()
+	listResources := d.Get("resources").(*schema.Set).List()
+	if len(listResources) > 0 {
 		resources := make([]string, len(listResources))
 		for i, v := range listResources {
 			vSplt := strings.Split(v.(string), ":")
@@ -392,12 +392,15 @@ func fillDomainAccount(d *schema.ResourceData, jsonData jsonDomainAccount) {
 	if tfErr := d.Set("certificate_validity", jsonData.CertificateValidity); tfErr != nil {
 		panic(tfErr)
 	}
-	credentials := make([]map[string]interface{}, len(*jsonData.Credentials))
-	for i, v := range *jsonData.Credentials {
-		credentials[i] = map[string]interface{}{
-			"id":         v.ID,
-			"public_key": v.PublicKey,
-			"type":       v.Type,
+	credentials := make([]map[string]interface{}, 0)
+	if jsonData.Credentials != nil {
+		credentials = make([]map[string]interface{}, len(*jsonData.Credentials))
+		for i, v := range *jsonData.Credentials {
+			credentials[i] = map[string]interface{}{
+				"id":         v.ID,
+				"public_key": v.PublicKey,
+				"type":       v.Type,
+			}
 		}
 	}
 	if tfErr := d.Set("credentials", credentials); tfErr != nil {
@@ -409,7 +412,13 @@ func fillDomainAccount(d *schema.ResourceData, jsonData jsonDomainAccount) {
 	if tfErr := d.Set("domain_password_change", jsonData.DomainPasswordChange); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("resources", jsonData.Resources); tfErr != nil {
-		panic(tfErr)
+	if jsonData.Resources == nil {
+		if tfErr := d.Set("resources", []string{}); tfErr != nil {
+			panic(tfErr)
+		}
+	} else {
+		if tfErr := d.Set("resources", *jsonData.Resources); tfErr != nil {
+			panic(tfErr)
+		}
 	}
 }
