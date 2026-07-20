@@ -21,6 +21,15 @@ func TestAccResourceApplication_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(
 						"wallix-bastion_application.testacc_Appli",
 						"id"),
+					resource.TestCheckResourceAttr(
+						"wallix-bastion_application.testacc_Appli",
+						"tags.#", "1"),
+					resource.TestCheckResourceAttr(
+						"wallix-bastion_application.testacc_Appli",
+						"tags.0.key", "testkey"),
+					resource.TestCheckResourceAttr(
+						"wallix-bastion_application.testacc_Appli",
+						"tags.0.value", "testvalue"),
 				),
 			},
 			{
@@ -150,6 +159,14 @@ resource "wallix-bastion_application" "testacc_Appli" {
     working_dir = "directory"
   }
   target = wallix-bastion_cluster.testacc_App.cluster_name
+  tags {
+    key   = "testkey"
+    value = "testvalue"
+  }
+  tags {
+    key   = "testkey2"
+    value = "testvalue2"
+  }
 }
 `
 }
