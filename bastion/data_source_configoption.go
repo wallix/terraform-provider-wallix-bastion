@@ -90,11 +90,11 @@ func readConfigoption(
 	var result jsonConfigOptions
 	var params string
 	if optionsList := d.Get("options_list").(*schema.Set).List(); len(optionsList) > 0 {
-		params += "?options="
-		for _, v := range optionsList {
-			params += v.(string) + ","
+		options := make([]string, len(optionsList))
+		for i, v := range optionsList {
+			options[i] = v.(string)
 		}
-		params = strings.TrimSuffix(params, ",")
+		params = "?options=" + strings.Join(options, ",")
 	}
 	body, code, err := c.newRequest(ctx, "/configoptions/"+d.Get("config_id").(string)+params, http.MethodGet, nil)
 	if err != nil {

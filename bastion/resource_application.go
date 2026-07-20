@@ -553,33 +553,9 @@ func fillApplication(d *schema.ResourceData, jsonData jsonApplication) {
 	if tfErr := d.Set("category", category); tfErr != nil {
 		panic(tfErr)
 	}
-	if jsonData.ApplicationURL != nil {
-		if tfErr := d.Set("application_url", *jsonData.ApplicationURL); tfErr != nil {
-			panic(tfErr)
-		}
-	} else {
-		if tfErr := d.Set("application_url", ""); tfErr != nil {
-			panic(tfErr)
-		}
-	}
-	if jsonData.Browser != nil {
-		if tfErr := d.Set("browser", *jsonData.Browser); tfErr != nil {
-			panic(tfErr)
-		}
-	} else {
-		if tfErr := d.Set("browser", ""); tfErr != nil {
-			panic(tfErr)
-		}
-	}
-	if jsonData.BrowserVersion != nil {
-		if tfErr := d.Set("browser_version", *jsonData.BrowserVersion); tfErr != nil {
-			panic(tfErr)
-		}
-	} else {
-		if tfErr := d.Set("browser_version", ""); tfErr != nil {
-			panic(tfErr)
-		}
-	}
+	setApplicationOptionalString(d, "application_url", jsonData.ApplicationURL)
+	setApplicationOptionalString(d, "browser", jsonData.Browser)
+	setApplicationOptionalString(d, "browser_version", jsonData.BrowserVersion)
 	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
@@ -589,10 +565,36 @@ func fillApplication(d *schema.ResourceData, jsonData jsonApplication) {
 	if tfErr := d.Set("parameters", jsonData.Parameters); tfErr != nil {
 		panic(tfErr)
 	}
+	if tfErr := d.Set("paths", fillApplicationPaths(jsonData.Paths)); tfErr != nil {
+		panic(tfErr)
+	}
+	setApplicationOptionalString(d, "target", jsonData.Target)
+	if tfErr := d.Set("local_domains", fillApplicationLocalDomains(jsonData.LocalDomains)); tfErr != nil {
+		panic(tfErr)
+	}
+	if tfErr := d.Set("tags", fillApplicationTags(jsonData.Tags)); tfErr != nil {
+		panic(tfErr)
+	}
+}
+
+// setApplicationOptionalString sets key to the dereferenced value, or "" when value is nil -
+// shared by the four *string fields (application_url/browser/browser_version/target) that follow
+// the same "unset means empty" convention.
+func setApplicationOptionalString(d *schema.ResourceData, key string, value *string) {
+	v := ""
+	if value != nil {
+		v = *value
+	}
+	if tfErr := d.Set(key, v); tfErr != nil {
+		panic(tfErr)
+	}
+}
+
+func fillApplicationPaths(jsonPaths *[]jsonApplicationPath) []map[string]interface{} {
 	paths := make([]map[string]interface{}, 0)
-	if jsonData.Paths != nil {
-		paths = make([]map[string]interface{}, len(*jsonData.Paths))
-		for i, v := range *jsonData.Paths {
+	if jsonPaths != nil {
+		paths = make([]map[string]interface{}, len(*jsonPaths))
+		for i, v := range *jsonPaths {
 			paths[i] = map[string]interface{}{
 				"target":      v.Target,
 				"program":     v.Program,
@@ -600,22 +602,15 @@ func fillApplication(d *schema.ResourceData, jsonData jsonApplication) {
 			}
 		}
 	}
-	if tfErr := d.Set("paths", paths); tfErr != nil {
-		panic(tfErr)
-	}
-	if jsonData.Target != nil {
-		if tfErr := d.Set("target", *jsonData.Target); tfErr != nil {
-			panic(tfErr)
-		}
-	} else {
-		if tfErr := d.Set("target", ""); tfErr != nil {
-			panic(tfErr)
-		}
-	}
+
+	return paths
+}
+
+func fillApplicationLocalDomains(jsonLocalDomains *[]jsonApplicationLocalDomain) []map[string]interface{} {
 	localDomains := make([]map[string]interface{}, 0)
-	if jsonData.LocalDomains != nil {
-		localDomains = make([]map[string]interface{}, len(*jsonData.LocalDomains))
-		for i, v := range *jsonData.LocalDomains {
+	if jsonLocalDomains != nil {
+		localDomains = make([]map[string]interface{}, len(*jsonLocalDomains))
+		for i, v := range *jsonLocalDomains {
 			localDomains[i] = map[string]interface{}{
 				"id":                     v.ID,
 				"admin_account":          v.AdminAccount,
@@ -629,28 +624,21 @@ func fillApplication(d *schema.ResourceData, jsonData jsonApplication) {
 			localDomains[i]["password_change_plugin_parameters"] = string(pluginParameters)
 		}
 	}
-	if tfErr := d.Set("local_domains", localDomains); tfErr != nil {
-		panic(tfErr)
-	}
-	if jsonData.Tags != nil && len(*jsonData.Tags) > 0 {
-		apiTags := *jsonData.Tags
 
-		stateTags := make([]interface{}, len(apiTags))
+	return localDomains
+}
 
-		for i, tagMap := range apiTags {
-			stateMap := map[string]interface{}{
+func fillApplicationTags(jsonTags *[]map[string]string) []interface{} {
+	stateTags := make([]interface{}, 0)
+	if jsonTags != nil {
+		stateTags = make([]interface{}, len(*jsonTags))
+		for i, tagMap := range *jsonTags {
+			stateTags[i] = map[string]interface{}{
 				"key":   tagMap["key"],
 				"value": tagMap["value"],
 			}
-			stateTags[i] = stateMap
-		}
-
-		if tfErr := d.Set("tags", stateTags); tfErr != nil {
-			panic(tfErr)
-		}
-	} else {
-		if tfErr := d.Set("tags", make([]interface{}, 0)); tfErr != nil {
-			panic(tfErr)
 		}
 	}
+
+	return stateTags
 }

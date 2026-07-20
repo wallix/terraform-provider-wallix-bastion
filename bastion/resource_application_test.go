@@ -23,7 +23,7 @@ func TestAccResourceApplication_basic(t *testing.T) {
 						"id"),
 					resource.TestCheckResourceAttr(
 						"wallix-bastion_application.testacc_Appli",
-						"tags.#", "1"),
+						"tags.#", "2"),
 					resource.TestCheckResourceAttr(
 						"wallix-bastion_application.testacc_Appli",
 						"tags.0.key", "testkey"),
@@ -236,6 +236,14 @@ resource "wallix-bastion_application" "testacc_Appli" {
   target         = wallix-bastion_cluster.testacc_App.cluster_name
   parameters     = "app_parameters"
   global_domains = [wallix-bastion_domain.testacc_App.domain_name]
+  tags {
+    key   = "testkey"
+    value = "testvalue"
+  }
+  tags {
+    key   = "testkey2"
+    value = "testvalue2"
+  }
 }
 `
 }

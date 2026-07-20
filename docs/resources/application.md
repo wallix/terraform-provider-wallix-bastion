@@ -65,6 +65,7 @@ resource "wallix-bastion_application" "jumphost_app" {
 - `global_domains` (Set of String)
 - `parameters` (String)
 - `paths` (Block Set) (see [below for nested schema](#nestedblock--paths))
+- `tags` (Block Set) (see [below for nested schema](#nestedblock--tags))
 - `target` (String)
 
 ### Read-Only
@@ -84,6 +85,15 @@ Required:
 Optional:
 
 - `working_dir` (String)
+
+<a id="nestedblock--tags"></a>
+
+### Nested Schema for `tags`
+
+Required:
+
+- `key` (String)
+- `value` (String)
 
 <a id="nestedatt--local_domains"></a>
 
