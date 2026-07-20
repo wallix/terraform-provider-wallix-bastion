@@ -108,19 +108,22 @@ func resourceDomainAccountCredentialCreate(
 		return diag.FromErr(fmt.Errorf("credential type %s on account_id %s, domain_id %s already exists",
 			d.Get("type").(string), d.Get("account_id").(string), d.Get("domain_id").(string)))
 	}
-	err = addDomainAccountCredential(ctx, d, m)
+	id, err := addDomainAccountCredential(ctx, d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceDomainAccountCredential(ctx,
-		d.Get("domain_id").(string), d.Get("account_id").(string), d.Get("type").(string), m)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if !ex {
-		return diag.FromErr(fmt.Errorf(
-			"credential type %s on account_id %s, domain_id %s not found after POST",
-			d.Get("type").(string), d.Get("account_id").(string), d.Get("domain_id").(string)))
+	if id == "" {
+		// Fallback for Bastion versions that don't return the X-Object-Id header on creation.
+		id, ex, err = searchResourceDomainAccountCredential(ctx,
+			d.Get("domain_id").(string), d.Get("account_id").(string), d.Get("type").(string), m)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if !ex {
+			return diag.FromErr(fmt.Errorf(
+				"credential type %s on account_id %s, domain_id %s not found after POST",
+				d.Get("type").(string), d.Get("account_id").(string), d.Get("domain_id").(string)))
+		}
 	}
 	d.SetId(id)
 
@@ -249,20 +252,21 @@ func searchResourceDomainAccountCredential(
 
 func addDomainAccountCredential(
 	ctx context.Context, d *schema.ResourceData, m interface{},
-) error {
+) (string, error) {
 	c := m.(*Client)
 	propagate := d.Get("propagate_credential_change").(bool)
 	jsonData := prepareDomainAccountCredentialJSON(d, propagate, true)
 
-	body, code, err := c.newRequest(ctx,
+	body, headers, code, err := c.newRequestWithHeaders(ctx,
 		"/domains/"+d.Get("domain_id").(string)+"/accounts/"+d.Get("account_id").(string)+"/credentials/",
 		http.MethodPost, jsonData)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
+		return "", fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
+	id := headers.Get("X-Object-Id")
 
 	if propagate {
 		accountID := d.Get("account_id")
@@ -272,14 +276,14 @@ func addDomainAccountCredential(
 			fmt.Sprintf("/accountchangepassword/%s/password", accountID),
 			http.MethodPut, jsonDataPropagate)
 		if err != nil {
-			return err
+			return "", err
 		}
 		if code != http.StatusOK && code != http.StatusNoContent {
-			return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
+			return "", fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 		}
 	}
 
-	return nil
+	return id, nil
 }
 
 func updateDomainAccountCredential(
