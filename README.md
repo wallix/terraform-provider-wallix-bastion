@@ -350,7 +350,6 @@ make release-major  # Prepare major release (X+1.0.0)
 
 - [Provider Documentation](https://registry.terraform.io/providers/wallix/wallix-bastion/latest/docs)
 - [Documentation Generation Guide](./DOCUMENTATION.md) - How to generate and verify documentation
-- [API Documentation](https://docs.wallix.com/)
 - [Examples](./examples/)
 
 ## Contributing
