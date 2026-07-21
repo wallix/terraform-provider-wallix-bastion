@@ -15,15 +15,15 @@ assignees: ''
 - [ ] New Data Source (terraform data "wallix-bastion_...")
 - [ ] Enhancement to existing resource/data source
 
-### Wallix Bastion Feature
+### WALLIX Bastion Feature
 
-**What Wallix Bastion feature/API should this resource manage?**
+**What WALLIX Bastion feature/API should this resource manage?**
 
-Describe the specific Wallix Bastion functionality this would expose.
+Describe the specific WALLIX Bastion functionality this would expose.
 
 ### API Endpoints
 
-**Which Wallix Bastion API endpoints would be used?**
+**Which WALLIX Bastion API endpoints would be used?**
 
 - `GET /api/endpoint` - for reading
 - `POST /api/endpoint` - for creation

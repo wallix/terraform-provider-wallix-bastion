@@ -17,7 +17,7 @@ A clear and concise description of the compatibility issue.
 
 - **Terraform version**: [e.g. v1.5.0]
 - **Provider version**: [e.g. v1.0.0]
-- **Wallix Bastion version**: [e.g. v3.12.0]
+- **WALLIX Bastion version**: [e.g. v3.12.0]
 - **Operating System**: [e.g. Ubuntu 22.04, Windows 11, macOS 13]
 - **Go version** (if building from source): [e.g. 1.21.0]
 

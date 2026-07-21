@@ -378,7 +378,7 @@ make setup-check
 
 ## Version Compatibility
 
-| Provider Version | Terraform Version | Go Version | Wallix Bastion API |
+| Provider Version | Terraform Version | Go Version | WALLIX Bastion API |
 |------------------|-------------------|------------|------------------- |
 | >= 0.15.0        | >= 1.0            | 1.25-1.26  | v3.8, v3.12        |
 | 0.14.x           | >= 1.0            | 1.22-1.24  | v3.8, v3.12        |

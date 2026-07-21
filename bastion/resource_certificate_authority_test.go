@@ -64,8 +64,8 @@ resource "tls_self_signed_cert" "testacc_CertificateAuthority" {
   private_key_pem = tls_private_key.testacc_CertificateAuthority.private_key_pem
 
   subject {
-    common_name  = "Wallix Bastion Test CA"
-    organization = "Wallix Test"
+    common_name  = "WALLIX Bastion Test CA"
+    organization = "WALLIX Test"
   }
 
   validity_period_hours = 8760
@@ -99,8 +99,8 @@ resource "tls_self_signed_cert" "testacc_CertificateAuthority" {
   private_key_pem = tls_private_key.testacc_CertificateAuthority.private_key_pem
 
   subject {
-    common_name  = "Wallix Bastion Test CA"
-    organization = "Wallix Test"
+    common_name  = "WALLIX Bastion Test CA"
+    organization = "WALLIX Test"
   }
 
   validity_period_hours = 8760

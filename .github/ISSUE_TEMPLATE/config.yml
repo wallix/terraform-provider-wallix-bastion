@@ -3,9 +3,9 @@ contact_links:
   - name: 🔒 Security Vulnerability (Private)
     url: https://github.com/wallix/terraform-provider-wallix-bastion/security/advisories/new
     about: Report security vulnerabilities privately
-  - name: 📚 Wallix Bastion Documentation
+  - name: 📚 WALLIX Bastion Documentation
     url: https://docs.wallix.com/
-    about: Official Wallix Bastion documentation
+    about: Official WALLIX Bastion documentation
   - name: 🏗️ Terraform Provider Development
     url: https://developer.hashicorp.com/terraform/plugin
     about: Terraform Provider development documentation

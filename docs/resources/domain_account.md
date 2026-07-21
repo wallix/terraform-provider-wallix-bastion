@@ -130,11 +130,9 @@ resource "wallix-bastion_domain_account" "complete" {
 - `domain_password_change` (Boolean)
 - `id` (String) The ID of this resource.
 
-<!-- markdownlint-disable MD033 -->
 <a id="nestedatt--credentials"></a>
-<!-- markdownlint-enable MD033 -->
 
-#### Nested Schema for `credentials`
+### Nested Schema for `credentials`
 
 Read-Only:
 

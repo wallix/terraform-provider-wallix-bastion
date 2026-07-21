@@ -169,7 +169,7 @@ We welcome several types of contributions:
 
 #### Test Environment Setup
 
-Before running tests, you need to configure your test environment with access to a Wallix Bastion instance.
+Before running tests, you need to configure your test environment with access to a WALLIX Bastion instance.
 
 ##### 1. Create Environment File
 

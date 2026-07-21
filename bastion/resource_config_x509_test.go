@@ -113,8 +113,8 @@ resource "tls_self_signed_cert" "ca" {
   private_key_pem = tls_private_key.ca.private_key_pem
 
   subject {
-    common_name  = "Wallix Bastion Test CA"
-    organization = "Wallix Test"
+    common_name  = "WALLIX Bastion Test CA"
+    organization = "WALLIX Test"
     country      = "FR"
   }
 
@@ -142,7 +142,7 @@ resource "tls_cert_request" "server" {
 
   subject {
     common_name  = "%s"
-    organization = "Wallix Test"
+    organization = "WALLIX Test"
     country      = "FR"
   }
 
@@ -172,7 +172,7 @@ resource "tls_locally_signed_cert" "server" {
   ]
 }
 
-# Wallix Bastion X509 configuration
+# WALLIX Bastion X509 configuration
 resource "wallix-bastion_config_x509" "test" {
   ca_certificate     = tls_self_signed_cert.ca.cert_pem
   server_public_key  = tls_locally_signed_cert.server.cert_pem
@@ -198,8 +198,8 @@ resource "tls_self_signed_cert" "ca_updated" {
   private_key_pem = tls_private_key.ca_updated.private_key_pem
 
   subject {
-    common_name  = "Wallix Bastion Updated Test CA"
-    organization = "Wallix Test Updated"
+    common_name  = "WALLIX Bastion Updated Test CA"
+    organization = "WALLIX Test Updated"
     country      = "FR"
   }
 
@@ -227,7 +227,7 @@ resource "tls_cert_request" "server_updated" {
 
   subject {
     common_name  = "%s"
-    organization = "Wallix Test Updated"
+    organization = "WALLIX Test Updated"
     country      = "FR"
   }
 
@@ -257,7 +257,7 @@ resource "tls_locally_signed_cert" "server_updated" {
   ]
 }
 
-# Updated Wallix Bastion X509 configuration
+# Updated WALLIX Bastion X509 configuration
 resource "wallix-bastion_config_x509" "test" {
   ca_certificate     = tls_self_signed_cert.ca_updated.cert_pem
   server_public_key  = tls_locally_signed_cert.server_updated.cert_pem
@@ -283,8 +283,8 @@ resource "tls_self_signed_cert" "ca" {
   private_key_pem = tls_private_key.ca.private_key_pem
 
   subject {
-    common_name  = "Wallix Bastion Test CA"
-    organization = "Wallix Test"
+    common_name  = "WALLIX Bastion Test CA"
+    organization = "WALLIX Test"
     country      = "FR"
   }
 
@@ -312,7 +312,7 @@ resource "tls_cert_request" "server" {
 
   subject {
     common_name  = "%s"
-    organization = "Wallix Test"
+    organization = "WALLIX Test"
     country      = "FR"
   }
 
@@ -342,7 +342,7 @@ resource "tls_locally_signed_cert" "server" {
   ]
 }
 
-# Wallix Bastion X509 configuration (disabled)
+# WALLIX Bastion X509 configuration (disabled)
 resource "wallix-bastion_config_x509" "test" {
   ca_certificate     = tls_self_signed_cert.ca.cert_pem
   server_public_key  = tls_locally_signed_cert.server.cert_pem
@@ -368,8 +368,8 @@ resource "tls_self_signed_cert" "ca" {
   private_key_pem = tls_private_key.ca.private_key_pem
 
   subject {
-    common_name  = "Wallix Bastion Test CA"
-    organization = "Wallix Test"
+    common_name  = "WALLIX Bastion Test CA"
+    organization = "WALLIX Test"
     country      = "FR"
   }
 
@@ -397,7 +397,7 @@ resource "tls_cert_request" "server" {
 
   subject {
     common_name  = "%s"
-    organization = "Wallix Test"
+    organization = "WALLIX Test"
     country      = "FR"
   }
 
@@ -427,7 +427,7 @@ resource "tls_locally_signed_cert" "server" {
   ]
 }
 
-# Wallix Bastion X509 configuration (enabled)
+# WALLIX Bastion X509 configuration (enabled)
 resource "wallix-bastion_config_x509" "test" {
   ca_certificate     = tls_self_signed_cert.ca.cert_pem
   server_public_key  = tls_locally_signed_cert.server.cert_pem

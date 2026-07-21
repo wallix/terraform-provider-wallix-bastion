@@ -44,7 +44,7 @@ Describe what is no longer working.
 - **Provider version (working)**: [e.g. v1.0.0]
 - **Provider version (broken)**: [e.g. v1.1.0]
 - **Terraform version**: [e.g. v1.5.0]
-- **Wallix Bastion version**: [e.g. v3.12.0]
+- **WALLIX Bastion version**: [e.g. v3.12.0]
 
 ### Expected Behavior
 

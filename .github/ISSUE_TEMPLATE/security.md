@@ -49,7 +49,7 @@ What could an attacker do with this vulnerability?
 
 - **Provider version**: [e.g. v1.0.0]
 - **Terraform version**: [e.g. v1.5.0]
-- **Wallix Bastion version**: [e.g. v3.12.0]
+- **WALLIX Bastion version**: [e.g. v3.12.0]
 
 ### Suggested Fix
 
