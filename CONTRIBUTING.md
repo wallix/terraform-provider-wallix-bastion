@@ -722,7 +722,6 @@ make dev-check
 
 - [Terraform Plugin Development](https://developer.hashicorp.com/terraform/plugin)
 - [Terraform Provider Framework](https://developer.hashicorp.com/terraform/plugin/framework)
-- [WALLIX Bastion API Documentation](https://docs.wallix.com/)
 
 ### Learning Resources
 
