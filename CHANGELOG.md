@@ -1,5 +1,38 @@
 # changelog
 
+## 0.15.0 (July 21, 2026)
+
+BREAKING CHANGES:
+
+- **provider**: TLS certificate verification is now enabled by default (`insecure_skip_verify` now defaults to `false`). Users connecting to a Bastion with a self-signed certificate must explicitly set `insecure_skip_verify = true` or the `WALLIX_INSECURE_SKIP_VERIFY` environment variable.
+
+FEATURES:
+
+- add `wallix-bastion_apikey` resource
+- add `wallix-bastion_apikey_v2` resource (requires API v3.12+; adds a required `profile` argument on top of `wallix-bastion_apikey`)
+- add `wallix-bastion_application_localdomain_account_credential` resource (only `type = "password"` is supported by the API for this endpoint)
+- add `wallix-bastion_certificate_authority` resource (requires API v3.12+)
+- add `wallix-bastion_passwordchangepolicy` resource
+- add `wallix-bastion_notification` resource
+- **provider**: add `session_timeout`, `csrf_enabled`, and `insecure_skip_verify` arguments
+- **client**: cookie-based session authentication, avoiding re-authentication on every API request
+- **client**: CSRF token protection, with automatic extraction from responses and refresh on expiry
+
+ENHANCEMENTS:
+
+- reduced resource creation time across almost every resource: creation now reads the new resource's ID from the API's `X-Object-Id` response header instead of an extra search request afterward, falling back to the search only against older Bastion versions that don't return the header
+- **resource/wallix-bastion_device**, **resource/wallix-bastion_application**: add `tags` argument (repeatable `key`/`value` blocks)
+- **resource/wallix-bastion_application**: add `web_application` category, replacing the `jumphost` category deprecated on API v3.12+
+- dependency updates addressing multiple security advisories in `golang.org/x/net`, `golang.org/x/crypto`, `google.golang.org/grpc`, and `github.com/cloudflare/circl`
+- **ci**: migrated `golangci-lint` configuration to the v2 schema and updated CI Go versions to 1.25/1.26
+
+BUG FIXES:
+
+- **resource/wallix-bastion_domain_account**: fixed a bug where changing the domain account without also updating its associated resources caused those resources to be deleted
+- **resource/wallix-bastion_application**: fixed a regression in the web application category where the default category wasn't applied when left unset
+- **resource/wallix-bastion_device_localdomain_account**: fixed a potential panic when the API omits the `credentials` field from a read response
+- **client**: fixed a race condition on session state checks, a bug where POST/PUT requests could fail on re-authentication due to request body reuse, and defensive error handling around URL parsing and cookie jar creation
+
 ## 0.14.8 (October 10, 2025)
 
 BUG FIXES:

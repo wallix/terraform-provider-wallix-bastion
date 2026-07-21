@@ -24,16 +24,24 @@ func TestAccResourceApplication_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"wallix-bastion_application.testacc_Appli",
 						"tags.#", "2"),
-					resource.TestCheckResourceAttr(
+					resource.TestCheckTypeSetElemNestedAttrs(
 						"wallix-bastion_application.testacc_Appli",
-						"tags.0.key", "testkey"),
-					resource.TestCheckResourceAttr(
-						"wallix-bastion_application.testacc_Appli",
-						"tags.0.value", "testvalue"),
+						"tags.*", map[string]string{
+							"key":   "testkey",
+							"value": "testvalue",
+						}),
 				),
 			},
 			{
 				Config: testAccResourceApplicationUpdate(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"wallix-bastion_application.testacc_Appli",
+						"parameters", "app_parameters"),
+					resource.TestCheckResourceAttr(
+						"wallix-bastion_application.testacc_Appli",
+						"global_domains.#", "1"),
+				),
 			},
 			{
 				ResourceName:  "wallix-bastion_application.testacc_Appli",

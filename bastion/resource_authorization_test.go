@@ -28,6 +28,23 @@ func TestAccResourceAuthorization_basic(t *testing.T) {
 				},
 				{
 					Config: testAccResourceAuthorizationUpdate(),
+					Check: resource.ComposeTestCheckFunc(
+						resource.TestCheckResourceAttr(
+							"wallix-bastion_authorization.testacc_Authorization",
+							"authorize_password_retrieval", "true"),
+						resource.TestCheckResourceAttr(
+							"wallix-bastion_authorization.testacc_Authorization",
+							"authorize_session_sharing", "true"),
+						resource.TestCheckResourceAttr(
+							"wallix-bastion_authorization.testacc_Authorization",
+							"session_sharing_mode", "view_control"),
+						resource.TestCheckResourceAttr(
+							"wallix-bastion_authorization.testacc_Authorization",
+							"approval_required", "true"),
+						resource.TestCheckResourceAttr(
+							"wallix-bastion_authorization.testacc_Authorization",
+							"active_quorum", "2"),
+					),
 				},
 				{
 					ResourceName:  "wallix-bastion_authorization.testacc_Authorization",
@@ -71,6 +88,11 @@ func TestAccResourceAuthorization_sessionSharing(t *testing.T) {
 							"wallix-bastion_authorization.testacc_Authorization_sharing",
 							"session_sharing_mode", "view_control"),
 					),
+				},
+				{
+					ResourceName:  "wallix-bastion_authorization.testacc_Authorization_sharing",
+					ImportState:   true,
+					ImportStateId: "testacc_Authorization_sharing",
 				},
 			},
 			PreventPostDestroyRefresh: true,

@@ -21,6 +21,17 @@ func TestAccResourceTimeframe_basic(t *testing.T) {
 			},
 			{
 				Config: testAccResourceTimeframeUpdate(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"wallix-bastion_timeframe.testacc_Timeframe",
+						"description", "testacc Timeframe"),
+					resource.TestCheckResourceAttr(
+						"wallix-bastion_timeframe.testacc_Timeframe",
+						"periods.#", "2"),
+					resource.TestCheckResourceAttrSet(
+						"wallix-bastion_timeframe.testacc_Timeframe2",
+						"id"),
+				),
 			},
 			{
 				ResourceName:  "wallix-bastion_timeframe.testacc_Timeframe",
@@ -70,6 +81,9 @@ resource "wallix-bastion_timeframe" "testacc_Timeframe" {
     end_time   = "16:00"
     week_days  = ["monday", "friday"]
   }
+}
+resource "wallix-bastion_timeframe" "testacc_Timeframe2" {
+  timeframe_name = "testacc_Timeframe2"
 }
 `
 }

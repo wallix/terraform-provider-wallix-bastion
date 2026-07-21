@@ -47,7 +47,7 @@ func TestAccResourceConfigX509_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: false,
-				ImportStateId:     "x509_config",
+				ImportStateId:     "x509Config",
 			},
 		},
 		PreventPostDestroyRefresh: true, // Prevent deletion

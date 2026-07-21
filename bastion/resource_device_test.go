@@ -21,12 +21,12 @@ func TestAccResourceDevice_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"wallix-bastion_device.testacc_Device",
 						"tags.#", "2"),
-					resource.TestCheckResourceAttr(
+					resource.TestCheckTypeSetElemNestedAttrs(
 						"wallix-bastion_device.testacc_Device",
-						"tags.0.key", "testkey"),
-					resource.TestCheckResourceAttr(
-						"wallix-bastion_device.testacc_Device",
-						"tags.0.value", "testvalue"),
+						"tags.*", map[string]string{
+							"key":   "testkey",
+							"value": "testvalue",
+						}),
 				),
 			},
 			{
@@ -42,12 +42,12 @@ func TestAccResourceDevice_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"wallix-bastion_device.testacc_Device",
 						"tags.#", "2"),
-					resource.TestCheckResourceAttr(
+					resource.TestCheckTypeSetElemNestedAttrs(
 						"wallix-bastion_device.testacc_Device",
-						"tags.0.key", "testkey"),
-					resource.TestCheckResourceAttr(
-						"wallix-bastion_device.testacc_Device",
-						"tags.0.value", "testvalue"),
+						"tags.*", map[string]string{
+							"key":   "testkey",
+							"value": "testvalue",
+						}),
 
 					resource.TestCheckResourceAttr(
 						"wallix-bastion_device.testacc_Device",
@@ -56,6 +56,11 @@ func TestAccResourceDevice_basic(t *testing.T) {
 						"wallix-bastion_device.testacc_Device",
 						"services.#", "1"),
 				),
+			},
+			{
+				ResourceName:  "wallix-bastion_device.testacc_Device",
+				ImportState:   true,
+				ImportStateId: "testacc_Device",
 			},
 		},
 		PreventPostDestroyRefresh: true,
