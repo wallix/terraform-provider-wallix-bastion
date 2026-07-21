@@ -8,12 +8,12 @@ description: |-
 
 # wallix-bastion_version (Data Source)
 
-Get information on Wallix Bastion version.
+Get information on WALLIX Bastion version.
 
 ## Example Usage
 
 ```terraform
-# Get Wallix Bastion version information
+# Get WALLIX Bastion version information
 data "wallix-bastion_version" "current" {}
 
 # Use version in conditional logic

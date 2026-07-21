@@ -1,6 +1,6 @@
-# Contributing to Terraform Provider Wallix Bastion
+# Contributing to Terraform Provider WALLIX Bastion
 
-Thank you for your interest in contributing to the Terraform Provider for Wallix Bastion! This document provides guidelines and information for contributors.
+Thank you for your interest in contributing to the Terraform Provider for WALLIX Bastion! This document provides guidelines and information for contributors.
 
 ## Code of Conduct
 
@@ -15,7 +15,7 @@ Before you begin contributing, ensure you have the following installed:
 - [Go](https://golang.org/doc/install) version 1.25 or 1.26
 - [Terraform](https://www.terraform.io/downloads.html) version 1.0 or later
 - [Git](https://git-scm.com/downloads)
-- Access to a Wallix Bastion instance for testing (recommended)
+- Access to a WALLIX Bastion instance for testing (recommended)
 
 ### Development Setup
 
@@ -510,7 +510,7 @@ examples/
    ```hcl
    # variables.tf
    variable "bastion_host" {
-     description = "Wallix Bastion hostname"
+     description = "WALLIX Bastion hostname"
      type        = string
    }
 
@@ -539,6 +539,7 @@ examples/
 
    ## Variables
 
+```text
    | Name | Description | Type | Required |
    |------|-------------|------|----------|
    | ...  | ...         | ...  | ...      |
@@ -721,7 +722,7 @@ make dev-check
 
 - [Terraform Plugin Development](https://developer.hashicorp.com/terraform/plugin)
 - [Terraform Provider Framework](https://developer.hashicorp.com/terraform/plugin/framework)
-- [Wallix Bastion API Documentation](https://docs.wallix.com/)
+- [WALLIX Bastion API Documentation](https://docs.wallix.com/)
 
 ### Learning Resources
 

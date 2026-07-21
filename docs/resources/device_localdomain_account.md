@@ -95,6 +95,7 @@ resource "wallix-bastion_device_localdomain_account" "complete" {
 - `domain_password_change` (Boolean)
 - `id` (String) The ID of this resource.
 
+<!-- markdownlint-disable-next-line MD033 -->
 <a id="nestedatt--credentials"></a>
 
 ### Nested Schema for `credentials`
@@ -163,7 +164,7 @@ checkout_policy = wallix-bastion_checkout_policy.restricted.policy_name
 
 ### Account Relationship
 
-```
+```text
 Device → Device Local Domain → Device Local Domain Account
   ↓           ↓                        ↓
 Server1 → local_domain → admin_account

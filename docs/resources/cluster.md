@@ -107,7 +107,7 @@ At least one of the following must be specified:
 
 **Accounts Format:**
 
-```
+```text
 account@domain:device:service
 ```
 
@@ -115,7 +115,7 @@ Example: `admin@corp.local:web01:SSH`
 
 **Account Mappings Format:**
 
-```
+```text
 device:service
 ```
 
@@ -123,7 +123,7 @@ Example: `web01:HTTP`
 
 **Interactive Logins Format:**
 
-```
+```text
 device:service
 ```
 

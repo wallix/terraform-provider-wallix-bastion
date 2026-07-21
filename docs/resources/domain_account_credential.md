@@ -205,7 +205,7 @@ variable "ssh_passphrase" {
 
 ### Credential Relationship
 
-```
+```text
 Device → Domain → Domain Account → Domain Account Credential
   ↓        ↓           ↓                    ↓
 Server → AD_Domain → john.doe → password/ssh_key

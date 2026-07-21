@@ -1,6 +1,6 @@
-# Terraform Provider Wallix Bastion Examples
+# Terraform Provider WALLIX Bastion Examples
 
-This directory contains examples that demonstrate how to use the Wallix Bastion Terraform provider in various scenarios.
+This directory contains examples that demonstrate how to use the WALLIX Bastion Terraform provider in various scenarios.
 
 ## Examples Overview
 
@@ -14,7 +14,7 @@ This directory contains examples that demonstrate how to use the Wallix Bastion 
 
 ## Prerequisites
 
-1. **Wallix Bastion instance** running and accessible
+1. **WALLIX Bastion instance** running and accessible
 2. **API credentials** with appropriate permissions
 3. **Terraform** >= 1.0 installed
 
@@ -47,7 +47,7 @@ This directory contains examples that demonstrate how to use the Wallix Bastion 
 
 Most examples use these common variables:
 
-- `bastion_ip` - IP address or hostname of your Wallix Bastion
+- `bastion_ip` - IP address or hostname of your WALLIX Bastion
 - `bastion_token` - API token for authentication
 - `api_version` - API version (default: "v3.12")
 

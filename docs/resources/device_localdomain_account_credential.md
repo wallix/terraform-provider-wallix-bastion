@@ -293,7 +293,7 @@ resource "wallix-bastion_device_localdomain_account_credential" "backup" {
 
 ### Credential Relationship
 
-```
+```text
 Device → Device Local Domain → Device Local Domain Account → Credential
   ↓            ↓                        ↓                         ↓
 Server1 → local_domain → admin_account → password/ssh_key

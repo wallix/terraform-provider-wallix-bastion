@@ -1,6 +1,6 @@
 # Documentation Guide
 
-This guide explains how to generate, verify, and maintain the documentation for the Terraform Provider Wallix Bastion.
+This guide explains how to generate, verify, and maintain the documentation for the Terraform Provider WALLIX Bastion.
 
 ## Overview
 

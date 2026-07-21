@@ -279,7 +279,7 @@ resource "wallix-bastion_application_localdomain" "ssh_app" {
 
 **Application Relationship:**
 
-```
+```text
 Application → Application Local Domain → Application Local Domain Account
      ↓                 ↓                           ↓
   WebApp → web.local → webadmin, webuser

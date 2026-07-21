@@ -1,7 +1,6 @@
 package bastion_test
 
 import (
-	"context"
 	"os"
 	"testing"
 
