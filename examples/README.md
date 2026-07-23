@@ -7,7 +7,6 @@ This directory contains examples that demonstrate how to use the WALLIX Bastion 
 | Example | Description | Complexity |
 | --------- | ------------- | ------------ |
 | [basic](./basic/) | Basic setup with minimal configuration | Beginner |
-| [authorization](./authorization/) | User and target groups with authorizations | Intermediate |
 | [session-sharing](./session-sharing/) | Session sharing functionality | Intermediate |
 | [approval-workflow](./approval-workflow/) | Authorization with approval workflow | Advanced |
 | [complete-setup](./complete-setup/) | Comprehensive production-ready setup | Advanced |
