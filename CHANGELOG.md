@@ -1,6 +1,6 @@
 # changelog
 
-## 0.15.0 (July 21, 2026)
+## 0.15.0 (July 23, 2026)
 
 BREAKING CHANGES:
 
@@ -17,6 +17,13 @@ FEATURES:
 - **provider**: add `session_timeout`, `csrf_enabled`, and `insecure_skip_verify` arguments
 - **client**: cookie-based session authentication, avoiding re-authentication on every API request
 - **client**: CSRF token protection, with automatic extraction from responses and refresh on expiry
+- add 37 data sources for read-only lookup of infrastructure that already exists on the Bastion,
+  covering every resource that previously had none (`wallix-bastion_device`,
+  `wallix-bastion_application`, `wallix-bastion_user`, `wallix-bastion_usergroup`,
+  `wallix-bastion_targetgroup`, `wallix-bastion_cluster`, `wallix-bastion_profile`,
+  `wallix-bastion_authorization`, and 29 others including the full `device_*`/`domain_*`/
+  `application_*` nested-resource families, `externalauth_*`, `authdomain_*`, and both
+  singleton configs `wallix-bastion_config_x509`/`wallix-bastion_encryption`)
 
 ENHANCEMENTS:
 
@@ -31,6 +38,7 @@ BUG FIXES:
 - **resource/wallix-bastion_domain_account**: fixed a bug where changing the domain account without also updating its associated resources caused those resources to be deleted
 - **resource/wallix-bastion_application**: fixed a regression in the web application category where the default category wasn't applied when left unset
 - **resource/wallix-bastion_device_localdomain_account**: fixed a potential panic when the API omits the `credentials` field from a read response
+- **resource/wallix-bastion_authdomain_azuread**: fixed `passphrase` always being sent to the API as an empty string when unset, which made it impossible to create this resource without also setting `private_key`/`passphrase`, even though both are documented as optional
 - **client**: fixed a race condition on session state checks, a bug where POST/PUT requests could fail on re-authentication due to request body reuse, and defensive error handling around URL parsing and cookie jar creation
 
 ## 0.14.8 (October 10, 2025)

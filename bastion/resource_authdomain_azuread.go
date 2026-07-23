@@ -25,7 +25,7 @@ type jsonAuthDomainAzureAD struct {
 	DefaultLanguage    string   `json:"default_language"`
 	Description        string   `json:"description"`
 	DomainName         string   `json:"domain_name"`
-	Passphrase         string   `json:"passphrase"`
+	Passphrase         string   `json:"passphrase,omitempty"`
 	PrivateKey         string   `json:"private_key"`
 	Type               string   `json:"type"`
 	ExternalAuths      []string `json:"external_auths"`
