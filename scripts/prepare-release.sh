@@ -78,11 +78,11 @@ check_git_status() {
     fi
 }
 
-# Function to ensure we're on the develop branch
+# Function to ensure we're on the main branch, with develop merged in
 check_branch() {
     local current_branch=$(git branch --show-current)
-    if [[ "$current_branch" != "develop" ]]; then
-        log_warning "Current branch is '$current_branch', not 'develop'"
+    if [[ "$current_branch" != "main" ]]; then
+        log_warning "Current branch is '$current_branch', not 'main'"
         read -p "Continue anyway? (y/N): " -n 1 -r
         echo
         if [[ ! $REPLY =~ ^[Yy]$ ]]; then
