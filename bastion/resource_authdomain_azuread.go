@@ -25,7 +25,7 @@ type jsonAuthDomainAzureAD struct {
 	DefaultLanguage    string   `json:"default_language"`
 	Description        string   `json:"description"`
 	DomainName         string   `json:"domain_name"`
-	Passphrase         string   `json:"passphrase"`
+	Passphrase         string   `json:"passphrase,omitempty"`
 	PrivateKey         string   `json:"private_key"`
 	Type               string   `json:"type"`
 	ExternalAuths      []string `json:"external_auths"`
@@ -136,16 +136,19 @@ func resourceAuthDomainAzureADCreate(
 	if ex {
 		return diag.FromErr(fmt.Errorf("domain_name %s already exists", d.Get("domain_name").(string)))
 	}
-	err = addAuthDomainAzureAD(ctx, d, m)
+	id, err := addAuthDomainAzureAD(ctx, d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceAuthDomainAzureAD(ctx, d.Get("domain_name").(string), m)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if !ex {
-		return diag.FromErr(fmt.Errorf("domain_name %s not found after POST", d.Get("domain_name").(string)))
+	if id == "" {
+		// Fallback for Bastion versions that don't return the X-Object-Id header on creation.
+		id, ex, err = searchResourceAuthDomainAzureAD(ctx, d.Get("domain_name").(string), m)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if !ex {
+			return diag.FromErr(fmt.Errorf("domain_name %s not found after POST", d.Get("domain_name").(string)))
+		}
 	}
 	d.SetId(id)
 
@@ -258,18 +261,18 @@ func searchResourceAuthDomainAzureAD(
 
 func addAuthDomainAzureAD(
 	ctx context.Context, d *schema.ResourceData, m interface{},
-) error {
+) (string, error) {
 	c := m.(*Client)
 	jsonData := prepareAuthDomainAzureADJSON(d)
-	body, code, err := c.newRequest(ctx, "/authdomains/", http.MethodPost, jsonData)
+	body, headers, code, err := c.newRequestWithHeaders(ctx, "/authdomains/", http.MethodPost, jsonData)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
+		return "", fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
-	return nil
+	return headers.Get("X-Object-Id"), nil
 }
 
 func updateAuthDomainAzureAD(

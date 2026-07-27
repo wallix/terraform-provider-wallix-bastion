@@ -1,6 +1,8 @@
 package bastion_test
 
 import (
+	"fmt"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -45,7 +47,7 @@ func TestAccResourceConfigX509_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: false,
-				ImportStateId:     "x509_config",
+				ImportStateId:     "x509Config",
 			},
 		},
 		PreventPostDestroyRefresh: true, // Prevent deletion
@@ -85,9 +87,21 @@ func TestAccResourceConfigX509_enableToggle(t *testing.T) {
 	})
 }
 
+// getBastionHostname returns the configured bastion hostname for certificate generation.
+func getBastionHostname() string {
+	hostname := os.Getenv(envWallixHost)
+	if hostname == "" {
+		return "bastion.test.local" // Fallback par défaut
+	}
+
+	return hostname
+}
+
 // Test configuration for creating the resource with TLS-generated certificates.
 func testAccResourceConfigX509Basic() string {
-	return `
+	hostname := getBastionHostname()
+
+	return fmt.Sprintf(`
 # Generate CA private key
 resource "tls_private_key" "ca" {
   algorithm = "RSA"
@@ -99,8 +113,8 @@ resource "tls_self_signed_cert" "ca" {
   private_key_pem = tls_private_key.ca.private_key_pem
 
   subject {
-    common_name  = "Wallix Bastion Test CA"
-    organization = "Wallix Test"
+    common_name  = "WALLIX Bastion Test CA"
+    organization = "WALLIX Test"
     country      = "FR"
   }
 
@@ -127,13 +141,13 @@ resource "tls_cert_request" "server" {
   private_key_pem = tls_private_key.server.private_key_pem
 
   subject {
-    common_name  = "bastion.test.local"
-    organization = "Wallix Test"
+    common_name  = "%s"
+    organization = "WALLIX Test"
     country      = "FR"
   }
 
   dns_names = [
-    "bastion.test.local",
+    "%s",
     "localhost",
   ]
 
@@ -158,19 +172,21 @@ resource "tls_locally_signed_cert" "server" {
   ]
 }
 
-# Wallix Bastion X509 configuration
+# WALLIX Bastion X509 configuration
 resource "wallix-bastion_config_x509" "test" {
   ca_certificate     = tls_self_signed_cert.ca.cert_pem
   server_public_key  = tls_locally_signed_cert.server.cert_pem
   server_private_key = tls_private_key.server.private_key_pem
   enable             = true
 }
-`
+`, hostname, hostname)
 }
 
 // Test configuration for updating the resource with new certificates.
 func testAccResourceConfigX509Update() string {
-	return `
+	hostname := getBastionHostname()
+
+	return fmt.Sprintf(`
 # Generate new CA private key for update test
 resource "tls_private_key" "ca_updated" {
   algorithm = "RSA"
@@ -182,8 +198,8 @@ resource "tls_self_signed_cert" "ca_updated" {
   private_key_pem = tls_private_key.ca_updated.private_key_pem
 
   subject {
-    common_name  = "Wallix Bastion Updated Test CA"
-    organization = "Wallix Test Updated"
+    common_name  = "WALLIX Bastion Updated Test CA"
+    organization = "WALLIX Test Updated"
     country      = "FR"
   }
 
@@ -210,13 +226,13 @@ resource "tls_cert_request" "server_updated" {
   private_key_pem = tls_private_key.server_updated.private_key_pem
 
   subject {
-    common_name  = "bastion-updated.test.local"
-    organization = "Wallix Test Updated"
+    common_name  = "%s"
+    organization = "WALLIX Test Updated"
     country      = "FR"
   }
 
   dns_names = [
-    "bastion-updated.test.local",
+    "%s",
     "localhost",
   ]
 
@@ -241,19 +257,21 @@ resource "tls_locally_signed_cert" "server_updated" {
   ]
 }
 
-# Updated Wallix Bastion X509 configuration
+# Updated WALLIX Bastion X509 configuration
 resource "wallix-bastion_config_x509" "test" {
   ca_certificate     = tls_self_signed_cert.ca_updated.cert_pem
   server_public_key  = tls_locally_signed_cert.server_updated.cert_pem
   server_private_key = tls_private_key.server_updated.private_key_pem
   enable             = false
 }
-`
+`, hostname, hostname)
 }
 
 // Test configuration with enable=false.
 func testAccResourceConfigX509Disabled() string {
-	return `
+	hostname := getBastionHostname()
+
+	return fmt.Sprintf(`
 # Generate CA private key
 resource "tls_private_key" "ca" {
   algorithm = "RSA"
@@ -265,8 +283,8 @@ resource "tls_self_signed_cert" "ca" {
   private_key_pem = tls_private_key.ca.private_key_pem
 
   subject {
-    common_name  = "Wallix Bastion Test CA"
-    organization = "Wallix Test"
+    common_name  = "WALLIX Bastion Test CA"
+    organization = "WALLIX Test"
     country      = "FR"
   }
 
@@ -293,13 +311,13 @@ resource "tls_cert_request" "server" {
   private_key_pem = tls_private_key.server.private_key_pem
 
   subject {
-    common_name  = "bastion.test.local"
-    organization = "Wallix Test"
+    common_name  = "%s"
+    organization = "WALLIX Test"
     country      = "FR"
   }
 
   dns_names = [
-    "bastion.test.local",
+    "%s",
     "localhost",
   ]
 
@@ -324,19 +342,21 @@ resource "tls_locally_signed_cert" "server" {
   ]
 }
 
-# Wallix Bastion X509 configuration (disabled)
+# WALLIX Bastion X509 configuration (disabled)
 resource "wallix-bastion_config_x509" "test" {
   ca_certificate     = tls_self_signed_cert.ca.cert_pem
   server_public_key  = tls_locally_signed_cert.server.cert_pem
   server_private_key = tls_private_key.server.private_key_pem
   enable             = false
 }
-`
+`, hostname, hostname)
 }
 
 // Test configuration with enable=true.
 func testAccResourceConfigX509Enabled() string {
-	return `
+	hostname := getBastionHostname()
+
+	return fmt.Sprintf(`
 # Generate CA private key
 resource "tls_private_key" "ca" {
   algorithm = "RSA"
@@ -348,8 +368,8 @@ resource "tls_self_signed_cert" "ca" {
   private_key_pem = tls_private_key.ca.private_key_pem
 
   subject {
-    common_name  = "Wallix Bastion Test CA"
-    organization = "Wallix Test"
+    common_name  = "WALLIX Bastion Test CA"
+    organization = "WALLIX Test"
     country      = "FR"
   }
 
@@ -376,13 +396,13 @@ resource "tls_cert_request" "server" {
   private_key_pem = tls_private_key.server.private_key_pem
 
   subject {
-    common_name  = "bastion.test.local"
-    organization = "Wallix Test"
+    common_name  = "%s"
+    organization = "WALLIX Test"
     country      = "FR"
   }
 
   dns_names = [
-    "bastion.test.local",
+    "%s",
     "localhost",
   ]
 
@@ -407,12 +427,12 @@ resource "tls_locally_signed_cert" "server" {
   ]
 }
 
-# Wallix Bastion X509 configuration (enabled)
+# WALLIX Bastion X509 configuration (enabled)
 resource "wallix-bastion_config_x509" "test" {
   ca_certificate     = tls_self_signed_cert.ca.cert_pem
   server_public_key  = tls_locally_signed_cert.server.cert_pem
   server_private_key = tls_private_key.server.private_key_pem
   enable             = true
 }
-`
+`, hostname, hostname)
 }

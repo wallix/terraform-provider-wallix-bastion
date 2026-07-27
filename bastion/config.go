@@ -6,23 +6,29 @@ import (
 
 // Config: provider config.
 type Config struct {
-	bastionPort       int
-	bastionAPIVersion string
-	bastionIP         string
-	bastionToken      string
-	bastionUser       string
-	bastionPwd        string
+	BastionPort        int
+	BastionAPIVersion  string
+	BastionIP          string
+	BastionToken       string
+	BastionUser        string
+	BastionPwd         string
+	SessionTimeout     int
+	CSRFEnabled        bool
+	InsecureSkipVerify bool
 }
 
 // Client: read information to connect on wallix bastion.
 func (c *Config) Client() (*Client, diag.Diagnostics) {
 	cl := &Client{
-		bastionIP:         c.bastionIP,
-		bastionPort:       c.bastionPort,
-		bastionToken:      c.bastionToken,
-		bastionUser:       c.bastionUser,
-		bastionAPIVersion: c.bastionAPIVersion,
-		bastionPwd:        c.bastionPwd,
+		bastionIP:          c.BastionIP,
+		bastionPort:        c.BastionPort,
+		bastionToken:       c.BastionToken,
+		bastionUser:        c.BastionUser,
+		bastionAPIVersion:  c.BastionAPIVersion,
+		bastionPwd:         c.BastionPwd,
+		sessionTimeout:     c.SessionTimeout,
+		csrfEnabled:        c.CSRFEnabled,
+		insecureSkipVerify: c.InsecureSkipVerify,
 	}
 
 	return cl, nil

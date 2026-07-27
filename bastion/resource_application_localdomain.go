@@ -110,18 +110,21 @@ func resourceApplicationLocalDomainCreate(
 		return diag.FromErr(fmt.Errorf("domain_name %s on application_id %s already exists",
 			d.Get("domain_name").(string), d.Get("application_id").(string)))
 	}
-	err = addApplicationLocalDomain(ctx, d, m)
+	id, err := addApplicationLocalDomain(ctx, d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceApplicationLocalDomain(ctx,
-		d.Get("application_id").(string), d.Get("domain_name").(string), m)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if !ex {
-		return diag.FromErr(fmt.Errorf("domain_name %s on application_id %s not found after POST",
-			d.Get("domain_name").(string), d.Get("application_id").(string)))
+	if id == "" {
+		// Fallback for Bastion versions that don't return the X-Object-Id header on creation.
+		id, ex, err = searchResourceApplicationLocalDomain(ctx,
+			d.Get("application_id").(string), d.Get("domain_name").(string), m)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if !ex {
+			return diag.FromErr(fmt.Errorf("domain_name %s on application_id %s not found after POST",
+				d.Get("domain_name").(string), d.Get("application_id").(string)))
+		}
 	}
 	d.SetId(id)
 
@@ -242,19 +245,19 @@ func searchResourceApplicationLocalDomain(
 
 func addApplicationLocalDomain(
 	ctx context.Context, d *schema.ResourceData, m interface{},
-) error {
+) (string, error) {
 	c := m.(*Client)
 	jsonData := prepareApplicationLocalDomainJSON(d, true)
-	body, code, err := c.newRequest(ctx, "/applications/"+d.Get("application_id").(string)+"/localdomains/",
-		http.MethodPost, jsonData)
+	body, headers, code, err := c.newRequestWithHeaders(ctx,
+		"/applications/"+d.Get("application_id").(string)+"/localdomains/", http.MethodPost, jsonData)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
+		return "", fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
-	return nil
+	return headers.Get("X-Object-Id"), nil
 }
 
 func updateApplicationLocalDomain(

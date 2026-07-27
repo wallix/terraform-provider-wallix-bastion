@@ -21,6 +21,11 @@ func TestAccResourceExternalAuthTacacs_basic(t *testing.T) {
 			},
 			{
 				Config: testAccResourceExternalAuthTacacsUpdate(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"wallix-bastion_externalauth_tacacs.testacc_ExternalAuthTacacs",
+						"port", "4949"),
+				),
 			},
 			{
 				ResourceName:  "wallix-bastion_externalauth_tacacs.testacc_ExternalAuthTacacs",
@@ -36,7 +41,7 @@ func testAccResourceExternalAuthTacacsCreate() string {
 	return `
 resource "wallix-bastion_externalauth_tacacs" "testacc_ExternalAuthTacacs" {
   authentication_name = "testacc_ExternalAuthTacacs"
-  host                = "server1"
+  host                = "192.168.100.20"
   port                = 49
   secret              = "aSecret"
 }
@@ -47,8 +52,8 @@ func testAccResourceExternalAuthTacacsUpdate() string {
 	return `
 resource "wallix-bastion_externalauth_tacacs" "testacc_ExternalAuthTacacs" {
   authentication_name     = "testacc_ExternalAuthTacacs"
-  host                    = "server1"
-  port                    = 1813
+  host                    = "192.168.100.20"
+  port                    = 4949
   secret                  = "aSecret"
   description             = "testacc ExternalAuthTacacs"
   use_primary_auth_domain = true

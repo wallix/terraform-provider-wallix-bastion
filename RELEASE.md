@@ -22,7 +22,7 @@ git push origin develop
 
 - Clean git working directory
 - On `develop` branch (recommended)
-- Go 1.23+ installed
+- Go 1.25+ installed
 - golangci-lint installed
 - Git configured with proper user information
 

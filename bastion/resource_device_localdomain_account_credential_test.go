@@ -17,9 +17,6 @@ func TestAccResourceDeviceLocalDomainAccountCred_basic(t *testing.T) {
 			"random": {
 				Source: "hashicorp/random",
 			},
-			"tls": {
-				Source: "hashicorp/tls",
-			},
 		},
 		Steps: []resource.TestStep{
 			{
@@ -66,7 +63,7 @@ func testAccResourceDeviceLocalDomainAccountCredCreate() string {
 	return `
 resource "wallix-bastion_device" "testacc_DeviceLocalDomainAccountCred" {
   device_name = "testacc_DeviceLocalDomainAccountCred"
-  host        = "testacc_localdomain_account.device"
+  host        = "192.168.100.4"
 }
 resource "wallix-bastion_device_localdomain" "testacc_DeviceLocalDomainAccountCred" {
   device_id   = wallix-bastion_device.testacc_DeviceLocalDomainAccountCred.id
@@ -107,7 +104,7 @@ func testAccResourceDeviceLocalDomainAccountCredUpdate() string {
 	return `
 resource "wallix-bastion_device" "testacc_DeviceLocalDomainAccountCred" {
   device_name = "testacc_DeviceLocalDomainAccountCred"
-  host        = "testacc_localdomain_account.device"
+  host        = "192.168.100.4"
 }
 resource "wallix-bastion_device_localdomain" "testacc_DeviceLocalDomainAccountCred" {
   device_id   = wallix-bastion_device.testacc_DeviceLocalDomainAccountCred.id
@@ -119,12 +116,19 @@ resource "wallix-bastion_device_localdomain_account" "testacc_DeviceLocalDomainA
   account_name  = "testacc_DeviceLocalDomainAccountCred_admin"
   account_login = "admin"
 }
+resource "wallix-bastion_device_localdomain_account_credential" "testacc_DeviceLocalDomainAccountCred" {
+  device_id  = wallix-bastion_device.testacc_DeviceLocalDomainAccountCred.id
+  domain_id  = wallix-bastion_device_localdomain.testacc_DeviceLocalDomainAccountCred.id
+  account_id = wallix-bastion_device_localdomain_account.testacc_DeviceLocalDomainAccountCred.id
+  type       = "password"
+  password   = random_password.testacc_DomainAccountCred.result
+}
 resource "wallix-bastion_device_localdomain_account_credential" "testacc_DeviceLocalDomainAccountCred2" {
   device_id   = wallix-bastion_device.testacc_DeviceLocalDomainAccountCred.id
   domain_id   = wallix-bastion_device_localdomain.testacc_DeviceLocalDomainAccountCred.id
   account_id  = wallix-bastion_device_localdomain_account.testacc_DeviceLocalDomainAccountCred.id
   type        = "ssh_key"
-  private_key = tls_private_key.testacc_DomainAccountCred.private_key_pem
+  private_key = "generate:RSA_4096"
   passphrase  = random_password.testacc_DomainAccountCred.result
 }
 resource "random_password" "testacc_DomainAccountCred" {
@@ -134,10 +138,6 @@ resource "random_password" "testacc_DomainAccountCred" {
   min_upper        = 1
   min_numeric      = 1
   min_special      = 1
-}
-resource "tls_private_key" "testacc_DomainAccountCred" {
-  algorithm = "RSA"
-  rsa_bits  = 4096
 }
 `
 }

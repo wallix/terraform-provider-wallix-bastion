@@ -32,7 +32,7 @@ If applicable, add screenshots to help explain your problem.
 
 - **Provider version**: [e.g. v1.0.0]
 - **Terraform version**: [e.g. v1.5.0]
-- **Wallix Bastion version**: [e.g. v3.12.0]
+- **WALLIX Bastion version**: [e.g. v3.12.0]
 - **OS**: [e.g. Ubuntu 22.04, Windows 11, macOS 13]
 
 ## Configuration

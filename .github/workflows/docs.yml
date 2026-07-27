@@ -46,11 +46,14 @@ jobs:
       - name: Generate documentation
         run: tfplugindocs generate
 
+      - name: Normalize markdown formatting
+        run: npx --yes markdownlint-cli2 --fix "docs/**/*.md"
+
       - name: Check for documentation changes
         run: |
           if ! git diff --exit-code docs/; then
             echo "Documentation is out of date."
-            echo "Please run 'tfplugindocs generate' and commit changes."
+            echo "Please run 'tfplugindocs generate', then 'markdownlint docs/ --fix', and commit changes."
             git diff docs/
             exit 1
           fi

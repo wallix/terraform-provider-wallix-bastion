@@ -135,17 +135,20 @@ func resourceDomainAccountCreate(
 		return diag.FromErr(fmt.Errorf("account_name %s on domain_id %s already exists",
 			d.Get("account_name").(string), d.Get("domain_id").(string)))
 	}
-	err = addDomainAccount(ctx, d, m)
+	id, err := addDomainAccount(ctx, d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceDomainAccount(ctx, d.Get("domain_id").(string), d.Get("account_name").(string), m)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if !ex {
-		return diag.FromErr(fmt.Errorf("account_name %s on domain_id %s not found after POST",
-			d.Get("account_name").(string), d.Get("domain_id").(string)))
+	if id == "" {
+		// Fallback for Bastion versions that don't return the X-Object-Id header on creation.
+		id, ex, err = searchResourceDomainAccount(ctx, d.Get("domain_id").(string), d.Get("account_name").(string), m)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if !ex {
+			return diag.FromErr(fmt.Errorf("account_name %s on domain_id %s not found after POST",
+				d.Get("account_name").(string), d.Get("domain_id").(string)))
+		}
 	}
 	d.SetId(id)
 
@@ -267,22 +270,22 @@ func searchResourceDomainAccount(
 
 func addDomainAccount(
 	ctx context.Context, d *schema.ResourceData, m interface{},
-) error {
+) (string, error) {
 	c := m.(*Client)
 	jsonData, err := prepareDomainAccountJSON(d)
 	if err != nil {
-		return err
+		return "", err
 	}
-	body, code, err := c.newRequest(ctx,
+	body, headers, code, err := c.newRequestWithHeaders(ctx,
 		"/domains/"+d.Get("domain_id").(string)+"/accounts/", http.MethodPost, jsonData)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
+		return "", fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
-	return nil
+	return headers.Get("X-Object-Id"), nil
 }
 
 func updateDomainAccount(
@@ -332,8 +335,8 @@ func prepareDomainAccountJSON(d *schema.ResourceData) (jsonDomainAccount, error)
 		Description:         d.Get("description").(string),
 	}
 
-	if d.HasChange("resources") {
-		listResources := d.Get("resources").(*schema.Set).List()
+	listResources := d.Get("resources").(*schema.Set).List()
+	if len(listResources) > 0 {
 		resources := make([]string, len(listResources))
 		for i, v := range listResources {
 			vSplt := strings.Split(v.(string), ":")
@@ -392,12 +395,15 @@ func fillDomainAccount(d *schema.ResourceData, jsonData jsonDomainAccount) {
 	if tfErr := d.Set("certificate_validity", jsonData.CertificateValidity); tfErr != nil {
 		panic(tfErr)
 	}
-	credentials := make([]map[string]interface{}, len(*jsonData.Credentials))
-	for i, v := range *jsonData.Credentials {
-		credentials[i] = map[string]interface{}{
-			"id":         v.ID,
-			"public_key": v.PublicKey,
-			"type":       v.Type,
+	credentials := make([]map[string]interface{}, 0)
+	if jsonData.Credentials != nil {
+		credentials = make([]map[string]interface{}, len(*jsonData.Credentials))
+		for i, v := range *jsonData.Credentials {
+			credentials[i] = map[string]interface{}{
+				"id":         v.ID,
+				"public_key": v.PublicKey,
+				"type":       v.Type,
+			}
 		}
 	}
 	if tfErr := d.Set("credentials", credentials); tfErr != nil {
@@ -409,7 +415,13 @@ func fillDomainAccount(d *schema.ResourceData, jsonData jsonDomainAccount) {
 	if tfErr := d.Set("domain_password_change", jsonData.DomainPasswordChange); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("resources", jsonData.Resources); tfErr != nil {
-		panic(tfErr)
+	if jsonData.Resources == nil {
+		if tfErr := d.Set("resources", []string{}); tfErr != nil {
+			panic(tfErr)
+		}
+	} else {
+		if tfErr := d.Set("resources", *jsonData.Resources); tfErr != nil {
+			panic(tfErr)
+		}
 	}
 }

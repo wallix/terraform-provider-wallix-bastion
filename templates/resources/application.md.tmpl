@@ -25,15 +25,25 @@ resource "wallix-bastion_application" "app1" {
   target = "cluster"
 }
 
-# Configure a jumphost application
+# Configure a web application (API v3.12+)
+resource "wallix-bastion_application" "web_app" {
+  application_name  = "web_app"
+  connection_policy = "WebApp"
+  category          = "web_application"
+  application_url   = "https://example.com"
+  description       = "Web application accessed via browser"
+}
+
+# Configure a jumphost application (deprecated in API v3.12+, use 'web_application' instead)
+# Only supported for API versions < v3.12
 resource "wallix-bastion_application" "jumphost_app" {
-  application_name = "web_app"
-  connection_policy = "HTTP"
-  category = "jumphost"
-  application_url = "https://example.com"
-  browser = "chrome"
-  browser_version = "latest"
-  description = "Web application accessed via jumphost"
+  application_name  = "legacy_app"
+  connection_policy = "JumpHost"
+  category          = "jumphost"
+  application_url   = "https://legacy.example.com"
+  browser           = "Mozilla Firefox"
+  browser_version   = "93.0"
+  description       = "Legacy jumphost application (use 'web_application' category for API v3.12+)"
 }
 ```
 
@@ -44,7 +54,8 @@ resource "wallix-bastion_application" "jumphost_app" {
 ### Application Categories
 
 - **standard**: For traditional applications with executable paths (default)
-- **jumphost**: For web applications accessed through a browser
+- **web_application**: For web applications accessed through a browser (API v3.12+)
+- **jumphost**: For web applications accessed through a browser (deprecated in API v3.12+, use 'web_application' instead)
 
 ### Path Configuration
 
@@ -52,6 +63,23 @@ When `category = "standard"`, the `paths` block is required and should specify:
 - **target**: The application target (format: `Interactive@device:service`)
 - **program**: The full path to the application executable
 - **working_dir**: The working directory for the application
+
+### Web Application Configuration
+
+When `category = "web_application"` (API v3.12+), the following fields are required:
+- **application_url**: The URL of the web application
+- **connection_policy**: The connection policy name
+
+Note: The `target`, `paths`, `browser`, and `browser_version` fields cannot be used with web_application.
+
+### Jumphost Application Configuration (Deprecated)
+
+When `category = "jumphost"` (API < v3.12, deprecated), the following fields are required:
+- **application_url**: The URL of the web application
+- **browser**: The browser to use (e.g., "Google Chrome", "Mozilla Firefox")
+- **browser_version**: The browser version (optional)
+
+Note: The `target` and `paths` fields cannot be used with jumphost applications.
 
 ### Target Specification
 

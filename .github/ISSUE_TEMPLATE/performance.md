@@ -45,7 +45,7 @@ resource "wallix-bastion_user" "example" {
 
 - **Provider version**: [e.g. v1.0.0]
 - **Terraform version**: [e.g. v1.5.0]
-- **Wallix Bastion version**: [e.g. v3.12.0]
+- **WALLIX Bastion version**: [e.g. v3.12.0]
 - **Infrastructure size**: [e.g. 1000 users, 50 devices]
 
 ### Expected Performance

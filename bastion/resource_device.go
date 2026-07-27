@@ -19,6 +19,7 @@ type jsonDevice struct {
 	Host         string                   `json:"host"`
 	LocalDomains *[]jsonDeviceLocalDomain `json:"local_domains,omitempty"`
 	Services     *[]jsonDeviceService     `json:"services,omitempty"`
+	Tags         *[]map[string]string     `json:"tags,omitempty"`
 }
 
 func resourceDevice() *schema.Resource {
@@ -129,6 +130,32 @@ func resourceDevice() *schema.Resource {
 					},
 				},
 			},
+			"tags": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"value": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+				Set: schema.HashResource(&schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key": {
+							Type: schema.TypeString,
+						},
+						"value": {
+							Type: schema.TypeString,
+						},
+					},
+				}),
+			},
 		},
 	}
 }
@@ -155,16 +182,19 @@ func resourceDeviceCreate(
 	if ex {
 		return diag.FromErr(fmt.Errorf("device_name %s already exists", d.Get("device_name").(string)))
 	}
-	err = addDevice(ctx, d, m)
+	id, err := addDevice(ctx, d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceDevice(ctx, d.Get("device_name").(string), m)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if !ex {
-		return diag.FromErr(fmt.Errorf("device_name %s not found after POST", d.Get("device_name").(string)))
+	if id == "" {
+		// Fallback for Bastion versions that don't return the X-Object-Id header on creation.
+		id, ex, err = searchResourceDevice(ctx, d.Get("device_name").(string), m)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if !ex {
+			return diag.FromErr(fmt.Errorf("device_name %s not found after POST", d.Get("device_name").(string)))
+		}
 	}
 	d.SetId(id)
 
@@ -277,18 +307,18 @@ func searchResourceDevice(
 
 func addDevice(
 	ctx context.Context, d *schema.ResourceData, m interface{},
-) error {
+) (string, error) {
 	c := m.(*Client)
 	jsonData := prepareDeviceJSON(d)
-	body, code, err := c.newRequest(ctx, "/devices/", http.MethodPost, jsonData)
+	body, headers, code, err := c.newRequestWithHeaders(ctx, "/devices/", http.MethodPost, jsonData)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
+		return "", fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
-	return nil
+	return headers.Get("X-Object-Id"), nil
 }
 
 func updateDevice(
@@ -323,12 +353,31 @@ func deleteDevice(
 }
 
 func prepareDeviceJSON(d *schema.ResourceData) jsonDevice {
-	return jsonDevice{
+	jsonData := jsonDevice{
 		DeviceName:  d.Get("device_name").(string),
 		Host:        d.Get("host").(string),
 		Alias:       d.Get("alias").(string),
 		Description: d.Get("description").(string),
 	}
+
+	if v, ok := d.GetOk("tags"); ok {
+		tagsSet := v.(*schema.Set)
+		tagsList := tagsSet.List()
+
+		tags := make([]map[string]string, len(tagsList))
+
+		for i, tagData := range tagsList {
+			tagMap := tagData.(map[string]interface{})
+
+			tags[i] = map[string]string{
+				"key":   tagMap["key"].(string),
+				"value": tagMap["value"].(string),
+			}
+		}
+		jsonData.Tags = &tags
+	}
+
+	return jsonData
 }
 
 func readDeviceOptions(
@@ -410,5 +459,27 @@ func fillDevice(d *schema.ResourceData, jsonData jsonDevice) {
 	}
 	if tfErr := d.Set("services", services); tfErr != nil {
 		panic(tfErr)
+	}
+
+	if jsonData.Tags != nil && len(*jsonData.Tags) > 0 {
+		apiTags := *jsonData.Tags
+
+		stateTags := make([]interface{}, len(apiTags))
+
+		for i, tagMap := range apiTags {
+			stateMap := map[string]interface{}{
+				"key":   tagMap["key"],
+				"value": tagMap["value"],
+			}
+			stateTags[i] = stateMap
+		}
+
+		if tfErr := d.Set("tags", stateTags); tfErr != nil {
+			panic(tfErr)
+		}
+	} else {
+		if tfErr := d.Set("tags", make([]interface{}, 0)); tfErr != nil {
+			panic(tfErr)
+		}
 	}
 }

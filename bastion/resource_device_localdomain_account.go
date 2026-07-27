@@ -148,18 +148,21 @@ func resourceDeviceLocalDomainAccountCreate(
 		return diag.FromErr(fmt.Errorf("account_name %s on domain_id %s, device_id %s already exists",
 			d.Get("account_name").(string), d.Get("domain_id").(string), d.Get("device_id").(string)))
 	}
-	err = addDeviceLocalDomainAccount(ctx, d, m)
+	id, err := addDeviceLocalDomainAccount(ctx, d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceDeviceLocalDomainAccount(ctx,
-		d.Get("device_id").(string), d.Get("domain_id").(string), d.Get("account_name").(string), m)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if !ex {
-		return diag.FromErr(fmt.Errorf("account_name %s on domain_id %s, device_id %s not found after POST",
-			d.Get("account_name").(string), d.Get("domain_id").(string), d.Get("device_id").(string)))
+	if id == "" {
+		// Fallback for Bastion versions that don't return the X-Object-Id header on creation.
+		id, ex, err = searchResourceDeviceLocalDomainAccount(ctx,
+			d.Get("device_id").(string), d.Get("domain_id").(string), d.Get("account_name").(string), m)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if !ex {
+			return diag.FromErr(fmt.Errorf("account_name %s on domain_id %s, device_id %s not found after POST",
+				d.Get("account_name").(string), d.Get("domain_id").(string), d.Get("device_id").(string)))
+		}
 	}
 	d.SetId(id)
 
@@ -285,20 +288,20 @@ func searchResourceDeviceLocalDomainAccount(
 
 func addDeviceLocalDomainAccount(
 	ctx context.Context, d *schema.ResourceData, m interface{},
-) error {
+) (string, error) {
 	c := m.(*Client)
 	jsonData := prepareDeviceLocalDomainAccountJSON(d)
-	body, code, err := c.newRequest(ctx,
+	body, headers, code, err := c.newRequestWithHeaders(ctx,
 		"/devices/"+d.Get("device_id").(string)+"/localdomains/"+d.Get("domain_id").(string)+
 			"/accounts/", http.MethodPost, jsonData)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
+		return "", fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
-	return nil
+	return headers.Get("X-Object-Id"), nil
 }
 
 func updateDeviceLocalDomainAccount(
@@ -402,12 +405,15 @@ func fillDeviceLocalDomainAccount(d *schema.ResourceData, jsonData jsonDeviceLoc
 	if tfErr := d.Set("certificate_validity", jsonData.CertificateValidity); tfErr != nil {
 		panic(tfErr)
 	}
-	credentials := make([]map[string]interface{}, len(*jsonData.Credentials))
-	for i, v := range *jsonData.Credentials {
-		credentials[i] = map[string]interface{}{
-			"id":         v.ID,
-			"public_key": v.PublicKey,
-			"type":       v.Type,
+	credentials := make([]map[string]interface{}, 0)
+	if jsonData.Credentials != nil {
+		credentials = make([]map[string]interface{}, len(*jsonData.Credentials))
+		for i, v := range *jsonData.Credentials {
+			credentials[i] = map[string]interface{}{
+				"id":         v.ID,
+				"public_key": v.PublicKey,
+				"type":       v.Type,
+			}
 		}
 	}
 	if tfErr := d.Set("credentials", credentials); tfErr != nil {

@@ -26,7 +26,7 @@ BINARY_NAME := terraform-provider-$(PROVIDER_NAME)
 
 LDFLAGS_STRING := "-X main.version=$(VERSION)"
 
-.PHONY: build install test testacc test-coverage fmt lint vet clean setup-dev docs docs-verify build-all test-all maintenance prepare-release release-patch release-minor release-major
+.PHONY: build install test testacc test-coverage fmt lint lint-fix lint-markdown lint-security vet clean setup-dev setup-check docs docs-verify build-all test-all maintenance prepare-release release-patch release-minor release-major ci-check dev-check
 
 # Default target
 
@@ -67,10 +67,10 @@ install: build
 
 test:
 	@if command -v go-test-report >/dev/null 2>&1; then \
-		go test -v ./... -json | go-test-report; \
+	  go test -v ./... -json | go-test-report; \
 	else \
-		echo "go-test-report not found, running tests without report generation"; \
-		go test -v ./...; \
+	  echo "go-test-report not found, running tests without report generation"; \
+	  go test -v ./...; \
 	fi
 
 # Run tests with coverage
@@ -82,7 +82,7 @@ test-coverage:
 # Run acceptance tests
 
 testacc:
-	TF_ACC=1 go test -v ./bastion -timeout 120m
+	TF_ACC=1 WALLIX_INSECURE_SKIP_VERIFY=true go test -v ./bastion -timeout 120m
 
 # Run all tests
 
@@ -94,10 +94,37 @@ fmt:
 	go fmt ./...
 	terraform fmt -recursive examples/
 
-# Run linters
+# Run linters with configuration matching CI
 
 lint:
-	golangci-lint run
+	golangci-lint run --config .golangci.yml --verbose --timeout 5m
+
+# Run linters and auto-fix issues when possible
+
+lint-fix:
+	golangci-lint run --config .golangci.yml --fix --timeout 5m
+
+# Lint markdown files
+
+lint-markdown:
+	@if command -v markdownlint >/dev/null 2>&1; then \
+	  markdownlint **/*.md --ignore node_modules --ignore .terraform --ignore WIP --config .markdownlint.json; \
+	else \
+	  echo "Warning: markdownlint not found. Install with: npm install -g markdownlint-cli"; \
+	  exit 1; \
+	fi
+
+# Run security vulnerability checks
+
+lint-security:
+	@echo "Running vulnerability checks..."
+	@if command -v govulncheck >/dev/null 2>&1; then \
+	  govulncheck ./...; \
+	else \
+	  echo "Warning: govulncheck not found. Installing..."; \
+	  go install golang.org/x/vuln/cmd/govulncheck@latest; \
+	  govulncheck ./...; \
+	fi
 
 # Run go vet
 
@@ -114,19 +141,51 @@ clean:
 # Setup development environment
 
 setup-dev:
+	@echo "Installing Go dependencies..."
 	go mod download
 	go mod tidy
+	@echo "Installing development tools..."
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	go install golang.org/x/vuln/cmd/govulncheck@latest
+	go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@latest
+	@echo ""
+	@echo "✓ Go tools installed successfully"
+	@echo ""
+	@echo "Optional tools (install manually):"
+	@echo "  - Terraform CLI: https://www.terraform.io/downloads"
+	@echo "  - markdownlint: npm install -g markdownlint-cli"
+	@echo "  - markdownlint-cli2: npm install -g markdownlint-cli2"
+	@echo ""
+	@echo "Verify installation:"
+	@echo "  golangci-lint version: $$(golangci-lint --version 2>/dev/null || echo 'not found')"
+	@echo "  govulncheck: $$(govulncheck -version 2>/dev/null || echo 'not found')"
+	@echo "  tfplugindocs: $$(tfplugindocs --version 2>/dev/null || echo 'installed')"
+
+# Verify development environment setup
+
+setup-check:
+	@echo "Checking development environment..."
+	@echo ""
+	@echo "Required Go tools:"
+	@command -v golangci-lint >/dev/null 2>&1 && echo "  ✓ golangci-lint: $$(golangci-lint --version | head -1)" || echo "  ✗ golangci-lint: not found"
+	@command -v govulncheck >/dev/null 2>&1 && echo "  ✓ govulncheck: installed" || echo "  ✗ govulncheck: not found"
+	@command -v tfplugindocs >/dev/null 2>&1 && echo "  ✓ tfplugindocs: installed" || echo "  ✗ tfplugindocs: not found"
+	@echo ""
+	@echo "Optional tools:"
+	@command -v terraform >/dev/null 2>&1 && echo "  ✓ terraform: installed" || echo "  ✗ terraform: not found"
+	@command -v markdownlint >/dev/null 2>&1 && echo "  ✓ markdownlint: installed" || echo "  ✗ markdownlint: not found (npm install -g markdownlint-cli)"
+	@echo ""
+	@command -v golangci-lint >/dev/null 2>&1 && command -v govulncheck >/dev/null 2>&1 && command -v tfplugindocs >/dev/null 2>&1 && echo "✓ All required tools installed!" || echo "⚠ Some required tools are missing. Run 'make setup-dev' to install them."
 
 # Generate documentation
 
 docs:
 	@echo "Generating documentation with tfplugindocs..."
 	@if command -v tfplugindocs >/dev/null 2>&1; then \
-		tfplugindocs generate; \
+	  tfplugindocs generate; \
 	else \
-		echo "Error: tfplugindocs not found. Install with: go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@latest"; \
-		exit 1; \
+	  echo "Error: tfplugindocs not found. Install with: go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@latest"; \
+	  exit 1; \
 	fi
 
 # Verify documentation quality
@@ -134,11 +193,11 @@ docs:
 docs-verify: docs
 	@echo "Verifying documentation quality..."
 	@if command -v markdownlint >/dev/null 2>&1; then \
-		markdownlint docs/ --fix; \
-		echo "Documentation linting completed"; \
+	  markdownlint docs/ --fix; \
+	  echo "Documentation linting completed"; \
 	else \
-		echo "Warning: markdownlint not found. Install with: npm install -g markdownlint-cli"; \
-		echo "Skipping markdown linting..."; \
+	  echo "Warning: markdownlint not found. Install with: npm install -g markdownlint-cli"; \
+	  echo "Skipping markdown linting..."; \
 	fi
 	@echo "Checking for template completeness..."
 	@tfplugindocs validate
@@ -149,8 +208,8 @@ docs-verify: docs
 coverage-api:
 	@echo "Analyzing API coverage..."
 	@if [ ! -f "tools/coverage-analyzer/main.go" ]; then \
-		echo "Coverage analyzer not found. Please create it first."; \
-		exit 1; \
+	  echo "Coverage analyzer not found. Please create it first."; \
+	  exit 1; \
 	fi
 	@cd tools/coverage-analyzer && go run main.go -provider ../../ -verbose
 
@@ -184,6 +243,11 @@ release-major:
 
 dev-check: lint test build
 	@echo "Development checks completed successfully"
+
+# Run all quality checks (like CI)
+
+ci-check: lint lint-security test
+	@echo "CI-style checks completed successfully"
 
 # Update dependencies
 

@@ -253,7 +253,7 @@ resource "wallix-bastion_authdomain_azuread" "high_security" {
 
 ### App Registration Setup
 
-#### Step 1: Create App Registration
+**Step 1: Create App Registration**
 
 1. Go to Azure Portal → Azure Active Directory → App registrations
 2. Click "New registration"
@@ -261,7 +261,7 @@ resource "wallix-bastion_authdomain_azuread" "high_security" {
 4. Supported account types: Choose based on your needs
 5. Redirect URI: Not required for client credentials flow
 
-#### Step 2: Configure API Permissions
+**Step 2: Configure API Permissions**
 
 1. Go to "API permissions"
 2. Add Microsoft Graph permissions:
@@ -270,7 +270,7 @@ resource "wallix-bastion_authdomain_azuread" "high_security" {
    - `Directory.Read.All` (Application permission)
 3. Grant admin consent
 
-#### Step 3: Create Client Secret
+**Step 3: Create Client Secret**
 
 1. Go to "Certificates & secrets"
 2. Click "New client secret"
