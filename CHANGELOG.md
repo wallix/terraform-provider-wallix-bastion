@@ -14,16 +14,19 @@ FEATURES:
 - add `wallix-bastion_certificate_authority` resource (requires API v3.12+)
 - add `wallix-bastion_passwordchangepolicy` resource
 - add `wallix-bastion_notification` resource
+- add `wallix-bastion_config_smtp` resource (SMTP server configuration)
+- add `wallix-bastion_config_wsm` resource (Web Session Manager configuration, requires API v3.12+)
 - **provider**: add `session_timeout`, `csrf_enabled`, and `insecure_skip_verify` arguments
 - **client**: cookie-based session authentication, avoiding re-authentication on every API request
 - **client**: CSRF token protection, with automatic extraction from responses and refresh on expiry
-- add 37 data sources for read-only lookup of infrastructure that already exists on the Bastion,
+- add 39 data sources for read-only lookup of infrastructure that already exists on the Bastion,
   covering every resource that previously had none (`wallix-bastion_device`,
   `wallix-bastion_application`, `wallix-bastion_user`, `wallix-bastion_usergroup`,
   `wallix-bastion_targetgroup`, `wallix-bastion_cluster`, `wallix-bastion_profile`,
-  `wallix-bastion_authorization`, and 29 others including the full `device_*`/`domain_*`/
-  `application_*` nested-resource families, `externalauth_*`, `authdomain_*`, and both
-  singleton configs `wallix-bastion_config_x509`/`wallix-bastion_encryption`)
+  `wallix-bastion_authorization`, and 31 others including the full `device_*`/`domain_*`/
+  `application_*` nested-resource families, `externalauth_*`, `authdomain_*`, and the singleton
+  configs `wallix-bastion_config_x509`/`wallix-bastion_config_smtp`/`wallix-bastion_config_wsm`/
+  `wallix-bastion_encryption`)
 
 ENHANCEMENTS:
 
