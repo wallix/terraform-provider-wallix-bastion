@@ -357,8 +357,6 @@ The provider supports comprehensive Bastion resource management:
 
 ### Supported Bastion Versions
 
-- Bastion 8.0+: Basic functionality
-- Bastion 9.0+: Enhanced features
 - Bastion 10.0+: Full feature support
 - Bastion 12.0.3+: CSRF token via cookie support
 
