@@ -10,9 +10,9 @@ import (
 	"github.com/wallix/terraform-provider-wallix-bastion/bastion"
 )
 
-// config/wsm doesn't exist before API v3.12; skip on older/default versions.
+// config/wsm doesn't exist before API v3.12; skip on older versions. Default (unset) is v3.12+.
 func TestAccResourceConfigWSM_basic(t *testing.T) {
-	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); semver.Compare(v, bastion.VersionWallixAPI312) >= 0 {
+	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); v == "" || semver.Compare(v, bastion.VersionWallixAPI312) >= 0 {
 		resourceName := "wallix-bastion_config_wsm.test"
 
 		resource.Test(t, resource.TestCase{

@@ -10,9 +10,9 @@ import (
 	"github.com/wallix/terraform-provider-wallix-bastion/bastion"
 )
 
-// The claim_customization block requires API v3.12+; skip on older/default versions.
+// The claim_customization block requires API v3.12+; skip on older versions. Default (unset) is v3.12+.
 func TestAccResourceAuthDomainSAML_basic(t *testing.T) {
-	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); semver.Compare(v, bastion.VersionWallixAPI312) >= 0 {
+	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); v == "" || semver.Compare(v, bastion.VersionWallixAPI312) >= 0 {
 		resource.Test(t, resource.TestCase{
 			PreCheck:  func() { testAccPreCheck(t) },
 			Providers: testAccProviders,

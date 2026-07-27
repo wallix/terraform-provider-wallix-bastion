@@ -52,7 +52,7 @@ func Provider() *schema.Provider {
 			"api_version": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("WALLIX_BASTION_API_VERSION", VersionWallixAPI38),
+				DefaultFunc: schema.EnvDefaultFunc("WALLIX_BASTION_API_VERSION", VersionWallixAPI312),
 			},
 			"session_timeout": {
 				Type:        schema.TypeInt,

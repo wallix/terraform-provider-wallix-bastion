@@ -13,7 +13,7 @@ import (
 // The update step (in the sibling resource test) sets authorize_session_sharing, which
 // requires API v3.12+; gate this datasource test the same way for consistency.
 func TestAccDataSourceAuthorization_basic(t *testing.T) {
-	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); semver.Compare(v, bastion.VersionWallixAPI312) >= 0 {
+	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); v == "" || semver.Compare(v, bastion.VersionWallixAPI312) >= 0 {
 		resource.Test(t, resource.TestCase{
 			PreCheck:                  func() { testAccPreCheck(t) },
 			Providers:                 testAccProviders,
