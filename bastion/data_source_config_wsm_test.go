@@ -12,11 +12,11 @@ import (
 
 // config_wsm is a singleton resource on the Bastion (a single, static
 // configuration identified by the hardcoded ID "wsmConfig") and doesn't exist
-// before API v3.12; skip on older/default versions. The data source has no
-// Required lookup field: it always reads the single existing WSM
-// configuration, so the "data" block below takes no arguments.
+// before API v3.12; skip on older versions. Default (unset) is v3.12+. The
+// data source has no Required lookup field: it always reads the single
+// existing WSM configuration, so the "data" block below takes no arguments.
 func TestAccDataSourceConfigWSM_basic(t *testing.T) {
-	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); semver.Compare(v, bastion.VersionWallixAPI312) >= 0 {
+	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); v == "" || semver.Compare(v, bastion.VersionWallixAPI312) >= 0 {
 		dataSourceName := "data.wallix-bastion_config_wsm.current"
 
 		resource.Test(t, resource.TestCase{

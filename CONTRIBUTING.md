@@ -184,7 +184,7 @@ export WALLIX_BASTION_HOST="bastion.test.local"
 export WALLIX_BASTION_USER="admin"
 export WALLIX_BASTION_TOKEN="your-api-token-here"
 
-# Optional: API version (default: v3.8)
+# Optional: API version (default: v3.12)
 export WALLIX_BASTION_API_VERSION="v3.12"
 
 # Optional: Port (default: 443)

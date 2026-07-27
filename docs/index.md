@@ -139,7 +139,7 @@ Choose one authentication method:
 ### Optional Arguments
 
 - **port**: HTTPS port for Bastion API (default: 443)
-- **api_version**: API version to use (default: "v3.8", also supports "v3.12")
+- **api_version**: API version to use (default: "v3.12", also supports "v3.8")
 - **insecure_skip_verify**: Skip TLS certificate verification (default: false). Only use for development with self-signed certificates
 - **csrf_enabled**: Enable CSRF token protection (default: true). Recommended to keep enabled for security
 - **session_timeout**: Session timeout duration in seconds (default: 120). Sessions are automatically refreshed on 401 responses
@@ -148,8 +148,8 @@ Choose one authentication method:
 
 The provider supports multiple Bastion API versions:
 
-- **v3.8**: Default version, widely compatible
-- **v3.12**: Newer version with additional features
+- **v3.8**: Widely compatible
+- **v3.12**: Default version, with additional features
 
 ```terraform
 provider "wallix-bastion" {

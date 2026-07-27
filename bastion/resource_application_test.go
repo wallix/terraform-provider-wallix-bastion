@@ -55,7 +55,7 @@ func TestAccResourceApplication_basic(t *testing.T) {
 
 func TestAccResourceApplication_web(t *testing.T) {
 	if os.Getenv("TESTACC_WEB_APP") != "" {
-		if v := os.Getenv("WALLIX_BASTION_API_VERSION"); semver.Compare(v, bastion.VersionWallixAPI312) >= 0 {
+		if v := os.Getenv("WALLIX_BASTION_API_VERSION"); v == "" || semver.Compare(v, bastion.VersionWallixAPI312) >= 0 {
 			resource.Test(t, resource.TestCase{
 				PreCheck:  func() { testAccPreCheck(t) },
 				Providers: testAccProviders,

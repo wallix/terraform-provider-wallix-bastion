@@ -11,10 +11,8 @@ import (
 	"github.com/wallix/terraform-provider-wallix-bastion/bastion"
 )
 
-// WALLIX_BASTION_API_VERSION defaults to v3.8 when unset (see provider.go's EnvDefaultFunc), so
-// an empty env var must be treated the same as an explicit v3.8 here.
 func TestAccDataSourceExternalAuthSaml_basic38(t *testing.T) {
-	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); v == "" || v == bastion.VersionWallixAPI38 {
+	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); v == bastion.VersionWallixAPI38 {
 		resource.Test(t, resource.TestCase{
 			PreCheck:                  func() { testAccPreCheck(t) },
 			Providers:                 testAccProviders,
@@ -62,9 +60,10 @@ func TestAccDataSourceExternalAuthSaml_basic38(t *testing.T) {
 	}
 }
 
+// WALLIX_BASTION_API_VERSION defaults to v3.12 when unset (see provider.go's EnvDefaultFunc), so
+// an empty env var must be treated the same as an explicit v3.12 here.
 func TestAccDataSourceExternalAuthSaml_basic(t *testing.T) {
-	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); v != "" &&
-		v != bastion.VersionWallixAPI38 {
+	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); v == "" || v == bastion.VersionWallixAPI312 {
 		resource.Test(t, resource.TestCase{
 			PreCheck:                  func() { testAccPreCheck(t) },
 			Providers:                 testAccProviders,

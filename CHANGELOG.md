@@ -27,6 +27,7 @@ FEATURES:
   `application_*` nested-resource families, `externalauth_*`, `authdomain_*`, and the singleton
   configs `wallix-bastion_config_x509`/`wallix-bastion_config_smtp`/`wallix-bastion_config_wsm`/
   `wallix-bastion_encryption`)
+- default API now use v3.12
 
 ENHANCEMENTS:
 
