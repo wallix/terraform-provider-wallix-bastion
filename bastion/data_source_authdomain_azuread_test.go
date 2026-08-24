@@ -47,6 +47,9 @@ resource "wallix-bastion_externalauth_saml" "testacc_dataAuthDomainAzureAD_ds" {
   authentication_name = "testacc_dataAuthDomainAzureAD_ds"
   idp_metadata         = local.idp_metadata_azuread_ds
   timeout              = 120
+  claim_customization {
+    username = "email"
+  }
 }
 
 resource "wallix-bastion_authdomain_azuread" "testacc_dataAuthDomainAzureAD_ds" {
@@ -69,6 +72,9 @@ resource "wallix-bastion_externalauth_saml" "testacc_dataAuthDomainAzureAD_ds" {
   authentication_name = "testacc_dataAuthDomainAzureAD_ds"
   idp_metadata         = local.idp_metadata_azuread_ds
   timeout              = 120
+  claim_customization {
+    username = "email"
+  }
 }
 
 resource "wallix-bastion_authdomain_azuread" "testacc_dataAuthDomainAzureAD_ds" {

@@ -5,6 +5,7 @@
 BREAKING CHANGES:
 
 - **provider**: TLS certificate verification is now enabled by default (`insecure_skip_verify` now defaults to `false`). Users connecting to a Bastion with a self-signed certificate must explicitly set `insecure_skip_verify = true` or the `WALLIX_INSECURE_SKIP_VERIFY` environment variable.
+- **resource/wallix-bastion_externalauth_saml**: `claim_customization` is now required, matching the API's actual requirement on API v3.12+; existing configs that omit it must add the block. This resource is not usable on API v3.8, where `claim_customization` isn't part of the API at all.
 
 FEATURES:
 
@@ -46,6 +47,7 @@ BUG FIXES:
 - **resource/wallix-bastion_device_localdomain_account**: fixed a potential panic when the API omits the `credentials` field from a read response
 - **resource/wallix-bastion_authdomain_azuread**: fixed `passphrase` always being sent to the API as an empty string when unset, which made it impossible to create this resource without also setting `private_key`/`passphrase`, even though both are documented as optional
 - **resource/wallix-bastion_device_localdomain_account_credential**, **resource/wallix-bastion_application_localdomain_account_credential**: fixed `apply` failing with "already exists" after WALLIX rotates a credential outside of Terraform (manual regenerate, or an automatic rotation policy); `Read` now retries a lookup by `(account, type)` before treating a 404 on the stored ID as a deletion
+- **data-source/wallix-bastion_device_localdomain_account_credential**, **data-source/wallix-bastion_domain_account_credential**, **data-source/wallix-bastion_application_localdomain_account_credential**: fixed `password`/`passphrase`/`private_key` never being populated even though declared as computed attributes
 - **client**: fixed a race condition on session state checks, a bug where POST/PUT requests could fail on re-authentication due to request body reuse, and defensive error handling around URL parsing and cookie jar creation
 
 ## 0.14.8 (October 10, 2025)

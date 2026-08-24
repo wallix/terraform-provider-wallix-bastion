@@ -140,7 +140,8 @@ const (
 `
 )
 
-// Resource creation configuration (WAB v3.8, no claim_customization support).
+// Resource creation configuration (WAB v3.8). claim_customization isn't part of the v3.8 API,
+// but the schema now requires the block regardless of API version - see resource_externalauth_saml.go.
 func testAccDataSourceExternalAuthSaml38ConfigCreate() string {
 	return fmt.Sprintf(`
 resource "wallix-bastion_externalauth_saml" "testacc_dataExternalAuthSaml" {
@@ -149,6 +150,9 @@ resource "wallix-bastion_externalauth_saml" "testacc_dataExternalAuthSaml" {
 %s
 EOT
   timeout              = 30
+  claim_customization {
+    username = "email"
+  }
 }
 `, dataSourceIdpMetadataSAML)
 }
@@ -162,6 +166,9 @@ resource "wallix-bastion_externalauth_saml" "testacc_dataExternalAuthSaml" {
 %s
 EOT
   timeout              = 30
+  claim_customization {
+    username = "email"
+  }
 }
 
 data "wallix-bastion_externalauth_saml" "testacc_dataExternalAuthSaml" {

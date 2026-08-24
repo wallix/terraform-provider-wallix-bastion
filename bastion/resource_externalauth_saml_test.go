@@ -156,6 +156,9 @@ resource "wallix-bastion_externalauth_saml" "testacc_ExternalAuthSaml" {
 %s
 EOT
   timeout             = 30
+  claim_customization {
+    username = "email"
+  }
 }
 `, idpMetadataSAML)
 }
@@ -186,6 +189,9 @@ EOT
   description         = "testacc_ExternalAuthSaml description"
   certificate         = tls_self_signed_cert.example.cert_pem
   private_key         = tls_private_key.example.private_key_pem
+  claim_customization {
+    username = "email"
+  }
 }
 
 resource "tls_private_key" "example" {

@@ -82,4 +82,7 @@ func fillSourceApplicationLocalDomainAccountCredential(d *schema.ResourceData, j
 	if tfErr := d.Set(skType, jsonData.Type); tfErr != nil {
 		panic(tfErr)
 	}
+	if tfErr := d.Set(skPassword, jsonData.Password); tfErr != nil {
+		panic(tfErr)
+	}
 }

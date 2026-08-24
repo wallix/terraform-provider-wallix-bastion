@@ -483,13 +483,13 @@ resource "wallix-bastion_externalauth_saml" "dev_saml" {
 ### Required
 
 - `authentication_name` (String)
+- `claim_customization` (Block List, Min: 1, Max: 1) (see [below for nested schema](#nestedblock--claim_customization))
 - `idp_metadata` (String)
 - `timeout` (Number)
 
 ### Optional
 
 - `certificate` (String, Sensitive)
-- `claim_customization` (Block List, Max: 1) (see [below for nested schema](#nestedblock--claim_customization))
 - `description` (String)
 - `passphrase` (String, Sensitive)
 - `private_key` (String, Sensitive)
