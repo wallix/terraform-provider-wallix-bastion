@@ -83,8 +83,7 @@ check_branch() {
     local current_branch=$(git branch --show-current)
     if [[ "$current_branch" != "main" ]]; then
         log_warning "Current branch is '$current_branch', not 'main'"
-        read -p "Continue anyway? (y/N): " -n 1 -r
-        echo
+        read -r -p "Continue anyway? (y/N): "
         if [[ ! $REPLY =~ ^[Yy]$ ]]; then
             exit 1
         fi
@@ -172,10 +171,10 @@ create_tag() {
     git tag -a "$new_version" -m "$tag_message"
     
     log_success "Tag ${new_version} created"
-    
+
     # Ask if we should push the tag
-    read -p "Push tag to remote? (y/N): " -n 1 -r
-    echo
+    log_warning "Pushing this tag triggers the release workflow and publishes to the Terraform Registry."
+    read -r -p "Push tag ${new_version} to remote now? (y/N): "
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         git push origin "$new_version"
         log_success "Tag ${new_version} pushed to remote"
@@ -296,8 +295,7 @@ main() {
     fi
     
     # Confirm before proceeding
-    read -p "Proceed with release $new_version? (y/N): " -n 1 -r
-    echo
+    read -r -p "Proceed with release $new_version? (y/N): "
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         log_info "Release preparation cancelled"
         exit 0
