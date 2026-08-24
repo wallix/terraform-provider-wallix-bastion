@@ -63,8 +63,12 @@ jobs:
       - name: Download and validate artifacts
         run: |
           TAG="${{ steps.release_info.outputs.tag }}"
-          echo "Validating artifacts for release $TAG"
-          
+          # GoReleaser names archive/checksum files with the bare version (no "v" prefix,
+          # see .goreleaser.yml's name_template using {{ .Version }}), while the release/tag
+          # itself keeps the "v" prefix - only the URL path segment uses TAG.
+          VERSION="${TAG#v}"
+          echo "Validating artifacts for release $TAG (version $VERSION)"
+
           # Create temp directory for downloads
           mkdir -p /tmp/artifacts
           cd /tmp/artifacts
@@ -106,31 +110,31 @@ jobs:
           
           # Download key artifacts to validate with retries
           download_with_retry \
-            "https://github.com/wallix/terraform-provider-wallix-bastion/releases/download/${TAG}/terraform-provider-wallix-bastion_${TAG}_linux_amd64.zip" \
-            "terraform-provider-wallix-bastion_${TAG}_linux_amd64.zip"
+            "https://github.com/wallix/terraform-provider-wallix-bastion/releases/download/${TAG}/terraform-provider-wallix-bastion_${VERSION}_linux_amd64.zip" \
+            "terraform-provider-wallix-bastion_${VERSION}_linux_amd64.zip"
           
           download_with_retry \
-            "https://github.com/wallix/terraform-provider-wallix-bastion/releases/download/${TAG}/terraform-provider-wallix-bastion_${TAG}_windows_amd64.zip" \
-            "terraform-provider-wallix-bastion_${TAG}_windows_amd64.zip"
+            "https://github.com/wallix/terraform-provider-wallix-bastion/releases/download/${TAG}/terraform-provider-wallix-bastion_${VERSION}_windows_amd64.zip" \
+            "terraform-provider-wallix-bastion_${VERSION}_windows_amd64.zip"
           
           download_with_retry \
-            "https://github.com/wallix/terraform-provider-wallix-bastion/releases/download/${TAG}/terraform-provider-wallix-bastion_${TAG}_SHA256SUMS" \
-            "terraform-provider-wallix-bastion_${TAG}_SHA256SUMS"
+            "https://github.com/wallix/terraform-provider-wallix-bastion/releases/download/${TAG}/terraform-provider-wallix-bastion_${VERSION}_SHA256SUMS" \
+            "terraform-provider-wallix-bastion_${VERSION}_SHA256SUMS"
           
           # Validate file types
           echo ""
           echo "=== Validating file types ==="
           echo "Linux zip:"
-          file "terraform-provider-wallix-bastion_${TAG}_linux_amd64.zip"
+          file "terraform-provider-wallix-bastion_${VERSION}_linux_amd64.zip"
           
           echo "Windows zip:"
-          file "terraform-provider-wallix-bastion_${TAG}_windows_amd64.zip"
+          file "terraform-provider-wallix-bastion_${VERSION}_windows_amd64.zip"
           
           # Test extraction
           echo ""
           echo "=== Testing archive extraction ==="
           echo "Testing Linux zip extraction:"
-          if unzip -l "terraform-provider-wallix-bastion_${TAG}_linux_amd64.zip" | head -10; then
+          if unzip -l "terraform-provider-wallix-bastion_${VERSION}_linux_amd64.zip" | head -10; then
             echo "✓ Linux zip extraction successful"
           else
             echo "✗ Linux zip extraction failed"
@@ -138,7 +142,7 @@ jobs:
           fi
           
           echo "Testing Windows zip extraction:"
-          if unzip -l "terraform-provider-wallix-bastion_${TAG}_windows_amd64.zip" | head -10; then
+          if unzip -l "terraform-provider-wallix-bastion_${VERSION}_windows_amd64.zip" | head -10; then
             echo "✓ Windows zip extraction successful"
           else
             echo "✗ Windows zip extraction failed"
@@ -148,12 +152,12 @@ jobs:
           # Validate checksums exist
           echo ""
           echo "=== Validating checksums ==="
-          if [ -f "terraform-provider-wallix-bastion_${TAG}_SHA256SUMS" ]; then
+          if [ -f "terraform-provider-wallix-bastion_${VERSION}_SHA256SUMS" ]; then
             echo "Checksums file found, checking format:"
-            head -5 "terraform-provider-wallix-bastion_${TAG}_SHA256SUMS"
+            head -5 "terraform-provider-wallix-bastion_${VERSION}_SHA256SUMS"
             
             # Count number of checksums
-            CHECKSUM_COUNT=$(wc -l < "terraform-provider-wallix-bastion_${TAG}_SHA256SUMS")
+            CHECKSUM_COUNT=$(wc -l < "terraform-provider-wallix-bastion_${VERSION}_SHA256SUMS")
             echo "Found $CHECKSUM_COUNT checksums"
             
             if [ "$CHECKSUM_COUNT" -lt 5 ]; then
@@ -168,8 +172,8 @@ jobs:
           # Verify one checksum
           echo ""
           echo "=== Verifying checksum ==="
-          sha256sum "terraform-provider-wallix-bastion_${TAG}_linux_amd64.zip"
-          grep "terraform-provider-wallix-bastion_${TAG}_linux_amd64.zip" "terraform-provider-wallix-bastion_${TAG}_SHA256SUMS"
+          sha256sum "terraform-provider-wallix-bastion_${VERSION}_linux_amd64.zip"
+          grep "terraform-provider-wallix-bastion_${VERSION}_linux_amd64.zip" "terraform-provider-wallix-bastion_${VERSION}_SHA256SUMS"
           
           echo ""
           echo "=== Validation completed successfully! ==="

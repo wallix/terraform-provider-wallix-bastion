@@ -115,6 +115,15 @@ run_tests() {
     
     # Run golangci-lint
     if command -v golangci-lint &> /dev/null; then
+        # .golangci.yml uses the v2 config schema (required by golangci-lint-action@v9);
+        # a v1 binary fails with a cryptic error, so check up front and point at the fix.
+        lint_version=$(golangci-lint --version 2>&1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+        lint_major=${lint_version%%.*}
+        if [[ -n "$lint_major" && "$lint_major" != "2" ]]; then
+            log_error "golangci-lint v${lint_version} found, but .golangci.yml requires v2."
+            log_error "Fix with: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest"
+            exit 1
+        fi
         golangci-lint run
         log_success "Linting passed"
     else

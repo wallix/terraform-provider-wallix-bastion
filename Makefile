@@ -26,7 +26,7 @@ BINARY_NAME := terraform-provider-$(PROVIDER_NAME)
 
 LDFLAGS_STRING := "-X main.version=$(VERSION)"
 
-.PHONY: build install test testacc test-coverage fmt lint lint-fix lint-markdown lint-security vet clean setup-dev setup-check docs docs-verify build-all test-all maintenance prepare-release release-patch release-minor release-major ci-check dev-check
+.PHONY: build install test testacc test-coverage fmt lint lint-fix lint-markdown lint-security vet clean setup-dev setup-check docs docs-verify build-all test-all maintenance prepare-release release-patch release-minor release-major release ci-check dev-check
 
 # Default target
 
@@ -145,7 +145,7 @@ setup-dev:
 	go mod download
 	go mod tidy
 	@echo "Installing development tools..."
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
 	go install golang.org/x/vuln/cmd/govulncheck@latest
 	go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@latest
 	@echo ""
@@ -238,6 +238,13 @@ release-minor:
 
 release-major:
 	@./scripts/prepare-release.sh --major
+
+# For a specific version, e.g. `make release ARGS="--version v0.15.0"`.
+# Note: `make release-minor --version vX` does NOT work - `--version` is parsed
+# by make itself (it prints make's own version and exits), never reaching the
+# script. Flags must be passed through the ARGS variable instead.
+release:
+	@./scripts/prepare-release.sh $(ARGS)
 
 # Quick development checks
 
