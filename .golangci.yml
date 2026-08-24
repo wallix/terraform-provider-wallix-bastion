@@ -13,7 +13,8 @@ linters:
     - depguard
     - dupl
     - err113
-    - exhaustruct
+    - exhaustruct     # Deprecated in v2 but still selectable; disable alongside exhaustruct_v5
+    - exhaustruct_v5  # v2's rewrite of `exhaustruct`; same reason for disabling as before
     - forcetypeassert
     - funlen
     - gomoddirectives
