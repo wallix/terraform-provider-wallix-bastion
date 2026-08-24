@@ -51,7 +51,7 @@ func TestAccDataSourceApplication_basic(t *testing.T) {
 func testAccDataSourceApplicationConfigCreate() string {
 	return `
 resource "wallix-bastion_device" "testacc_dataAppli_ds" {
-  device_name = "testacc_dataAppli_ds"
+  device_name = "testacc_dataAppli_ds_device"
   host        = "192.168.100.13"
 }
 
@@ -97,7 +97,7 @@ resource "wallix-bastion_application" "testacc_dataAppli_ds" {
 func testAccDataSourceApplicationConfigData() string {
 	return `
 resource "wallix-bastion_device" "testacc_dataAppli_ds" {
-  device_name = "testacc_dataAppli_ds"
+  device_name = "testacc_dataAppli_ds_device"
   host        = "192.168.100.13"
 }
 

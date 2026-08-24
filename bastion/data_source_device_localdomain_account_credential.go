@@ -92,6 +92,15 @@ func fillSourceDeviceLocalDomainAccountCredential(d *schema.ResourceData, jsonDa
 	if tfErr := d.Set(skType, jsonData.Type); tfErr != nil {
 		panic(tfErr)
 	}
+	if tfErr := d.Set(skPassword, jsonData.Password); tfErr != nil {
+		panic(tfErr)
+	}
+	if tfErr := d.Set(skPassphrase, jsonData.Passphrase); tfErr != nil {
+		panic(tfErr)
+	}
+	if tfErr := d.Set(skPrivateKey, jsonData.PrivateKey); tfErr != nil {
+		panic(tfErr)
+	}
 	if tfErr := d.Set(skPublicKey, jsonData.PublicKey); tfErr != nil {
 		panic(tfErr)
 	}
