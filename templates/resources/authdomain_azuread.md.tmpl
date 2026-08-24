@@ -8,207 +8,33 @@ description: |-
 
 # {{ .Name }} ({{ .Type | title }})
 
-Provides an Azure Active Directory authentication domain resource.
+Provides an Azure Active Directory authentication domain resource. This authenticates users via
+SAML against Azure AD, so it depends on a `wallix-bastion_externalauth_saml` resource configured
+for Azure AD's SAML endpoint.
 
 ## Example Usage
 
 ```terraform
-# Basic Azure AD authentication domain
-resource "wallix-bastion_authdomain_azuread" "corporate_azure" {
-  domain_name     = "corporate.onmicrosoft.com"
-  default_domain  = "AZURE_AD"
-  description     = "Corporate Azure Active Directory domain"
-  default_language = "en"
-  
-  # Azure AD configuration
-  tenant_id       = "12345678-1234-1234-1234-123456789012"
-  client_id       = "87654321-4321-4321-4321-210987654321"
-  client_secret   = var.azure_ad_client_secret
-  
-  # Authentication scope
-  scope           = "https://graph.microsoft.com/.default"
-}
+resource "wallix-bastion_externalauth_saml" "azuread" {
+  authentication_name = "azuread_saml"
+  idp_metadata        = file("${path.module}/azuread-federationmetadata.xml")
+  timeout             = 30
 
-# Azure AD with custom application registration
-resource "wallix-bastion_authdomain_azuread" "custom_app" {
-  domain_name     = "custom.onmicrosoft.com"
-  default_domain  = "CUSTOM_AZURE"
-  description     = "Custom Azure AD application registration"
-  default_language = "en"
-  
-  # Custom app registration
-  tenant_id       = var.azure_tenant_id
-  client_id       = var.azure_custom_client_id
-  client_secret   = var.azure_custom_client_secret
-  
-  # Custom scope and authority
-  scope           = "api://custom-app/.default"
-  authority       = "https://login.microsoftonline.com/organizations"
-}
-
-# Multi-tenant Azure AD configuration
-resource "wallix-bastion_authdomain_azuread" "multi_tenant" {
-  domain_name     = "multitenant.onmicrosoft.com"
-  default_domain  = "MULTI_AZURE"
-  description     = "Multi-tenant Azure AD configuration"
-  default_language = "en"
-  
-  # Multi-tenant settings
-  tenant_id       = "common"  # Multi-tenant identifier
-  client_id       = var.azure_multitenant_client_id
-  client_secret   = var.azure_multitenant_client_secret
-  
-  # Multi-tenant authority
-  authority       = "https://login.microsoftonline.com/common"
-  scope           = "https://graph.microsoft.com/.default"
-  
-  # Allow users from any Azure AD tenant
-  allow_external_users = true
-}
-
-# Azure AD B2C configuration
-resource "wallix-bastion_authdomain_azuread" "b2c" {
-  domain_name     = "b2c.onmicrosoft.com"
-  default_domain  = "AZURE_B2C"
-  description     = "Azure AD B2C configuration"
-  default_language = "en"
-  
-  # B2C specific settings
-  tenant_id       = "b2ctenant.onmicrosoft.com"
-  client_id       = var.azure_b2c_client_id
-  client_secret   = var.azure_b2c_client_secret
-  
-  # B2C authority and policy
-  authority       = "https://b2ctenant.b2clogin.com/b2ctenant.onmicrosoft.com/B2C_1_signin"
-  scope           = "openid profile"
-  
-  # B2C specific attributes
-  user_flow       = "B2C_1_signin"
-  policy_name     = "B2C_1_signin"
-}
-
-# Azure AD with Conditional Access
-resource "wallix-bastion_authdomain_azuread" "conditional_access" {
-  domain_name     = "conditional.onmicrosoft.com"
-  default_domain  = "CONDITIONAL_AZURE"
-  description     = "Azure AD with Conditional Access policies"
-  default_language = "en"
-  
-  # Standard Azure AD settings
-  tenant_id       = var.azure_tenant_id
-  client_id       = var.azure_client_id
-  client_secret   = var.azure_client_secret
-  
-  # Enhanced security scope
-  scope           = "https://graph.microsoft.com/.default"
-  
-  # Conditional Access requirements
-  require_mfa     = true
-  require_compliant_device = true
-  allowed_locations = ["trusted_location_1", "trusted_location_2"]
-}
-
-# Azure Government Cloud configuration
-resource "wallix-bastion_authdomain_azuread" "gov_cloud" {
-  domain_name     = "government.onmicrosoft.us"
-  default_domain  = "AZURE_GOV"
-  description     = "Azure Government Cloud AD"
-  default_language = "en"
-  
-  # Government cloud settings
-  tenant_id       = var.azure_gov_tenant_id
-  client_id       = var.azure_gov_client_id
-  client_secret   = var.azure_gov_client_secret
-  
-  # Government cloud endpoints
-  authority       = "https://login.microsoftonline.us"
-  scope           = "https://graph.microsoft.us/.default"
-  graph_endpoint  = "https://graph.microsoft.us"
-}
-
-# Azure AD with custom user attributes
-resource "wallix-bastion_authdomain_azuread" "custom_attributes" {
-  domain_name     = "custom-attrs.onmicrosoft.com"
-  default_domain  = "CUSTOM_ATTRS"
-  description     = "Azure AD with custom user attributes"
-  default_language = "en"
-  
-  # Standard connection
-  tenant_id       = var.azure_tenant_id
-  client_id       = var.azure_client_id
-  client_secret   = var.azure_client_secret
-  scope           = "https://graph.microsoft.com/.default"
-  
-  # Custom attribute mapping
-  user_id_claim   = "oid"
-  username_claim  = "preferred_username"
-  email_claim     = "email"
-  groups_claim    = "groups"
-  roles_claim     = "roles"
-  
-  # Custom claims
-  custom_claims   = {
-    department    = "extension_department"
-    employee_id   = "extension_employeeId"
-    cost_center   = "extension_costCenter"
+  claim_customization {
+    username = "email"
   }
 }
 
-# Azure AD with group-based access
-resource "wallix-bastion_authdomain_azuread" "group_based" {
-  domain_name     = "groups.onmicrosoft.com"
-  default_domain  = "GROUP_AZURE"
-  description     = "Azure AD with group-based access control"
-  default_language = "en"
-  
-  # Standard configuration
-  tenant_id       = var.azure_tenant_id
-  client_id       = var.azure_client_id
-  client_secret   = var.azure_client_secret
-  scope           = "https://graph.microsoft.com/.default"
-  
-  # Group validation
-  validate_groups = true
-  required_groups = [
-    "Bastion Users",
-    "VPN Access"
-  ]
-  admin_groups    = [
-    "Bastion Administrators",
-    "IT Security"
-  ]
-}
-
-# High-security Azure AD configuration
-resource "wallix-bastion_authdomain_azuread" "high_security" {
-  domain_name     = "secure.onmicrosoft.com"
-  default_domain  = "SECURE_AZURE"
-  description     = "High-security Azure AD configuration"
-  default_language = "en"
-  
-  # Secure connection
-  tenant_id       = var.azure_secure_tenant_id
-  client_id       = var.azure_secure_client_id
-  client_secret   = var.azure_secure_client_secret
-  
-  # Enhanced security settings
-  scope           = "https://graph.microsoft.com/.default"
-  require_mfa     = true
-  require_compliant_device = true
-  session_timeout = 3600  # 1 hour
-  
-  # Certificate-based authentication
-  certificate_auth = true
-  client_certificate_path = "/secure/certs/azure-ad-client.pfx"
-  client_certificate_password = var.azure_cert_password
-  
-  # Strict group validation
-  validate_groups = true
-  required_groups = ["High Security Access"]
-  
-  # Audit and compliance
-  enable_audit_logs = true
-  compliance_policy = "strict"
+resource "wallix-bastion_authdomain_azuread" "corporate" {
+  domain_name          = "corporate.onmicrosoft.com"
+  auth_domain_name     = "corporate-azuread"
+  client_id            = "87654321-4321-4321-4321-210987654321"
+  entity_id            = "https://sts.windows.net/12345678-1234-1234-1234-123456789012/"
+  label                = "Corporate Azure AD"
+  default_language     = "en"
+  default_email_domain = "corporate.com"
+  description          = "Corporate Azure Active Directory domain"
+  external_auths       = [wallix-bastion_externalauth_saml.azuread.authentication_name]
 }
 ```
 
@@ -216,252 +42,26 @@ resource "wallix-bastion_authdomain_azuread" "high_security" {
 
 ## Usage Notes
 
-### Azure AD Configuration
+### Relationship to externalauth_saml
 
-**Basic Requirements:**
+`external_auths` references one or more `wallix-bastion_externalauth_saml.authentication_name`
+values - Azure AD authenticates through WALLIX's generic SAML integration, configured with Azure
+AD as the identity provider. `client_id` and `entity_id` should match the values from your Azure
+AD app registration / SAML federation metadata.
 
-- **tenant_id**: Azure AD tenant identifier (GUID or domain)
-- **client_id**: Application (client) ID from Azure AD app registration
-- **client_secret**: Client secret for the registered application
-- **scope**: OAuth 2.0 scope for Microsoft Graph API access
+### default_language
 
-### App Registration Setup
+Must be one of `de`, `en`, `es`, `fr`, `ru`.
 
-**Step 1: Create App Registration**
+### Optional Certificate-Based Fields
 
-1. Go to Azure Portal → Azure Active Directory → App registrations
-2. Click "New registration"
-3. Name: "WALLIX Bastion Integration"
-4. Supported account types: Choose based on your needs
-5. Redirect URI: Not required for client credentials flow
-
-**Step 2: Configure API Permissions**
-
-1. Go to "API permissions"
-2. Add Microsoft Graph permissions:
-   - `User.Read.All` (Application permission)
-   - `Group.Read.All` (Application permission)
-   - `Directory.Read.All` (Application permission)
-3. Grant admin consent
-
-**Step 3: Create Client Secret**
-
-1. Go to "Certificates & secrets"
-2. Click "New client secret"
-3. Set expiration (24 months recommended)
-4. Copy the secret value (store securely)
-
-### Tenant Configuration Types
-
-**Single Tenant:**
-
-```terraform
-tenant_id = "12345678-1234-1234-1234-123456789012"
-authority = "https://login.microsoftonline.com/12345678-1234-1234-1234-123456789012"
-```
-
-**Multi-Tenant:**
-
-```terraform
-tenant_id = "common"
-authority = "https://login.microsoftonline.com/common"
-allow_external_users = true
-```
-
-**Azure B2C:**
-
-```terraform
-tenant_id = "b2ctenant.onmicrosoft.com"
-authority = "https://b2ctenant.b2clogin.com/b2ctenant.onmicrosoft.com/B2C_1_signin"
-user_flow = "B2C_1_signin"
-```
-
-### Cloud Environment Support
-
-**Azure Public Cloud:**
-
-```terraform
-authority = "https://login.microsoftonline.com"
-scope = "https://graph.microsoft.com/.default"
-graph_endpoint = "https://graph.microsoft.com"
-```
-
-**Azure Government:**
-
-```terraform
-authority = "https://login.microsoftonline.us"
-scope = "https://graph.microsoft.us/.default"
-graph_endpoint = "https://graph.microsoft.us"
-```
-
-**Azure China:**
-
-```terraform
-authority = "https://login.chinacloudapi.cn"
-scope = "https://microsoftgraph.chinacloudapi.cn/.default"
-graph_endpoint = "https://microsoftgraph.chinacloudapi.cn"
-```
-
-### User Attribute Mapping
-
-**Standard Claims:**
-
-```terraform
-user_id_claim   = "oid"                # Object ID (unique identifier)
-username_claim  = "preferred_username" # Username
-email_claim     = "email"              # Email address
-groups_claim    = "groups"             # Group memberships
-roles_claim     = "roles"              # Application roles
-```
-
-**Custom Claims:**
-
-```terraform
-custom_claims = {
-  department    = "extension_department"
-  employee_id   = "extension_employeeId"
-  manager       = "extension_manager"
-  cost_center   = "extension_costCenter"
-}
-```
-
-### Security Features
-
-**Multi-Factor Authentication:**
-
-```terraform
-require_mfa = true
-mfa_methods = ["phone", "authenticator", "sms"]
-```
-
-**Conditional Access:**
-
-```terraform
-require_compliant_device = true
-allowed_locations = ["trusted_location_1", "trusted_location_2"]
-blocked_locations = ["blocked_country_1"]
-```
-
-**Certificate Authentication:**
-
-```terraform
-certificate_auth = true
-client_certificate_path = "/path/to/client-cert.pfx"
-client_certificate_password = var.cert_password
-```
-
-### Group-Based Access Control
-
-**Group Validation:**
-
-```terraform
-validate_groups = true
-required_groups = [
-  "Bastion Users",
-  "Remote Access"
-]
-admin_groups = [
-  "Bastion Administrators",
-  "IT Security Team"
-]
-```
-
-### Session Management
-
-**Session Configuration:**
-
-```terraform
-session_timeout = 3600      # 1 hour in seconds
-max_sessions = 5            # Maximum concurrent sessions
-idle_timeout = 1800         # 30 minutes idle timeout
-```
-
-### Best Practices
-
-**Security:**
-
-1. Use certificate-based authentication for production
-2. Enable MFA requirements
-3. Implement Conditional Access policies
-4. Regular secret rotation (every 6-12 months)
-5. Use least-privilege API permissions
-
-**Operational:**
-
-1. Monitor authentication failures
-2. Set up alerts for failed authentications
-3. Regular access reviews
-4. Audit group memberships
-5. Monitor application permissions
-
-### Common Configurations
-
-**Corporate Environment:**
-
-```terraform
-resource "wallix-bastion_authdomain_azuread" "corporate" {
-  tenant_id     = var.azure_tenant_id
-  client_id     = var.azure_client_id
-  client_secret = var.azure_client_secret
-  
-  require_mfa = true
-  validate_groups = true
-  required_groups = ["VPN Users", "Remote Workers"]
-}
-```
-
-**High-Security Environment:**
-
-```terraform
-resource "wallix-bastion_authdomain_azuread" "secure" {
-  tenant_id     = var.azure_tenant_id
-  client_id     = var.azure_client_id
-  
-  certificate_auth = true
-  client_certificate_path = var.azure_cert_path
-  
-  require_mfa = true
-  require_compliant_device = true
-  session_timeout = 1800  # 30 minutes
-}
-```
-
-### Troubleshooting
-
-**Common Issues:**
-
-1. **Authentication Failures**: Check client secret expiration
-2. **Permission Errors**: Verify API permissions and admin consent
-3. **Group Issues**: Validate group names and memberships
-4. **Certificate Problems**: Check certificate validity and password
-
-**Debugging Steps:**
-
-1. Verify tenant ID and client ID
-2. Check client secret expiration
-3. Validate API permissions
-4. Test with Azure AD PowerShell
-5. Review Azure AD sign-in logs
-
-### Monitoring and Compliance
-
-**Azure AD Logs:**
-
-- Sign-in logs for authentication events
-- Audit logs for configuration changes
-- Risk events for suspicious activity
-
-**Compliance Features:**
-
-- Conditional Access policy compliance
-- Device compliance status
-- MFA usage reports
-- Access reviews
+`certificate`, `client_secret`, `private_key`, and `passphrase` are all optional. `passphrase`
+requires `private_key` to also be set.
 
 ## Import
 
 Azure AD authentication domain can be imported using the domain name, e.g.
 
 ```shell
-terraform import wallix-bastion_authdomain_azuread.corporate "corporate.onmicrosoft.com"
+terraform import wallix-bastion_authdomain_azuread.corporate corporate.onmicrosoft.com
 ```
