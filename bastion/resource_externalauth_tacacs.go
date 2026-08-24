@@ -33,15 +33,15 @@ func resourceExternalAuthTacacs() *schema.Resource {
 			StateContext: resourceExternalAuthTacacsImport,
 		},
 		Schema: map[string]*schema.Schema{
-			"authentication_name": {
+			skAuthenticationName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"host": {
+			skHost: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"port": {
+			skPort: {
 				Type:         schema.TypeInt,
 				Required:     true,
 				ValidateFunc: validation.IntBetween(1, 65535),
@@ -51,11 +51,11 @@ func resourceExternalAuthTacacs() *schema.Resource {
 				Required:  true,
 				Sensitive: true,
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"use_primary_auth_domain": {
+			skUsePrimaryAuthDomain: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -78,12 +78,12 @@ func resourceExternalAuthTacacsCreate(
 	if err := resourceExternalAuthTacacsVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	_, ex, err := searchResourceExternalAuthTacacs(ctx, d.Get("authentication_name").(string), m)
+	_, ex, err := searchResourceExternalAuthTacacs(ctx, d.Get(skAuthenticationName).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if ex {
-		return diag.FromErr(fmt.Errorf("authentication_name %s already exists", d.Get("authentication_name").(string)))
+		return diag.FromErr(fmt.Errorf("authentication_name %s already exists", d.Get(skAuthenticationName).(string)))
 	}
 	id, err := addExternalAuthTacacs(ctx, d, m)
 	if err != nil {
@@ -91,12 +91,12 @@ func resourceExternalAuthTacacsCreate(
 	}
 	if id == "" {
 		// Fallback for Bastion versions that don't return the X-Object-Id header on creation.
-		id, ex, err = searchResourceExternalAuthTacacs(ctx, d.Get("authentication_name").(string), m)
+		id, ex, err = searchResourceExternalAuthTacacs(ctx, d.Get(skAuthenticationName).(string), m)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 		if !ex {
-			return diag.FromErr(fmt.Errorf("authentication_name %s not found after POST", d.Get("authentication_name").(string)))
+			return diag.FromErr(fmt.Errorf("authentication_name %s not found after POST", d.Get(skAuthenticationName).(string)))
 		}
 	}
 	d.SetId(id)
@@ -256,12 +256,12 @@ func deleteExternalAuthTacacs(
 
 func prepareExternalAuthTacacsJSON(d *schema.ResourceData) jsonExternalAuthTacacs {
 	return jsonExternalAuthTacacs{
-		AuthenticationName:   d.Get("authentication_name").(string),
-		Host:                 d.Get("host").(string),
-		Port:                 d.Get("port").(int),
+		AuthenticationName:   d.Get(skAuthenticationName).(string),
+		Host:                 d.Get(skHost).(string),
+		Port:                 d.Get(skPort).(int),
 		Secret:               d.Get("secret").(string),
-		Description:          d.Get("description").(string),
-		UsePrimaryAuthDomain: d.Get("use_primary_auth_domain").(bool),
+		Description:          d.Get(skDescription).(string),
+		UsePrimaryAuthDomain: d.Get(skUsePrimaryAuthDomain).(bool),
 		Type:                 "TACACS+",
 	}
 }
@@ -293,19 +293,19 @@ func readExternalAuthTacacsOptions(
 }
 
 func fillExternalAuthTacacs(d *schema.ResourceData, jsonData jsonExternalAuthTacacs) {
-	if tfErr := d.Set("authentication_name", jsonData.AuthenticationName); tfErr != nil {
+	if tfErr := d.Set(skAuthenticationName, jsonData.AuthenticationName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("host", jsonData.Host); tfErr != nil {
+	if tfErr := d.Set(skHost, jsonData.Host); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("port", jsonData.Port); tfErr != nil {
+	if tfErr := d.Set(skPort, jsonData.Port); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("use_primary_auth_domain", jsonData.UsePrimaryAuthDomain); tfErr != nil {
+	if tfErr := d.Set(skUsePrimaryAuthDomain, jsonData.UsePrimaryAuthDomain); tfErr != nil {
 		panic(tfErr)
 	}
 }

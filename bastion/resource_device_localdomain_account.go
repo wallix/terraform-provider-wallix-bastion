@@ -37,25 +37,25 @@ func resourceDeviceLocalDomainAccount() *schema.Resource {
 			StateContext: resourceDeviceLocalDomainAccountImport,
 		},
 		Schema: map[string]*schema.Schema{
-			"device_id": {
+			skDeviceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"domain_id": {
+			skDomainID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"account_name": {
+			skAccountName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"account_login": {
+			skAccountLogin: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"auto_change_password": {
+			skAutoChangePassword: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -67,7 +67,7 @@ func resourceDeviceLocalDomainAccount() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"checkout_policy": {
+			skCheckoutPolicy: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "default",
@@ -81,22 +81,22 @@ func resourceDeviceLocalDomainAccount() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"public_key": {
+						skPublicKey: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"type": {
+						skType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"domain_password_change": {
+			skDomainPasswordChange: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -124,29 +124,29 @@ func resourceDeviceLocalDomainAccountCreate(
 	if err := resourceDeviceLocalDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	cfgDevice, err := readDeviceOptions(ctx, d.Get("device_id").(string), m)
+	cfgDevice, err := readDeviceOptions(ctx, d.Get(skDeviceID).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if cfgDevice.ID == "" {
-		return diag.FromErr(fmt.Errorf("device with ID %s doesn't exists", d.Get("device_id").(string)))
+		return diag.FromErr(fmt.Errorf("device with ID %s doesn't exists", d.Get(skDeviceID).(string)))
 	}
-	cfgDomain, err := readDeviceLocalDomainOptions(ctx, d.Get("device_id").(string), d.Get("domain_id").(string), m)
+	cfgDomain, err := readDeviceLocalDomainOptions(ctx, d.Get(skDeviceID).(string), d.Get(skDomainID).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if cfgDomain.ID == "" {
 		return diag.FromErr(fmt.Errorf("domain_id with ID %s on device_id %s doesn't exists",
-			d.Get("domain_id").(string), d.Get("device_id").(string)))
+			d.Get(skDomainID).(string), d.Get(skDeviceID).(string)))
 	}
 	_, ex, err := searchResourceDeviceLocalDomainAccount(ctx,
-		d.Get("device_id").(string), d.Get("domain_id").(string), d.Get("account_name").(string), m)
+		d.Get(skDeviceID).(string), d.Get(skDomainID).(string), d.Get(skAccountName).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if ex {
 		return diag.FromErr(fmt.Errorf("account_name %s on domain_id %s, device_id %s already exists",
-			d.Get("account_name").(string), d.Get("domain_id").(string), d.Get("device_id").(string)))
+			d.Get(skAccountName).(string), d.Get(skDomainID).(string), d.Get(skDeviceID).(string)))
 	}
 	id, err := addDeviceLocalDomainAccount(ctx, d, m)
 	if err != nil {
@@ -155,13 +155,13 @@ func resourceDeviceLocalDomainAccountCreate(
 	if id == "" {
 		// Fallback for Bastion versions that don't return the X-Object-Id header on creation.
 		id, ex, err = searchResourceDeviceLocalDomainAccount(ctx,
-			d.Get("device_id").(string), d.Get("domain_id").(string), d.Get("account_name").(string), m)
+			d.Get(skDeviceID).(string), d.Get(skDomainID).(string), d.Get(skAccountName).(string), m)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 		if !ex {
 			return diag.FromErr(fmt.Errorf("account_name %s on domain_id %s, device_id %s not found after POST",
-				d.Get("account_name").(string), d.Get("domain_id").(string), d.Get("device_id").(string)))
+				d.Get(skAccountName).(string), d.Get(skDomainID).(string), d.Get(skDeviceID).(string)))
 		}
 	}
 	d.SetId(id)
@@ -177,7 +177,7 @@ func resourceDeviceLocalDomainAccountRead(
 		return diag.FromErr(err)
 	}
 	cfg, err := readDeviceLocalDomainAccountOptions(ctx,
-		d.Get("device_id").(string), d.Get("domain_id").(string), d.Id(), m)
+		d.Get(skDeviceID).(string), d.Get(skDomainID).(string), d.Id(), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -248,10 +248,10 @@ func resourceDeviceLocalDomainAccountImport(
 	fillDeviceLocalDomainAccount(d, cfg)
 	result := make([]*schema.ResourceData, 1)
 	d.SetId(id)
-	if tfErr := d.Set("device_id", idSplit[0]); tfErr != nil {
+	if tfErr := d.Set(skDeviceID, idSplit[0]); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("domain_id", idSplit[1]); tfErr != nil {
+	if tfErr := d.Set(skDomainID, idSplit[1]); tfErr != nil {
 		panic(tfErr)
 	}
 	result[0] = d
@@ -291,7 +291,7 @@ func addDeviceLocalDomainAccount(
 	c := m.(*Client)
 	jsonData := prepareDeviceLocalDomainAccountJSON(d)
 	body, headers, code, err := c.newRequestWithHeaders(ctx,
-		"/devices/"+d.Get("device_id").(string)+"/localdomains/"+d.Get("domain_id").(string)+
+		"/devices/"+d.Get(skDeviceID).(string)+"/localdomains/"+d.Get(skDomainID).(string)+
 			"/accounts/", http.MethodPost, jsonData)
 	if err != nil {
 		return "", err
@@ -309,7 +309,7 @@ func updateDeviceLocalDomainAccount(
 	c := m.(*Client)
 	jsonData := prepareDeviceLocalDomainAccountJSON(d)
 	body, code, err := c.newRequest(ctx,
-		"/devices/"+d.Get("device_id").(string)+"/localdomains/"+d.Get("domain_id").(string)+
+		"/devices/"+d.Get(skDeviceID).(string)+"/localdomains/"+d.Get(skDomainID).(string)+
 			"/accounts/"+d.Id()+"?force=true", http.MethodPut, jsonData)
 	if err != nil {
 		return err
@@ -326,7 +326,7 @@ func deleteDeviceLocalDomainAccount(
 ) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
-		"/devices/"+d.Get("device_id").(string)+"/localdomains/"+d.Get("domain_id").(string)+
+		"/devices/"+d.Get(skDeviceID).(string)+"/localdomains/"+d.Get(skDomainID).(string)+
 			"/accounts/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
 		return err
@@ -340,13 +340,13 @@ func deleteDeviceLocalDomainAccount(
 
 func prepareDeviceLocalDomainAccountJSON(d *schema.ResourceData) jsonDeviceLocalDomainAccount {
 	jsonData := jsonDeviceLocalDomainAccount{
-		AccountName:         d.Get("account_name").(string),
-		AccountLogin:        d.Get("account_login").(string),
-		AutoChangePassword:  d.Get("auto_change_password").(bool),
+		AccountName:         d.Get(skAccountName).(string),
+		AccountLogin:        d.Get(skAccountLogin).(string),
+		AutoChangePassword:  d.Get(skAutoChangePassword).(bool),
 		AutoChangeSSHKey:    d.Get("auto_change_ssh_key").(bool),
 		CertificateValidity: d.Get("certificate_validity").(string),
-		CheckoutPolicy:      d.Get("checkout_policy").(string),
-		Description:         d.Get("description").(string),
+		CheckoutPolicy:      d.Get(skCheckoutPolicy).(string),
+		Description:         d.Get(skDescription).(string),
 	}
 
 	listServices := d.Get("services").(*schema.Set).List()
@@ -386,16 +386,16 @@ func readDeviceLocalDomainAccountOptions(
 }
 
 func fillDeviceLocalDomainAccount(d *schema.ResourceData, jsonData jsonDeviceLocalDomainAccount) {
-	if tfErr := d.Set("account_name", jsonData.AccountName); tfErr != nil {
+	if tfErr := d.Set(skAccountName, jsonData.AccountName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("account_login", jsonData.AccountLogin); tfErr != nil {
+	if tfErr := d.Set(skAccountLogin, jsonData.AccountLogin); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("checkout_policy", jsonData.CheckoutPolicy); tfErr != nil {
+	if tfErr := d.Set(skCheckoutPolicy, jsonData.CheckoutPolicy); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("auto_change_password", jsonData.AutoChangePassword); tfErr != nil {
+	if tfErr := d.Set(skAutoChangePassword, jsonData.AutoChangePassword); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("auto_change_ssh_key", jsonData.AutoChangeSSHKey); tfErr != nil {
@@ -409,19 +409,19 @@ func fillDeviceLocalDomainAccount(d *schema.ResourceData, jsonData jsonDeviceLoc
 		credentials = make([]map[string]interface{}, len(*jsonData.Credentials))
 		for i, v := range *jsonData.Credentials {
 			credentials[i] = map[string]interface{}{
-				"id":         v.ID,
-				"public_key": v.PublicKey,
-				"type":       v.Type,
+				"id":        v.ID,
+				skPublicKey: v.PublicKey,
+				skType:      v.Type,
 			}
 		}
 	}
 	if tfErr := d.Set("credentials", credentials); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("domain_password_change", jsonData.DomainPasswordChange); tfErr != nil {
+	if tfErr := d.Set(skDomainPasswordChange, jsonData.DomainPasswordChange); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("services", jsonData.Services); tfErr != nil {

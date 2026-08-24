@@ -13,7 +13,7 @@ func dataSourceExternalAuthSaml() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceExternalAuthSamlRead,
 		Schema: map[string]*schema.Schema{
-			"authentication_name": {
+			skAuthenticationName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -21,11 +21,11 @@ func dataSourceExternalAuthSaml() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"timeout": {
+			skTimeout: {
 				Type:     schema.TypeFloat,
 				Computed: true,
 			},
-			"certificate": {
+			skCertificate: {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
@@ -43,11 +43,11 @@ func dataSourceExternalAuthSaml() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"email": {
+						skEmail: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"language": {
+						skLanguage: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -58,16 +58,16 @@ func dataSourceExternalAuthSaml() *schema.Resource {
 					},
 				},
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"passphrase": {
+			skPassphrase: {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
 			},
-			"private_key": {
+			skPrivateKey: {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
@@ -119,12 +119,12 @@ func dataSourceExternalAuthSamlRead(
 	if err := dataSourceExternalAuthSamlVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceExternalAuthSaml(ctx, d.Get("authentication_name").(string), m)
+	id, ex, err := searchResourceExternalAuthSaml(ctx, d.Get(skAuthenticationName).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if !ex {
-		return diag.FromErr(fmt.Errorf("authentication_name %s doesn't exists", d.Get("authentication_name").(string)))
+		return diag.FromErr(fmt.Errorf("authentication_name %s doesn't exists", d.Get(skAuthenticationName).(string)))
 	}
 	cfg, err := readExternalAuthSamlOptions(ctx, id, m)
 	if err != nil {
@@ -137,16 +137,16 @@ func dataSourceExternalAuthSamlRead(
 }
 
 func fillSourceExternalAuthSaml(d *schema.ResourceData, jsonData jsonExternalAuthSaml) {
-	if tfErr := d.Set("authentication_name", jsonData.AuthenticationName); tfErr != nil {
+	if tfErr := d.Set(skAuthenticationName, jsonData.AuthenticationName); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("idp_metadata", jsonData.IDPMetadata); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("timeout", jsonData.Timeout); tfErr != nil {
+	if tfErr := d.Set(skTimeout, jsonData.Timeout); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("idp_entity_id", jsonData.IDPEntityID); tfErr != nil {
@@ -175,8 +175,8 @@ func fillSourceExternalAuthSaml(d *schema.ResourceData, jsonData jsonExternalAut
 			{
 				"username":    jsonData.ClaimCustomization.Username,
 				"displayname": jsonData.ClaimCustomization.Displayname,
-				"email":       jsonData.ClaimCustomization.Email,
-				"language":    jsonData.ClaimCustomization.Language,
+				skEmail:       jsonData.ClaimCustomization.Email,
+				skLanguage:    jsonData.ClaimCustomization.Language,
 				"group":       jsonData.ClaimCustomization.Group,
 			},
 		}

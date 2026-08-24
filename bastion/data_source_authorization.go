@@ -25,7 +25,7 @@ func dataSourceAuthorization() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -45,7 +45,7 @@ func dataSourceAuthorization() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"subprotocols": {
+			skSubprotocols: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -58,7 +58,7 @@ func dataSourceAuthorization() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"approval_required": {
+			skApprovalRequired: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -145,7 +145,7 @@ func fillSourceAuthorization(d *schema.ResourceData, jsonData jsonAuthorization)
 	if tfErr := d.Set("target_group", jsonData.TargetGroup); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("authorize_password_retrieval", jsonData.AuthorizePasswordRetrieval); tfErr != nil {
@@ -160,7 +160,7 @@ func fillSourceAuthorization(d *schema.ResourceData, jsonData jsonAuthorization)
 	if tfErr := d.Set("session_sharing_mode", jsonData.SessionSharingMode); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("subprotocols", jsonData.SubProtocols); tfErr != nil {
+	if tfErr := d.Set(skSubprotocols, jsonData.SubProtocols); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("is_critical", jsonData.IsCritical); tfErr != nil {
@@ -169,7 +169,7 @@ func fillSourceAuthorization(d *schema.ResourceData, jsonData jsonAuthorization)
 	if tfErr := d.Set("is_recorded", jsonData.IsRecorded); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("approval_required", jsonData.ApprovalRequired); tfErr != nil {
+	if tfErr := d.Set(skApprovalRequired, jsonData.ApprovalRequired); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("approvers", jsonData.Approvers); tfErr != nil {

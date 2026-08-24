@@ -11,8 +11,8 @@ func TestAccResourceUserGroup_basic(t *testing.T) {
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
-			"random": {
-				Source: "hashicorp/random",
+			tvRandomProviderName: {
+				Source: tvRandomProviderSource,
 			},
 		},
 		Steps: []resource.TestStep{

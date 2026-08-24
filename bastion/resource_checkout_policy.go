@@ -36,11 +36,11 @@ func resourceCheckoutPolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"enable_lock": {
+			skEnableLock: {
 				Type:         schema.TypeBool,
 				Optional:     true,
 				RequiredWith: []string{"duration", "max_duration"},
@@ -48,22 +48,22 @@ func resourceCheckoutPolicy() *schema.Resource {
 			"change_credentials_at_checkin": {
 				Type:         schema.TypeBool,
 				Optional:     true,
-				RequiredWith: []string{"enable_lock"},
+				RequiredWith: []string{skEnableLock},
 			},
 			"duration": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				RequiredWith: []string{"enable_lock"},
+				RequiredWith: []string{skEnableLock},
 			},
 			"extension": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				RequiredWith: []string{"enable_lock"},
+				RequiredWith: []string{skEnableLock},
 			},
 			"max_duration": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				RequiredWith: []string{"enable_lock"},
+				RequiredWith: []string{skEnableLock},
 			},
 		},
 	}
@@ -266,8 +266,8 @@ func prepareCheckoutPolicyJSON(d *schema.ResourceData) jsonCheckoutPolicy {
 	jsonData := jsonCheckoutPolicy{
 		ChangeCredentialsAtCheckin: d.Get("change_credentials_at_checkin").(bool),
 		CheckoutPolicyName:         d.Get("checkout_policy_name").(string),
-		Description:                d.Get("description").(string),
-		EnableLock:                 d.Get("enable_lock").(bool),
+		Description:                d.Get(skDescription).(string),
+		EnableLock:                 d.Get(skEnableLock).(bool),
 		Duration:                   d.Get("duration").(int),
 		Extension:                  d.Get("extension").(int),
 		MaxDuration:                d.Get("max_duration").(int),
@@ -305,10 +305,10 @@ func fillCheckoutPolicy(d *schema.ResourceData, jsonData jsonCheckoutPolicy) {
 	if tfErr := d.Set("checkout_policy_name", jsonData.CheckoutPolicyName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("enable_lock", jsonData.EnableLock); tfErr != nil {
+	if tfErr := d.Set(skEnableLock, jsonData.EnableLock); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("change_credentials_at_checkin", jsonData.ChangeCredentialsAtCheckin); tfErr != nil {

@@ -13,7 +13,7 @@ func dataSourceExternalAuthLdap() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceExternalAuthLdapRead,
 		Schema: map[string]*schema.Schema{
-			"authentication_name": {
+			skAuthenticationName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -21,7 +21,7 @@ func dataSourceExternalAuthLdap() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"host": {
+			skHost: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -33,24 +33,24 @@ func dataSourceExternalAuthLdap() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"port": {
+			skPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"timeout": {
+			skTimeout: {
 				Type:     schema.TypeFloat,
 				Computed: true,
 			},
-			"ca_certificate": {
+			skCACertificate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"certificate": {
+			skCertificate: {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -78,22 +78,22 @@ func dataSourceExternalAuthLdap() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"passphrase": {
+			skPassphrase: {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
 			},
-			"password": {
+			skPassword: {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
 			},
-			"private_key": {
+			skPrivateKey: {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
 			},
-			"use_primary_auth_domain": {
+			skUsePrimaryAuthDomain: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -116,12 +116,12 @@ func dataSourceExternalAuthLdapRead(
 	if err := dataSourceExternalAuthLdapVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceExternalAuthLdap(ctx, d.Get("authentication_name").(string), m)
+	id, ex, err := searchResourceExternalAuthLdap(ctx, d.Get(skAuthenticationName).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if !ex {
-		return diag.FromErr(fmt.Errorf("authentication_name %s doesn't exists", d.Get("authentication_name").(string)))
+		return diag.FromErr(fmt.Errorf("authentication_name %s doesn't exists", d.Get(skAuthenticationName).(string)))
 	}
 	cfg, err := readExternalAuthLdapOptions(ctx, id, m)
 	if err != nil {
@@ -134,13 +134,13 @@ func dataSourceExternalAuthLdapRead(
 }
 
 func fillSourceExternalAuthLdap(d *schema.ResourceData, jsonData jsonExternalAuthLdap) {
-	if tfErr := d.Set("authentication_name", jsonData.AuthenticationName); tfErr != nil {
+	if tfErr := d.Set(skAuthenticationName, jsonData.AuthenticationName); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("cn_attribute", jsonData.CNAttribute); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("host", jsonData.Host); tfErr != nil {
+	if tfErr := d.Set(skHost, jsonData.Host); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("ldap_base", jsonData.LDAPBase); tfErr != nil {
@@ -152,16 +152,16 @@ func fillSourceExternalAuthLdap(d *schema.ResourceData, jsonData jsonExternalAut
 	if tfErr := d.Set("login_attribute", jsonData.LoginAttribute); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("port", jsonData.Port); tfErr != nil {
+	if tfErr := d.Set(skPort, jsonData.Port); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("timeout", jsonData.Timeout); tfErr != nil {
+	if tfErr := d.Set(skTimeout, jsonData.Timeout); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("ca_certificate", jsonData.CACertificate); tfErr != nil {
+	if tfErr := d.Set(skCACertificate, jsonData.CACertificate); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("is_active_directory", jsonData.IsActiveDirectory); tfErr != nil {
@@ -179,7 +179,7 @@ func fillSourceExternalAuthLdap(d *schema.ResourceData, jsonData jsonExternalAut
 	if tfErr := d.Set("is_starttls", jsonData.IsStartTLS); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("use_primary_auth_domain", jsonData.UsePrimaryAuthDomain); tfErr != nil {
+	if tfErr := d.Set(skUsePrimaryAuthDomain, jsonData.UsePrimaryAuthDomain); tfErr != nil {
 		panic(tfErr)
 	}
 }

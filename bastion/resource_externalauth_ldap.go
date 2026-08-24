@@ -47,7 +47,7 @@ func resourceExternalAuthLdap() *schema.Resource {
 			StateContext: resourceExternalAuthLdapImport,
 		},
 		Schema: map[string]*schema.Schema{
-			"authentication_name": {
+			skAuthenticationName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -55,7 +55,7 @@ func resourceExternalAuthLdap() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"host": {
+			skHost: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -67,25 +67,25 @@ func resourceExternalAuthLdap() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"port": {
+			skPort: {
 				Type:         schema.TypeInt,
 				Required:     true,
 				ValidateFunc: validation.IntBetween(1, 65535),
 			},
-			"timeout": {
+			skTimeout: {
 				Type:     schema.TypeFloat,
 				Required: true,
 			},
-			"ca_certificate": {
+			skCACertificate: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"certificate": {
+			skCertificate: {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -113,23 +113,23 @@ func resourceExternalAuthLdap() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"passphrase": {
+			skPassphrase: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
-				RequiredWith: []string{"private_key"},
+				RequiredWith: []string{skPrivateKey},
 			},
-			"password": {
+			skPassword: {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
 			},
-			"private_key": {
+			skPrivateKey: {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
 			},
-			"use_primary_auth_domain": {
+			skUsePrimaryAuthDomain: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -152,16 +152,16 @@ func resourceExternalAuthLdapCreate(
 	if err := resourceExternalAuthLdapVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	_, ex, err := searchResourceExternalAuthLdap(ctx, d.Get("authentication_name").(string), m)
+	_, ex, err := searchResourceExternalAuthLdap(ctx, d.Get(skAuthenticationName).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if ex {
-		return diag.FromErr(fmt.Errorf("authentication_name %s already exists", d.Get("authentication_name").(string)))
+		return diag.FromErr(fmt.Errorf("authentication_name %s already exists", d.Get(skAuthenticationName).(string)))
 	}
-	if !d.Get("is_anonymous_access").(bool) && (d.Get("login").(string) == "" || d.Get("password").(string) == "") {
+	if !d.Get("is_anonymous_access").(bool) && (d.Get("login").(string) == "" || d.Get(skPassword).(string) == "") {
 		return diag.FromErr(fmt.Errorf("missing 'login' and/or 'password' on "+
-			"externalauth_ldap %s", d.Get("authentication_name").(string)))
+			"externalauth_ldap %s", d.Get(skAuthenticationName).(string)))
 	}
 	id, err := addExternalAuthLdap(ctx, d, m)
 	if err != nil {
@@ -169,12 +169,12 @@ func resourceExternalAuthLdapCreate(
 	}
 	if id == "" {
 		// Fallback for Bastion versions that don't return the X-Object-Id header on creation.
-		id, ex, err = searchResourceExternalAuthLdap(ctx, d.Get("authentication_name").(string), m)
+		id, ex, err = searchResourceExternalAuthLdap(ctx, d.Get(skAuthenticationName).(string), m)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 		if !ex {
-			return diag.FromErr(fmt.Errorf("authentication_name %s not found after POST", d.Get("authentication_name").(string)))
+			return diag.FromErr(fmt.Errorf("authentication_name %s not found after POST", d.Get(skAuthenticationName).(string)))
 		}
 	}
 	d.SetId(id)
@@ -210,9 +210,9 @@ func resourceExternalAuthLdapUpdate(
 	if err := resourceExternalAuthLdapVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	if !d.Get("is_anonymous_access").(bool) && (d.Get("login").(string) == "" || d.Get("password").(string) == "") {
+	if !d.Get("is_anonymous_access").(bool) && (d.Get("login").(string) == "" || d.Get(skPassword).(string) == "") {
 		return diag.FromErr(fmt.Errorf("missing 'login' and/or 'password' on "+
-			"externalauth_ldap %s", d.Get("authentication_name").(string)))
+			"externalauth_ldap %s", d.Get(skAuthenticationName).(string)))
 	}
 	if err := updateExternalAuthLdap(ctx, d, m); err != nil {
 		return diag.FromErr(err)
@@ -343,21 +343,21 @@ func prepareExternalAuthLdapJSON(d *schema.ResourceData) jsonExternalAuthLdap {
 		IsProtectedUser:      d.Get("is_protected_user").(bool),
 		IsSSL:                d.Get("is_ssl").(bool),
 		IsStartTLS:           d.Get("is_starttls").(bool),
-		UsePrimaryAuthDomain: d.Get("use_primary_auth_domain").(bool),
-		Timeout:              d.Get("timeout").(float64),
-		AuthenticationName:   d.Get("authentication_name").(string),
-		CACertificate:        d.Get("ca_certificate").(string),
-		Certificate:          d.Get("certificate").(string),
+		UsePrimaryAuthDomain: d.Get(skUsePrimaryAuthDomain).(bool),
+		Timeout:              d.Get(skTimeout).(float64),
+		AuthenticationName:   d.Get(skAuthenticationName).(string),
+		CACertificate:        d.Get(skCACertificate).(string),
+		Certificate:          d.Get(skCertificate).(string),
 		CNAttribute:          d.Get("cn_attribute").(string),
-		Description:          d.Get("description").(string),
+		Description:          d.Get(skDescription).(string),
 		LDAPBase:             d.Get("ldap_base").(string),
 		Login:                d.Get("login").(string),
 		LoginAttribute:       d.Get("login_attribute").(string),
-		Host:                 d.Get("host").(string),
-		Password:             d.Get("password").(string),
-		Passphrase:           d.Get("passphrase").(string),
-		Port:                 d.Get("port").(int),
-		PrivateKey:           d.Get("private_key").(string),
+		Host:                 d.Get(skHost).(string),
+		Password:             d.Get(skPassword).(string),
+		Passphrase:           d.Get(skPassphrase).(string),
+		Port:                 d.Get(skPort).(int),
+		PrivateKey:           d.Get(skPrivateKey).(string),
 		Type:                 "LDAP",
 	}
 }
@@ -389,13 +389,13 @@ func readExternalAuthLdapOptions(
 }
 
 func fillExternalAuthLdap(d *schema.ResourceData, jsonData jsonExternalAuthLdap) {
-	if tfErr := d.Set("authentication_name", jsonData.AuthenticationName); tfErr != nil {
+	if tfErr := d.Set(skAuthenticationName, jsonData.AuthenticationName); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("cn_attribute", jsonData.CNAttribute); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("host", jsonData.Host); tfErr != nil {
+	if tfErr := d.Set(skHost, jsonData.Host); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("ldap_base", jsonData.LDAPBase); tfErr != nil {
@@ -407,16 +407,16 @@ func fillExternalAuthLdap(d *schema.ResourceData, jsonData jsonExternalAuthLdap)
 	if tfErr := d.Set("login_attribute", jsonData.LoginAttribute); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("port", jsonData.Port); tfErr != nil {
+	if tfErr := d.Set(skPort, jsonData.Port); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("timeout", jsonData.Timeout); tfErr != nil {
+	if tfErr := d.Set(skTimeout, jsonData.Timeout); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("ca_certificate", jsonData.CACertificate); tfErr != nil {
+	if tfErr := d.Set(skCACertificate, jsonData.CACertificate); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("is_active_directory", jsonData.IsActiveDirectory); tfErr != nil {
@@ -434,7 +434,7 @@ func fillExternalAuthLdap(d *schema.ResourceData, jsonData jsonExternalAuthLdap)
 	if tfErr := d.Set("is_starttls", jsonData.IsStartTLS); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("use_primary_auth_domain", jsonData.UsePrimaryAuthDomain); tfErr != nil {
+	if tfErr := d.Set(skUsePrimaryAuthDomain, jsonData.UsePrimaryAuthDomain); tfErr != nil {
 		panic(tfErr)
 	}
 }

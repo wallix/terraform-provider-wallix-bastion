@@ -34,16 +34,16 @@ func resourceAPIKeyV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"profile": {
+			skProfile: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"ip_limitation": {
+			skIPLimitation: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -255,12 +255,12 @@ func deleteAPIKeyV2(
 func prepareAPIKeyV2JSON(d *schema.ResourceData, newResource bool) jsonAPIKeyV2 {
 	jsonData := jsonAPIKeyV2{
 		APIKeyName:  d.Get("apikey_name").(string),
-		Description: d.Get("description").(string),
+		Description: d.Get(skDescription).(string),
 	}
 
 	if newResource {
-		jsonData.Profile = d.Get("profile").(string)
-		jsonData.IPLimitation = d.Get("ip_limitation").(string)
+		jsonData.Profile = d.Get(skProfile).(string)
+		jsonData.IPLimitation = d.Get(skIPLimitation).(string)
 	}
 
 	return jsonData
@@ -295,13 +295,13 @@ func fillAPIKeyV2(d *schema.ResourceData, jsonData jsonAPIKeyV2) {
 	if tfErr := d.Set("apikey_name", jsonData.APIKeyName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("profile", jsonData.Profile); tfErr != nil {
+	if tfErr := d.Set(skProfile, jsonData.Profile); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("ip_limitation", jsonData.IPLimitation); tfErr != nil {
+	if tfErr := d.Set(skIPLimitation, jsonData.IPLimitation); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("apikey", jsonData.APIKey); tfErr != nil {

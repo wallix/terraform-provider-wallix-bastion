@@ -24,8 +24,8 @@ func TestAccResourceDevice_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(
 						"wallix-bastion_device.testacc_Device",
 						"tags.*", map[string]string{
-							"key":   "testkey",
-							"value": "testvalue",
+							tvKey:   tvTestKey,
+							tvValue: tvTestValue,
 						}),
 				),
 			},
@@ -45,8 +45,8 @@ func TestAccResourceDevice_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(
 						"wallix-bastion_device.testacc_Device",
 						"tags.*", map[string]string{
-							"key":   "testkey",
-							"value": "testvalue",
+							tvKey:   tvTestKey,
+							tvValue: tvTestValue,
 						}),
 
 					resource.TestCheckResourceAttr(

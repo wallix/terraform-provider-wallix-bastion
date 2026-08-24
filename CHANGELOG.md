@@ -37,6 +37,7 @@ ENHANCEMENTS:
 - dependency updates addressing multiple security advisories in `golang.org/x/net`, `golang.org/x/crypto`, `google.golang.org/grpc`, and `github.com/cloudflare/circl`
 - **ci**: migrated `golangci-lint` configuration to the v2 schema and updated CI Go versions to 1.25/1.26
 - **ci**: migrated acceptance tests off the deprecated `resource.TestCase.Providers` field to `ProviderFactories`, and resource importers off the deprecated `schema.ResourceImporter.State` to `StateContext`, clearing 129 `staticcheck` SA1019 findings
+- **ci**: introduced shared string constants for schema key names and other repeated literals, replacing ~1300 duplicate occurrences across resources/data sources, and re-enabled the `goconst` linter
 
 BUG FIXES:
 

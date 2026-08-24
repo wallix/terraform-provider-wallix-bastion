@@ -16,8 +16,8 @@ func TestAccResourceConfigX509_basic(t *testing.T) {
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
-			"tls": {
-				Source: "hashicorp/tls",
+			tvTLSProviderName: {
+				Source: tvTLSProviderSource,
 			},
 		},
 		Steps: []resource.TestStep{
@@ -62,8 +62,8 @@ func TestAccResourceConfigX509_enableToggle(t *testing.T) {
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
-			"tls": {
-				Source: "hashicorp/tls",
+			tvTLSProviderName: {
+				Source: tvTLSProviderSource,
 			},
 		},
 		Steps: []resource.TestStep{

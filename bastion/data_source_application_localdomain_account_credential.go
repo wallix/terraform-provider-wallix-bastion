@@ -14,24 +14,24 @@ func dataSourceApplicationLocalDomainAccountCredential() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceApplicationLocalDomainAccountCredentialRead,
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			skApplicationID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"domain_id": {
+			skDomainID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"account_id": {
+			skAccountID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"type": {
+			skType: {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"password"}, false),
+				ValidateFunc: validation.StringInSlice([]string{skPassword}, false),
 			},
-			"password": {
+			skPassword: {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
@@ -57,18 +57,18 @@ func dataSourceApplicationLocalDomainAccountCredentialRead(
 		return diag.FromErr(err)
 	}
 	id, ex, err := searchResourceApplicationLocalDomainAccountCredential(ctx,
-		d.Get("application_id").(string), d.Get("domain_id").(string), d.Get("account_id").(string),
-		d.Get("type").(string), m)
+		d.Get(skApplicationID).(string), d.Get(skDomainID).(string), d.Get(skAccountID).(string),
+		d.Get(skType).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if !ex {
 		return diag.FromErr(fmt.Errorf(
 			"credential type %s on account_id %s, domain_id %s, application_id %s doesn't exists",
-			d.Get("type").(string), d.Get("account_id").(string), d.Get("domain_id").(string), d.Get("application_id").(string)))
+			d.Get(skType).(string), d.Get(skAccountID).(string), d.Get(skDomainID).(string), d.Get(skApplicationID).(string)))
 	}
 	cfg, err := readApplicationLocalDomainAccountCredentialOptions(ctx,
-		d.Get("application_id").(string), d.Get("domain_id").(string), d.Get("account_id").(string), id, m)
+		d.Get(skApplicationID).(string), d.Get(skDomainID).(string), d.Get(skAccountID).(string), id, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -79,7 +79,7 @@ func dataSourceApplicationLocalDomainAccountCredentialRead(
 }
 
 func fillSourceApplicationLocalDomainAccountCredential(d *schema.ResourceData, jsonData jsonCredential) {
-	if tfErr := d.Set("type", jsonData.Type); tfErr != nil {
+	if tfErr := d.Set(skType, jsonData.Type); tfErr != nil {
 		panic(tfErr)
 	}
 }

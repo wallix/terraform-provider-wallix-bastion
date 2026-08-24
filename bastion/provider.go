@@ -34,7 +34,7 @@ func Provider() *schema.Provider {
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("WALLIX_BASTION_USER", nil),
 			},
-			"port": {
+			skPort: {
 				Type:        schema.TypeInt,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("WALLIX_BASTION_PORT", 443),
@@ -44,7 +44,7 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("WALLIX_BASTION_TOKEN", nil),
 			},
-			"password": {
+			skPassword: {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("WALLIX_BASTION_PASSWORD", nil),
@@ -175,10 +175,10 @@ func configureProvider(
 	config := Config{
 		BastionAPIVersion:  d.Get("api_version").(string),
 		BastionIP:          d.Get("ip").(string),
-		BastionPort:        d.Get("port").(int),
+		BastionPort:        d.Get(skPort).(int),
 		BastionToken:       d.Get("token").(string),
 		BastionUser:        d.Get("user").(string),
-		BastionPwd:         d.Get("password").(string),
+		BastionPwd:         d.Get(skPassword).(string),
 		SessionTimeout:     d.Get("session_timeout").(int),
 		CSRFEnabled:        d.Get("csrf_enabled").(bool),
 		InsecureSkipVerify: d.Get("insecure_skip_verify").(bool),

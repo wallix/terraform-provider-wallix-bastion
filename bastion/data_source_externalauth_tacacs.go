@@ -13,15 +13,15 @@ func dataSourceExternalAuthTacacs() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceExternalAuthTacacsRead,
 		Schema: map[string]*schema.Schema{
-			"authentication_name": {
+			skAuthenticationName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"host": {
+			skHost: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"port": {
+			skPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -30,11 +30,11 @@ func dataSourceExternalAuthTacacs() *schema.Resource {
 				Computed:  true,
 				Sensitive: true,
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"use_primary_auth_domain": {
+			skUsePrimaryAuthDomain: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -57,12 +57,12 @@ func dataSourceExternalAuthTacacsRead(
 	if err := dataSourceExternalAuthTacacsVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceExternalAuthTacacs(ctx, d.Get("authentication_name").(string), m)
+	id, ex, err := searchResourceExternalAuthTacacs(ctx, d.Get(skAuthenticationName).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if !ex {
-		return diag.FromErr(fmt.Errorf("authentication_name %s doesn't exists", d.Get("authentication_name").(string)))
+		return diag.FromErr(fmt.Errorf("authentication_name %s doesn't exists", d.Get(skAuthenticationName).(string)))
 	}
 	cfg, err := readExternalAuthTacacsOptions(ctx, id, m)
 	if err != nil {
@@ -75,19 +75,19 @@ func dataSourceExternalAuthTacacsRead(
 }
 
 func fillSourceExternalAuthTacacs(d *schema.ResourceData, jsonData jsonExternalAuthTacacs) {
-	if tfErr := d.Set("authentication_name", jsonData.AuthenticationName); tfErr != nil {
+	if tfErr := d.Set(skAuthenticationName, jsonData.AuthenticationName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("host", jsonData.Host); tfErr != nil {
+	if tfErr := d.Set(skHost, jsonData.Host); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("port", jsonData.Port); tfErr != nil {
+	if tfErr := d.Set(skPort, jsonData.Port); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("use_primary_auth_domain", jsonData.UsePrimaryAuthDomain); tfErr != nil {
+	if tfErr := d.Set(skUsePrimaryAuthDomain, jsonData.UsePrimaryAuthDomain); tfErr != nil {
 		panic(tfErr)
 	}
 }

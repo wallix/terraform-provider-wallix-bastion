@@ -37,13 +37,13 @@ func resourceCertificateAuthority() *schema.Resource {
 			"ca_type": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"SSH", "X509"}, false),
+				ValidateFunc: validation.StringInSlice([]string{skProtoSSH, "X509"}, false),
 			},
-			"ca_certificate": {
+			skCACertificate: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -251,8 +251,8 @@ func prepareCertificateAuthorityJSON(d *schema.ResourceData) jsonCertificateAuth
 	return jsonCertificateAuthority{
 		CertificateAuthorityName: d.Get("certificate_authority_name").(string),
 		CAType:                   d.Get("ca_type").(string),
-		Description:              d.Get("description").(string),
-		CACertificate:            d.Get("ca_certificate").(string),
+		Description:              d.Get(skDescription).(string),
+		CACertificate:            d.Get(skCACertificate).(string),
 	}
 }
 
@@ -288,10 +288,10 @@ func fillCertificateAuthority(d *schema.ResourceData, jsonData jsonCertificateAu
 	if tfErr := d.Set("ca_type", jsonData.CAType); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("ca_certificate", jsonData.CACertificate); tfErr != nil {
+	if tfErr := d.Set(skCACertificate, jsonData.CACertificate); tfErr != nil {
 		panic(tfErr)
 	}
 }

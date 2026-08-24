@@ -29,8 +29,8 @@ func TestAccDataSourceApplication_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(
 						"data.wallix-bastion_application.testacc_dataAppli",
 						"tags.*", map[string]string{
-							"key":   "testkey",
-							"value": "testvalue",
+							tvKey:   tvTestKey,
+							tvValue: tvTestValue,
 						}),
 					resource.TestCheckResourceAttr("data.wallix-bastion_application.testacc_dataAppli",
 						"paths.#", "1"),

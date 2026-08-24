@@ -13,7 +13,7 @@ func dataSourceAuthDomainMapping() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceAuthDomainMappingRead,
 		Schema: map[string]*schema.Schema{
-			"domain_id": {
+			skDomainID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -25,7 +25,7 @@ func dataSourceAuthDomainMapping() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain": {
+			skDomain: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -48,15 +48,15 @@ func dataSourceAuthDomainMappingRead(
 	if err := dataSourceAuthDomainMappingVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceAuthDomainMapping(ctx, d.Get("domain_id").(string), d.Get("user_group").(string), m)
+	id, ex, err := searchResourceAuthDomainMapping(ctx, d.Get(skDomainID).(string), d.Get("user_group").(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if !ex {
 		return diag.FromErr(fmt.Errorf("auth domain mapping for user_group %s on domain_id %s doesn't exists",
-			d.Get("user_group").(string), d.Get("domain_id").(string)))
+			d.Get("user_group").(string), d.Get(skDomainID).(string)))
 	}
-	cfg, err := readAuthDomainMappingOptions(ctx, d.Get("domain_id").(string), id, m)
+	cfg, err := readAuthDomainMappingOptions(ctx, d.Get(skDomainID).(string), id, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -73,7 +73,7 @@ func fillSourceAuthDomainMapping(d *schema.ResourceData, jsonData jsonAuthDomain
 	if tfErr := d.Set("external_group", jsonData.ExternalGroup); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("domain", jsonData.Domain); tfErr != nil {
+	if tfErr := d.Set(skDomain, jsonData.Domain); tfErr != nil {
 		panic(tfErr)
 	}
 }

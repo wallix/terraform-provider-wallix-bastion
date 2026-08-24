@@ -34,7 +34,7 @@ func resourceAuthDomainMapping() *schema.Resource {
 			StateContext: resourceAuthDomainMappingImport,
 		},
 		Schema: map[string]*schema.Schema{
-			"domain_id": {
+			skDomainID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -47,7 +47,7 @@ func resourceAuthDomainMapping() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"domain": {
+			skDomain: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -70,20 +70,20 @@ func resourceAuthDomainMappingCreate(
 	if err := resourceAuthDomainMappingVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	domainIDExists, err := checkAuthDomainID(ctx, d.Get("domain_id").(string), m)
+	domainIDExists, err := checkAuthDomainID(ctx, d.Get(skDomainID).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if !domainIDExists {
-		return diag.FromErr(fmt.Errorf("auth domain with ID %s doesn't exists", d.Get("domain_id").(string)))
+		return diag.FromErr(fmt.Errorf("auth domain with ID %s doesn't exists", d.Get(skDomainID).(string)))
 	}
-	_, ex, err := searchResourceAuthDomainMapping(ctx, d.Get("domain_id").(string), d.Get("user_group").(string), m)
+	_, ex, err := searchResourceAuthDomainMapping(ctx, d.Get(skDomainID).(string), d.Get("user_group").(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if ex {
 		return diag.FromErr(fmt.Errorf("auth domain mapping for user_group %s on domain_id %s already exists",
-			d.Get("user_group").(string), d.Get("domain_id").(string)))
+			d.Get("user_group").(string), d.Get(skDomainID).(string)))
 	}
 	id, err := addAuthDomainMapping(ctx, d, m)
 	if err != nil {
@@ -91,13 +91,13 @@ func resourceAuthDomainMappingCreate(
 	}
 	if id == "" {
 		// Fallback for Bastion versions that don't return the X-Object-Id header on creation.
-		id, ex, err = searchResourceAuthDomainMapping(ctx, d.Get("domain_id").(string), d.Get("user_group").(string), m)
+		id, ex, err = searchResourceAuthDomainMapping(ctx, d.Get(skDomainID).(string), d.Get("user_group").(string), m)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 		if !ex {
 			return diag.FromErr(fmt.Errorf("auth domain mapping for user_group %s on domain_id %s not found after POST",
-				d.Get("user_group").(string), d.Get("domain_id").(string)))
+				d.Get("user_group").(string), d.Get(skDomainID).(string)))
 		}
 	}
 	d.SetId(id)
@@ -112,7 +112,7 @@ func resourceAuthDomainMappingRead(
 	if err := resourceAuthDomainMappingVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	cfg, err := readAuthDomainMappingOptions(ctx, d.Get("domain_id").(string), d.Id(), m)
+	cfg, err := readAuthDomainMappingOptions(ctx, d.Get(skDomainID).(string), d.Id(), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -180,7 +180,7 @@ func resourceAuthDomainMappingImport(
 	fillAuthDomainMapping(d, cfg)
 	result := make([]*schema.ResourceData, 1)
 	d.SetId(id)
-	if tfErr := d.Set("domain_id", idSplit[0]); tfErr != nil {
+	if tfErr := d.Set(skDomainID, idSplit[0]); tfErr != nil {
 		panic(tfErr)
 	}
 	result[0] = d
@@ -253,7 +253,7 @@ func addAuthDomainMapping(
 	jsonData := prepareAuthDomainMappingJSON(d)
 	body, headers, code, err := c.newRequestWithHeaders(
 		ctx,
-		"/authdomains/"+d.Get("domain_id").(string)+"/mappings",
+		"/authdomains/"+d.Get(skDomainID).(string)+"/mappings",
 		http.MethodPost,
 		jsonData,
 	)
@@ -274,7 +274,7 @@ func updateAuthDomainMapping(
 	jsonData := prepareAuthDomainMappingJSON(d)
 	body, code, err := c.newRequest(
 		ctx,
-		"/authdomains/"+d.Get("domain_id").(string)+"/mappings/"+d.Id(),
+		"/authdomains/"+d.Get(skDomainID).(string)+"/mappings/"+d.Id(),
 		http.MethodPut,
 		jsonData,
 	)
@@ -294,7 +294,7 @@ func deleteAuthDomainMapping(
 	c := m.(*Client)
 	body, code, err := c.newRequest(
 		ctx,
-		"/authdomains/"+d.Get("domain_id").(string)+"/mappings/"+d.Id(),
+		"/authdomains/"+d.Get(skDomainID).(string)+"/mappings/"+d.Id(),
 		http.MethodDelete,
 		nil,
 	)
@@ -352,7 +352,7 @@ func fillAuthDomainMapping(d *schema.ResourceData, jsonData jsonAuthDomainMappin
 	if tfErr := d.Set("external_group", jsonData.ExternalGroup); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("domain", jsonData.Domain); tfErr != nil {
+	if tfErr := d.Set(skDomain, jsonData.Domain); tfErr != nil {
 		panic(tfErr)
 	}
 }

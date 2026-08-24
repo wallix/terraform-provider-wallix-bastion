@@ -11,7 +11,7 @@ func TestTLSInsecureSkipVerifyDefault(t *testing.T) {
 		BastionIP:          testHost,
 		BastionPort:        443,
 		BastionUser:        "admin",
-		BastionPwd:         "password",
+		BastionPwd:         skPassword,
 		InsecureSkipVerify: false, // Default: secure
 	}
 
@@ -26,7 +26,7 @@ func TestTLSInsecureSkipVerifyEnabled(t *testing.T) {
 		BastionIP:          testHost,
 		BastionPort:        443,
 		BastionUser:        "admin",
-		BastionPwd:         "password",
+		BastionPwd:         skPassword,
 		InsecureSkipVerify: true, // Allow self-signed for dev
 	}
 
@@ -41,7 +41,7 @@ func TestTLSHTTPTransportConfiguration(t *testing.T) {
 		BastionIP:          testHost,
 		BastionPort:        443,
 		BastionUser:        "admin",
-		BastionPwd:         "password",
+		BastionPwd:         skPassword,
 		InsecureSkipVerify: false,
 	}
 

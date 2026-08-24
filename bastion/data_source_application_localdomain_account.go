@@ -13,39 +13,39 @@ func dataSourceApplicationLocalDomainAccount() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceApplicationLocalDomainAccountRead,
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			skApplicationID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"domain_id": {
+			skDomainID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"account_name": {
+			skAccountName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"account_login": {
+			skAccountLogin: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"auto_change_password": {
+			skAutoChangePassword: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"checkout_policy": {
+			skCheckoutPolicy: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_password_change": {
+			skDomainPasswordChange: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"password": {
+			skPassword: {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
@@ -71,16 +71,16 @@ func dataSourceApplicationLocalDomainAccountRead(
 		return diag.FromErr(err)
 	}
 	id, ex, err := searchResourceApplicationLocalDomainAccount(ctx,
-		d.Get("application_id").(string), d.Get("domain_id").(string), d.Get("account_name").(string), m)
+		d.Get(skApplicationID).(string), d.Get(skDomainID).(string), d.Get(skAccountName).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if !ex {
 		return diag.FromErr(fmt.Errorf("account_name %s on domain_id %s, application_id %s doesn't exists",
-			d.Get("account_name").(string), d.Get("domain_id").(string), d.Get("application_id").(string)))
+			d.Get(skAccountName).(string), d.Get(skDomainID).(string), d.Get(skApplicationID).(string)))
 	}
 	cfg, err := readApplicationLocalDomainAccountOptions(ctx,
-		d.Get("application_id").(string), d.Get("domain_id").(string), id, m)
+		d.Get(skApplicationID).(string), d.Get(skDomainID).(string), id, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -91,22 +91,22 @@ func dataSourceApplicationLocalDomainAccountRead(
 }
 
 func fillSourceApplicationLocalDomainAccount(d *schema.ResourceData, jsonData jsonApplicationLocalDomainAccount) {
-	if tfErr := d.Set("account_name", jsonData.AccountName); tfErr != nil {
+	if tfErr := d.Set(skAccountName, jsonData.AccountName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("account_login", jsonData.AccountLogin); tfErr != nil {
+	if tfErr := d.Set(skAccountLogin, jsonData.AccountLogin); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("checkout_policy", jsonData.CheckoutPolicy); tfErr != nil {
+	if tfErr := d.Set(skCheckoutPolicy, jsonData.CheckoutPolicy); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("auto_change_password", jsonData.AutoChangePassword); tfErr != nil {
+	if tfErr := d.Set(skAutoChangePassword, jsonData.AutoChangePassword); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("domain_password_change", jsonData.DomainPasswordChange); tfErr != nil {
+	if tfErr := d.Set(skDomainPasswordChange, jsonData.DomainPasswordChange); tfErr != nil {
 		panic(tfErr)
 	}
 }

@@ -37,7 +37,7 @@ func resourceNotification() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -45,16 +45,16 @@ func resourceNotification() *schema.Resource {
 				Type:     schema.TypeBool,
 				Required: true,
 			},
-			"type": {
+			skType: {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"email"}, false),
+				ValidateFunc: validation.StringInSlice([]string{skEmail}, false),
 			},
 			"destination": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"language": {
+			skLanguage: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"de", "en", "es", "fr", "ru"}, false),
@@ -298,11 +298,11 @@ func prepareNotificationJSON(d *schema.ResourceData) jsonNotification {
 
 	return jsonNotification{
 		NotificationName: d.Get("notification_name").(string),
-		Description:      d.Get("description").(string),
+		Description:      d.Get(skDescription).(string),
 		Enabled:          d.Get("enabled").(bool),
-		Type:             d.Get("type").(string),
+		Type:             d.Get(skType).(string),
 		Destination:      d.Get("destination").(string),
-		Language:         d.Get("language").(string),
+		Language:         d.Get(skLanguage).(string),
 		Events:           events,
 	}
 }
@@ -336,19 +336,19 @@ func fillNotification(d *schema.ResourceData, jsonData jsonNotification) {
 	if tfErr := d.Set("notification_name", jsonData.NotificationName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("enabled", jsonData.Enabled); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("type", jsonData.Type); tfErr != nil {
+	if tfErr := d.Set(skType, jsonData.Type); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("destination", jsonData.Destination); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("language", jsonData.Language); tfErr != nil {
+	if tfErr := d.Set(skLanguage, jsonData.Language); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("events", jsonData.Events); tfErr != nil {

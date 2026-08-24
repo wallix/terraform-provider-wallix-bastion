@@ -13,32 +13,32 @@ func dataSourceDeviceService() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceDeviceServiceRead,
 		Schema: map[string]*schema.Schema{
-			"device_id": {
+			skDeviceID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"service_name": {
+			skServiceName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"connection_policy": {
+			skConnectionPolicy: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"port": {
+			skPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"protocol": {
+			skProtocol: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"global_domains": {
+			skGlobalDomains: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"subprotocols": {
+			skSubprotocols: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -62,15 +62,15 @@ func dataSourceDeviceServiceRead(
 	if err := dataSourceDeviceServiceVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceDeviceService(ctx, d.Get("device_id").(string), d.Get("service_name").(string), m)
+	id, ex, err := searchResourceDeviceService(ctx, d.Get(skDeviceID).(string), d.Get(skServiceName).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if !ex {
 		return diag.FromErr(fmt.Errorf("service_name %s on device_id %s doesn't exists",
-			d.Get("service_name").(string), d.Get("device_id").(string)))
+			d.Get(skServiceName).(string), d.Get(skDeviceID).(string)))
 	}
-	cfg, err := readDeviceServiceOptions(ctx, d.Get("device_id").(string), id, m)
+	cfg, err := readDeviceServiceOptions(ctx, d.Get(skDeviceID).(string), id, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -81,22 +81,22 @@ func dataSourceDeviceServiceRead(
 }
 
 func fillSourceDeviceService(d *schema.ResourceData, jsonData jsonDeviceService) {
-	if tfErr := d.Set("service_name", jsonData.ServiceName); tfErr != nil {
+	if tfErr := d.Set(skServiceName, jsonData.ServiceName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("connection_policy", jsonData.ConnectionPolicy); tfErr != nil {
+	if tfErr := d.Set(skConnectionPolicy, jsonData.ConnectionPolicy); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("port", jsonData.Port); tfErr != nil {
+	if tfErr := d.Set(skPort, jsonData.Port); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("protocol", jsonData.Protocol); tfErr != nil {
+	if tfErr := d.Set(skProtocol, jsonData.Protocol); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("global_domains", jsonData.GlobalDomains); tfErr != nil {
+	if tfErr := d.Set(skGlobalDomains, jsonData.GlobalDomains); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("subprotocols", jsonData.SubProtocols); tfErr != nil {
+	if tfErr := d.Set(skSubprotocols, jsonData.SubProtocols); tfErr != nil {
 		panic(tfErr)
 	}
 }

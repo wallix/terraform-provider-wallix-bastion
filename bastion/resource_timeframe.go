@@ -42,7 +42,7 @@ func resourceTimeframe() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -282,7 +282,7 @@ func deleteTimeframe(
 
 func prepareTimeframeJSON(d *schema.ResourceData) (jsonTimeframe, error) {
 	jsonData := jsonTimeframe{
-		Description:   d.Get("description").(string),
+		Description:   d.Get(skDescription).(string),
 		IsOvertimable: d.Get("is_overtimable").(bool),
 		TimeframeName: d.Get("timeframe_name").(string),
 	}
@@ -348,7 +348,7 @@ func fillTimeframe(d *schema.ResourceData, jsonData jsonTimeframe) {
 	if tfErr := d.Set("timeframe_name", jsonData.TimeframeName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("is_overtimable", jsonData.IsOvertimable); tfErr != nil {

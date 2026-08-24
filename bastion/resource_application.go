@@ -51,7 +51,7 @@ func resourceApplication() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"connection_policy": {
+			skConnectionPolicy: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -59,8 +59,8 @@ func resourceApplication() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				Default:      "standard",
-				ValidateFunc: validation.StringInSlice([]string{"standard", "jumphost", "web_application"}, false),
+				Default:      skStandard,
+				ValidateFunc: validation.StringInSlice([]string{skStandard, "jumphost", "web_application"}, false),
 			},
 			"application_url": {
 				Type:     schema.TypeString,
@@ -74,11 +74,11 @@ func resourceApplication() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"global_domains": {
+			skGlobalDomains: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -92,7 +92,7 @@ func resourceApplication() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"target": {
+						skTarget: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -108,7 +108,7 @@ func resourceApplication() *schema.Resource {
 					},
 				},
 			},
-			"target": {
+			skTarget: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -121,31 +121,31 @@ func resourceApplication() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"admin_account": {
+						skAdminAccount: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"domain_name": {
+						skDomainName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"description": {
+						skDescription: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"enable_password_change": {
+						skEnablePasswordChange: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"password_change_policy": {
+						skPasswordChangePolicy: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"password_change_plugin": {
+						skPasswordChangePlugin: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"password_change_plugin_parameters": {
+						skPasswordChangePluginParameters: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -157,11 +157,11 @@ func resourceApplication() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						skKey: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"value": {
+						skValue: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -377,8 +377,8 @@ func prepareApplicationJSON(
 ) {
 	jsonData := jsonApplication{
 		ApplicationName:  d.Get("application_name").(string),
-		ConnectionPolicy: d.Get("connection_policy").(string),
-		Description:      d.Get("description").(string),
+		ConnectionPolicy: d.Get(skConnectionPolicy).(string),
+		Description:      d.Get(skDescription).(string),
 		Parameters:       d.Get("parameters").(string),
 	}
 	if v, ok := d.GetOk("tags"); ok {
@@ -391,8 +391,8 @@ func prepareApplicationJSON(
 			tagMap := tagData.(map[string]interface{})
 
 			tags[i] = map[string]string{
-				"key":   tagMap["key"].(string),
-				"value": tagMap["value"].(string),
+				skKey:   tagMap[skKey].(string),
+				skValue: tagMap[skValue].(string),
 			}
 		}
 		jsonData.Tags = &tags
@@ -403,7 +403,7 @@ func prepareApplicationJSON(
 		jsonData.Category = d.Get("category").(string)
 	}
 	switch jsonData.Category {
-	case "", "standard":
+	case "", skStandard:
 		if d.Get("application_url").(string) != "" {
 			return jsonData, errors.New("application_url cannot be configured when category = standard")
 		}
@@ -414,7 +414,7 @@ func prepareApplicationJSON(
 			return jsonData, errors.New("browser_version cannot be configured when category = standard")
 		}
 
-		target := d.Get("target").(string)
+		target := d.Get(skTarget).(string)
 		if target == "" {
 			return jsonData, errors.New("target must be specified when category = standard")
 		}
@@ -428,14 +428,14 @@ func prepareApplicationJSON(
 		for i, v := range listPaths {
 			paths := v.(map[string]interface{})
 			jsonDataPaths[i] = jsonApplicationPath{
-				Target:     paths["target"].(string),
+				Target:     paths[skTarget].(string),
 				Program:    paths["program"].(string),
 				WorkingDir: paths["working_dir"].(string),
 			}
 		}
 		jsonData.Paths = &jsonDataPaths
 
-		listGlobalDomains := d.Get("global_domains").(*schema.Set).List()
+		listGlobalDomains := d.Get(skGlobalDomains).(*schema.Set).List()
 		jsonDataGlobalDomains := make([]string, len(listGlobalDomains))
 		for i, v := range listGlobalDomains {
 			jsonDataGlobalDomains[i] = v.(string)
@@ -450,13 +450,13 @@ func prepareApplicationJSON(
 				apiVersion,
 			)
 		}
-		if d.Get("target").(string) != "" {
+		if d.Get(skTarget).(string) != "" {
 			return jsonData, errors.New("target cannot be configured when category = jumphost")
 		}
 		if len(d.Get("paths").(*schema.Set).List()) > 0 {
 			return jsonData, errors.New("paths cannot be configured when category = jumphost")
 		}
-		if len(d.Get("global_domains").(*schema.Set).List()) > 0 {
+		if len(d.Get(skGlobalDomains).(*schema.Set).List()) > 0 {
 			return jsonData, errors.New("global_domains cannot be configured when category = jumphost")
 		}
 
@@ -483,7 +483,7 @@ func prepareApplicationJSON(
 				apiVersion,
 			)
 		}
-		if d.Get("target").(string) != "" {
+		if d.Get(skTarget).(string) != "" {
 			return jsonData, errors.New("target cannot be configured when category = web_application")
 		}
 		if len(d.Get("paths").(*schema.Set).List()) > 0 {
@@ -502,7 +502,7 @@ func prepareApplicationJSON(
 		}
 		jsonData.ApplicationURL = &applicationURL
 
-		listGlobalDomains := d.Get("global_domains").(*schema.Set).List()
+		listGlobalDomains := d.Get(skGlobalDomains).(*schema.Set).List()
 		jsonDataGlobalDomains := make([]string, len(listGlobalDomains))
 		for i, v := range listGlobalDomains {
 			jsonDataGlobalDomains[i] = v.(string)
@@ -542,12 +542,12 @@ func fillApplication(d *schema.ResourceData, jsonData jsonApplication) {
 	if tfErr := d.Set("application_name", jsonData.ApplicationName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("connection_policy", jsonData.ConnectionPolicy); tfErr != nil {
+	if tfErr := d.Set(skConnectionPolicy, jsonData.ConnectionPolicy); tfErr != nil {
 		panic(tfErr)
 	}
 	category := jsonData.Category
 	if category == "" {
-		category = "standard"
+		category = skStandard
 	}
 	if tfErr := d.Set("category", category); tfErr != nil {
 		panic(tfErr)
@@ -555,10 +555,10 @@ func fillApplication(d *schema.ResourceData, jsonData jsonApplication) {
 	setApplicationOptionalString(d, "application_url", jsonData.ApplicationURL)
 	setApplicationOptionalString(d, "browser", jsonData.Browser)
 	setApplicationOptionalString(d, "browser_version", jsonData.BrowserVersion)
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("global_domains", jsonData.GlobalDomains); tfErr != nil {
+	if tfErr := d.Set(skGlobalDomains, jsonData.GlobalDomains); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("parameters", jsonData.Parameters); tfErr != nil {
@@ -567,7 +567,7 @@ func fillApplication(d *schema.ResourceData, jsonData jsonApplication) {
 	if tfErr := d.Set("paths", fillApplicationPaths(jsonData.Paths)); tfErr != nil {
 		panic(tfErr)
 	}
-	setApplicationOptionalString(d, "target", jsonData.Target)
+	setApplicationOptionalString(d, skTarget, jsonData.Target)
 	if tfErr := d.Set("local_domains", fillApplicationLocalDomains(jsonData.LocalDomains)); tfErr != nil {
 		panic(tfErr)
 	}
@@ -595,7 +595,7 @@ func fillApplicationPaths(jsonPaths *[]jsonApplicationPath) []map[string]interfa
 		paths = make([]map[string]interface{}, len(*jsonPaths))
 		for i, v := range *jsonPaths {
 			paths[i] = map[string]interface{}{
-				"target":      v.Target,
+				skTarget:      v.Target,
 				"program":     v.Program,
 				"working_dir": v.WorkingDir,
 			}
@@ -611,16 +611,16 @@ func fillApplicationLocalDomains(jsonLocalDomains *[]jsonApplicationLocalDomain)
 		localDomains = make([]map[string]interface{}, len(*jsonLocalDomains))
 		for i, v := range *jsonLocalDomains {
 			localDomains[i] = map[string]interface{}{
-				"id":                     v.ID,
-				"admin_account":          v.AdminAccount,
-				"domain_name":            v.DomainName,
-				"description":            v.Description,
-				"enable_password_change": v.EnablePasswordChange,
-				"password_change_policy": v.PasswordChangePolicy,
-				"password_change_plugin": v.PasswordChangePlugin,
+				"id":                   v.ID,
+				skAdminAccount:         v.AdminAccount,
+				skDomainName:           v.DomainName,
+				skDescription:          v.Description,
+				skEnablePasswordChange: v.EnablePasswordChange,
+				skPasswordChangePolicy: v.PasswordChangePolicy,
+				skPasswordChangePlugin: v.PasswordChangePlugin,
 			}
 			pluginParameters, _ := json.Marshal(v.PasswordChangePluginParameters) //nolint: errchkjson
-			localDomains[i]["password_change_plugin_parameters"] = string(pluginParameters)
+			localDomains[i][skPasswordChangePluginParameters] = string(pluginParameters)
 		}
 	}
 
@@ -633,8 +633,8 @@ func fillApplicationTags(jsonTags *[]map[string]string) []interface{} {
 		stateTags = make([]interface{}, len(*jsonTags))
 		for i, tagMap := range *jsonTags {
 			stateTags[i] = map[string]interface{}{
-				"key":   tagMap["key"],
-				"value": tagMap["value"],
+				skKey:   tagMap[skKey],
+				skValue: tagMap[skValue],
 			}
 		}
 	}

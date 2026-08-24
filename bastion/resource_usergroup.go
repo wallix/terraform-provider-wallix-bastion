@@ -41,11 +41,11 @@ func resourceUserGroup() *schema.Resource {
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"profile": {
+			skProfile: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -54,16 +54,16 @@ func resourceUserGroup() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"action": {
+						skAction: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"kill", "notify"}, false),
 						},
-						"rules": {
+						skRules: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"subprotocol": {
+						skSubprotocol: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice(
@@ -73,9 +73,9 @@ func resourceUserGroup() *schema.Resource {
 									"SSH_SCP_UP",
 									"SSH_SCP_DOWN",
 									"SFTP_SESSION",
-									"RLOGIN",
-									"TELNET",
-									"RDP",
+									skProtoRLOGIN,
+									skProtoTELNET,
+									skProtoRDP,
 								},
 								false,
 							),
@@ -83,7 +83,7 @@ func resourceUserGroup() *schema.Resource {
 					},
 				},
 			},
-			"users": {
+			skUsers: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -286,13 +286,13 @@ func deleteUserGroup(
 
 func prepareUserGroupJSON(d *schema.ResourceData) jsonUserGroup {
 	jsonData := jsonUserGroup{
-		Description: d.Get("description").(string),
+		Description: d.Get(skDescription).(string),
 		GroupName:   d.Get("group_name").(string),
-		Profile:     d.Get("profile").(string),
+		Profile:     d.Get(skProfile).(string),
 	}
 
-	if d.HasChanges("users") {
-		listUsers := d.Get("users").(*schema.Set).List()
+	if d.HasChanges(skUsers) {
+		listUsers := d.Get(skUsers).(*schema.Set).List()
 		users := make([]string, len(listUsers))
 		for i, v := range listUsers {
 			users[i] = v.(string)
@@ -311,9 +311,9 @@ func prepareUserGroupJSON(d *schema.ResourceData) jsonUserGroup {
 	for i, v := range listRestrictions {
 		restrictions := v.(map[string]interface{})
 		jsonData.Restrictions[i] = jsonRestriction{
-			Action:      restrictions["action"].(string),
-			Rules:       restrictions["rules"].(string),
-			SubProtocol: restrictions["subprotocol"].(string),
+			Action:      restrictions[skAction].(string),
+			Rules:       restrictions[skRules].(string),
+			SubProtocol: restrictions[skSubprotocol].(string),
 		}
 	}
 
@@ -352,24 +352,24 @@ func fillUserGroup(d *schema.ResourceData, jsonData jsonUserGroup) {
 	if tfErr := d.Set("timeframes", jsonData.TimeFrames); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("profile", jsonData.Profile); tfErr != nil {
+	if tfErr := d.Set(skProfile, jsonData.Profile); tfErr != nil {
 		panic(tfErr)
 	}
 	restrictions := make([]map[string]interface{}, len(jsonData.Restrictions))
 	for i, v := range jsonData.Restrictions {
 		restrictions[i] = map[string]interface{}{
-			"action":      v.Action,
-			"rules":       v.Rules,
-			"subprotocol": v.SubProtocol,
+			skAction:      v.Action,
+			skRules:       v.Rules,
+			skSubprotocol: v.SubProtocol,
 		}
 	}
 	if tfErr := d.Set("restrictions", restrictions); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("users", jsonData.Users); tfErr != nil {
+	if tfErr := d.Set(skUsers, jsonData.Users); tfErr != nil {
 		panic(tfErr)
 	}
 }
