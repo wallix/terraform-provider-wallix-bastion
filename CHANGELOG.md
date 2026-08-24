@@ -1,6 +1,6 @@
 # changelog
 
-## 0.15.0 (July 23, 2026)
+## 0.15.0 (August 24, 2026)
 
 BREAKING CHANGES:
 
@@ -49,6 +49,7 @@ BUG FIXES:
 - **resource/wallix-bastion_device_localdomain_account_credential**, **resource/wallix-bastion_application_localdomain_account_credential**: fixed `apply` failing with "already exists" after WALLIX rotates a credential outside of Terraform (manual regenerate, or an automatic rotation policy); `Read` now retries a lookup by `(account, type)` before treating a 404 on the stored ID as a deletion
 - **data-source/wallix-bastion_device_localdomain_account_credential**, **data-source/wallix-bastion_domain_account_credential**, **data-source/wallix-bastion_application_localdomain_account_credential**: fixed `password`/`passphrase`/`private_key` never being populated even though declared as computed attributes
 - **client**: fixed a race condition on session state checks, a bug where POST/PUT requests could fail on re-authentication due to request body reuse, and defensive error handling around URL parsing and cookie jar creation
+- **docs**: rewrote the `wallix-bastion_authdomain_ad`, `wallix-bastion_authdomain_azuread`, `wallix-bastion_authdomain_ldap`, `wallix-bastion_authdomain_mapping`, `wallix-bastion_authdomain_saml`, `wallix-bastion_externalauth_kerberos`, `wallix-bastion_externalauth_ldap`, `wallix-bastion_externalauth_radius`, `wallix-bastion_externalauth_saml`, and `wallix-bastion_externalauth_tacacs` resource docs, whose examples referenced arguments that don't exist on these resources (e.g. `identity_provider_url`, `user_attribute_mapping`, `ldap_hosts`, `tenant_id`) instead of their real schemas
 
 ## 0.14.8 (October 10, 2025)
 
