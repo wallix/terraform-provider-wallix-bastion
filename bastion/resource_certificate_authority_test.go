@@ -17,8 +17,8 @@ func TestAccResourceCertificateAuthority_basic(t *testing.T) {
 			PreCheck:          func() { testAccPreCheck(t) },
 			ProviderFactories: testAccProviderFactories,
 			ExternalProviders: map[string]resource.ExternalProvider{
-				"tls": {
-					Source: "hashicorp/tls",
+				tvTLSProviderName: {
+					Source: tvTLSProviderSource,
 				},
 			},
 			Steps: []resource.TestStep{

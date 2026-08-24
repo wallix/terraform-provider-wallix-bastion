@@ -13,49 +13,49 @@ func dataSourceDeviceLocalDomain() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceDeviceLocalDomainRead,
 		Schema: map[string]*schema.Schema{
-			"device_id": {
+			skDeviceID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"domain_name": {
+			skDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"admin_account": {
+			skAdminAccount: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ca_public_key": {
+			skCAPublicKey: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ca_private_key": {
+			skCAPrivateKey: {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"enable_password_change": {
+			skEnablePasswordChange: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"passphrase": {
+			skPassphrase: {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
 			},
-			"password_change_policy": {
+			skPasswordChangePolicy: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"password_change_plugin": {
+			skPasswordChangePlugin: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"password_change_plugin_parameters": {
+			skPasswordChangePluginParameters: {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
@@ -79,15 +79,15 @@ func dataSourceDeviceLocalDomainRead(
 	if err := dataSourceDeviceLocalDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceDeviceLocalDomain(ctx, d.Get("device_id").(string), d.Get("domain_name").(string), m)
+	id, ex, err := searchResourceDeviceLocalDomain(ctx, d.Get(skDeviceID).(string), d.Get(skDomainName).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if !ex {
 		return diag.FromErr(fmt.Errorf("domain_name %s on device_id %s doesn't exists",
-			d.Get("domain_name").(string), d.Get("device_id").(string)))
+			d.Get(skDomainName).(string), d.Get(skDeviceID).(string)))
 	}
-	cfg, err := readDeviceLocalDomainOptions(ctx, d.Get("device_id").(string), id, m)
+	cfg, err := readDeviceLocalDomainOptions(ctx, d.Get(skDeviceID).(string), id, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -98,25 +98,25 @@ func dataSourceDeviceLocalDomainRead(
 }
 
 func fillSourceDeviceLocalDomain(d *schema.ResourceData, jsonData jsonDeviceLocalDomain) {
-	if tfErr := d.Set("domain_name", jsonData.DomainName); tfErr != nil {
+	if tfErr := d.Set(skDomainName, jsonData.DomainName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("admin_account", jsonData.AdminAccount); tfErr != nil {
+	if tfErr := d.Set(skAdminAccount, jsonData.AdminAccount); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("ca_public_key", jsonData.CAPublicKey); tfErr != nil {
+	if tfErr := d.Set(skCAPublicKey, jsonData.CAPublicKey); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("enable_password_change", jsonData.EnablePasswordChange); tfErr != nil {
+	if tfErr := d.Set(skEnablePasswordChange, jsonData.EnablePasswordChange); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("password_change_policy", jsonData.PasswordChangePolicy); tfErr != nil {
+	if tfErr := d.Set(skPasswordChangePolicy, jsonData.PasswordChangePolicy); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("password_change_plugin", jsonData.PasswordChangePlugin); tfErr != nil {
+	if tfErr := d.Set(skPasswordChangePlugin, jsonData.PasswordChangePlugin); tfErr != nil {
 		panic(tfErr)
 	}
 }

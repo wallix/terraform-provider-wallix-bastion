@@ -32,7 +32,7 @@ func resourceAPIKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"ip_limitation": {
+			skIPLimitation: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -238,7 +238,7 @@ func deleteAPIKey(
 func prepareAPIKeyJSON(d *schema.ResourceData) jsonAPIKey {
 	return jsonAPIKey{
 		APIKeyName:   d.Get("apikey_name").(string),
-		IPLimitation: d.Get("ip_limitation").(string),
+		IPLimitation: d.Get(skIPLimitation).(string),
 	}
 }
 
@@ -271,7 +271,7 @@ func fillAPIKey(d *schema.ResourceData, jsonData jsonAPIKey) {
 	if tfErr := d.Set("apikey_name", jsonData.APIKeyName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("ip_limitation", jsonData.IPLimitation); tfErr != nil {
+	if tfErr := d.Set(skIPLimitation, jsonData.IPLimitation); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("apikey", jsonData.APIKey); tfErr != nil {

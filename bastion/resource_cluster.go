@@ -34,26 +34,26 @@ func resourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"accounts": {
+			skAccounts: {
 				Type:         schema.TypeSet,
 				Optional:     true,
-				AtLeastOneOf: []string{"accounts", "account_mappings", "interactive_logins"},
+				AtLeastOneOf: []string{skAccounts, skAccountMappings, skInteractiveLogins},
 				Elem:         &schema.Schema{Type: schema.TypeString},
 			},
-			"account_mappings": {
+			skAccountMappings: {
 				Type:         schema.TypeSet,
 				Optional:     true,
-				AtLeastOneOf: []string{"accounts", "account_mappings", "interactive_logins"},
+				AtLeastOneOf: []string{skAccounts, skAccountMappings, skInteractiveLogins},
 				Elem:         &schema.Schema{Type: schema.TypeString},
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"interactive_logins": {
+			skInteractiveLogins: {
 				Type:         schema.TypeSet,
 				Optional:     true,
-				AtLeastOneOf: []string{"accounts", "account_mappings", "interactive_logins"},
+				AtLeastOneOf: []string{skAccounts, skAccountMappings, skInteractiveLogins},
 				Elem:         &schema.Schema{Type: schema.TypeString},
 			},
 		},
@@ -254,22 +254,22 @@ func deleteCluster(
 func prepareClusterJSON(d *schema.ResourceData) jsonCluster {
 	jsonData := jsonCluster{
 		ClusterName: d.Get("cluster_name").(string),
-		Description: d.Get("description").(string),
+		Description: d.Get(skDescription).(string),
 	}
 
-	listAccounts := d.Get("accounts").(*schema.Set).List()
+	listAccounts := d.Get(skAccounts).(*schema.Set).List()
 	jsonData.Accounts = make([]string, len(listAccounts))
 	for i, v := range listAccounts {
 		jsonData.Accounts[i] = v.(string)
 	}
 
-	listAccountMappings := d.Get("account_mappings").(*schema.Set).List()
+	listAccountMappings := d.Get(skAccountMappings).(*schema.Set).List()
 	jsonData.AccountMappings = make([]string, len(listAccountMappings))
 	for i, v := range listAccountMappings {
 		jsonData.AccountMappings[i] = v.(string)
 	}
 
-	listInteractiveLogins := d.Get("interactive_logins").(*schema.Set).List()
+	listInteractiveLogins := d.Get(skInteractiveLogins).(*schema.Set).List()
 	jsonData.InteractiveLogins = make([]string, len(listInteractiveLogins))
 	for i, v := range listInteractiveLogins {
 		jsonData.InteractiveLogins[i] = v.(string)
@@ -307,16 +307,16 @@ func fillCluster(d *schema.ResourceData, jsonData jsonCluster) {
 	if tfErr := d.Set("cluster_name", jsonData.ClusterName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("accounts", jsonData.Accounts); tfErr != nil {
+	if tfErr := d.Set(skAccounts, jsonData.Accounts); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("account_mappings", jsonData.AccountMappings); tfErr != nil {
+	if tfErr := d.Set(skAccountMappings, jsonData.AccountMappings); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("interactive_logins", jsonData.InteractiveLogins); tfErr != nil {
+	if tfErr := d.Set(skInteractiveLogins, jsonData.InteractiveLogins); tfErr != nil {
 		panic(tfErr)
 	}
 }

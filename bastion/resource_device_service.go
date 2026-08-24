@@ -34,41 +34,41 @@ func resourceDeviceService() *schema.Resource {
 			StateContext: resourceDeviceServiceImport,
 		},
 		Schema: map[string]*schema.Schema{
-			"device_id": {
+			skDeviceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"service_name": {
+			skServiceName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"connection_policy": {
+			skConnectionPolicy: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"port": {
+			skPort: {
 				Type:         schema.TypeInt,
 				Required:     true,
 				ValidateFunc: validation.IntBetween(1, 65535),
 			},
-			"protocol": {
+			skProtocol: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice(
-					[]string{"SSH", "RAWTCPIP", "RDP", "RLOGIN", "TELNET", "VNC"},
+					[]string{skProtoSSH, "RAWTCPIP", skProtoRDP, skProtoRLOGIN, skProtoTELNET, "VNC"},
 					false,
 				),
 			},
-			"global_domains": {
+			skGlobalDomains: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"subprotocols": {
+			skSubprotocols: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -92,20 +92,20 @@ func resourceDeviceServiceCreate(
 	if err := resourceDeviceServiceVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	cfg, err := readDeviceOptions(ctx, d.Get("device_id").(string), m)
+	cfg, err := readDeviceOptions(ctx, d.Get(skDeviceID).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if cfg.ID == "" {
-		return diag.FromErr(fmt.Errorf("device with ID %s doesn't exists", d.Get("device_id").(string)))
+		return diag.FromErr(fmt.Errorf("device with ID %s doesn't exists", d.Get(skDeviceID).(string)))
 	}
-	_, ex, err := searchResourceDeviceService(ctx, d.Get("device_id").(string), d.Get("service_name").(string), m)
+	_, ex, err := searchResourceDeviceService(ctx, d.Get(skDeviceID).(string), d.Get(skServiceName).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if ex {
 		return diag.FromErr(fmt.Errorf("service_name %s on device_id %s already exists",
-			d.Get("service_name").(string), d.Get("device_id").(string)))
+			d.Get(skServiceName).(string), d.Get(skDeviceID).(string)))
 	}
 	id, err := addDeviceService(ctx, d, m)
 	if err != nil {
@@ -113,13 +113,13 @@ func resourceDeviceServiceCreate(
 	}
 	if id == "" {
 		// Fallback for Bastion versions that don't return the X-Object-Id header on creation.
-		id, ex, err = searchResourceDeviceService(ctx, d.Get("device_id").(string), d.Get("service_name").(string), m)
+		id, ex, err = searchResourceDeviceService(ctx, d.Get(skDeviceID).(string), d.Get(skServiceName).(string), m)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 		if !ex {
 			return diag.FromErr(fmt.Errorf("service_name %s on device_id %s not found after POST",
-				d.Get("service_name").(string), d.Get("device_id").(string)))
+				d.Get(skServiceName).(string), d.Get(skDeviceID).(string)))
 		}
 	}
 	d.SetId(id)
@@ -134,7 +134,7 @@ func resourceDeviceServiceRead(
 	if err := resourceDeviceServiceVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	cfg, err := readDeviceServiceOptions(ctx, d.Get("device_id").(string), d.Id(), m)
+	cfg, err := readDeviceServiceOptions(ctx, d.Get(skDeviceID).(string), d.Id(), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -204,7 +204,7 @@ func resourceDeviceServiceImport(
 	fillDeviceService(d, cfg)
 	result := make([]*schema.ResourceData, 1)
 	d.SetId(id)
-	if tfErr := d.Set("device_id", idSplit[0]); tfErr != nil {
+	if tfErr := d.Set(skDeviceID, idSplit[0]); tfErr != nil {
 		panic(tfErr)
 	}
 	result[0] = d
@@ -247,7 +247,7 @@ func addDeviceService(
 		return "", err
 	}
 	body, headers, code, err := c.newRequestWithHeaders(
-		ctx, "/devices/"+d.Get("device_id").(string)+"/services/", http.MethodPost, jsonData)
+		ctx, "/devices/"+d.Get(skDeviceID).(string)+"/services/", http.MethodPost, jsonData)
 	if err != nil {
 		return "", err
 	}
@@ -267,7 +267,7 @@ func updateDeviceService(
 		return err
 	}
 	body, code, err := c.newRequest(ctx,
-		"/devices/"+d.Get("device_id").(string)+"/services/"+d.Id()+"?force=true", http.MethodPut, json)
+		"/devices/"+d.Get(skDeviceID).(string)+"/services/"+d.Id()+"?force=true", http.MethodPut, json)
 	if err != nil {
 		return err
 	}
@@ -283,7 +283,7 @@ func deleteDeviceService(
 ) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
-		"/devices/"+d.Get("device_id").(string)+"/services/"+d.Id(), http.MethodDelete, nil)
+		"/devices/"+d.Get(skDeviceID).(string)+"/services/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
 		return err
 	}
@@ -330,17 +330,17 @@ func prepareDeviceServiceJSON(
 	jsonDeviceService, error,
 ) {
 	jsonData := jsonDeviceService{
-		ConnectionPolicy: d.Get("connection_policy").(string),
-		Port:             d.Get("port").(int),
+		ConnectionPolicy: d.Get(skConnectionPolicy).(string),
+		Port:             d.Get(skPort).(int),
 	}
 
 	if newResource {
-		jsonData.ServiceName = d.Get("service_name").(string)
-		jsonData.Protocol = d.Get("protocol").(string)
+		jsonData.ServiceName = d.Get(skServiceName).(string)
+		jsonData.Protocol = d.Get(skProtocol).(string)
 	}
 
-	if d.HasChange("global_domains") {
-		listGlobalDomains := d.Get("global_domains").(*schema.Set).List()
+	if d.HasChange(skGlobalDomains) {
+		listGlobalDomains := d.Get(skGlobalDomains).(*schema.Set).List()
 		globalDomains := make([]string, len(listGlobalDomains))
 		for i, v := range listGlobalDomains {
 			globalDomains[i] = v.(string)
@@ -348,22 +348,22 @@ func prepareDeviceServiceJSON(
 		jsonData.GlobalDomains = &globalDomains
 	}
 
-	if listSubProtocols := d.Get("subprotocols").(*schema.Set).List(); len(listSubProtocols) > 0 {
+	if listSubProtocols := d.Get(skSubprotocols).(*schema.Set).List(); len(listSubProtocols) > 0 {
 		subProtocols := make([]string, len(listSubProtocols))
 		for i, v := range listSubProtocols {
-			switch d.Get("protocol").(string) {
-			case "SSH":
+			switch d.Get(skProtocol).(string) {
+			case skProtoSSH:
 				if !slices.Contains(sshSubProtocolsValid(), v.(string)) {
 					return jsonData, fmt.Errorf("subprotocols %s not valid for SSH service", v)
 				}
 				subProtocols[i] = v.(string)
-			case "RDP":
+			case skProtoRDP:
 				if !slices.Contains(rdpSubProtocolsValid(), v.(string)) {
 					return jsonData, fmt.Errorf("subprotocols %s not valid for RDP service", v)
 				}
 				subProtocols[i] = v.(string)
 			default:
-				return jsonData, fmt.Errorf("subprotocols need to not set for %s service", d.Get("protocol").(string))
+				return jsonData, fmt.Errorf("subprotocols need to not set for %s service", d.Get(skProtocol).(string))
 			}
 		}
 		jsonData.SubProtocols = &subProtocols
@@ -398,22 +398,22 @@ func readDeviceServiceOptions(
 }
 
 func fillDeviceService(d *schema.ResourceData, jsonData jsonDeviceService) {
-	if tfErr := d.Set("service_name", jsonData.ServiceName); tfErr != nil {
+	if tfErr := d.Set(skServiceName, jsonData.ServiceName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("connection_policy", jsonData.ConnectionPolicy); tfErr != nil {
+	if tfErr := d.Set(skConnectionPolicy, jsonData.ConnectionPolicy); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("port", jsonData.Port); tfErr != nil {
+	if tfErr := d.Set(skPort, jsonData.Port); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("protocol", jsonData.Protocol); tfErr != nil {
+	if tfErr := d.Set(skProtocol, jsonData.Protocol); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("global_domains", jsonData.GlobalDomains); tfErr != nil {
+	if tfErr := d.Set(skGlobalDomains, jsonData.GlobalDomains); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("subprotocols", jsonData.SubProtocols); tfErr != nil {
+	if tfErr := d.Set(skSubprotocols, jsonData.SubProtocols); tfErr != nil {
 		panic(tfErr)
 	}
 }

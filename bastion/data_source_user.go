@@ -17,11 +17,11 @@ func dataSourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"email": {
+			skEmail: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"profile": {
+			skProfile: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -59,7 +59,7 @@ func dataSourceUser() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"password": {
+			skPassword: {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
@@ -113,10 +113,10 @@ func fillSourceUser(d *schema.ResourceData, jsonData jsonUser) {
 	if tfErr := d.Set("user_name", jsonData.UserName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("email", jsonData.Email); tfErr != nil {
+	if tfErr := d.Set(skEmail, jsonData.Email); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("profile", jsonData.Profile); tfErr != nil {
+	if tfErr := d.Set(skProfile, jsonData.Profile); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("user_auths", jsonData.UserAuths); tfErr != nil {

@@ -27,8 +27,8 @@ func TestAccResourceApplication_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(
 						"wallix-bastion_application.testacc_Appli",
 						"tags.*", map[string]string{
-							"key":   "testkey",
-							"value": "testvalue",
+							tvKey:   tvTestKey,
+							tvValue: tvTestValue,
 						}),
 				),
 			},

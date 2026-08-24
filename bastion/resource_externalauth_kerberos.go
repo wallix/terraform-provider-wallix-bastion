@@ -34,11 +34,11 @@ func resourceExternalAuthKerberos() *schema.Resource {
 			StateContext: resourceExternalAuthKerberosImport,
 		},
 		Schema: map[string]*schema.Schema{
-			"authentication_name": {
+			skAuthenticationName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"host": {
+			skHost: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -46,7 +46,7 @@ func resourceExternalAuthKerberos() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"port": {
+			skPort: {
 				Type:         schema.TypeInt,
 				Required:     true,
 				ValidateFunc: validation.IntBetween(1, 65535),
@@ -56,7 +56,7 @@ func resourceExternalAuthKerberos() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -71,7 +71,7 @@ func resourceExternalAuthKerberos() *schema.Resource {
 				Deprecated: "Remove this attribute's configuration as it is not used anymore" +
 					" and the attribute will be removed in the next major version of the provider.",
 			},
-			"use_primary_auth_domain": {
+			skUsePrimaryAuthDomain: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -94,12 +94,12 @@ func resourceExternalAuthKerberosCreate(
 	if err := resourceExternalAuthKerberosVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	_, ex, err := searchResourceExternalAuthKerberos(ctx, d.Get("authentication_name").(string), m)
+	_, ex, err := searchResourceExternalAuthKerberos(ctx, d.Get(skAuthenticationName).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if ex {
-		return diag.FromErr(fmt.Errorf("authentication_name %s already exists", d.Get("authentication_name").(string)))
+		return diag.FromErr(fmt.Errorf("authentication_name %s already exists", d.Get(skAuthenticationName).(string)))
 	}
 	id, err := addExternalAuthKerberos(ctx, d, m)
 	if err != nil {
@@ -107,12 +107,12 @@ func resourceExternalAuthKerberosCreate(
 	}
 	if id == "" {
 		// Fallback for Bastion versions that don't return the X-Object-Id header on creation.
-		id, ex, err = searchResourceExternalAuthKerberos(ctx, d.Get("authentication_name").(string), m)
+		id, ex, err = searchResourceExternalAuthKerberos(ctx, d.Get(skAuthenticationName).(string), m)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 		if !ex {
-			return diag.FromErr(fmt.Errorf("authentication_name %s not found after POST", d.Get("authentication_name").(string)))
+			return diag.FromErr(fmt.Errorf("authentication_name %s not found after POST", d.Get(skAuthenticationName).(string)))
 		}
 	}
 	d.SetId(id)
@@ -272,13 +272,13 @@ func deleteExternalAuthKerberos(
 
 func prepareExternalAuthKerberosJSON(d *schema.ResourceData) jsonExternalAuthKerberos {
 	jsonData := jsonExternalAuthKerberos{
-		AuthenticationName:   d.Get("authentication_name").(string),
-		Host:                 d.Get("host").(string),
+		AuthenticationName:   d.Get(skAuthenticationName).(string),
+		Host:                 d.Get(skHost).(string),
 		KerDomController:     d.Get("ker_dom_controller").(string),
-		Port:                 d.Get("port").(int),
-		Description:          d.Get("description").(string),
+		Port:                 d.Get(skPort).(int),
+		Description:          d.Get(skDescription).(string),
 		KeyTab:               d.Get("keytab").(string),
-		UsePrimaryAuthDomain: d.Get("use_primary_auth_domain").(bool),
+		UsePrimaryAuthDomain: d.Get(skUsePrimaryAuthDomain).(bool),
 		Type:                 "KERBEROS",
 	}
 	if d.Get("kerberos_password").(bool) {
@@ -315,22 +315,22 @@ func readExternalAuthKerberosOptions(
 }
 
 func fillExternalAuthKerberos(d *schema.ResourceData, jsonData jsonExternalAuthKerberos) {
-	if tfErr := d.Set("authentication_name", jsonData.AuthenticationName); tfErr != nil {
+	if tfErr := d.Set(skAuthenticationName, jsonData.AuthenticationName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("host", jsonData.Host); tfErr != nil {
+	if tfErr := d.Set(skHost, jsonData.Host); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("ker_dom_controller", jsonData.KerDomController); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("port", jsonData.Port); tfErr != nil {
+	if tfErr := d.Set(skPort, jsonData.Port); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("use_primary_auth_domain", jsonData.UsePrimaryAuthDomain); tfErr != nil {
+	if tfErr := d.Set(skUsePrimaryAuthDomain, jsonData.UsePrimaryAuthDomain); tfErr != nil {
 		panic(tfErr)
 	}
 	if jsonData.Type == "KERBEROS-PASSWORD" {

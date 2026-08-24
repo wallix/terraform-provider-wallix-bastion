@@ -40,7 +40,7 @@ func resourcePasswordChangePolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -328,7 +328,7 @@ func configuredStringPtr(d *schema.ResourceData, key string) *string {
 func preparePasswordChangePolicyJSON(d *schema.ResourceData) jsonPasswordChangePolicy {
 	return jsonPasswordChangePolicy{
 		PasswordChangePolicyName: d.Get("password_change_policy_name").(string),
-		Description:              d.Get("description").(string),
+		Description:              d.Get(skDescription).(string),
 		PasswordLength:           configuredIntPtr(d, "password_length"),
 		SpecialChars:             configuredIntPtr(d, "special_chars"),
 		LowerChars:               configuredIntPtr(d, "lower_chars"),
@@ -370,7 +370,7 @@ func fillPasswordChangePolicy(d *schema.ResourceData, jsonData jsonPasswordChang
 	if tfErr := d.Set("password_change_policy_name", jsonData.PasswordChangePolicyName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("password_length", intPtrValue(jsonData.PasswordLength)); tfErr != nil {

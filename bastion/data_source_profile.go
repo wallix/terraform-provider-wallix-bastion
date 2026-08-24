@@ -26,51 +26,51 @@ func dataSourceProfile() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"system_audit": {
+						skSystemAudit: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"users": {
+						skUsers: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"user_groups": {
+						skUserGroups: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"devices": {
+						skDevices: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"target_groups": {
+						skTargetGroups: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"authorizations": {
+						skAuthorizations: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"profiles": {
+						skProfiles: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"wab_settings": {
+						skWabSettings: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"system_settings": {
+						skSystemSettings: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"backup": {
+						skBackup: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"approval": {
+						skApproval: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"credential_recovery": {
+						skCredentialRecovery: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -82,58 +82,58 @@ func dataSourceProfile() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"system_audit": {
+						skSystemAudit: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"users": {
+						skUsers: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"user_groups": {
+						skUserGroups: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"devices": {
+						skDevices: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"target_groups": {
+						skTargetGroups: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"authorizations": {
+						skAuthorizations: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"profiles": {
+						skProfiles: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"wab_settings": {
+						skWabSettings: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"system_settings": {
+						skSystemSettings: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"backup": {
+						skBackup: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"approval": {
+						skApproval: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"credential_recovery": {
+						skCredentialRecovery: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -142,7 +142,7 @@ func dataSourceProfile() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"ip_limitation": {
+			skIPLimitation: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -159,7 +159,7 @@ func dataSourceProfile() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"target_groups": {
+						skTargetGroups: {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -172,7 +172,7 @@ func dataSourceProfile() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"user_groups": {
+						skUserGroups: {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -221,47 +221,47 @@ func fillSourceProfile(d *schema.ResourceData, jsonData jsonProfile) {
 		panic(tfErr)
 	}
 	guiFeatures := []map[string]interface{}{{
-		"wab_audit":           jsonData.GuiFeatures.WabAudit,
-		"system_audit":        jsonData.GuiFeatures.SystemAudit,
-		"users":               jsonData.GuiFeatures.Users,
-		"user_groups":         jsonData.GuiFeatures.UserGroups,
-		"devices":             jsonData.GuiFeatures.Devices,
-		"target_groups":       jsonData.GuiFeatures.TargetGroups,
-		"authorizations":      jsonData.GuiFeatures.Authorizations,
-		"profiles":            jsonData.GuiFeatures.Profiles,
-		"wab_settings":        jsonData.GuiFeatures.WabSettings,
-		"system_settings":     jsonData.GuiFeatures.SystemSettings,
-		"backup":              jsonData.GuiFeatures.Backup,
-		"approval":            jsonData.GuiFeatures.Approval,
-		"credential_recovery": jsonData.GuiFeatures.CredentialRecovery,
+		"wab_audit":          jsonData.GuiFeatures.WabAudit,
+		skSystemAudit:        jsonData.GuiFeatures.SystemAudit,
+		skUsers:              jsonData.GuiFeatures.Users,
+		skUserGroups:         jsonData.GuiFeatures.UserGroups,
+		skDevices:            jsonData.GuiFeatures.Devices,
+		skTargetGroups:       jsonData.GuiFeatures.TargetGroups,
+		skAuthorizations:     jsonData.GuiFeatures.Authorizations,
+		skProfiles:           jsonData.GuiFeatures.Profiles,
+		skWabSettings:        jsonData.GuiFeatures.WabSettings,
+		skSystemSettings:     jsonData.GuiFeatures.SystemSettings,
+		skBackup:             jsonData.GuiFeatures.Backup,
+		skApproval:           jsonData.GuiFeatures.Approval,
+		skCredentialRecovery: jsonData.GuiFeatures.CredentialRecovery,
 	}}
 	if tfErr := d.Set("gui_features", guiFeatures); tfErr != nil {
 		panic(tfErr)
 	}
 	guiTransmission := []map[string]interface{}{{
-		"system_audit":        jsonData.GuiTransmission.SystemAudit,
-		"users":               jsonData.GuiTransmission.Users,
-		"user_groups":         jsonData.GuiTransmission.UserGroups,
-		"devices":             jsonData.GuiTransmission.Devices,
-		"target_groups":       jsonData.GuiTransmission.TargetGroups,
-		"authorizations":      jsonData.GuiTransmission.Authorizations,
-		"profiles":            jsonData.GuiTransmission.Profiles,
-		"wab_settings":        jsonData.GuiTransmission.WabSettings,
-		"system_settings":     jsonData.GuiTransmission.SystemSettings,
-		"backup":              jsonData.GuiTransmission.Backup,
-		"approval":            jsonData.GuiTransmission.Approval,
-		"credential_recovery": jsonData.GuiTransmission.CredentialRecovery,
+		skSystemAudit:        jsonData.GuiTransmission.SystemAudit,
+		skUsers:              jsonData.GuiTransmission.Users,
+		skUserGroups:         jsonData.GuiTransmission.UserGroups,
+		skDevices:            jsonData.GuiTransmission.Devices,
+		skTargetGroups:       jsonData.GuiTransmission.TargetGroups,
+		skAuthorizations:     jsonData.GuiTransmission.Authorizations,
+		skProfiles:           jsonData.GuiTransmission.Profiles,
+		skWabSettings:        jsonData.GuiTransmission.WabSettings,
+		skSystemSettings:     jsonData.GuiTransmission.SystemSettings,
+		skBackup:             jsonData.GuiTransmission.Backup,
+		skApproval:           jsonData.GuiTransmission.Approval,
+		skCredentialRecovery: jsonData.GuiTransmission.CredentialRecovery,
 	}}
 	if tfErr := d.Set("gui_transmission", guiTransmission); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("dashboards", jsonData.Dashboards); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("ip_limitation", jsonData.IPLimitation); tfErr != nil {
+	if tfErr := d.Set(skIPLimitation, jsonData.IPLimitation); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("target_access", jsonData.TargetAccess); tfErr != nil {
@@ -270,7 +270,7 @@ func fillSourceProfile(d *schema.ResourceData, jsonData jsonProfile) {
 	if jsonData.TargetGroupsLimitation.Enabled {
 		targetGroupsLimitation := []map[string]interface{}{{
 			"default_target_group": *jsonData.TargetGroupsLimitation.DefaultTargetGroup,
-			"target_groups":        *jsonData.TargetGroupsLimitation.TargetGroups,
+			skTargetGroups:         *jsonData.TargetGroupsLimitation.TargetGroups,
 		}}
 		if tfErr := d.Set("target_groups_limitation", targetGroupsLimitation); tfErr != nil {
 			panic(tfErr)
@@ -283,7 +283,7 @@ func fillSourceProfile(d *schema.ResourceData, jsonData jsonProfile) {
 	}
 	if jsonData.UserGroupsLimitation.Enabled {
 		userGroupsLimitation := []map[string]interface{}{{
-			"user_groups": *jsonData.UserGroupsLimitation.UserGroups,
+			skUserGroups: *jsonData.UserGroupsLimitation.UserGroups,
 		}}
 		if tfErr := d.Set("user_groups_limitation", userGroupsLimitation); tfErr != nil {
 			panic(tfErr)

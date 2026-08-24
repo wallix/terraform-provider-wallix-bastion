@@ -17,7 +17,7 @@ func dataSourcePasswordChangePolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -98,7 +98,7 @@ func fillSourcePasswordChangePolicy(d *schema.ResourceData, jsonData jsonPasswor
 	if tfErr := d.Set("password_change_policy_name", jsonData.PasswordChangePolicyName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("password_length", intPtrValue(jsonData.PasswordLength)); tfErr != nil {

@@ -11,11 +11,11 @@ func TestAccResourceUser_basic(t *testing.T) {
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
-			"random": {
-				Source: "hashicorp/random",
+			tvRandomProviderName: {
+				Source: tvRandomProviderSource,
 			},
-			"tls": {
-				Source: "hashicorp/tls",
+			tvTLSProviderName: {
+				Source: tvTLSProviderSource,
 			},
 		},
 		Steps: []resource.TestStep{

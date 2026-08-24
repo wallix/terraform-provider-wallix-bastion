@@ -37,7 +37,7 @@ func resourceConfigX509() *schema.Resource {
 			StateContext: resourceConfigX509Import,
 		},
 		Schema: map[string]*schema.Schema{
-			"ca_certificate": {
+			skCACertificate: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -80,9 +80,9 @@ func resourceConfigX509Read(ctx context.Context, d *schema.ResourceData, m inter
 
 		return nil
 	}
-	if d.Get("ca_certificate").(string) != "" {
+	if d.Get(skCACertificate).(string) != "" {
 		// check diff between api response and common name of ca_certificate
-		caCertificatePEM, _ := pem.Decode([]byte(d.Get("ca_certificate").(string)))
+		caCertificatePEM, _ := pem.Decode([]byte(d.Get(skCACertificate).(string)))
 		if caCertificatePEM == nil {
 			return diag.FromErr(errors.New("failed to decode PEM block from ca_certificate"))
 		}
@@ -226,7 +226,7 @@ func deleteConfigX509(ctx context.Context, m interface{}) error {
 
 func prepareConfigX509JSON(d *schema.ResourceData) jsonConfigX509 {
 	return jsonConfigX509{
-		CaCertificate:    d.Get("ca_certificate").(string),
+		CaCertificate:    d.Get(skCACertificate).(string),
 		ServerPublicKey:  d.Get("server_public_key").(string),
 		ServerPrivateKey: d.Get("server_private_key").(string),
 		Enable:           d.Get("enable").(bool),

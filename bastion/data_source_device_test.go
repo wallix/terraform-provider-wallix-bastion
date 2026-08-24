@@ -34,8 +34,8 @@ func TestAccDataSourceDevice_basic(t *testing.T) {
 						"tags.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs("data.wallix-bastion_device.testacc_dataDevice",
 						"tags.*", map[string]string{
-							"key":   "testkey",
-							"value": "testvalue",
+							tvKey:   tvTestKey,
+							tvValue: tvTestValue,
 						}),
 				),
 			},

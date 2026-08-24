@@ -13,35 +13,35 @@ func dataSourceApplicationLocalDomain() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceApplicationLocalDomainRead,
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			skApplicationID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"domain_name": {
+			skDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"admin_account": {
+			skAdminAccount: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"enable_password_change": {
+			skEnablePasswordChange: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"password_change_policy": {
+			skPasswordChangePolicy: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"password_change_plugin": {
+			skPasswordChangePlugin: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"password_change_plugin_parameters": {
+			skPasswordChangePluginParameters: {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
@@ -66,15 +66,15 @@ func dataSourceApplicationLocalDomainRead(
 		return diag.FromErr(err)
 	}
 	id, ex, err := searchResourceApplicationLocalDomain(ctx,
-		d.Get("application_id").(string), d.Get("domain_name").(string), m)
+		d.Get(skApplicationID).(string), d.Get(skDomainName).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if !ex {
 		return diag.FromErr(fmt.Errorf("domain_name %s on application_id %s doesn't exists",
-			d.Get("domain_name").(string), d.Get("application_id").(string)))
+			d.Get(skDomainName).(string), d.Get(skApplicationID).(string)))
 	}
-	cfg, err := readApplicationLocalDomainOptions(ctx, d.Get("application_id").(string), id, m)
+	cfg, err := readApplicationLocalDomainOptions(ctx, d.Get(skApplicationID).(string), id, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -85,22 +85,22 @@ func dataSourceApplicationLocalDomainRead(
 }
 
 func fillSourceApplicationLocalDomain(d *schema.ResourceData, jsonData jsonApplicationLocalDomain) {
-	if tfErr := d.Set("domain_name", jsonData.DomainName); tfErr != nil {
+	if tfErr := d.Set(skDomainName, jsonData.DomainName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("admin_account", jsonData.AdminAccount); tfErr != nil {
+	if tfErr := d.Set(skAdminAccount, jsonData.AdminAccount); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("enable_password_change", jsonData.EnablePasswordChange); tfErr != nil {
+	if tfErr := d.Set(skEnablePasswordChange, jsonData.EnablePasswordChange); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("password_change_policy", jsonData.PasswordChangePolicy); tfErr != nil {
+	if tfErr := d.Set(skPasswordChangePolicy, jsonData.PasswordChangePolicy); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("password_change_plugin", jsonData.PasswordChangePlugin); tfErr != nil {
+	if tfErr := d.Set(skPasswordChangePlugin, jsonData.PasswordChangePlugin); tfErr != nil {
 		panic(tfErr)
 	}
 }

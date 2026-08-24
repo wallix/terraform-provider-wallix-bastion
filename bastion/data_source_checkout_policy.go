@@ -17,11 +17,11 @@ func dataSourceCheckoutPolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"enable_lock": {
+			skEnableLock: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -81,10 +81,10 @@ func fillSourceCheckoutPolicy(d *schema.ResourceData, jsonData jsonCheckoutPolic
 	if tfErr := d.Set("checkout_policy_name", jsonData.CheckoutPolicyName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("enable_lock", jsonData.EnableLock); tfErr != nil {
+	if tfErr := d.Set(skEnableLock, jsonData.EnableLock); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("change_credentials_at_checkin", jsonData.ChangeCredentialsAtCheckin); tfErr != nil {

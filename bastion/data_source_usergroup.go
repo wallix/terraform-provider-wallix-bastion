@@ -22,11 +22,11 @@ func dataSourceUserGroup() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"profile": {
+			skProfile: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -35,22 +35,22 @@ func dataSourceUserGroup() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"action": {
+						skAction: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"rules": {
+						skRules: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"subprotocol": {
+						skSubprotocol: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"users": {
+			skUsers: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -98,24 +98,24 @@ func fillSourceUserGroup(d *schema.ResourceData, jsonData jsonUserGroup) {
 	if tfErr := d.Set("timeframes", jsonData.TimeFrames); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("profile", jsonData.Profile); tfErr != nil {
+	if tfErr := d.Set(skProfile, jsonData.Profile); tfErr != nil {
 		panic(tfErr)
 	}
 	restrictions := make([]map[string]interface{}, len(jsonData.Restrictions))
 	for i, v := range jsonData.Restrictions {
 		restrictions[i] = map[string]interface{}{
-			"action":      v.Action,
-			"rules":       v.Rules,
-			"subprotocol": v.SubProtocol,
+			skAction:      v.Action,
+			skRules:       v.Rules,
+			skSubprotocol: v.SubProtocol,
 		}
 	}
 	if tfErr := d.Set("restrictions", restrictions); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("users", jsonData.Users); tfErr != nil {
+	if tfErr := d.Set(skUsers, jsonData.Users); tfErr != nil {
 		panic(tfErr)
 	}
 }

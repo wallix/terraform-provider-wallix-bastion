@@ -18,9 +18,6 @@ linters:
     - forcetypeassert
     - funlen
     - gomoddirectives
-    - goconst         # v2 scores repeated strings package-wide instead of per-file, surfacing
-                      # ~190 pre-existing cross-file dupes at once; tracked as a follow-up
-                      # instead of blocking this migration - see issue #103
     - mnd
     - modernize     # New in v2; too aggressive/noisy for this codebase's existing style
     - nestif

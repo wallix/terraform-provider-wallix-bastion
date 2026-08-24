@@ -83,64 +83,64 @@ func resourceProfile() *schema.Resource {
 						"wab_audit": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"view"}, false),
+							ValidateFunc: validation.StringInSlice([]string{skView}, false),
 						},
-						"system_audit": {
+						skSystemAudit: {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"view"}, false),
+							ValidateFunc: validation.StringInSlice([]string{skView}, false),
 						},
-						"users": {
+						skUsers: {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"view", "modify"}, false),
+							ValidateFunc: validation.StringInSlice([]string{skView, skModify}, false),
 						},
-						"user_groups": {
+						skUserGroups: {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"view", "modify"}, false),
+							ValidateFunc: validation.StringInSlice([]string{skView, skModify}, false),
 						},
-						"devices": {
+						skDevices: {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"view", "modify"}, false),
+							ValidateFunc: validation.StringInSlice([]string{skView, skModify}, false),
 						},
-						"target_groups": {
+						skTargetGroups: {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"view", "modify"}, false),
+							ValidateFunc: validation.StringInSlice([]string{skView, skModify}, false),
 						},
-						"authorizations": {
+						skAuthorizations: {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"view", "modify"}, false),
+							ValidateFunc: validation.StringInSlice([]string{skView, skModify}, false),
 						},
-						"profiles": {
+						skProfiles: {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"modify"}, false),
+							ValidateFunc: validation.StringInSlice([]string{skModify}, false),
 						},
-						"wab_settings": {
+						skWabSettings: {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"view", "modify"}, false),
+							ValidateFunc: validation.StringInSlice([]string{skView, skModify}, false),
 						},
-						"system_settings": {
+						skSystemSettings: {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"modify"}, false),
+							ValidateFunc: validation.StringInSlice([]string{skModify}, false),
 						},
-						"backup": {
+						skBackup: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice([]string{"execute"}, false),
 						},
-						"approval": {
+						skApproval: {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"view", "modify"}, false),
+							ValidateFunc: validation.StringInSlice([]string{skView, skModify}, false),
 						},
-						"credential_recovery": {
+						skCredentialRecovery: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice([]string{"execute"}, false),
@@ -154,62 +154,62 @@ func resourceProfile() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"system_audit": {
+						skSystemAudit: {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"view"}, false),
+							ValidateFunc: validation.StringInSlice([]string{skView}, false),
 						},
-						"users": {
+						skUsers: {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"view", "modify"}, false),
+							ValidateFunc: validation.StringInSlice([]string{skView, skModify}, false),
 						},
-						"user_groups": {
+						skUserGroups: {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"view", "modify"}, false),
+							ValidateFunc: validation.StringInSlice([]string{skView, skModify}, false),
 						},
-						"devices": {
+						skDevices: {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"view", "modify"}, false),
+							ValidateFunc: validation.StringInSlice([]string{skView, skModify}, false),
 						},
-						"target_groups": {
+						skTargetGroups: {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"view", "modify"}, false),
+							ValidateFunc: validation.StringInSlice([]string{skView, skModify}, false),
 						},
-						"authorizations": {
+						skAuthorizations: {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"view", "modify"}, false),
+							ValidateFunc: validation.StringInSlice([]string{skView, skModify}, false),
 						},
-						"profiles": {
+						skProfiles: {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"modify"}, false),
+							ValidateFunc: validation.StringInSlice([]string{skModify}, false),
 						},
-						"wab_settings": {
+						skWabSettings: {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"view", "modify"}, false),
+							ValidateFunc: validation.StringInSlice([]string{skView, skModify}, false),
 						},
-						"system_settings": {
+						skSystemSettings: {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"modify"}, false),
+							ValidateFunc: validation.StringInSlice([]string{skModify}, false),
 						},
-						"backup": {
+						skBackup: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice([]string{"execute"}, false),
 						},
-						"approval": {
+						skApproval: {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"view", "modify"}, false),
+							ValidateFunc: validation.StringInSlice([]string{skView, skModify}, false),
 						},
-						"credential_recovery": {
+						skCredentialRecovery: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice([]string{"execute"}, false),
@@ -217,7 +217,7 @@ func resourceProfile() *schema.Resource {
 					},
 				},
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -226,7 +226,7 @@ func resourceProfile() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"ip_limitation": {
+			skIPLimitation: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -244,7 +244,7 @@ func resourceProfile() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"target_groups": {
+						skTargetGroups: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -258,7 +258,7 @@ func resourceProfile() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"user_groups": {
+						skUserGroups: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -468,8 +468,8 @@ func prepareProfileJSON( //nolint:gocognit
 	d *schema.ResourceData, newResource bool,
 ) jsonProfile {
 	jsonData := jsonProfile{
-		Description:  d.Get("description").(string),
-		IPLimitation: d.Get("ip_limitation").(string),
+		Description:  d.Get(skDescription).(string),
+		IPLimitation: d.Get(skIPLimitation).(string),
 		TargetAccess: d.Get("target_access").(bool),
 	}
 
@@ -485,40 +485,40 @@ func prepareProfileJSON( //nolint:gocognit
 		if v2 := m["wab_audit"].(string); v2 != "" {
 			jsonData.GuiFeatures.WabAudit = &v2
 		}
-		if v2 := m["system_audit"].(string); v2 != "" {
+		if v2 := m[skSystemAudit].(string); v2 != "" {
 			jsonData.GuiFeatures.SystemAudit = &v2
 		}
-		if v2 := m["users"].(string); v2 != "" {
+		if v2 := m[skUsers].(string); v2 != "" {
 			jsonData.GuiFeatures.Users = &v2
 		}
-		if v2 := m["user_groups"].(string); v2 != "" {
+		if v2 := m[skUserGroups].(string); v2 != "" {
 			jsonData.GuiFeatures.UserGroups = &v2
 		}
-		if v2 := m["devices"].(string); v2 != "" {
+		if v2 := m[skDevices].(string); v2 != "" {
 			jsonData.GuiFeatures.Devices = &v2
 		}
-		if v2 := m["target_groups"].(string); v2 != "" {
+		if v2 := m[skTargetGroups].(string); v2 != "" {
 			jsonData.GuiFeatures.TargetGroups = &v2
 		}
-		if v2 := m["authorizations"].(string); v2 != "" {
+		if v2 := m[skAuthorizations].(string); v2 != "" {
 			jsonData.GuiFeatures.Authorizations = &v2
 		}
-		if v2 := m["profiles"].(string); v2 != "" {
+		if v2 := m[skProfiles].(string); v2 != "" {
 			jsonData.GuiFeatures.Profiles = &v2
 		}
-		if v2 := m["wab_settings"].(string); v2 != "" {
+		if v2 := m[skWabSettings].(string); v2 != "" {
 			jsonData.GuiFeatures.WabSettings = &v2
 		}
-		if v2 := m["system_settings"].(string); v2 != "" {
+		if v2 := m[skSystemSettings].(string); v2 != "" {
 			jsonData.GuiFeatures.SystemSettings = &v2
 		}
-		if v2 := m["backup"].(string); v2 != "" {
+		if v2 := m[skBackup].(string); v2 != "" {
 			jsonData.GuiFeatures.Backup = &v2
 		}
-		if v2 := m["approval"].(string); v2 != "" {
+		if v2 := m[skApproval].(string); v2 != "" {
 			jsonData.GuiFeatures.Approval = &v2
 		}
-		if v2 := m["credential_recovery"].(string); v2 != "" {
+		if v2 := m[skCredentialRecovery].(string); v2 != "" {
 			jsonData.GuiFeatures.CredentialRecovery = &v2
 		}
 	}
@@ -528,40 +528,40 @@ func prepareProfileJSON( //nolint:gocognit
 			continue
 		}
 		m := v.(map[string]interface{})
-		if v2 := m["system_audit"].(string); v2 != "" {
+		if v2 := m[skSystemAudit].(string); v2 != "" {
 			jsonData.GuiTransmission.SystemAudit = &v2
 		}
-		if v2 := m["users"].(string); v2 != "" {
+		if v2 := m[skUsers].(string); v2 != "" {
 			jsonData.GuiTransmission.Users = &v2
 		}
-		if v2 := m["user_groups"].(string); v2 != "" {
+		if v2 := m[skUserGroups].(string); v2 != "" {
 			jsonData.GuiTransmission.UserGroups = &v2
 		}
-		if v2 := m["devices"].(string); v2 != "" {
+		if v2 := m[skDevices].(string); v2 != "" {
 			jsonData.GuiTransmission.Devices = &v2
 		}
-		if v2 := m["target_groups"].(string); v2 != "" {
+		if v2 := m[skTargetGroups].(string); v2 != "" {
 			jsonData.GuiTransmission.TargetGroups = &v2
 		}
-		if v2 := m["authorizations"].(string); v2 != "" {
+		if v2 := m[skAuthorizations].(string); v2 != "" {
 			jsonData.GuiTransmission.Authorizations = &v2
 		}
-		if v2 := m["profiles"].(string); v2 != "" {
+		if v2 := m[skProfiles].(string); v2 != "" {
 			jsonData.GuiTransmission.Profiles = &v2
 		}
-		if v2 := m["wab_settings"].(string); v2 != "" {
+		if v2 := m[skWabSettings].(string); v2 != "" {
 			jsonData.GuiTransmission.WabSettings = &v2
 		}
-		if v2 := m["system_settings"].(string); v2 != "" {
+		if v2 := m[skSystemSettings].(string); v2 != "" {
 			jsonData.GuiTransmission.SystemSettings = &v2
 		}
-		if v2 := m["backup"].(string); v2 != "" {
+		if v2 := m[skBackup].(string); v2 != "" {
 			jsonData.GuiTransmission.Backup = &v2
 		}
-		if v2 := m["approval"].(string); v2 != "" {
+		if v2 := m[skApproval].(string); v2 != "" {
 			jsonData.GuiTransmission.Approval = &v2
 		}
-		if v2 := m["credential_recovery"].(string); v2 != "" {
+		if v2 := m[skCredentialRecovery].(string); v2 != "" {
 			jsonData.GuiTransmission.CredentialRecovery = &v2
 		}
 	}
@@ -578,7 +578,7 @@ func prepareProfileJSON( //nolint:gocognit
 	for _, v := range d.Get("target_groups_limitation").([]interface{}) {
 		m := v.(map[string]interface{})
 		jsonData.TargetGroupsLimitation.Enabled = true
-		listTargetGroups := m["target_groups"].(*schema.Set).List()
+		listTargetGroups := m[skTargetGroups].(*schema.Set).List()
 		targetGroups := make([]string, len(listTargetGroups))
 		for i, v2 := range listTargetGroups {
 			targetGroups[i] = v2.(string)
@@ -594,7 +594,7 @@ func prepareProfileJSON( //nolint:gocognit
 	for _, v := range d.Get("user_groups_limitation").([]interface{}) {
 		m := v.(map[string]interface{})
 		jsonData.UserGroupsLimitation.Enabled = true
-		listUserGroups := m["user_groups"].(*schema.Set).List()
+		listUserGroups := m[skUserGroups].(*schema.Set).List()
 		userGroups := make([]string, len(listUserGroups))
 		for i, v2 := range listUserGroups {
 			userGroups[i] = v2.(string)
@@ -632,47 +632,47 @@ func readProfileOptions(
 
 func fillProfile(d *schema.ResourceData, jsonData jsonProfile) {
 	guiFeatures := []map[string]interface{}{{
-		"wab_audit":           jsonData.GuiFeatures.WabAudit,
-		"system_audit":        jsonData.GuiFeatures.SystemAudit,
-		"users":               jsonData.GuiFeatures.Users,
-		"user_groups":         jsonData.GuiFeatures.UserGroups,
-		"devices":             jsonData.GuiFeatures.Devices,
-		"target_groups":       jsonData.GuiFeatures.TargetGroups,
-		"authorizations":      jsonData.GuiFeatures.Authorizations,
-		"profiles":            jsonData.GuiFeatures.Profiles,
-		"wab_settings":        jsonData.GuiFeatures.WabSettings,
-		"system_settings":     jsonData.GuiFeatures.SystemSettings,
-		"backup":              jsonData.GuiFeatures.Backup,
-		"approval":            jsonData.GuiFeatures.Approval,
-		"credential_recovery": jsonData.GuiFeatures.CredentialRecovery,
+		"wab_audit":          jsonData.GuiFeatures.WabAudit,
+		skSystemAudit:        jsonData.GuiFeatures.SystemAudit,
+		skUsers:              jsonData.GuiFeatures.Users,
+		skUserGroups:         jsonData.GuiFeatures.UserGroups,
+		skDevices:            jsonData.GuiFeatures.Devices,
+		skTargetGroups:       jsonData.GuiFeatures.TargetGroups,
+		skAuthorizations:     jsonData.GuiFeatures.Authorizations,
+		skProfiles:           jsonData.GuiFeatures.Profiles,
+		skWabSettings:        jsonData.GuiFeatures.WabSettings,
+		skSystemSettings:     jsonData.GuiFeatures.SystemSettings,
+		skBackup:             jsonData.GuiFeatures.Backup,
+		skApproval:           jsonData.GuiFeatures.Approval,
+		skCredentialRecovery: jsonData.GuiFeatures.CredentialRecovery,
 	}}
 	if tfErr := d.Set("gui_features", guiFeatures); tfErr != nil {
 		panic(tfErr)
 	}
 	guiTransmission := []map[string]interface{}{{
-		"system_audit":        jsonData.GuiTransmission.SystemAudit,
-		"users":               jsonData.GuiTransmission.Users,
-		"user_groups":         jsonData.GuiTransmission.UserGroups,
-		"devices":             jsonData.GuiTransmission.Devices,
-		"target_groups":       jsonData.GuiTransmission.TargetGroups,
-		"authorizations":      jsonData.GuiTransmission.Authorizations,
-		"profiles":            jsonData.GuiTransmission.Profiles,
-		"wab_settings":        jsonData.GuiTransmission.WabSettings,
-		"system_settings":     jsonData.GuiTransmission.SystemSettings,
-		"backup":              jsonData.GuiTransmission.Backup,
-		"approval":            jsonData.GuiTransmission.Approval,
-		"credential_recovery": jsonData.GuiTransmission.CredentialRecovery,
+		skSystemAudit:        jsonData.GuiTransmission.SystemAudit,
+		skUsers:              jsonData.GuiTransmission.Users,
+		skUserGroups:         jsonData.GuiTransmission.UserGroups,
+		skDevices:            jsonData.GuiTransmission.Devices,
+		skTargetGroups:       jsonData.GuiTransmission.TargetGroups,
+		skAuthorizations:     jsonData.GuiTransmission.Authorizations,
+		skProfiles:           jsonData.GuiTransmission.Profiles,
+		skWabSettings:        jsonData.GuiTransmission.WabSettings,
+		skSystemSettings:     jsonData.GuiTransmission.SystemSettings,
+		skBackup:             jsonData.GuiTransmission.Backup,
+		skApproval:           jsonData.GuiTransmission.Approval,
+		skCredentialRecovery: jsonData.GuiTransmission.CredentialRecovery,
 	}}
 	if tfErr := d.Set("gui_transmission", guiTransmission); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("dashboards", jsonData.Dashboards); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("ip_limitation", jsonData.IPLimitation); tfErr != nil {
+	if tfErr := d.Set(skIPLimitation, jsonData.IPLimitation); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("target_access", jsonData.TargetAccess); tfErr != nil {
@@ -681,7 +681,7 @@ func fillProfile(d *schema.ResourceData, jsonData jsonProfile) {
 	if jsonData.TargetGroupsLimitation.Enabled {
 		targetGroupsLimitation := []map[string]interface{}{{
 			"default_target_group": *jsonData.TargetGroupsLimitation.DefaultTargetGroup,
-			"target_groups":        *jsonData.TargetGroupsLimitation.TargetGroups,
+			skTargetGroups:         *jsonData.TargetGroupsLimitation.TargetGroups,
 		}}
 		if tfErr := d.Set("target_groups_limitation", targetGroupsLimitation); tfErr != nil {
 			panic(tfErr)
@@ -694,7 +694,7 @@ func fillProfile(d *schema.ResourceData, jsonData jsonProfile) {
 	}
 	if jsonData.UserGroupsLimitation.Enabled {
 		userGroupsLimitation := []map[string]interface{}{{
-			"user_groups": *jsonData.UserGroupsLimitation.UserGroups,
+			skUserGroups: *jsonData.UserGroupsLimitation.UserGroups,
 		}}
 		if tfErr := d.Set("user_groups_limitation", userGroupsLimitation); tfErr != nil {
 			panic(tfErr)

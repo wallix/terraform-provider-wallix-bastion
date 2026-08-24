@@ -17,7 +17,7 @@ func dataSourceAPIKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"ip_limitation": {
+			skIPLimitation: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -65,7 +65,7 @@ func fillSourceAPIKey(d *schema.ResourceData, jsonData jsonAPIKey) {
 	if tfErr := d.Set("apikey_name", jsonData.APIKeyName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("ip_limitation", jsonData.IPLimitation); tfErr != nil {
+	if tfErr := d.Set(skIPLimitation, jsonData.IPLimitation); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("apikey", jsonData.APIKey); tfErr != nil {

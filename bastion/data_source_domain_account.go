@@ -13,19 +13,19 @@ func dataSourceDomainAccount() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceDomainAccountRead,
 		Schema: map[string]*schema.Schema{
-			"domain_id": {
+			skDomainID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"account_name": {
+			skAccountName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"account_login": {
+			skAccountLogin: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"auto_change_password": {
+			skAutoChangePassword: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -37,7 +37,7 @@ func dataSourceDomainAccount() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"checkout_policy": {
+			skCheckoutPolicy: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,22 +50,22 @@ func dataSourceDomainAccount() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"public_key": {
+						skPublicKey: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"type": {
+						skType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_password_change": {
+			skDomainPasswordChange: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -93,15 +93,15 @@ func dataSourceDomainAccountRead(
 	if err := dataSourceDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceDomainAccount(ctx, d.Get("domain_id").(string), d.Get("account_name").(string), m)
+	id, ex, err := searchResourceDomainAccount(ctx, d.Get(skDomainID).(string), d.Get(skAccountName).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if !ex {
 		return diag.FromErr(fmt.Errorf("account_name %s on domain_id %s doesn't exists",
-			d.Get("account_name").(string), d.Get("domain_id").(string)))
+			d.Get(skAccountName).(string), d.Get(skDomainID).(string)))
 	}
-	cfg, err := readDomainAccountOptions(ctx, d.Get("domain_id").(string), id, m)
+	cfg, err := readDomainAccountOptions(ctx, d.Get(skDomainID).(string), id, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -112,16 +112,16 @@ func dataSourceDomainAccountRead(
 }
 
 func fillSourceDomainAccount(d *schema.ResourceData, jsonData jsonDomainAccount) {
-	if tfErr := d.Set("account_name", jsonData.AccountName); tfErr != nil {
+	if tfErr := d.Set(skAccountName, jsonData.AccountName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("account_login", jsonData.AccountLogin); tfErr != nil {
+	if tfErr := d.Set(skAccountLogin, jsonData.AccountLogin); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("checkout_policy", jsonData.CheckoutPolicy); tfErr != nil {
+	if tfErr := d.Set(skCheckoutPolicy, jsonData.CheckoutPolicy); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("auto_change_password", jsonData.AutoChangePassword); tfErr != nil {
+	if tfErr := d.Set(skAutoChangePassword, jsonData.AutoChangePassword); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("auto_change_ssh_key", jsonData.AutoChangeSSHKey); tfErr != nil {
@@ -135,19 +135,19 @@ func fillSourceDomainAccount(d *schema.ResourceData, jsonData jsonDomainAccount)
 		credentials = make([]map[string]interface{}, len(*jsonData.Credentials))
 		for i, v := range *jsonData.Credentials {
 			credentials[i] = map[string]interface{}{
-				"id":         v.ID,
-				"public_key": v.PublicKey,
-				"type":       v.Type,
+				"id":        v.ID,
+				skPublicKey: v.PublicKey,
+				skType:      v.Type,
 			}
 		}
 	}
 	if tfErr := d.Set("credentials", credentials); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("domain_password_change", jsonData.DomainPasswordChange); tfErr != nil {
+	if tfErr := d.Set(skDomainPasswordChange, jsonData.DomainPasswordChange); tfErr != nil {
 		panic(tfErr)
 	}
 	if jsonData.Resources == nil {

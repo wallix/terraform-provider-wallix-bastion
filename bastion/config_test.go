@@ -18,7 +18,7 @@ func TestConfigClientWithCSRFOptions(t *testing.T) {
 		{
 			name: "default config with CSRF enabled",
 			config: bastion.Config{
-				BastionIP:      "192.168.1.1",
+				BastionIP:      tvTestHost,
 				BastionPort:    443,
 				BastionUser:    "admin",
 				BastionPwd:     "password",
@@ -32,7 +32,7 @@ func TestConfigClientWithCSRFOptions(t *testing.T) {
 		{
 			name: "config with CSRF disabled",
 			config: bastion.Config{
-				BastionIP:      "192.168.1.1",
+				BastionIP:      tvTestHost,
 				BastionPort:    443,
 				BastionUser:    "admin",
 				BastionPwd:     "password",
@@ -46,7 +46,7 @@ func TestConfigClientWithCSRFOptions(t *testing.T) {
 		{
 			name: "config with custom session timeout",
 			config: bastion.Config{
-				BastionIP:      "192.168.1.1",
+				BastionIP:      tvTestHost,
 				BastionPort:    8443,
 				BastionUser:    "testuser",
 				BastionPwd:     "testpass",

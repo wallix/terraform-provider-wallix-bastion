@@ -17,15 +17,15 @@ func dataSourceAPIKeyV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"profile": {
+			skProfile: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ip_limitation": {
+			skIPLimitation: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -74,13 +74,13 @@ func fillSourceAPIKeyV2(d *schema.ResourceData, jsonData jsonAPIKeyV2) {
 	if tfErr := d.Set("apikey_name", jsonData.APIKeyName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("profile", jsonData.Profile); tfErr != nil {
+	if tfErr := d.Set(skProfile, jsonData.Profile); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("ip_limitation", jsonData.IPLimitation); tfErr != nil {
+	if tfErr := d.Set(skIPLimitation, jsonData.IPLimitation); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("apikey", jsonData.APIKey); tfErr != nil {

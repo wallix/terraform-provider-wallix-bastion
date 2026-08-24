@@ -34,42 +34,42 @@ func resourceApplicationLocalDomainAccount() *schema.Resource {
 			StateContext: resourceApplicationLocalDomainAccountImport,
 		},
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			skApplicationID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"domain_id": {
+			skDomainID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"account_name": {
+			skAccountName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"account_login": {
+			skAccountLogin: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"auto_change_password": {
+			skAutoChangePassword: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"checkout_policy": {
+			skCheckoutPolicy: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "default",
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"domain_password_change": {
+			skDomainPasswordChange: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"password": {
+			skPassword: {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
@@ -93,30 +93,30 @@ func resourceApplicationLocalDomainAccountCreate(
 	if err := resourceApplicationLocalDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	cfgApplication, err := readApplicationOptions(ctx, d.Get("application_id").(string), m)
+	cfgApplication, err := readApplicationOptions(ctx, d.Get(skApplicationID).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if cfgApplication.ID == "" {
-		return diag.FromErr(fmt.Errorf("application with ID %s doesn't exists", d.Get("application_id").(string)))
+		return diag.FromErr(fmt.Errorf("application with ID %s doesn't exists", d.Get(skApplicationID).(string)))
 	}
 	cfgDomain, err := readApplicationLocalDomainOptions(ctx,
-		d.Get("application_id").(string), d.Get("domain_id").(string), m)
+		d.Get(skApplicationID).(string), d.Get(skDomainID).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if cfgDomain.ID == "" {
 		return diag.FromErr(fmt.Errorf("domain_id with ID %s on application_id %s doesn't exists",
-			d.Get("domain_id").(string), d.Get("application_id").(string)))
+			d.Get(skDomainID).(string), d.Get(skApplicationID).(string)))
 	}
 	_, ex, err := searchResourceApplicationLocalDomainAccount(ctx,
-		d.Get("application_id").(string), d.Get("domain_id").(string), d.Get("account_name").(string), m)
+		d.Get(skApplicationID).(string), d.Get(skDomainID).(string), d.Get(skAccountName).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if ex {
 		return diag.FromErr(fmt.Errorf("account_name %s on domain_id %s, application_id %s already exists",
-			d.Get("account_name").(string), d.Get("domain_id").(string), d.Get("application_id").(string)))
+			d.Get(skAccountName).(string), d.Get(skDomainID).(string), d.Get(skApplicationID).(string)))
 	}
 	id, err := addApplicationLocalDomainAccount(ctx, d, m)
 	if err != nil {
@@ -125,13 +125,13 @@ func resourceApplicationLocalDomainAccountCreate(
 	if id == "" {
 		// Fallback for Bastion versions that don't return the X-Object-Id header on creation.
 		id, ex, err = searchResourceApplicationLocalDomainAccount(ctx,
-			d.Get("application_id").(string), d.Get("domain_id").(string), d.Get("account_name").(string), m)
+			d.Get(skApplicationID).(string), d.Get(skDomainID).(string), d.Get(skAccountName).(string), m)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 		if !ex {
 			return diag.FromErr(fmt.Errorf("account_name %s on domain_id %s, application_id %s not found after POST",
-				d.Get("account_name").(string), d.Get("domain_id").(string), d.Get("application_id").(string)))
+				d.Get(skAccountName).(string), d.Get(skDomainID).(string), d.Get(skApplicationID).(string)))
 		}
 	}
 	d.SetId(id)
@@ -147,7 +147,7 @@ func resourceApplicationLocalDomainAccountRead(
 		return diag.FromErr(err)
 	}
 	cfg, err := readApplicationLocalDomainAccountOptions(ctx,
-		d.Get("application_id").(string), d.Get("domain_id").(string), d.Id(), m)
+		d.Get(skApplicationID).(string), d.Get(skDomainID).(string), d.Id(), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -219,10 +219,10 @@ func resourceApplicationLocalDomainAccountImport(
 	fillApplicationLocalDomainAccount(d, cfg)
 	result := make([]*schema.ResourceData, 1)
 	d.SetId(id)
-	if tfErr := d.Set("application_id", idSplit[0]); tfErr != nil {
+	if tfErr := d.Set(skApplicationID, idSplit[0]); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("domain_id", idSplit[1]); tfErr != nil {
+	if tfErr := d.Set(skDomainID, idSplit[1]); tfErr != nil {
 		panic(tfErr)
 	}
 	result[0] = d
@@ -262,7 +262,7 @@ func addApplicationLocalDomainAccount(
 	c := m.(*Client)
 	jsonData := prepareApplicationLocalDomainAccountJSON(d)
 	body, headers, code, err := c.newRequestWithHeaders(ctx,
-		"/applications/"+d.Get("application_id").(string)+"/localdomains/"+d.Get("domain_id").(string)+
+		"/applications/"+d.Get(skApplicationID).(string)+"/localdomains/"+d.Get(skDomainID).(string)+
 			"/accounts/", http.MethodPost, jsonData)
 	if err != nil {
 		return "", err
@@ -280,7 +280,7 @@ func updateApplicationLocalDomainAccount(
 	c := m.(*Client)
 	jsonData := prepareApplicationLocalDomainAccountJSON(d)
 	body, code, err := c.newRequest(ctx,
-		"/applications/"+d.Get("application_id").(string)+"/localdomains/"+d.Get("domain_id").(string)+
+		"/applications/"+d.Get(skApplicationID).(string)+"/localdomains/"+d.Get(skDomainID).(string)+
 			"/accounts/"+d.Id()+"?force=true", http.MethodPut, jsonData)
 	if err != nil {
 		return err
@@ -297,7 +297,7 @@ func deleteApplicationLocalDomainAccount(
 ) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
-		"/applications/"+d.Get("application_id").(string)+"/localdomains/"+d.Get("domain_id").(string)+
+		"/applications/"+d.Get(skApplicationID).(string)+"/localdomains/"+d.Get(skDomainID).(string)+
 			"/accounts/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
 		return err
@@ -311,18 +311,18 @@ func deleteApplicationLocalDomainAccount(
 
 func prepareApplicationLocalDomainAccountJSON(d *schema.ResourceData) jsonApplicationLocalDomainAccount {
 	jsonData := jsonApplicationLocalDomainAccount{
-		AccountLogin:       d.Get("account_login").(string),
-		AccountName:        d.Get("account_name").(string),
-		AutoChangePassword: d.Get("auto_change_password").(bool),
-		CheckoutPolicy:     d.Get("checkout_policy").(string),
-		Description:        d.Get("description").(string),
+		AccountLogin:       d.Get(skAccountLogin).(string),
+		AccountName:        d.Get(skAccountName).(string),
+		AutoChangePassword: d.Get(skAutoChangePassword).(bool),
+		CheckoutPolicy:     d.Get(skCheckoutPolicy).(string),
+		Description:        d.Get(skDescription).(string),
 	}
 
 	credentials := make([]jsonCredential, 0)
-	if d.Get("password").(string) != "" {
+	if d.Get(skPassword).(string) != "" {
 		credentials = append(credentials, jsonCredential{
-			Type:     "password",
-			Password: d.Get("password").(string),
+			Type:     skPassword,
+			Password: d.Get(skPassword).(string),
 		})
 	}
 	jsonData.Credentials = credentials
@@ -358,22 +358,22 @@ func readApplicationLocalDomainAccountOptions(
 }
 
 func fillApplicationLocalDomainAccount(d *schema.ResourceData, jsonData jsonApplicationLocalDomainAccount) {
-	if tfErr := d.Set("account_name", jsonData.AccountName); tfErr != nil {
+	if tfErr := d.Set(skAccountName, jsonData.AccountName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("account_login", jsonData.AccountLogin); tfErr != nil {
+	if tfErr := d.Set(skAccountLogin, jsonData.AccountLogin); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("checkout_policy", jsonData.CheckoutPolicy); tfErr != nil {
+	if tfErr := d.Set(skCheckoutPolicy, jsonData.CheckoutPolicy); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("auto_change_password", jsonData.AutoChangePassword); tfErr != nil {
+	if tfErr := d.Set(skAutoChangePassword, jsonData.AutoChangePassword); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("domain_password_change", jsonData.DomainPasswordChange); tfErr != nil {
+	if tfErr := d.Set(skDomainPasswordChange, jsonData.DomainPasswordChange); tfErr != nil {
 		panic(tfErr)
 	}
 }

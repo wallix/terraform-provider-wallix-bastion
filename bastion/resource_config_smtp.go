@@ -35,7 +35,7 @@ func resourceConfigSMTP() *schema.Resource {
 			StateContext: resourceConfigSMTPImport,
 		},
 		Schema: map[string]*schema.Schema{
-			"protocol": {
+			skProtocol: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"smtp", "smtps", "starttls"}, false),
@@ -51,7 +51,7 @@ func resourceConfigSMTP() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"port": {
+			skPort: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      25,
@@ -77,7 +77,7 @@ func resourceConfigSMTP() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"password": {
+			skPassword: {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
@@ -196,21 +196,21 @@ func updateConfigSMTP(
 
 func prepareConfigSMTPJSON(d *schema.ResourceData) jsonConfigSMTP {
 	return jsonConfigSMTP{
-		Protocol:             d.Get("protocol").(string),
+		Protocol:             d.Get(skProtocol).(string),
 		AuthenticationMethod: d.Get("authentication_method").(string),
 		Server:               d.Get("server").(string),
-		Port:                 d.Get("port").(int),
+		Port:                 d.Get(skPort).(int),
 		PostmasterEmail:      d.Get("postmaster_email").(string),
 		SenderName:           d.Get("sender_name").(string),
 		SenderEmail:          d.Get("sender_email").(string),
 		CertificateHash:      d.Get("certificate_hash").(string),
 		User:                 d.Get("user").(string),
-		Password:             d.Get("password").(string),
+		Password:             d.Get(skPassword).(string),
 	}
 }
 
 func fillConfigSMTP(d *schema.ResourceData, jsonData jsonConfigSMTP) {
-	if tfErr := d.Set("protocol", jsonData.Protocol); tfErr != nil {
+	if tfErr := d.Set(skProtocol, jsonData.Protocol); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("authentication_method", jsonData.AuthenticationMethod); tfErr != nil {
@@ -219,7 +219,7 @@ func fillConfigSMTP(d *schema.ResourceData, jsonData jsonConfigSMTP) {
 	if tfErr := d.Set("server", jsonData.Server); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("port", jsonData.Port); tfErr != nil {
+	if tfErr := d.Set(skPort, jsonData.Port); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("postmaster_email", jsonData.PostmasterEmail); tfErr != nil {

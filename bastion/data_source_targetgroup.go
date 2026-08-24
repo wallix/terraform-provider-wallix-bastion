@@ -17,7 +17,7 @@ func dataSourceTargetGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -26,23 +26,23 @@ func dataSourceTargetGroup() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"account": {
+						skAccount: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"domain": {
+						skDomain: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"domain_type": {
+						skDomainType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"device": {
+						skDevice: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"application": {
+						skApplication: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -54,15 +54,15 @@ func dataSourceTargetGroup() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"action": {
+						skAction: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"rules": {
+						skRules: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"subprotocol": {
+						skSubprotocol: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -74,27 +74,27 @@ func dataSourceTargetGroup() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"account": {
+						skAccount: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"domain": {
+						skDomain: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"domain_type": {
+						skDomainType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"device": {
+						skDevice: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"service": {
+						skService: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"application": {
+						skApplication: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -106,15 +106,15 @@ func dataSourceTargetGroup() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device": {
+						skDevice: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"service": {
+						skService: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"application": {
+						skApplication: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -126,15 +126,15 @@ func dataSourceTargetGroup() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device": {
+						skDevice: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"service": {
+						skService: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"application": {
+						skApplication: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -146,23 +146,23 @@ func dataSourceTargetGroup() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"account": {
+						skAccount: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"domain": {
+						skDomain: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"domain_type": {
+						skDomainType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"device": {
+						skDevice: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"application": {
+						skApplication: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -209,17 +209,17 @@ func fillSourceTargetGroup(d *schema.ResourceData, jsonData jsonTargetGroup) {
 	if tfErr := d.Set("group_name", jsonData.GroupName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
 	passwordRetrievalAccounts := make([]map[string]interface{}, len(jsonData.PasswordRetrieval.Accounts))
 	for i, v := range jsonData.PasswordRetrieval.Accounts {
 		passwordRetrievalAccounts[i] = map[string]interface{}{
-			"account":     v.Account,
-			"domain":      v.Domain,
-			"domain_type": v.DomainType,
-			"device":      v.Device,
-			"application": v.Application,
+			skAccount:     v.Account,
+			skDomain:      v.Domain,
+			skDomainType:  v.DomainType,
+			skDevice:      v.Device,
+			skApplication: v.Application,
 		}
 	}
 	if tfErr := d.Set("password_retrieval_accounts", passwordRetrievalAccounts); tfErr != nil {
@@ -228,9 +228,9 @@ func fillSourceTargetGroup(d *schema.ResourceData, jsonData jsonTargetGroup) {
 	restrictions := make([]map[string]interface{}, len(jsonData.Restrictions))
 	for i, v := range jsonData.Restrictions {
 		restrictions[i] = map[string]interface{}{
-			"action":      v.Action,
-			"rules":       v.Rules,
-			"subprotocol": v.SubProtocol,
+			skAction:      v.Action,
+			skRules:       v.Rules,
+			skSubprotocol: v.SubProtocol,
 		}
 	}
 	if tfErr := d.Set("restrictions", restrictions); tfErr != nil {
@@ -239,12 +239,12 @@ func fillSourceTargetGroup(d *schema.ResourceData, jsonData jsonTargetGroup) {
 	sessionAccounts := make([]map[string]interface{}, len(jsonData.Session.Accounts))
 	for i, v := range jsonData.Session.Accounts {
 		sessionAccounts[i] = map[string]interface{}{
-			"account":     v.Account,
-			"domain":      v.Domain,
-			"domain_type": v.DomainType,
-			"device":      v.Device,
-			"service":     v.Service,
-			"application": v.Application,
+			skAccount:     v.Account,
+			skDomain:      v.Domain,
+			skDomainType:  v.DomainType,
+			skDevice:      v.Device,
+			skService:     v.Service,
+			skApplication: v.Application,
 		}
 	}
 	if tfErr := d.Set("session_accounts", sessionAccounts); tfErr != nil {
@@ -253,9 +253,9 @@ func fillSourceTargetGroup(d *schema.ResourceData, jsonData jsonTargetGroup) {
 	sessionAccountMappings := make([]map[string]interface{}, len(jsonData.Session.AccountMappings))
 	for i, v := range jsonData.Session.AccountMappings {
 		sessionAccountMappings[i] = map[string]interface{}{
-			"device":      v.Device,
-			"service":     v.Service,
-			"application": v.Application,
+			skDevice:      v.Device,
+			skService:     v.Service,
+			skApplication: v.Application,
 		}
 	}
 	if tfErr := d.Set("session_account_mappings", sessionAccountMappings); tfErr != nil {
@@ -264,9 +264,9 @@ func fillSourceTargetGroup(d *schema.ResourceData, jsonData jsonTargetGroup) {
 	sessionInteractiveLogins := make([]map[string]interface{}, len(jsonData.Session.InteractiveLogins))
 	for i, v := range jsonData.Session.InteractiveLogins {
 		sessionInteractiveLogins[i] = map[string]interface{}{
-			"device":      v.Device,
-			"service":     v.Service,
-			"application": v.Application,
+			skDevice:      v.Device,
+			skService:     v.Service,
+			skApplication: v.Application,
 		}
 	}
 	if tfErr := d.Set("session_interactive_logins", sessionInteractiveLogins); tfErr != nil {
@@ -275,11 +275,11 @@ func fillSourceTargetGroup(d *schema.ResourceData, jsonData jsonTargetGroup) {
 	sessionScenarioAccounts := make([]map[string]interface{}, len(jsonData.Session.ScenarioAccounts))
 	for i, v := range jsonData.Session.ScenarioAccounts {
 		sessionScenarioAccounts[i] = map[string]interface{}{
-			"account":     v.Account,
-			"domain":      v.Domain,
-			"domain_type": v.DomainType,
-			"device":      v.Device,
-			"application": v.Application,
+			skAccount:     v.Account,
+			skDomain:      v.Domain,
+			skDomainType:  v.DomainType,
+			skDevice:      v.Device,
+			skApplication: v.Application,
 		}
 	}
 	if tfErr := d.Set("session_scenario_accounts", sessionScenarioAccounts); tfErr != nil {

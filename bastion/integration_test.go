@@ -19,7 +19,7 @@ func TestWallixBastionServerCSRFFlow(t *testing.T) {
 		if r.URL.Path == "/api/v3.8/authentication" && r.Method == http.MethodPost {
 			// Set session cookie
 			http.SetCookie(w, &http.Cookie{
-				Name:   "wab_session_id",
+				Name:   tvWabSessionID,
 				Value:  sessionCookie,
 				Path:   "/",
 				MaxAge: 7200,
@@ -37,7 +37,7 @@ func TestWallixBastionServerCSRFFlow(t *testing.T) {
 		// Check session cookie
 		sessionFound := false
 		for _, cookie := range r.Cookies() {
-			if cookie.Name == "wab_session_id" && cookie.Value == sessionCookie {
+			if cookie.Name == tvWabSessionID && cookie.Value == sessionCookie {
 				sessionFound = true
 
 				break
@@ -150,7 +150,7 @@ func TestMultipleAuthenticationsWithCSRF(t *testing.T) {
 			authCount++
 
 			http.SetCookie(w, &http.Cookie{
-				Name:   "wab_session_id",
+				Name:   tvWabSessionID,
 				Value:  fmt.Sprintf("session-%d", authCount),
 				Path:   "/",
 				MaxAge: 120,
@@ -194,7 +194,7 @@ func TestCSRFEnabledvsDisabledBehavior(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/api/v3.8/authentication" && r.Method == http.MethodPost {
 			http.SetCookie(w, &http.Cookie{
-				Name:   "wab_session_id",
+				Name:   tvWabSessionID,
 				Value:  "test-session",
 				Path:   "/",
 				MaxAge: 120,

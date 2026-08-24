@@ -44,11 +44,11 @@ func resourceUser() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 			},
-			"email": {
+			skEmail: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"profile": {
+			skProfile: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -87,7 +87,7 @@ func resourceUser() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"password": {
+			skPassword: {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
@@ -286,9 +286,9 @@ func prepareUserJSON(d *schema.ResourceData, newResource bool) jsonUser {
 	jsonData := jsonUser{
 		UserName:       d.Get("user_name").(string),
 		DisplayName:    d.Get("display_name").(string),
-		Email:          d.Get("email").(string),
+		Email:          d.Get(skEmail).(string),
 		IPSource:       d.Get("ip_source").(string),
-		Profile:        d.Get("profile").(string),
+		Profile:        d.Get(skProfile).(string),
 		SSHPublicKey:   d.Get("ssh_public_key").(string),
 		CertificateCN:  d.Get("certificate_dn").(string),
 		ExpirationDate: d.Get("expiration_date").(string),
@@ -297,12 +297,12 @@ func prepareUserJSON(d *schema.ResourceData, newResource bool) jsonUser {
 
 	if newResource {
 		jsonData.PreferredLanguage = d.Get("preferred_language").(string)
-		jsonData.Password = d.Get("password").(string)
+		jsonData.Password = d.Get(skPassword).(string)
 		if d.Get("force_change_pwd").(bool) {
 			jsonData.ForceChangePwd = &b
 		}
-	} else if d.HasChange("password") && !d.Get("force_change_pwd").(bool) {
-		if v := d.Get("password").(string); v != "" {
+	} else if d.HasChange(skPassword) && !d.Get("force_change_pwd").(bool) {
+		if v := d.Get(skPassword).(string); v != "" {
 			jsonData.Password = v
 		}
 	}
@@ -355,10 +355,10 @@ func fillUser(d *schema.ResourceData, jsonData jsonUser) {
 	if tfErr := d.Set("user_name", jsonData.UserName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("email", jsonData.Email); tfErr != nil {
+	if tfErr := d.Set(skEmail, jsonData.Email); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("profile", jsonData.Profile); tfErr != nil {
+	if tfErr := d.Set(skProfile, jsonData.Profile); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("user_auths", jsonData.UserAuths); tfErr != nil {

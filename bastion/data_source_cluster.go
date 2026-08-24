@@ -17,21 +17,21 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"accounts": {
+			skAccounts: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"account_mappings": {
+			skAccountMappings: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"interactive_logins": {
+			skInteractiveLogins: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -76,16 +76,16 @@ func fillSourceCluster(d *schema.ResourceData, jsonData jsonCluster) {
 	if tfErr := d.Set("cluster_name", jsonData.ClusterName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("accounts", jsonData.Accounts); tfErr != nil {
+	if tfErr := d.Set(skAccounts, jsonData.Accounts); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("account_mappings", jsonData.AccountMappings); tfErr != nil {
+	if tfErr := d.Set(skAccountMappings, jsonData.AccountMappings); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("interactive_logins", jsonData.InteractiveLogins); tfErr != nil {
+	if tfErr := d.Set(skInteractiveLogins, jsonData.InteractiveLogins); tfErr != nil {
 		panic(tfErr)
 	}
 }

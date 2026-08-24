@@ -24,28 +24,28 @@ func resourceApplicationLocalDomainAccountCredential() *schema.Resource {
 			StateContext: resourceApplicationLocalDomainAccountCredentialImport,
 		},
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			skApplicationID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"domain_id": {
+			skDomainID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"account_id": {
+			skAccountID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"type": {
+			skType: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{"password"}, false),
+				ValidateFunc: validation.StringInSlice([]string{skPassword}, false),
 			},
-			"password": {
+			skPassword: {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
@@ -70,41 +70,41 @@ func resourceApplicationLocalDomainAccountCredentialCreate(
 	if err := resourceApplicationLocalDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	cfgApplication, err := readApplicationOptions(ctx, d.Get("application_id").(string), m)
+	cfgApplication, err := readApplicationOptions(ctx, d.Get(skApplicationID).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if cfgApplication.ID == "" {
-		return diag.FromErr(fmt.Errorf("application with ID %s doesn't exists", d.Get("application_id").(string)))
+		return diag.FromErr(fmt.Errorf("application with ID %s doesn't exists", d.Get(skApplicationID).(string)))
 	}
 	cfgDomain, err := readApplicationLocalDomainOptions(ctx,
-		d.Get("application_id").(string), d.Get("domain_id").(string), m)
+		d.Get(skApplicationID).(string), d.Get(skDomainID).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if cfgDomain.ID == "" {
 		return diag.FromErr(fmt.Errorf("domain_id with ID %s on application_id %s doesn't exists",
-			d.Get("domain_id").(string), d.Get("application_id").(string)))
+			d.Get(skDomainID).(string), d.Get(skApplicationID).(string)))
 	}
 	cfgAccount, err := readApplicationLocalDomainAccountOptions(ctx,
-		d.Get("application_id").(string), d.Get("domain_id").(string), d.Get("account_id").(string), m)
+		d.Get(skApplicationID).(string), d.Get(skDomainID).(string), d.Get(skAccountID).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if cfgAccount.ID == "" {
 		return diag.FromErr(fmt.Errorf("account_id with ID %s on domain_id %s, application_id %s doesn't exists",
-			d.Get("account_id").(string), d.Get("domain_id").(string), d.Get("application_id").(string)))
+			d.Get(skAccountID).(string), d.Get(skDomainID).(string), d.Get(skApplicationID).(string)))
 	}
 	_, ex, err := searchResourceApplicationLocalDomainAccountCredential(ctx,
-		d.Get("application_id").(string), d.Get("domain_id").(string), d.Get("account_id").(string),
-		d.Get("type").(string), m)
+		d.Get(skApplicationID).(string), d.Get(skDomainID).(string), d.Get(skAccountID).(string),
+		d.Get(skType).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if ex {
 		return diag.FromErr(fmt.Errorf(
 			"credential type %s on account_id %s, domain_id %s, application_id %s already exists",
-			d.Get("type").(string), d.Get("account_id").(string), d.Get("domain_id").(string), d.Get("application_id").(string)))
+			d.Get(skType).(string), d.Get(skAccountID).(string), d.Get(skDomainID).(string), d.Get(skApplicationID).(string)))
 	}
 	id, err := addApplicationLocalDomainAccountCredential(ctx, d, m)
 	if err != nil {
@@ -113,16 +113,16 @@ func resourceApplicationLocalDomainAccountCredentialCreate(
 	if id == "" {
 		// Fallback for Bastion versions that don't return the X-Object-Id header on creation.
 		id, ex, err = searchResourceApplicationLocalDomainAccountCredential(ctx,
-			d.Get("application_id").(string), d.Get("domain_id").(string), d.Get("account_id").(string),
-			d.Get("type").(string), m)
+			d.Get(skApplicationID).(string), d.Get(skDomainID).(string), d.Get(skAccountID).(string),
+			d.Get(skType).(string), m)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 		if !ex {
 			return diag.FromErr(fmt.Errorf(
 				"credential type %s on account_id %s, domain_id %s, application_id %s not found after POST",
-				d.Get("type").(string), d.Get("account_id").(string), d.Get("domain_id").(string),
-				d.Get("application_id").(string)))
+				d.Get(skType).(string), d.Get(skAccountID).(string), d.Get(skDomainID).(string),
+				d.Get(skApplicationID).(string)))
 		}
 	}
 	d.SetId(id)
@@ -138,7 +138,7 @@ func resourceApplicationLocalDomainAccountCredentialRead(
 		return diag.FromErr(err)
 	}
 	cfg, err := readApplicationLocalDomainAccountCredentialOptions(ctx,
-		d.Get("application_id").(string), d.Get("domain_id").(string), d.Get("account_id").(string), d.Id(), m)
+		d.Get(skApplicationID).(string), d.Get(skDomainID).(string), d.Get(skAccountID).(string), d.Id(), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -148,14 +148,14 @@ func resourceApplicationLocalDomainAccountCredentialRead(
 		// with a different internal ID, so the GET by the stored ID 404s.
 		// Retry a lookup by (account, type) before treating it as deleted.
 		newID, found, err := searchResourceApplicationLocalDomainAccountCredential(ctx,
-			d.Get("application_id").(string), d.Get("domain_id").(string), d.Get("account_id").(string),
-			d.Get("type").(string), m)
+			d.Get(skApplicationID).(string), d.Get(skDomainID).(string), d.Get(skAccountID).(string),
+			d.Get(skType).(string), m)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 		if found {
 			cfg, err = readApplicationLocalDomainAccountCredentialOptions(ctx,
-				d.Get("application_id").(string), d.Get("domain_id").(string), d.Get("account_id").(string), newID, m)
+				d.Get(skApplicationID).(string), d.Get(skDomainID).(string), d.Get(skAccountID).(string), newID, m)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -232,13 +232,13 @@ func resourceApplicationLocalDomainAccountCredentialImport(
 	fillApplicationLocalDomainAccountCredential(d, cfg)
 	result := make([]*schema.ResourceData, 1)
 	d.SetId(id)
-	if tfErr := d.Set("application_id", idSplit[0]); tfErr != nil {
+	if tfErr := d.Set(skApplicationID, idSplit[0]); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("domain_id", idSplit[1]); tfErr != nil {
+	if tfErr := d.Set(skDomainID, idSplit[1]); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("account_id", idSplit[2]); tfErr != nil {
+	if tfErr := d.Set(skAccountID, idSplit[2]); tfErr != nil {
 		panic(tfErr)
 	}
 	result[0] = d
@@ -281,8 +281,8 @@ func addApplicationLocalDomainAccountCredential(
 	c := m.(*Client)
 	jsonData := prepareApplicationLocalDomainAccountCredentialJSON(d)
 	body, headers, code, err := c.newRequestWithHeaders(ctx,
-		"/applications/"+d.Get("application_id").(string)+"/localdomains/"+d.Get("domain_id").(string)+
-			"/accounts/"+d.Get("account_id").(string)+"/credentials/", http.MethodPost, jsonData)
+		"/applications/"+d.Get(skApplicationID).(string)+"/localdomains/"+d.Get(skDomainID).(string)+
+			"/accounts/"+d.Get(skAccountID).(string)+"/credentials/", http.MethodPost, jsonData)
 	if err != nil {
 		return "", err
 	}
@@ -299,8 +299,8 @@ func updateApplicationLocalDomainAccountCredential(
 	c := m.(*Client)
 	jsonData := prepareApplicationLocalDomainAccountCredentialJSON(d)
 	body, code, err := c.newRequest(ctx,
-		"/applications/"+d.Get("application_id").(string)+"/localdomains/"+d.Get("domain_id").(string)+
-			"/accounts/"+d.Get("account_id").(string)+"/credentials/"+d.Id(), http.MethodPut, jsonData)
+		"/applications/"+d.Get(skApplicationID).(string)+"/localdomains/"+d.Get(skDomainID).(string)+
+			"/accounts/"+d.Get(skAccountID).(string)+"/credentials/"+d.Id(), http.MethodPut, jsonData)
 	if err != nil {
 		return err
 	}
@@ -316,8 +316,8 @@ func deleteApplicationLocalDomainAccountCredential(
 ) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
-		"/applications/"+d.Get("application_id").(string)+"/localdomains/"+d.Get("domain_id").(string)+
-			"/accounts/"+d.Get("account_id").(string)+"/credentials/"+d.Id(), http.MethodDelete, nil)
+		"/applications/"+d.Get(skApplicationID).(string)+"/localdomains/"+d.Get(skDomainID).(string)+
+			"/accounts/"+d.Get(skAccountID).(string)+"/credentials/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
 		return err
 	}
@@ -334,8 +334,8 @@ func prepareApplicationLocalDomainAccountCredentialJSON(
 	// Application account credentials only support the "password" type
 	// (no ssh_key/private_key/public_key, unlike device/domain account credentials).
 	jsonData := jsonCredential{
-		Type:     d.Get("type").(string),
-		Password: d.Get("password").(string),
+		Type:     d.Get(skType).(string),
+		Password: d.Get(skPassword).(string),
 	}
 
 	return jsonData
@@ -381,7 +381,7 @@ func readApplicationLocalDomainAccountCredentialOptions(
 }
 
 func fillApplicationLocalDomainAccountCredential(d *schema.ResourceData, jsonData jsonCredential) {
-	if tfErr := d.Set("type", jsonData.Type); tfErr != nil {
+	if tfErr := d.Set(skType, jsonData.Type); tfErr != nil {
 		panic(tfErr)
 	}
 }

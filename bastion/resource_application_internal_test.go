@@ -11,8 +11,8 @@ func TestFillApplicationHandlesNilLocalDomains(t *testing.T) {
 
 	fillApplication(d, jsonApplication{
 		ApplicationName:  "test-app",
-		ConnectionPolicy: "RDP",
-		Category:         "standard",
+		ConnectionPolicy: skProtoRDP,
+		Category:         skStandard,
 	})
 
 	localDomains := d.Get("local_domains")

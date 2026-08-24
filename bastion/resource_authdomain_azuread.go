@@ -42,11 +42,11 @@ func resourceAuthDomainAzureAD() *schema.Resource {
 			StateContext: resourceAuthDomainAzureADImport,
 		},
 		Schema: map[string]*schema.Schema{
-			"domain_name": {
+			skDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"auth_domain_name": {
+			skAuthDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -54,11 +54,11 @@ func resourceAuthDomainAzureAD() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"default_email_domain": {
+			skDefaultEmailDomain: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"default_language": {
+			skDefaultLanguage: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"de", "en", "es", "fr", "ru"}, false),
@@ -67,7 +67,7 @@ func resourceAuthDomainAzureAD() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"external_auths": {
+			skExternalAuths: {
 				Type:     schema.TypeList,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -76,7 +76,7 @@ func resourceAuthDomainAzureAD() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"certificate": {
+			skCertificate: {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
@@ -86,26 +86,26 @@ func resourceAuthDomainAzureAD() *schema.Resource {
 				Optional:  true,
 				Sensitive: true,
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"is_default": {
+			skIsDefault: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"passphrase": {
+			skPassphrase: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
-				RequiredWith: []string{"private_key"},
+				RequiredWith: []string{skPrivateKey},
 			},
-			"private_key": {
+			skPrivateKey: {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
 			},
-			"secondary_auth": {
+			skSecondaryAuth: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -129,12 +129,12 @@ func resourceAuthDomainAzureADCreate(
 	if err := resourceAuthDomainAzureADVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	_, ex, err := searchResourceAuthDomainAzureAD(ctx, d.Get("domain_name").(string), m)
+	_, ex, err := searchResourceAuthDomainAzureAD(ctx, d.Get(skDomainName).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if ex {
-		return diag.FromErr(fmt.Errorf("domain_name %s already exists", d.Get("domain_name").(string)))
+		return diag.FromErr(fmt.Errorf("domain_name %s already exists", d.Get(skDomainName).(string)))
 	}
 	id, err := addAuthDomainAzureAD(ctx, d, m)
 	if err != nil {
@@ -142,12 +142,12 @@ func resourceAuthDomainAzureADCreate(
 	}
 	if id == "" {
 		// Fallback for Bastion versions that don't return the X-Object-Id header on creation.
-		id, ex, err = searchResourceAuthDomainAzureAD(ctx, d.Get("domain_name").(string), m)
+		id, ex, err = searchResourceAuthDomainAzureAD(ctx, d.Get(skDomainName).(string), m)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 		if !ex {
-			return diag.FromErr(fmt.Errorf("domain_name %s not found after POST", d.Get("domain_name").(string)))
+			return diag.FromErr(fmt.Errorf("domain_name %s not found after POST", d.Get(skDomainName).(string)))
 		}
 	}
 	d.SetId(id)
@@ -308,28 +308,28 @@ func deleteAuthDomainAzureAD(
 func prepareAuthDomainAzureADJSON(d *schema.ResourceData) jsonAuthDomainAzureAD {
 	jsonData := jsonAuthDomainAzureAD{
 		Type:               "AzureAD",
-		DomainName:         d.Get("domain_name").(string),
-		AuthDomainName:     d.Get("auth_domain_name").(string),
+		DomainName:         d.Get(skDomainName).(string),
+		AuthDomainName:     d.Get(skAuthDomainName).(string),
 		ClientID:           d.Get("client_id").(string),
-		DefaultEmailDomain: d.Get("default_email_domain").(string),
-		DefaultLanguage:    d.Get("default_language").(string),
+		DefaultEmailDomain: d.Get(skDefaultEmailDomain).(string),
+		DefaultLanguage:    d.Get(skDefaultLanguage).(string),
 		EntityID:           d.Get("entity_id").(string),
 		Label:              d.Get("label").(string),
-		Certificate:        d.Get("certificate").(string),
+		Certificate:        d.Get(skCertificate).(string),
 		ClientSecret:       d.Get("client_secret").(string),
-		Description:        d.Get("description").(string),
-		IsDefault:          d.Get("is_default").(bool),
-		Passphrase:         d.Get("passphrase").(string),
-		PrivateKey:         d.Get("private_key").(string),
+		Description:        d.Get(skDescription).(string),
+		IsDefault:          d.Get(skIsDefault).(bool),
+		Passphrase:         d.Get(skPassphrase).(string),
+		PrivateKey:         d.Get(skPrivateKey).(string),
 	}
 
-	listExternalAuths := d.Get("external_auths").([]interface{})
+	listExternalAuths := d.Get(skExternalAuths).([]interface{})
 	jsonData.ExternalAuths = make([]string, len(listExternalAuths))
 	for i, v := range listExternalAuths {
 		jsonData.ExternalAuths[i] = v.(string)
 	}
 
-	listSecondaryAuth := d.Get("secondary_auth").([]interface{})
+	listSecondaryAuth := d.Get(skSecondaryAuth).([]interface{})
 	jsonData.SecondaryAuth = make([]string, len(listSecondaryAuth))
 	for i, v := range listSecondaryAuth {
 		jsonData.SecondaryAuth[i] = v.(string)
@@ -364,38 +364,38 @@ func readAuthDomainAzureADOptions(
 }
 
 func fillAuthDomainAzureAD(d *schema.ResourceData, jsonData jsonAuthDomainAzureAD) {
-	if tfErr := d.Set("domain_name", jsonData.DomainName); tfErr != nil {
+	if tfErr := d.Set(skDomainName, jsonData.DomainName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("auth_domain_name", jsonData.AuthDomainName); tfErr != nil {
+	if tfErr := d.Set(skAuthDomainName, jsonData.AuthDomainName); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("client_id", jsonData.ClientID); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("default_language", jsonData.DefaultLanguage); tfErr != nil {
+	if tfErr := d.Set(skDefaultLanguage, jsonData.DefaultLanguage); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("default_email_domain", jsonData.DefaultEmailDomain); tfErr != nil {
+	if tfErr := d.Set(skDefaultEmailDomain, jsonData.DefaultEmailDomain); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("entity_id", jsonData.EntityID); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("external_auths", jsonData.ExternalAuths); tfErr != nil {
+	if tfErr := d.Set(skExternalAuths, jsonData.ExternalAuths); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("label", jsonData.Label); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("is_default", jsonData.IsDefault); tfErr != nil {
+	if tfErr := d.Set(skIsDefault, jsonData.IsDefault); tfErr != nil {
 		panic(tfErr)
 	}
 	// private_key hidden on API
-	if tfErr := d.Set("secondary_auth", jsonData.SecondaryAuth); tfErr != nil {
+	if tfErr := d.Set(skSecondaryAuth, jsonData.SecondaryAuth); tfErr != nil {
 		panic(tfErr)
 	}
 }

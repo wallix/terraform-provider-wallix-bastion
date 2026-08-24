@@ -18,15 +18,15 @@ func dataSourceConnectionPolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"protocol": {
+			skProtocol: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"type": {
+			skType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -80,18 +80,18 @@ func fillSourceConnectionPolicy(d *schema.ResourceData, jsonData jsonConnectionP
 	if tfErr := d.Set("connection_policy_name", jsonData.ConnectionPolicyName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("protocol", jsonData.Protocol); tfErr != nil {
+	if tfErr := d.Set(skProtocol, jsonData.Protocol); tfErr != nil {
 		panic(tfErr)
 	}
 	if jsonData.Type != "" {
-		if tfErr := d.Set("type", jsonData.Type); tfErr != nil {
+		if tfErr := d.Set(skType, jsonData.Type); tfErr != nil {
 			panic(tfErr)
 		}
 	} else {
-		if tfErr := d.Set("type", jsonData.Protocol); tfErr != nil {
+		if tfErr := d.Set(skType, jsonData.Protocol); tfErr != nil {
 			panic(tfErr)
 		}
 	}

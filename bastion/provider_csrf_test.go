@@ -22,7 +22,7 @@ func TestSessionWithCSRFIntegration(t *testing.T) {
 
 			// Return session cookie and CSRF token on successful auth
 			http.SetCookie(w, &http.Cookie{
-				Name:  "wab_session_id",
+				Name:  tvWabSessionID,
 				Value: fmt.Sprintf("session-%d", callCount),
 				Path:  "/",
 			})
@@ -86,7 +86,7 @@ func TestSessionWithCSRFIntegration(t *testing.T) {
 // TestConfigCSRFDisabled tests that CSRF can be disabled.
 func TestConfigCSRFDisabled(t *testing.T) {
 	config := bastion.Config{
-		BastionIP:         "192.168.1.1",
+		BastionIP:         tvTestHost,
 		BastionPort:       443,
 		BastionUser:       "admin",
 		BastionPwd:        "password",
@@ -135,7 +135,7 @@ func TestSessionTimeoutConfiguration(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			config := bastion.Config{
-				BastionIP:      "192.168.1.1",
+				BastionIP:      tvTestHost,
 				BastionPort:    443,
 				BastionUser:    "admin",
 				BastionPwd:     "password",

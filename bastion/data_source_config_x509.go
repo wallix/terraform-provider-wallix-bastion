@@ -18,7 +18,7 @@ func dataSourceConfigX509() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceConfigX509Read,
 		Schema: map[string]*schema.Schema{
-			"ca_certificate": {
+			skCACertificate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -64,7 +64,7 @@ func dataSourceConfigX509Read(
 }
 
 func fillSourceConfigX509(d *schema.ResourceData, jsonData jsonConfigX509) {
-	if tfErr := d.Set("ca_certificate", jsonData.CaCertificate); tfErr != nil {
+	if tfErr := d.Set(skCACertificate, jsonData.CaCertificate); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("server_public_key", jsonData.ServerPublicKey); tfErr != nil {

@@ -18,7 +18,7 @@ func dataSourceConfigSMTP() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceConfigSMTPRead,
 		Schema: map[string]*schema.Schema{
-			"protocol": {
+			skProtocol: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -30,7 +30,7 @@ func dataSourceConfigSMTP() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"port": {
+			skPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -84,7 +84,7 @@ func dataSourceConfigSMTPRead(
 }
 
 func fillSourceConfigSMTP(d *schema.ResourceData, jsonData jsonConfigSMTP) {
-	if tfErr := d.Set("protocol", jsonData.Protocol); tfErr != nil {
+	if tfErr := d.Set(skProtocol, jsonData.Protocol); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("authentication_method", jsonData.AuthenticationMethod); tfErr != nil {
@@ -93,7 +93,7 @@ func fillSourceConfigSMTP(d *schema.ResourceData, jsonData jsonConfigSMTP) {
 	if tfErr := d.Set("server", jsonData.Server); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("port", jsonData.Port); tfErr != nil {
+	if tfErr := d.Set(skPort, jsonData.Port); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("postmaster_email", jsonData.PostmasterEmail); tfErr != nil {

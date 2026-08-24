@@ -17,7 +17,7 @@ func dataSourceNotification() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -25,7 +25,7 @@ func dataSourceNotification() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"type": {
+			skType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -33,7 +33,7 @@ func dataSourceNotification() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"language": {
+			skLanguage: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -82,19 +82,19 @@ func fillSourceNotification(d *schema.ResourceData, jsonData jsonNotification) {
 	if tfErr := d.Set("notification_name", jsonData.NotificationName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("enabled", jsonData.Enabled); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("type", jsonData.Type); tfErr != nil {
+	if tfErr := d.Set(skType, jsonData.Type); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("destination", jsonData.Destination); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("language", jsonData.Language); tfErr != nil {
+	if tfErr := d.Set(skLanguage, jsonData.Language); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("events", jsonData.Events); tfErr != nil {

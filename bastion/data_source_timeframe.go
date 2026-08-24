@@ -17,7 +17,7 @@ func dataSourceTimeframe() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -95,7 +95,7 @@ func fillSourceTimeframe(d *schema.ResourceData, jsonData jsonTimeframe) {
 	if tfErr := d.Set("timeframe_name", jsonData.TimeframeName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("is_overtimable", jsonData.IsOvertimable); tfErr != nil {

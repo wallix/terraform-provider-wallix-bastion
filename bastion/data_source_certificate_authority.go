@@ -21,11 +21,11 @@ func dataSourceCertificateAuthority() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ca_certificate": {
+			skCACertificate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -74,10 +74,10 @@ func fillSourceCertificateAuthority(d *schema.ResourceData, jsonData jsonCertifi
 	if tfErr := d.Set("ca_type", jsonData.CAType); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("ca_certificate", jsonData.CACertificate); tfErr != nil {
+	if tfErr := d.Set(skCACertificate, jsonData.CACertificate); tfErr != nil {
 		panic(tfErr)
 	}
 }
