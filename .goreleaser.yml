@@ -29,7 +29,7 @@ builds:
 archives:
   - id: default
     name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
-    format: zip  # Use zip format for all platforms
+    formats: [zip]  # Use zip format for all platforms
     files:
       - README.md
       - LICENSE
