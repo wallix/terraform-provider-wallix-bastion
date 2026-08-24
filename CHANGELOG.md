@@ -1,6 +1,6 @@
 # changelog
 
-## 0.15.0 (July 23, 2026)
+## 0.15.0 (August 24, 2026)
 
 BREAKING CHANGES:
 
