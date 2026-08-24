@@ -155,6 +155,28 @@ func resourceDeviceLocalDomainAccountCredentialRead(
 		return diag.FromErr(err)
 	}
 	if cfg.ID == "" {
+		// WALLIX rotates a credential (manual regenerate, or an automatic
+		// rotation policy) by deleting the old object and creating a new one
+		// with a different internal ID, so the GET by the stored ID 404s.
+		// Retry a lookup by (account, type) before treating it as deleted.
+		newID, found, err := searchResourceDeviceLocalDomainAccountCredential(ctx,
+			d.Get("device_id").(string), d.Get("domain_id").(string), d.Get("account_id").(string),
+			d.Get("type").(string), m)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if found {
+			cfg, err = readDeviceLocalDomainAccountCredentialOptions(ctx,
+				d.Get("device_id").(string), d.Get("domain_id").(string), d.Get("account_id").(string), newID, m)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			if cfg.ID != "" {
+				d.SetId(newID)
+			}
+		}
+	}
+	if cfg.ID == "" {
 		d.SetId("")
 	} else {
 		fillDeviceLocalDomainAccountCredential(d, cfg)
