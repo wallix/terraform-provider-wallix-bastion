@@ -37,7 +37,7 @@ func resourceDomain() *schema.Resource {
 		UpdateContext: resourceDomainUpdate,
 		DeleteContext: resourceDomainDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceDomainImport,
+			StateContext: resourceDomainImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"domain_name": {
@@ -206,11 +206,10 @@ func resourceDomainDelete(
 }
 
 func resourceDomainImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err

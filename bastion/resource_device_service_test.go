@@ -11,8 +11,8 @@ import (
 func TestAccResourceDeviceService_basic(t *testing.T) {
 	resourceName := "wallix-bastion_device_service.testacc_DeviceService"
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceDeviceServiceCreate(),

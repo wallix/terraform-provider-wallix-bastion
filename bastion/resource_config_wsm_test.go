@@ -16,8 +16,8 @@ func TestAccResourceConfigWSM_basic(t *testing.T) {
 		resourceName := "wallix-bastion_config_wsm.test"
 
 		resource.Test(t, resource.TestCase{
-			PreCheck:  func() { testAccPreCheck(t) },
-			Providers: testAccProviders,
+			PreCheck:          func() { testAccPreCheck(t) },
+			ProviderFactories: testAccProviderFactories,
 			Steps: []resource.TestStep{
 				{
 					Config: testAccResourceConfigWSMCreate(),

@@ -33,7 +33,7 @@ func resourcePasswordChangePolicy() *schema.Resource {
 		UpdateContext: resourcePasswordChangePolicyUpdate,
 		DeleteContext: resourcePasswordChangePolicyDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourcePasswordChangePolicyImport,
+			StateContext: resourcePasswordChangePolicyImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"password_change_policy_name": {
@@ -187,11 +187,10 @@ func resourcePasswordChangePolicyDelete(
 }
 
 func resourcePasswordChangePolicyImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourcePasswordChangePolicyVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err

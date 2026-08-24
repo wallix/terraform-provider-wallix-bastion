@@ -34,7 +34,7 @@ func resourceDeviceLocalDomainAccount() *schema.Resource {
 		UpdateContext: resourceDeviceLocalDomainAccountUpdate,
 		DeleteContext: resourceDeviceLocalDomainAccountDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceDeviceLocalDomainAccountImport,
+			StateContext: resourceDeviceLocalDomainAccountImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"device_id": {
@@ -221,11 +221,10 @@ func resourceDeviceLocalDomainAccountDelete(
 }
 
 func resourceDeviceLocalDomainAccountImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceDeviceLocalDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err

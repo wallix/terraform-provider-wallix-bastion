@@ -31,7 +31,7 @@ func resourceDeviceService() *schema.Resource {
 		UpdateContext: resourceDeviceServiceUpdate,
 		DeleteContext: resourceDeviceServiceDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceDeviceServiceImport,
+			StateContext: resourceDeviceServiceImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"device_id": {
@@ -178,11 +178,10 @@ func resourceDeviceServiceDelete(
 }
 
 func resourceDeviceServiceImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceDeviceServiceVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err

@@ -144,7 +144,7 @@ func TestSessionTimeoutConfiguration(t *testing.T) {
 			}
 
 			client, diags := config.Client()
-			if (diags.HasError()) != tt.wantErr {
+			if diags.HasError() != tt.wantErr {
 				t.Errorf("Config.Client() error = %v, wantErr %v", diags.HasError(), tt.wantErr)
 
 				return

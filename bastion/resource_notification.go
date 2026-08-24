@@ -30,7 +30,7 @@ func resourceNotification() *schema.Resource {
 		UpdateContext: resourceNotificationUpdate,
 		DeleteContext: resourceNotificationDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceNotificationImport,
+			StateContext: resourceNotificationImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"notification_name": {
@@ -185,11 +185,10 @@ func resourceNotificationDelete(
 }
 
 func resourceNotificationImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceNotificationVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err

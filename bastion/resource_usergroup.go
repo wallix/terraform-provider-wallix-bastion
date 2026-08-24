@@ -29,7 +29,7 @@ func resourceUserGroup() *schema.Resource {
 		UpdateContext: resourceUserGroupUpdate,
 		DeleteContext: resourceUserGroupDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceUserGroupImport,
+			StateContext: resourceUserGroupImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"group_name": {
@@ -185,11 +185,10 @@ func resourceUserGroupDelete(
 }
 
 func resourceUserGroupImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceUserGroupVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err

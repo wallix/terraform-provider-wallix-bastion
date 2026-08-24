@@ -77,7 +77,7 @@ func resourceTargetGroup() *schema.Resource {
 		UpdateContext: resourceTargetGroupUpdate,
 		DeleteContext: resourceTargetGroupDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceTargetGroupImport,
+			StateContext: resourceTargetGroupImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"group_name": {
@@ -362,11 +362,10 @@ func resourceTargetGroupDelete(
 }
 
 func resourceTargetGroupImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceTargetGroupVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err

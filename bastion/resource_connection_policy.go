@@ -30,7 +30,7 @@ func resourceConnectionPolicy() *schema.Resource {
 		UpdateContext: resourceConnectionPolicyUpdate,
 		DeleteContext: resourceConnectionPolicyDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceConnectionPolicyImport,
+			StateContext: resourceConnectionPolicyImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"connection_policy_name": {
@@ -166,11 +166,10 @@ func resourceConnectionPolicyDelete(
 }
 
 func resourceConnectionPolicyImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceConnectionPolicyVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err

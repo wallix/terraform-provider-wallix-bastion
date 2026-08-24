@@ -44,7 +44,7 @@ func resourceApplication() *schema.Resource {
 		UpdateContext: resourceApplicationUpdate,
 		DeleteContext: resourceApplicationDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceApplicationImport,
+			StateContext: resourceApplicationImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"application_name": {
@@ -264,11 +264,10 @@ func resourceApplicationDelete(
 }
 
 func resourceApplicationImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceApplicationVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err

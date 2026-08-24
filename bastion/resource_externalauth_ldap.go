@@ -44,7 +44,7 @@ func resourceExternalAuthLdap() *schema.Resource {
 		UpdateContext: resourceExternalAuthLdapUpdate,
 		DeleteContext: resourceExternalAuthLdapDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceExternalAuthLdapImport,
+			StateContext: resourceExternalAuthLdapImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"authentication_name": {
@@ -237,11 +237,10 @@ func resourceExternalAuthLdapDelete(
 }
 
 func resourceExternalAuthLdapImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceExternalAuthLdapVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err

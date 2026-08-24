@@ -36,7 +36,7 @@ func resourceAuthDomainSAML() *schema.Resource {
 		UpdateContext: resourceAuthDomainSAMLUpdate,
 		DeleteContext: resourceAuthDomainSAMLDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAuthDomainSAMLImport,
+			StateContext: resourceAuthDomainSAMLImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"domain_name": {
@@ -182,11 +182,10 @@ func resourceAuthDomainSAMLDelete(
 }
 
 func resourceAuthDomainSAMLImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceAuthDomainSAMLVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err

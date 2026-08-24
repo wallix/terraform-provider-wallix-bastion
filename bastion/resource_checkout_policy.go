@@ -29,7 +29,7 @@ func resourceCheckoutPolicy() *schema.Resource {
 		UpdateContext: resourceCheckoutPolicyUpdate,
 		DeleteContext: resourceCheckoutPolicyDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceCheckoutPolicyImport,
+			StateContext: resourceCheckoutPolicyImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"checkout_policy_name": {
@@ -162,11 +162,10 @@ func resourceCheckoutPolicyDelete(
 }
 
 func resourceCheckoutPolicyImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceCheckoutPolicyVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err

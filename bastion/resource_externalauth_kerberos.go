@@ -31,7 +31,7 @@ func resourceExternalAuthKerberos() *schema.Resource {
 		UpdateContext: resourceExternalAuthKerberosUpdate,
 		DeleteContext: resourceExternalAuthKerberosDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceExternalAuthKerberosImport,
+			StateContext: resourceExternalAuthKerberosImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"authentication_name": {
@@ -171,11 +171,10 @@ func resourceExternalAuthKerberosDelete(
 }
 
 func resourceExternalAuthKerberosImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceExternalAuthKerberosVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err

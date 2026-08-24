@@ -11,8 +11,8 @@ import (
 func TestAccResourceApplicationLocalDomain_basic(t *testing.T) {
 	resourceName := "wallix-bastion_application_localdomain.testacc_AppLocalDom"
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceApplicationLocalDomainCreate(),

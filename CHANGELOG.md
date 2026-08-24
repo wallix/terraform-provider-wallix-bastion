@@ -36,6 +36,7 @@ ENHANCEMENTS:
 - **resource/wallix-bastion_application**: add `web_application` category, replacing the `jumphost` category deprecated on API v3.12+
 - dependency updates addressing multiple security advisories in `golang.org/x/net`, `golang.org/x/crypto`, `google.golang.org/grpc`, and `github.com/cloudflare/circl`
 - **ci**: migrated `golangci-lint` configuration to the v2 schema and updated CI Go versions to 1.25/1.26
+- **ci**: migrated acceptance tests off the deprecated `resource.TestCase.Providers` field to `ProviderFactories`, and resource importers off the deprecated `schema.ResourceImporter.State` to `StateContext`, clearing 129 `staticcheck` SA1019 findings
 
 BUG FIXES:
 

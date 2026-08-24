@@ -66,7 +66,7 @@ func resourceProfile() *schema.Resource {
 		UpdateContext: resourceProfileUpdate,
 		DeleteContext: resourceProfileDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceProfileImport,
+			StateContext: resourceProfileImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"profile_name": {
@@ -362,11 +362,10 @@ func resourceProfileDelete(
 }
 
 func resourceProfileImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceProfileVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err

@@ -12,8 +12,8 @@ import (
 
 func TestAccResourceApplication_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceApplicationCreate(),
@@ -57,8 +57,8 @@ func TestAccResourceApplication_web(t *testing.T) {
 	if os.Getenv("TESTACC_WEB_APP") != "" {
 		if v := os.Getenv("WALLIX_BASTION_API_VERSION"); v == "" || semver.Compare(v, bastion.VersionWallixAPI312) >= 0 {
 			resource.Test(t, resource.TestCase{
-				PreCheck:  func() { testAccPreCheck(t) },
-				Providers: testAccProviders,
+				PreCheck:          func() { testAccPreCheck(t) },
+				ProviderFactories: testAccProviderFactories,
 				Steps: []resource.TestStep{
 					{
 						Config: testAccResourceApplicationCreateWeb(),
@@ -105,8 +105,8 @@ func TestAccResourceApplication_jumphost_deprecated(t *testing.T) {
 		// Only run this test for API versions < 3.12 where jumphost is still supported
 		if v != "" && semver.Compare(v, bastion.VersionWallixAPI312) < 0 {
 			resource.Test(t, resource.TestCase{
-				PreCheck:  func() { testAccPreCheck(t) },
-				Providers: testAccProviders,
+				PreCheck:          func() { testAccPreCheck(t) },
+				ProviderFactories: testAccProviderFactories,
 				Steps: []resource.TestStep{
 					{
 						Config: testAccResourceApplicationCreateJumphost(),

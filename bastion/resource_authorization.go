@@ -43,7 +43,7 @@ func resourceAuthorization() *schema.Resource {
 		UpdateContext: resourceAuthorizationUpdate,
 		DeleteContext: resourceAuthorizationDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAuthorizationImport,
+			StateContext: resourceAuthorizationImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"authorization_name": {
@@ -256,11 +256,10 @@ func resourceAuthorizationDelete(
 }
 
 func resourceAuthorizationImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceAuthorizationVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err

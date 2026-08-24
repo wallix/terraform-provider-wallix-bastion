@@ -26,10 +26,12 @@ func init() { //nolint:gochecknoinits
 }
 
 var (
-	testAccProviders = map[string]*schema.Provider{ //nolint: gochecknoglobals
-		"wallix-bastion": testAccProvider,
+	testAccProvider          = bastion.Provider()                           //nolint: gochecknoglobals
+	testAccProviderFactories = map[string]func() (*schema.Provider, error){ //nolint: gochecknoglobals
+		"wallix-bastion": func() (*schema.Provider, error) {
+			return testAccProvider, nil
+		},
 	}
-	testAccProvider = bastion.Provider() //nolint: gochecknoglobals
 )
 
 func TestProvider(t *testing.T) {

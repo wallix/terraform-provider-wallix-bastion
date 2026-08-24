@@ -35,7 +35,7 @@ func resourceTimeframe() *schema.Resource {
 		UpdateContext: resourceTimeframeUpdate,
 		DeleteContext: resourceTimeframeDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceTimeframeImport,
+			StateContext: resourceTimeframeImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"timeframe_name": {
@@ -180,11 +180,10 @@ func resourceTimeframeDelete(
 }
 
 func resourceTimeframeImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceTimeframeVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err

@@ -15,7 +15,7 @@ func TestAccDataSourceExternalAuthSaml_basic38(t *testing.T) {
 	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); v == bastion.VersionWallixAPI38 {
 		resource.Test(t, resource.TestCase{
 			PreCheck:                  func() { testAccPreCheck(t) },
-			Providers:                 testAccProviders,
+			ProviderFactories:         testAccProviderFactories,
 			PreventPostDestroyRefresh: true,
 			Steps: []resource.TestStep{
 				{
@@ -66,7 +66,7 @@ func TestAccDataSourceExternalAuthSaml_basic(t *testing.T) {
 	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); v == "" || v == bastion.VersionWallixAPI312 {
 		resource.Test(t, resource.TestCase{
 			PreCheck:                  func() { testAccPreCheck(t) },
-			Providers:                 testAccProviders,
+			ProviderFactories:         testAccProviderFactories,
 			PreventPostDestroyRefresh: true,
 			Steps: []resource.TestStep{
 				{

@@ -25,7 +25,7 @@ func resourceConfigWSM() *schema.Resource {
 		UpdateContext: resourceConfigWSMUpdate,
 		DeleteContext: resourceConfigWSMDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceConfigWSMImport,
+			StateContext: resourceConfigWSMImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"hostname": {
@@ -115,7 +115,7 @@ func resourceConfigWSMDelete(
 }
 
 func resourceConfigWSMImport(
-	d *schema.ResourceData, _ interface{},
+	_ context.Context, d *schema.ResourceData, _ interface{},
 ) ([]*schema.ResourceData, error) {
 	// Since the resource does not have a unique ID, use the static "wsmConfig" ID.
 	d.SetId("wsmConfig")

@@ -24,7 +24,7 @@ func resourceConnectionMessage() *schema.Resource {
 		UpdateContext: resourceConnectionMessageUpdate,
 		DeleteContext: resourceConnectionMessageDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceConnectionMessageImport,
+			StateContext: resourceConnectionMessageImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"message_name": {
@@ -110,11 +110,10 @@ func resourceConnectionMessageDelete(
 }
 
 func resourceConnectionMessageImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceConnectionMessageVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err

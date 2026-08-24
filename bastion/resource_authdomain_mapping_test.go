@@ -11,8 +11,8 @@ import (
 func TestAccResourceAuthDomainMapping_basic(t *testing.T) {
 	resourceName := "wallix-bastion_authdomain_mapping.testacc_AuthDomainMapping"
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceAuthDomainMappingCreate(),

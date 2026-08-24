@@ -21,7 +21,7 @@ func resourceDomainAccountCredential() *schema.Resource {
 		UpdateContext: resourceDomainAccountCredentialUpdate,
 		DeleteContext: resourceDomainAccountCredentialDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceDomainAccountCredentialImport,
+			StateContext: resourceDomainAccountCredentialImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"domain_id": {
@@ -182,11 +182,10 @@ func resourceDomainAccountCredentialDelete(
 }
 
 func resourceDomainAccountCredentialImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err

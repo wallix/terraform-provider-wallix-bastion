@@ -11,8 +11,8 @@ import (
 func TestAccResourceDeviceLocalDomainAccountCred_basic(t *testing.T) {
 	resourceName := "wallix-bastion_device_localdomain_account_credential.testacc_DeviceLocalDomainAccountCred2"
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
 			"random": {
 				Source: "hashicorp/random",

@@ -62,7 +62,7 @@ func TestConfigClientWithCSRFOptions(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			client, diags := tt.config.Client()
-			if (diags.HasError()) != tt.wantErr {
+			if diags.HasError() != tt.wantErr {
 				t.Errorf("Config.Client() error = %v, wantErr %v", diags.HasError(), tt.wantErr)
 
 				return

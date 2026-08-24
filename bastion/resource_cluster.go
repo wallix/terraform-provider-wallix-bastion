@@ -27,7 +27,7 @@ func resourceCluster() *schema.Resource {
 		UpdateContext: resourceClusterUpdate,
 		DeleteContext: resourceClusterDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceClusterImport,
+			StateContext: resourceClusterImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"cluster_name": {
@@ -152,11 +152,10 @@ func resourceClusterDelete(
 }
 
 func resourceClusterImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceClusterVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err

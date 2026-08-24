@@ -11,8 +11,8 @@ import (
 func TestAccResourceDomainAccount_basic(t *testing.T) {
 	resourceName := "wallix-bastion_domain_account.testacc_DomainAccount"
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceDomainAccountCreate(),

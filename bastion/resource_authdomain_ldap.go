@@ -41,7 +41,7 @@ func resourceAuthDomainLdap() *schema.Resource {
 		UpdateContext: resourceAuthDomainLdapUpdate,
 		DeleteContext: resourceAuthDomainLdapDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAuthDomainLdapImport,
+			StateContext: resourceAuthDomainLdapImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"domain_name": {
@@ -211,11 +211,10 @@ func resourceAuthDomainLdapDelete(
 }
 
 func resourceAuthDomainLdapImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceAuthDomainLdapVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err

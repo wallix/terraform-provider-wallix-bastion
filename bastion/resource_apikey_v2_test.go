@@ -14,8 +14,8 @@ import (
 func TestAccResourceAPIKeyV2_basic(t *testing.T) {
 	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); v == "" || semver.Compare(v, bastion.VersionWallixAPI312) >= 0 {
 		resource.Test(t, resource.TestCase{
-			PreCheck:  func() { testAccPreCheck(t) },
-			Providers: testAccProviders,
+			PreCheck:          func() { testAccPreCheck(t) },
+			ProviderFactories: testAccProviderFactories,
 			Steps: []resource.TestStep{
 				{
 					Config: testAccResourceAPIKeyV2Create(),

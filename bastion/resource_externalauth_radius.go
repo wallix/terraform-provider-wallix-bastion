@@ -31,7 +31,7 @@ func resourceExternalAuthRadius() *schema.Resource {
 		UpdateContext: resourceExternalAuthRadiusUpdate,
 		DeleteContext: resourceExternalAuthRadiusDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceExternalAuthRadiusImport,
+			StateContext: resourceExternalAuthRadiusImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"authentication_name": {
@@ -160,11 +160,10 @@ func resourceExternalAuthRadiusDelete(
 }
 
 func resourceExternalAuthRadiusImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceExternalAuthRadiusVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err

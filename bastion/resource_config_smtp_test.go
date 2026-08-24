@@ -10,8 +10,8 @@ func TestAccResourceConfigSMTP_basic(t *testing.T) {
 	resourceName := "wallix-bastion_config_smtp.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceConfigSMTPCreate(),

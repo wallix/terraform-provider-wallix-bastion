@@ -32,7 +32,7 @@ func resourceConfigSMTP() *schema.Resource {
 		UpdateContext: resourceConfigSMTPUpdate,
 		DeleteContext: resourceConfigSMTPDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceConfigSMTPImport,
+			StateContext: resourceConfigSMTPImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"protocol": {
@@ -150,7 +150,7 @@ func resourceConfigSMTPDelete(
 }
 
 func resourceConfigSMTPImport(
-	d *schema.ResourceData, _ interface{},
+	_ context.Context, d *schema.ResourceData, _ interface{},
 ) ([]*schema.ResourceData, error) {
 	// Since the resource does not have a unique ID, use the static "smtpConfig" ID.
 	d.SetId("smtpConfig")

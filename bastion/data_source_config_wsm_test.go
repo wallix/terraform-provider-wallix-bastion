@@ -21,7 +21,7 @@ func TestAccDataSourceConfigWSM_basic(t *testing.T) {
 
 		resource.Test(t, resource.TestCase{
 			PreCheck:                  func() { testAccPreCheck(t) },
-			Providers:                 testAccProviders,
+			ProviderFactories:         testAccProviderFactories,
 			PreventPostDestroyRefresh: true,
 			Steps: []resource.TestStep{
 				{

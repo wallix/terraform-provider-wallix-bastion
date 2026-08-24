@@ -11,8 +11,8 @@ import (
 func TestAccResourceDeviceLocalDomainAccount_basic(t *testing.T) {
 	resourceName := "wallix-bastion_device_localdomain_account.testacc_DeviceLocalDomainAccount"
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceDeviceLocalDomainAccountCreate(),

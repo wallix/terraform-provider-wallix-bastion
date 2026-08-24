@@ -30,7 +30,7 @@ func resourceExternalAuthTacacs() *schema.Resource {
 		UpdateContext: resourceExternalAuthTacacsUpdate,
 		DeleteContext: resourceExternalAuthTacacsDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceExternalAuthTacacsImport,
+			StateContext: resourceExternalAuthTacacsImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"authentication_name": {
@@ -155,11 +155,10 @@ func resourceExternalAuthTacacsDelete(
 }
 
 func resourceExternalAuthTacacsImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceExternalAuthTacacsVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err

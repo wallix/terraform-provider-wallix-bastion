@@ -34,7 +34,7 @@ func resourceConfigX509() *schema.Resource {
 		UpdateContext: resourceConfigX509Update,
 		DeleteContext: resourceConfigX509Delete,
 		Importer: &schema.ResourceImporter{
-			State: resourceConfigX509Import,
+			StateContext: resourceConfigX509Import,
 		},
 		Schema: map[string]*schema.Schema{
 			"ca_certificate": {
@@ -141,7 +141,9 @@ func resourceConfigX509Delete(ctx context.Context, d *schema.ResourceData, m int
 	return nil
 }
 
-func resourceConfigX509Import(d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
+func resourceConfigX509Import(
+	_ context.Context, d *schema.ResourceData, _ interface{},
+) ([]*schema.ResourceData, error) {
 	// Since the resource does not have a unique ID, use the static "x509Config" ID
 	d.SetId("x509Config")
 

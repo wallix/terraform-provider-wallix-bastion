@@ -25,7 +25,7 @@ func resourceAPIKey() *schema.Resource {
 		UpdateContext: resourceAPIKeyUpdate,
 		DeleteContext: resourceAPIKeyDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAPIKeyImport,
+			StateContext: resourceAPIKeyImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"apikey_name": {
@@ -136,11 +136,10 @@ func resourceAPIKeyDelete(
 }
 
 func resourceAPIKeyImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceAPIKeyVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err

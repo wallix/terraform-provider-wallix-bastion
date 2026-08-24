@@ -36,7 +36,7 @@ func resourceUser() *schema.Resource {
 		UpdateContext: resourceUserUpdate,
 		DeleteContext: resourceUserDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceUserImport,
+			StateContext: resourceUserImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"user_name": {
@@ -188,11 +188,10 @@ func resourceUserDelete(
 }
 
 func resourceUserImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceUserVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
