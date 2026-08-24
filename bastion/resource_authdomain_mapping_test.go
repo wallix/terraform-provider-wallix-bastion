@@ -11,8 +11,8 @@ import (
 func TestAccResourceAuthDomainMapping_basic(t *testing.T) {
 	resourceName := "wallix-bastion_authdomain_mapping.testacc_AuthDomainMapping"
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceAuthDomainMappingCreate(),
@@ -59,7 +59,7 @@ resource "wallix-bastion_authdomain_ldap" "testacc_AuthDomainMapping" {
 resource "wallix-bastion_externalauth_ldap" "testacc_AuthDomainMapping" {
   authentication_name = "testacc_AuthDomainMapping"
   cn_attribute        = "sAMAccountName"
-  host                = "server1"
+  host                = "192.168.100.20"
   ldap_base           = "OU=FR,DC=test,DC=com"
   login_attribute     = "sAMAccountName"
   port                = 636
@@ -92,7 +92,7 @@ resource "wallix-bastion_authdomain_ldap" "testacc_AuthDomainMapping" {
 resource "wallix-bastion_externalauth_ldap" "testacc_AuthDomainMapping" {
   authentication_name = "testacc_AuthDomainMapping"
   cn_attribute        = "sAMAccountName"
-  host                = "server1"
+  host                = "192.168.100.20"
   ldap_base           = "OU=FR,DC=test,DC=com"
   login_attribute     = "sAMAccountName"
   port                = 636

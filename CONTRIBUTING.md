@@ -12,7 +12,7 @@ Please note we have a [code of conduct](CODE_OF_CONDUCT.md), please follow it in
 
 Before you begin contributing, ensure you have the following installed:
 
-- [Go](https://golang.org/doc/install) version 1.22 or 1.23
+- [Go](https://golang.org/doc/install) version 1.25 or 1.26
 - [Terraform](https://www.terraform.io/downloads.html) version 1.0 or later
 - [Git](https://git-scm.com/downloads)
 - Access to a WALLIX Bastion instance for testing (recommended)
@@ -166,6 +166,133 @@ We welcome several types of contributions:
    - Use `d.Partial(true)` for complex updates
 
 ### Testing Guidelines
+
+#### Test Environment Setup
+
+Before running tests, you need to configure your test environment with access to a WALLIX Bastion instance.
+
+##### 1. Create Environment File
+
+Create a `.env.test` file in the project root (this file is git-ignored):
+
+```bash
+# .env.test - Test environment configuration
+# DO NOT commit this file - it's in .gitignore
+
+# Required: Bastion connection settings
+export WALLIX_BASTION_HOST="bastion.test.local"
+export WALLIX_BASTION_USER="admin"
+export WALLIX_BASTION_TOKEN="your-api-token-here"
+
+# Optional: API version (default: v3.12)
+export WALLIX_BASTION_API_VERSION="v3.12"
+
+# Optional: Port (default: 443)
+export WALLIX_BASTION_PORT="443"
+
+# For development/testing with self-signed certificates
+export WALLIX_INSECURE_SKIP_VERIFY="true"
+
+# Enable acceptance tests
+export TF_ACC="1"
+
+# Optional: CSRF settings (default: enabled)
+export WALLIX_CSRF_ENABLED="true"
+
+# Optional: Session timeout in seconds (default: 120)
+export WALLIX_SESSION_TIMEOUT="120"
+
+# Optional: Enable verbose logging
+export TF_LOG="DEBUG"
+export TF_LOG_PATH="./terraform-test.log"
+```
+
+##### 2. Load Environment Variables
+
+```bash
+# Source the environment file before running tests
+source .env.test
+
+# Verify configuration
+echo "Testing against: $WALLIX_BASTION_HOST"
+echo "API Version: $WALLIX_BASTION_API_VERSION"
+```
+
+##### 3. Alternative: Direct Export
+
+If you prefer not to use a file:
+
+```bash
+# Export variables directly in your shell
+export WALLIX_BASTION_HOST="bastion.test.local"
+export WALLIX_BASTION_USER="admin"
+export WALLIX_BASTION_TOKEN="your-token"
+export WALLIX_BASTION_API_VERSION="v3.12"
+export WALLIX_INSECURE_SKIP_VERIFY="true"
+export TF_ACC="1"
+```
+
+##### 4. Verify Connectivity
+
+Test your Bastion connection before running tests:
+
+```bash
+# Test API connectivity
+curl -k https://$WALLIX_BASTION_HOST/api/version
+
+# Or using the provider
+cat > test-connection.tf <<EOF
+terraform {
+  required_providers {
+    wallix-bastion = {
+      source  = "terraform.local/local/wallix-bastion"
+      version = "0.0.0-dev"
+    }
+  }
+}
+
+provider "wallix-bastion" {
+  ip                   = "$WALLIX_BASTION_HOST"
+  user                 = "$WALLIX_BASTION_USER"
+  token                = "$WALLIX_BASTION_TOKEN"
+  api_version          = "$WALLIX_BASTION_API_VERSION"
+  insecure_skip_verify = true
+}
+
+data "wallix-bastion_version" "current" {}
+
+output "version" {
+  value = data.wallix-bastion_version.current
+}
+EOF
+
+terraform init
+terraform plan
+```
+
+##### 5. Security Best Practices
+
+- ✅ Use a dedicated test Bastion instance (not production!)
+- ✅ Create a dedicated test user with limited permissions
+- ✅ Rotate API tokens regularly
+- ✅ Never commit `.env.test` or tokens to version control
+- ✅ Use different tokens for CI/CD environments
+- ⚠️ Ensure `.env.test` is in `.gitignore`
+
+##### 6. CI/CD Environment Setup
+
+For GitHub Actions or other CI/CD:
+
+```yaml
+# .github/workflows/test.yml
+env:
+  WALLIX_BASTION_HOST: ${{ secrets.TEST_BASTION_HOST }}
+  WALLIX_BASTION_USER: ${{ secrets.TEST_BASTION_USER }}
+  WALLIX_BASTION_TOKEN: ${{ secrets.TEST_BASTION_TOKEN }}
+  WALLIX_BASTION_API_VERSION: "v3.12"
+  WALLIX_INSECURE_SKIP_VERIFY: "true"
+  TF_ACC: "1"
+```
 
 #### Unit Tests
 
@@ -415,8 +542,11 @@ examples/
 ```text
    | Name | Description | Type | Required |
    |------|-------------|------|----------|
-   | ... | ... | ... | ... |
-```
+   | ...  | ...         | ...  | ...      |
+
+   ```text
+   (End of README)
+   ```
 
 ### Example Best Practices
 
@@ -477,7 +607,7 @@ For security-related issues, please follow our [Security Policy](SECURITY.md) ra
    # Check Go version
    go version
    
-   # Update if needed (requires Go 1.22 or 1.23)
+   # Update if needed (requires Go 1.25 or 1.26)
    ```
 
 2. **Dependency Issues**
@@ -592,7 +722,6 @@ make dev-check
 
 - [Terraform Plugin Development](https://developer.hashicorp.com/terraform/plugin)
 - [Terraform Provider Framework](https://developer.hashicorp.com/terraform/plugin/framework)
-- [WALLIX Bastion API Documentation](https://docs.wallix.com/)
 
 ### Learning Resources
 

@@ -41,32 +41,32 @@ func resourceAuthDomainAD() *schema.Resource {
 		UpdateContext: resourceAuthDomainADUpdate,
 		DeleteContext: resourceAuthDomainADDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAuthDomainADImport,
+			StateContext: resourceAuthDomainADImport,
 		},
 		Schema: map[string]*schema.Schema{
-			"domain_name": {
+			skDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"auth_domain_name": {
+			skAuthDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"default_email_domain": {
+			skDefaultEmailDomain: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"default_language": {
+			skDefaultLanguage: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"de", "en", "es", "fr", "ru"}, false),
 			},
-			"external_auths": {
+			skExternalAuths: {
 				Type:     schema.TypeList,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -86,7 +86,7 @@ func resourceAuthDomainAD() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"is_default": {
+			skIsDefault: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -102,7 +102,7 @@ func resourceAuthDomainAD() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"secondary_auth": {
+			skSecondaryAuth: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -134,23 +134,26 @@ func resourceAuthDomainADCreate(
 	if err := resourceAuthDomainADVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	_, ex, err := searchResourceAuthDomainAD(ctx, d.Get("domain_name").(string), m)
+	_, ex, err := searchResourceAuthDomainAD(ctx, d.Get(skDomainName).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if ex {
-		return diag.FromErr(fmt.Errorf("domain_name %s already exists", d.Get("domain_name").(string)))
+		return diag.FromErr(fmt.Errorf("domain_name %s already exists", d.Get(skDomainName).(string)))
 	}
-	err = addAuthDomainAD(ctx, d, m)
+	id, err := addAuthDomainAD(ctx, d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceAuthDomainAD(ctx, d.Get("domain_name").(string), m)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if !ex {
-		return diag.FromErr(fmt.Errorf("domain_name %s not found after POST", d.Get("domain_name").(string)))
+	if id == "" {
+		// Fallback for Bastion versions that don't return the X-Object-Id header on creation.
+		id, ex, err = searchResourceAuthDomainAD(ctx, d.Get(skDomainName).(string), m)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if !ex {
+			return diag.FromErr(fmt.Errorf("domain_name %s not found after POST", d.Get(skDomainName).(string)))
+		}
 	}
 	d.SetId(id)
 
@@ -208,11 +211,10 @@ func resourceAuthDomainADDelete(
 }
 
 func resourceAuthDomainADImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceAuthDomainADVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
@@ -263,18 +265,18 @@ func searchResourceAuthDomainAD(
 
 func addAuthDomainAD(
 	ctx context.Context, d *schema.ResourceData, m interface{},
-) error {
+) (string, error) {
 	c := m.(*Client)
 	jsonData := prepareAuthDomainADJSON(d)
-	body, code, err := c.newRequest(ctx, "/authdomains/", http.MethodPost, jsonData)
+	body, headers, code, err := c.newRequestWithHeaders(ctx, "/authdomains/", http.MethodPost, jsonData)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
+		return "", fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
-	return nil
+	return headers.Get("X-Object-Id"), nil
 }
 
 func updateAuthDomainAD(
@@ -311,16 +313,16 @@ func deleteAuthDomainAD(
 func prepareAuthDomainADJSON(d *schema.ResourceData) jsonAuthDomainAD {
 	jsonData := jsonAuthDomainAD{
 		Type:                 "AD",
-		DomainName:           d.Get("domain_name").(string),
-		AuthDomainName:       d.Get("auth_domain_name").(string),
-		DefaultEmailDomain:   d.Get("default_email_domain").(string),
-		DefaultLanguage:      d.Get("default_language").(string),
-		Description:          d.Get("description").(string),
+		DomainName:           d.Get(skDomainName).(string),
+		AuthDomainName:       d.Get(skAuthDomainName).(string),
+		DefaultEmailDomain:   d.Get(skDefaultEmailDomain).(string),
+		DefaultLanguage:      d.Get(skDefaultLanguage).(string),
+		Description:          d.Get(skDescription).(string),
 		CheckX509SanEmail:    d.Get("check_x509_san_email").(bool),
 		DisplayNameAttribute: d.Get("display_name_attribute").(string),
 		EmailAttribute:       d.Get("email_attribute").(string),
 		GroupAttribute:       d.Get("group_attribute").(string),
-		IsDefault:            d.Get("is_default").(bool),
+		IsDefault:            d.Get(skIsDefault).(bool),
 		LanguageAttribute:    d.Get("language_attribute").(string),
 		PubKeyAttribute:      d.Get("pubkey_attribute").(string),
 		SanDomainName:        d.Get("san_domain_name").(string),
@@ -328,13 +330,13 @@ func prepareAuthDomainADJSON(d *schema.ResourceData) jsonAuthDomainAD {
 		X509SearchFilter:     d.Get("x509_search_filter").(string),
 	}
 
-	listExternalAuths := d.Get("external_auths").([]interface{})
+	listExternalAuths := d.Get(skExternalAuths).([]interface{})
 	jsonData.ExternalAuths = make([]string, len(listExternalAuths))
 	for i, v := range listExternalAuths {
 		jsonData.ExternalAuths[i] = v.(string)
 	}
 
-	listSecondaryAuth := d.Get("secondary_auth").([]interface{})
+	listSecondaryAuth := d.Get(skSecondaryAuth).([]interface{})
 	jsonData.SecondaryAuth = make([]string, len(listSecondaryAuth))
 	for i, v := range listSecondaryAuth {
 		jsonData.SecondaryAuth[i] = v.(string)
@@ -369,22 +371,22 @@ func readAuthDomainADOptions(
 }
 
 func fillAuthDomainAD(d *schema.ResourceData, jsonData jsonAuthDomainAD) {
-	if tfErr := d.Set("domain_name", jsonData.DomainName); tfErr != nil {
+	if tfErr := d.Set(skDomainName, jsonData.DomainName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("auth_domain_name", jsonData.AuthDomainName); tfErr != nil {
+	if tfErr := d.Set(skAuthDomainName, jsonData.AuthDomainName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("external_auths", jsonData.ExternalAuths); tfErr != nil {
+	if tfErr := d.Set(skExternalAuths, jsonData.ExternalAuths); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("default_language", jsonData.DefaultLanguage); tfErr != nil {
+	if tfErr := d.Set(skDefaultLanguage, jsonData.DefaultLanguage); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("default_email_domain", jsonData.DefaultEmailDomain); tfErr != nil {
+	if tfErr := d.Set(skDefaultEmailDomain, jsonData.DefaultEmailDomain); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("check_x509_san_email", jsonData.CheckX509SanEmail); tfErr != nil {
@@ -399,7 +401,7 @@ func fillAuthDomainAD(d *schema.ResourceData, jsonData jsonAuthDomainAD) {
 	if tfErr := d.Set("email_attribute", jsonData.EmailAttribute); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("is_default", jsonData.IsDefault); tfErr != nil {
+	if tfErr := d.Set(skIsDefault, jsonData.IsDefault); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("language_attribute", jsonData.LanguageAttribute); tfErr != nil {
@@ -411,7 +413,7 @@ func fillAuthDomainAD(d *schema.ResourceData, jsonData jsonAuthDomainAD) {
 	if tfErr := d.Set("san_domain_name", jsonData.SanDomainName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("secondary_auth", jsonData.SecondaryAuth); tfErr != nil {
+	if tfErr := d.Set(skSecondaryAuth, jsonData.SecondaryAuth); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("x509_condition", jsonData.X509Condition); tfErr != nil {

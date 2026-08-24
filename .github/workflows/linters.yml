@@ -30,7 +30,7 @@ jobs:
             go.mod
       
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v9
         with:
           version: latest
           args: --config .golangci.yml --verbose --timeout 5m
@@ -68,7 +68,7 @@ jobs:
         uses: actions/checkout@v5
       
       - name: Markdown Lint
-        uses: DavidAnson/markdownlint-cli2-action@v20
+        uses: DavidAnson/markdownlint-cli2-action@v24
         with:
           globs: |
             **/*.md

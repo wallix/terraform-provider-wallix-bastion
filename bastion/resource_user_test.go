@@ -8,14 +8,14 @@ import (
 
 func TestAccResourceUser_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
-			"random": {
-				Source: "hashicorp/random",
+			tvRandomProviderName: {
+				Source: tvRandomProviderSource,
 			},
-			"tls": {
-				Source: "hashicorp/tls",
+			tvTLSProviderName: {
+				Source: tvTLSProviderSource,
 			},
 		},
 		Steps: []resource.TestStep{

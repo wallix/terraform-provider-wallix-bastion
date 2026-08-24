@@ -77,14 +77,14 @@ func resourceTargetGroup() *schema.Resource {
 		UpdateContext: resourceTargetGroupUpdate,
 		DeleteContext: resourceTargetGroupDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceTargetGroupImport,
+			StateContext: resourceTargetGroupImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"group_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -93,25 +93,25 @@ func resourceTargetGroup() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"account": {
+						skAccount: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"domain": {
+						skDomain: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"domain_type": {
+						skDomainType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{domainTypeLocal, domainTypeGlobal}, false),
 						},
-						"device": {
+						skDevice: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "",
 						},
-						"application": {
+						skApplication: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "",
@@ -124,16 +124,16 @@ func resourceTargetGroup() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"action": {
+						skAction: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"kill", "notify"}, false),
 						},
-						"rules": {
+						skRules: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"subprotocol": {
+						skSubprotocol: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice(
@@ -143,9 +143,9 @@ func resourceTargetGroup() *schema.Resource {
 									"SSH_SCP_UP",
 									"SSH_SCP_DOWN",
 									"SFTP_SESSION",
-									"RLOGIN",
-									"TELNET",
-									"RDP",
+									skProtoRLOGIN,
+									skProtoTELNET,
+									skProtoRDP,
 								},
 								false,
 							),
@@ -158,30 +158,30 @@ func resourceTargetGroup() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"account": {
+						skAccount: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"domain": {
+						skDomain: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"domain_type": {
+						skDomainType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{domainTypeLocal, domainTypeGlobal}, false),
 						},
-						"device": {
+						skDevice: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "",
 						},
-						"service": {
+						skService: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "",
 						},
-						"application": {
+						skApplication: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "",
@@ -194,17 +194,17 @@ func resourceTargetGroup() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device": {
+						skDevice: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "",
 						},
-						"service": {
+						skService: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "",
 						},
-						"application": {
+						skApplication: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "",
@@ -217,17 +217,17 @@ func resourceTargetGroup() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device": {
+						skDevice: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "",
 						},
-						"service": {
+						skService: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "",
 						},
-						"application": {
+						skApplication: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "",
@@ -240,25 +240,25 @@ func resourceTargetGroup() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"account": {
+						skAccount: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"domain": {
+						skDomain: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"domain_type": {
+						skDomainType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{domainTypeLocal, domainTypeGlobal}, false),
 						},
-						"device": {
+						skDevice: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "",
 						},
-						"application": {
+						skApplication: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "",
@@ -292,16 +292,19 @@ func resourceTargetGroupCreate(
 	if ex {
 		return diag.FromErr(fmt.Errorf("group_name %s already exists", d.Get("group_name").(string)))
 	}
-	err = addTargetGroup(ctx, d, m)
+	id, err := addTargetGroup(ctx, d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceTargetGroup(ctx, d.Get("group_name").(string), m)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if !ex {
-		return diag.FromErr(fmt.Errorf("group_name %s not found after POST", d.Get("group_name").(string)))
+	if id == "" {
+		// Fallback for Bastion versions that don't return the X-Object-Id header on creation.
+		id, ex, err = searchResourceTargetGroup(ctx, d.Get("group_name").(string), m)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if !ex {
+			return diag.FromErr(fmt.Errorf("group_name %s not found after POST", d.Get("group_name").(string)))
+		}
 	}
 	d.SetId(id)
 
@@ -359,11 +362,10 @@ func resourceTargetGroupDelete(
 }
 
 func resourceTargetGroupImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceTargetGroupVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
@@ -414,21 +416,21 @@ func searchResourceTargetGroup(
 
 func addTargetGroup(
 	ctx context.Context, d *schema.ResourceData, m interface{},
-) error {
+) (string, error) {
 	c := m.(*Client)
-	json, err := prepareTargetGroupJSON(d)
+	jsonData, err := prepareTargetGroupJSON(d)
 	if err != nil {
-		return err
+		return "", err
 	}
-	body, code, err := c.newRequest(ctx, "/targetgroups/", http.MethodPost, json)
+	body, headers, code, err := c.newRequestWithHeaders(ctx, "/targetgroups/", http.MethodPost, jsonData)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
+		return "", fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
-	return nil
+	return headers.Get("X-Object-Id"), nil
 }
 
 func updateTargetGroup(
@@ -467,7 +469,7 @@ func deleteTargetGroup(
 
 func prepareTargetGroupJSON(d *schema.ResourceData) (jsonTargetGroup, error) { //nolint: gocognit,gocyclo,maintidx
 	jsonData := jsonTargetGroup{
-		Description: d.Get("description").(string),
+		Description: d.Get(skDescription).(string),
 		GroupName:   d.Get("group_name").(string),
 	}
 
@@ -479,28 +481,28 @@ func prepareTargetGroupJSON(d *schema.ResourceData) (jsonTargetGroup, error) { /
 	for i, v := range listPasswordRetrievalAccounts {
 		passwordRetrievalAccounts := v.(map[string]interface{})
 		switch {
-		case passwordRetrievalAccounts["domain_type"].(string) == domainTypeGlobal:
-			if passwordRetrievalAccounts["device"].(string) != "" ||
-				passwordRetrievalAccounts["application"].(string) != "" {
+		case passwordRetrievalAccounts[skDomainType].(string) == domainTypeGlobal:
+			if passwordRetrievalAccounts[skDevice].(string) != "" ||
+				passwordRetrievalAccounts[skApplication].(string) != "" {
 				return jsonData, errors.New("bad password_retrieval_accounts: " +
 					"device and application need to be null with domain_type=global")
 			}
-		case passwordRetrievalAccounts["domain_type"].(string) == domainTypeLocal:
-			if passwordRetrievalAccounts["device"].(string) == "" &&
-				passwordRetrievalAccounts["application"].(string) == "" {
+		case passwordRetrievalAccounts[skDomainType].(string) == domainTypeLocal:
+			if passwordRetrievalAccounts[skDevice].(string) == "" &&
+				passwordRetrievalAccounts[skApplication].(string) == "" {
 				return jsonData, errors.New("bad password_retrieval_accounts: " +
 					"device or application need to be set with domain_type=local")
 			}
-		case passwordRetrievalAccounts["device"].(string) != "" && passwordRetrievalAccounts["application"].(string) != "":
+		case passwordRetrievalAccounts[skDevice].(string) != "" && passwordRetrievalAccounts[skApplication].(string) != "":
 			return jsonData, errors.New("bad password_retrieval_accounts: " +
 				"device and application mutually exclusive")
 		}
 		jsonData.PasswordRetrieval.Accounts[i] = jsonTargerGroupPasswordRetrievalAccount{
-			Account:     passwordRetrievalAccounts["account"].(string),
-			Domain:      passwordRetrievalAccounts["domain"].(string),
-			DomainType:  passwordRetrievalAccounts["domain_type"].(string),
-			Device:      passwordRetrievalAccounts["device"].(string),
-			Application: passwordRetrievalAccounts["application"].(string),
+			Account:     passwordRetrievalAccounts[skAccount].(string),
+			Domain:      passwordRetrievalAccounts[skDomain].(string),
+			DomainType:  passwordRetrievalAccounts[skDomainType].(string),
+			Device:      passwordRetrievalAccounts[skDevice].(string),
+			Application: passwordRetrievalAccounts[skApplication].(string),
 		}
 	}
 
@@ -509,9 +511,9 @@ func prepareTargetGroupJSON(d *schema.ResourceData) (jsonTargetGroup, error) { /
 	for i, v := range listRestrictions {
 		restrictions := v.(map[string]interface{})
 		jsonData.Restrictions[i] = jsonRestriction{
-			Action:      restrictions["action"].(string),
-			Rules:       restrictions["rules"].(string),
-			SubProtocol: restrictions["subprotocol"].(string),
+			Action:      restrictions[skAction].(string),
+			Rules:       restrictions[skRules].(string),
+			SubProtocol: restrictions[skSubprotocol].(string),
 		}
 	}
 
@@ -520,30 +522,30 @@ func prepareTargetGroupJSON(d *schema.ResourceData) (jsonTargetGroup, error) { /
 	for i, v := range listSessionAccounts {
 		sessionAccounts := v.(map[string]interface{})
 		switch {
-		case (sessionAccounts["device"].(string) == "" || sessionAccounts["service"].(string) == "") &&
-			sessionAccounts["application"].(string) == "":
+		case (sessionAccounts[skDevice].(string) == "" || sessionAccounts[skService].(string) == "") &&
+			sessionAccounts[skApplication].(string) == "":
 			return jsonData, errors.New("bad session_accounts: " +
 				"device/service or application need to be set")
-		case sessionAccounts["device"].(string) != "" && sessionAccounts["application"].(string) != "":
+		case sessionAccounts[skDevice].(string) != "" && sessionAccounts[skApplication].(string) != "":
 			return jsonData, errors.New("bad session_accounts: " +
 				"device and application mutually exclusive")
-		case sessionAccounts["service"].(string) != "" && sessionAccounts["application"].(string) != "":
+		case sessionAccounts[skService].(string) != "" && sessionAccounts[skApplication].(string) != "":
 			return jsonData, errors.New("bad session_accounts: " +
 				"service and application mutually exclusive")
-		case sessionAccounts["device"].(string) != "" && sessionAccounts["service"].(string) == "":
+		case sessionAccounts[skDevice].(string) != "" && sessionAccounts[skService].(string) == "":
 			return jsonData, fmt.Errorf("bad session_accounts: "+
-				"missing service for device %s", sessionAccounts["device"].(string))
-		case sessionAccounts["service"].(string) != "" && sessionAccounts["device"].(string) == "":
+				"missing service for device %s", sessionAccounts[skDevice].(string))
+		case sessionAccounts[skService].(string) != "" && sessionAccounts[skDevice].(string) == "":
 			return jsonData, fmt.Errorf("bad session_accounts: "+
-				"missing device for service %s", sessionAccounts["service"].(string))
+				"missing device for service %s", sessionAccounts[skService].(string))
 		}
 		jsonData.Session.Accounts[i] = jsonTargetGroupSessionAccount{
-			Account:     sessionAccounts["account"].(string),
-			Domain:      sessionAccounts["domain"].(string),
-			DomainType:  sessionAccounts["domain_type"].(string),
-			Device:      sessionAccounts["device"].(string),
-			Service:     sessionAccounts["service"].(string),
-			Application: sessionAccounts["application"].(string),
+			Account:     sessionAccounts[skAccount].(string),
+			Domain:      sessionAccounts[skDomain].(string),
+			DomainType:  sessionAccounts[skDomainType].(string),
+			Device:      sessionAccounts[skDevice].(string),
+			Service:     sessionAccounts[skService].(string),
+			Application: sessionAccounts[skApplication].(string),
 		}
 	}
 
@@ -552,23 +554,23 @@ func prepareTargetGroupJSON(d *schema.ResourceData) (jsonTargetGroup, error) { /
 	for i, v := range listSessionAccountMappings {
 		sessionAccountMappings := v.(map[string]interface{})
 		switch {
-		case sessionAccountMappings["device"].(string) != "" && sessionAccountMappings["application"].(string) != "":
+		case sessionAccountMappings[skDevice].(string) != "" && sessionAccountMappings[skApplication].(string) != "":
 			return jsonData, errors.New("bad session_account_mappings: " +
 				"device and application mutually exclusive")
-		case sessionAccountMappings["service"].(string) != "" && sessionAccountMappings["application"].(string) != "":
+		case sessionAccountMappings[skService].(string) != "" && sessionAccountMappings[skApplication].(string) != "":
 			return jsonData, errors.New("bad session_account_mappings: " +
 				"service and application mutually exclusive")
-		case sessionAccountMappings["device"].(string) != "" && sessionAccountMappings["service"].(string) == "":
+		case sessionAccountMappings[skDevice].(string) != "" && sessionAccountMappings[skService].(string) == "":
 			return jsonData, fmt.Errorf("bad session_account_mappings: "+
-				"missing service for device %s", sessionAccountMappings["device"].(string))
-		case sessionAccountMappings["service"].(string) != "" && sessionAccountMappings["device"].(string) == "":
+				"missing service for device %s", sessionAccountMappings[skDevice].(string))
+		case sessionAccountMappings[skService].(string) != "" && sessionAccountMappings[skDevice].(string) == "":
 			return jsonData, fmt.Errorf("bad session_account_mappings: "+
-				"missing device for service %s", sessionAccountMappings["service"].(string))
+				"missing device for service %s", sessionAccountMappings[skService].(string))
 		}
 		jsonData.Session.AccountMappings[i] = jsonTargetGroupSessionAccountMapping{
-			Device:      sessionAccountMappings["device"].(string),
-			Service:     sessionAccountMappings["service"].(string),
-			Application: sessionAccountMappings["application"].(string),
+			Device:      sessionAccountMappings[skDevice].(string),
+			Service:     sessionAccountMappings[skService].(string),
+			Application: sessionAccountMappings[skApplication].(string),
 		}
 	}
 
@@ -577,23 +579,23 @@ func prepareTargetGroupJSON(d *schema.ResourceData) (jsonTargetGroup, error) { /
 	for i, v := range listSessionInteractiveLogins {
 		sessionInteractiveLogins := v.(map[string]interface{})
 		switch {
-		case sessionInteractiveLogins["device"].(string) != "" && sessionInteractiveLogins["application"].(string) != "":
+		case sessionInteractiveLogins[skDevice].(string) != "" && sessionInteractiveLogins[skApplication].(string) != "":
 			return jsonData, errors.New("bad session_interactive_logins: " +
 				"device and application mutually exclusive")
-		case sessionInteractiveLogins["service"].(string) != "" && sessionInteractiveLogins["application"].(string) != "":
+		case sessionInteractiveLogins[skService].(string) != "" && sessionInteractiveLogins[skApplication].(string) != "":
 			return jsonData, errors.New("bad session_interactive_logins: " +
 				"service and application mutually exclusive")
-		case sessionInteractiveLogins["device"].(string) != "" && sessionInteractiveLogins["service"].(string) == "":
+		case sessionInteractiveLogins[skDevice].(string) != "" && sessionInteractiveLogins[skService].(string) == "":
 			return jsonData, fmt.Errorf("bad session_interactive_logins: "+
-				"missing service for device %s", sessionInteractiveLogins["device"].(string))
-		case sessionInteractiveLogins["service"].(string) != "" && sessionInteractiveLogins["device"].(string) == "":
+				"missing service for device %s", sessionInteractiveLogins[skDevice].(string))
+		case sessionInteractiveLogins[skService].(string) != "" && sessionInteractiveLogins[skDevice].(string) == "":
 			return jsonData, fmt.Errorf("bad session_interactive_logins: "+
-				"missing device for service %s", sessionInteractiveLogins["service"].(string))
+				"missing device for service %s", sessionInteractiveLogins[skService].(string))
 		}
 		jsonData.Session.InteractiveLogins[i] = jsonTargetGroupSessionInteractiveLogin{
-			Device:      sessionInteractiveLogins["device"].(string),
-			Service:     sessionInteractiveLogins["service"].(string),
-			Application: sessionInteractiveLogins["application"].(string),
+			Device:      sessionInteractiveLogins[skDevice].(string),
+			Service:     sessionInteractiveLogins[skService].(string),
+			Application: sessionInteractiveLogins[skApplication].(string),
 		}
 	}
 
@@ -602,28 +604,28 @@ func prepareTargetGroupJSON(d *schema.ResourceData) (jsonTargetGroup, error) { /
 	for i, v := range listSessionScenarioAccounts {
 		sessionScenarioAccounts := v.(map[string]interface{})
 		switch {
-		case sessionScenarioAccounts["domain_type"].(string) == domainTypeGlobal:
-			if sessionScenarioAccounts["device"].(string) != "" ||
-				sessionScenarioAccounts["application"].(string) != "" {
+		case sessionScenarioAccounts[skDomainType].(string) == domainTypeGlobal:
+			if sessionScenarioAccounts[skDevice].(string) != "" ||
+				sessionScenarioAccounts[skApplication].(string) != "" {
 				return jsonData, errors.New("bad session_scenario_accounts: " +
 					"device and application need to be null with domain_type=global")
 			}
-		case sessionScenarioAccounts["domain_type"].(string) == domainTypeLocal:
-			if sessionScenarioAccounts["device"].(string) == "" &&
-				sessionScenarioAccounts["application"].(string) == "" {
+		case sessionScenarioAccounts[skDomainType].(string) == domainTypeLocal:
+			if sessionScenarioAccounts[skDevice].(string) == "" &&
+				sessionScenarioAccounts[skApplication].(string) == "" {
 				return jsonData, errors.New("bad session_scenario_accounts: " +
 					"device or application need to be set with domain_type=local")
 			}
-		case sessionScenarioAccounts["device"].(string) != "" && sessionScenarioAccounts["application"].(string) != "":
+		case sessionScenarioAccounts[skDevice].(string) != "" && sessionScenarioAccounts[skApplication].(string) != "":
 			return jsonData, errors.New("bad session_scenario_accounts: " +
 				"device and application mutually exclusive")
 		}
 		jsonData.Session.ScenarioAccounts[i] = jsonTargetGroupSessionScenarioAccount{
-			Account:     sessionScenarioAccounts["account"].(string),
-			Domain:      sessionScenarioAccounts["domain"].(string),
-			DomainType:  sessionScenarioAccounts["domain_type"].(string),
-			Device:      sessionScenarioAccounts["device"].(string),
-			Application: sessionScenarioAccounts["application"].(string),
+			Account:     sessionScenarioAccounts[skAccount].(string),
+			Domain:      sessionScenarioAccounts[skDomain].(string),
+			DomainType:  sessionScenarioAccounts[skDomainType].(string),
+			Device:      sessionScenarioAccounts[skDevice].(string),
+			Application: sessionScenarioAccounts[skApplication].(string),
 		}
 	}
 
@@ -659,17 +661,17 @@ func fillTargetGroup(d *schema.ResourceData, jsonData jsonTargetGroup) {
 	if tfErr := d.Set("group_name", jsonData.GroupName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
 	passwordRetrievalAccounts := make([]map[string]interface{}, len(jsonData.PasswordRetrieval.Accounts))
 	for i, v := range jsonData.PasswordRetrieval.Accounts {
 		passwordRetrievalAccounts[i] = map[string]interface{}{
-			"account":     v.Account,
-			"domain":      v.Domain,
-			"domain_type": v.DomainType,
-			"device":      v.Device,
-			"application": v.Application,
+			skAccount:     v.Account,
+			skDomain:      v.Domain,
+			skDomainType:  v.DomainType,
+			skDevice:      v.Device,
+			skApplication: v.Application,
 		}
 	}
 	if tfErr := d.Set("password_retrieval_accounts", passwordRetrievalAccounts); tfErr != nil {
@@ -678,9 +680,9 @@ func fillTargetGroup(d *schema.ResourceData, jsonData jsonTargetGroup) {
 	restrictions := make([]map[string]interface{}, len(jsonData.Restrictions))
 	for i, v := range jsonData.Restrictions {
 		restrictions[i] = map[string]interface{}{
-			"action":      v.Action,
-			"rules":       v.Rules,
-			"subprotocol": v.SubProtocol,
+			skAction:      v.Action,
+			skRules:       v.Rules,
+			skSubprotocol: v.SubProtocol,
 		}
 	}
 	if tfErr := d.Set("restrictions", restrictions); tfErr != nil {
@@ -689,12 +691,12 @@ func fillTargetGroup(d *schema.ResourceData, jsonData jsonTargetGroup) {
 	sessionAccounts := make([]map[string]interface{}, len(jsonData.Session.Accounts))
 	for i, v := range jsonData.Session.Accounts {
 		sessionAccounts[i] = map[string]interface{}{
-			"account":     v.Account,
-			"domain":      v.Domain,
-			"domain_type": v.DomainType,
-			"device":      v.Device,
-			"service":     v.Service,
-			"application": v.Application,
+			skAccount:     v.Account,
+			skDomain:      v.Domain,
+			skDomainType:  v.DomainType,
+			skDevice:      v.Device,
+			skService:     v.Service,
+			skApplication: v.Application,
 		}
 	}
 	if tfErr := d.Set("session_accounts", sessionAccounts); tfErr != nil {
@@ -703,9 +705,9 @@ func fillTargetGroup(d *schema.ResourceData, jsonData jsonTargetGroup) {
 	sessionAccountMappings := make([]map[string]interface{}, len(jsonData.Session.AccountMappings))
 	for i, v := range jsonData.Session.AccountMappings {
 		sessionAccountMappings[i] = map[string]interface{}{
-			"device":      v.Device,
-			"service":     v.Service,
-			"application": v.Application,
+			skDevice:      v.Device,
+			skService:     v.Service,
+			skApplication: v.Application,
 		}
 	}
 	if tfErr := d.Set("session_account_mappings", sessionAccountMappings); tfErr != nil {
@@ -714,9 +716,9 @@ func fillTargetGroup(d *schema.ResourceData, jsonData jsonTargetGroup) {
 	sessionInteractiveLogins := make([]map[string]interface{}, len(jsonData.Session.InteractiveLogins))
 	for i, v := range jsonData.Session.InteractiveLogins {
 		sessionInteractiveLogins[i] = map[string]interface{}{
-			"device":      v.Device,
-			"service":     v.Service,
-			"application": v.Application,
+			skDevice:      v.Device,
+			skService:     v.Service,
+			skApplication: v.Application,
 		}
 	}
 	if tfErr := d.Set("session_interactive_logins", sessionInteractiveLogins); tfErr != nil {
@@ -725,11 +727,11 @@ func fillTargetGroup(d *schema.ResourceData, jsonData jsonTargetGroup) {
 	sessionScenarioAccounts := make([]map[string]interface{}, len(jsonData.Session.ScenarioAccounts))
 	for i, v := range jsonData.Session.ScenarioAccounts {
 		sessionScenarioAccounts[i] = map[string]interface{}{
-			"account":     v.Account,
-			"domain":      v.Domain,
-			"domain_type": v.DomainType,
-			"device":      v.Device,
-			"application": v.Application,
+			skAccount:     v.Account,
+			skDomain:      v.Domain,
+			skDomainType:  v.DomainType,
+			skDevice:      v.Device,
+			skApplication: v.Application,
 		}
 	}
 	if tfErr := d.Set("session_scenario_accounts", sessionScenarioAccounts); tfErr != nil {

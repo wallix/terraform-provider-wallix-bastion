@@ -8,120 +8,32 @@ description: |-
 
 # {{ .Name }} ({{ .Type | title }})
 
-Provides a LDAP authentication domain resource.
+Provides a LDAP authentication domain resource. It depends on a `wallix-bastion_externalauth_ldap`
+resource for the actual directory connection, and adds attribute mapping and optional X.509
+certificate-based authentication on top.
 
 ## Example Usage
 
 ```terraform
-# Basic LDAP authentication domain
+resource "wallix-bastion_externalauth_ldap" "corporate" {
+  authentication_name = "corporate_ldap"
+  host                = "ldap.corporate.local"
+  port                = 636
+  is_ssl              = true
+  ldap_base           = "ou=people,dc=corporate,dc=local"
+  cn_attribute        = "uid"
+  login_attribute     = "uid"
+  timeout             = 10
+  is_anonymous_access = true
+}
+
 resource "wallix-bastion_authdomain_ldap" "corporate" {
-  domain_name     = "corporate.local"
-  default_domain  = "CORPORATE"
-  description     = "Corporate LDAP domain"
-  default_language = "en"
-  
-  # LDAP server configuration
-  ldap_hosts       = ["ldap1.corporate.local", "ldap2.corporate.local"]
-  ldap_port        = 389
-  ldap_base        = "dc=corporate,dc=local"
-  ldap_login       = "cn=bastion,ou=service,dc=corporate,dc=local"
-  ldap_password    = var.ldap_service_password
-}
-
-# Secure LDAP with SSL/TLS
-resource "wallix-bastion_authdomain_ldap" "secure_ldap" {
-  domain_name     = "secure.corporate.local"
-  default_domain  = "SECURE"
-  description     = "Secure LDAP with SSL"
-  default_language = "en"
-  
-  # Secure LDAP configuration
-  ldap_hosts       = ["ldaps.corporate.local"]
-  ldap_port        = 636
-  ldap_base        = "dc=corporate,dc=local"
-  ldap_login       = "cn=bastion,ou=services,dc=corporate,dc=local"
-  ldap_password    = var.ldap_secure_password
-  use_ssl          = true
-  verify_certificate = true
-}
-
-# LDAP with custom search filters
-resource "wallix-bastion_authdomain_ldap" "filtered" {
-  domain_name     = "filtered.corporate.local"
-  default_domain  = "FILTERED"
-  description     = "LDAP with custom user filtering"
-  default_language = "en"
-  
-  # LDAP server configuration
-  ldap_hosts       = ["ldap.corporate.local"]
-  ldap_port        = 389
-  ldap_base        = "dc=corporate,dc=local"
-  ldap_login       = "cn=bastion,ou=services,dc=corporate,dc=local"
-  ldap_password    = var.ldap_password
-  
-  # Custom search configuration
-  user_cn          = "sAMAccountName"
-  user_dn          = "distinguishedName"
-  user_email       = "mail"
-  user_group       = "memberOf"
-  user_source      = "objectCategory"
-  user_source_filter = "(objectCategory=person)"
-}
-
-# LDAP with group membership validation
-resource "wallix-bastion_authdomain_ldap" "group_validation" {
-  domain_name     = "grouped.corporate.local"
-  default_domain  = "GROUPED"
-  description     = "LDAP with group validation"
-  default_language = "en"
-  
-  # LDAP server configuration
-  ldap_hosts       = ["ldap.corporate.local"]
-  ldap_port        = 389
-  ldap_base        = "dc=corporate,dc=local"
-  ldap_login       = "cn=bastion,ou=services,dc=corporate,dc=local"
-  ldap_password    = var.ldap_password
-  
-  # Group validation
-  is_default       = false
-  check_user_group = true
-  user_group       = "memberOf"
-  group_source_filter = "(objectClass=group)"
-}
-
-# Complete LDAP configuration
-resource "wallix-bastion_authdomain_ldap" "complete" {
-  domain_name     = "complete.corporate.local"
-  default_domain  = "COMPLETE"
-  description     = "Complete LDAP configuration"
-  default_language = "fr"
-  
-  # LDAP server configuration
-  ldap_hosts       = ["ldap1.corporate.local", "ldap2.corporate.local"]
-  ldap_port        = 636
-  ldap_base        = "dc=corporate,dc=local"
-  ldap_login       = "cn=bastion,ou=services,dc=corporate,dc=local"
-  ldap_password    = var.ldap_password
-  
-  # Security settings
-  use_ssl          = true
-  verify_certificate = true
-  
-  # User attribute mapping
-  user_cn          = "sAMAccountName"
-  user_dn          = "distinguishedName"
-  user_email       = "mail"
-  user_group       = "memberOf"
-  user_source      = "objectCategory"
-  user_source_filter = "(objectCategory=person)"
-  
-  # Group settings
-  check_user_group = true
-  group_source_filter = "(objectClass=group)"
-  
-  # Domain settings
-  is_default       = false
-  external_ldaps   = ["ldap3.partner.local:389"]
+  domain_name          = "corporate.local"
+  auth_domain_name     = "corporate.com"
+  external_auths       = [wallix-bastion_externalauth_ldap.corporate.authentication_name]
+  default_language     = "en"
+  default_email_domain = "corporate.com"
+  description          = "Corporate LDAP directory"
 }
 ```
 
@@ -129,196 +41,27 @@ resource "wallix-bastion_authdomain_ldap" "complete" {
 
 ## Usage Notes
 
-### LDAP Server Configuration
+### Relationship to externalauth_ldap
 
-**Basic Connection:**
-- **ldap_hosts**: List of LDAP server hostnames/IPs
-- **ldap_port**: Standard ports (389 for LDAP, 636 for LDAPS)
-- **ldap_base**: Base DN for LDAP searches
-- **ldap_login**: Service account DN for LDAP binding
-- **ldap_password**: Service account password
+`external_auths` references one or more `wallix-bastion_externalauth_ldap.authentication_name`
+values, which hold the actual LDAP connection details (host, port, bind credentials, base DN).
+This resource layers attribute mapping and authentication-domain settings (default language,
+default email domain) on top.
 
-### Security Configuration
+### default_language
 
-**SSL/TLS Encryption:**
-```terraform
-use_ssl          = true    # Enable SSL/TLS
-verify_certificate = true  # Verify server certificate
-ldap_port        = 636     # LDAPS port
-```
+Must be one of `de`, `en`, `es`, `fr`, `ru`.
 
-**Service Account Security:**
-- Use dedicated service account with minimal privileges
-- Store passwords in variables marked as sensitive
-- Consider using read-only service accounts
+### X.509 Attributes Are Optional
 
-### User Attribute Mapping
-
-Map LDAP attributes to bastion user properties:
-
-**Common Active Directory Mappings:**
-```terraform
-user_cn    = "sAMAccountName"      # Username
-user_dn    = "distinguishedName"   # Full DN
-user_email = "mail"                # Email address
-user_group = "memberOf"            # Group membership
-```
-
-**Common OpenLDAP Mappings:**
-```terraform
-user_cn    = "uid"                 # Username
-user_dn    = "dn"                  # Distinguished Name
-user_email = "mail"                # Email address
-user_group = "memberOf"            # Group membership
-```
-
-### Search Filters
-
-**User Filtering:**
-```terraform
-user_source        = "objectCategory"
-user_source_filter = "(objectCategory=person)"
-```
-
-**Group Filtering:**
-```terraform
-group_source_filter = "(objectClass=group)"
-```
-
-**Custom Filters:**
-```terraform
-user_source_filter = "(&(objectCategory=person)(!(userAccountControl:1.2.840.113556.1.4.803:=2)))"
-```
-
-### Group Validation
-
-Enable group membership checking:
-```terraform
-check_user_group = true
-user_group       = "memberOf"
-group_source_filter = "(objectClass=group)"
-```
-
-### High Availability
-
-Configure multiple LDAP servers:
-```terraform
-ldap_hosts = [
-  "ldap1.corporate.local",
-  "ldap2.corporate.local",
-  "ldap3.corporate.local"
-]
-```
-
-### External LDAP References
-
-Reference external LDAP servers:
-```terraform
-external_ldaps = [
-  "partner-ldap.example.com:389",
-  "contractor-ldap.example.org:636"
-]
-```
-
-### Domain Languages
-
-Supported languages for user interface:
-- `en`: English
-- `fr`: French
-- `es`: Spanish
-- `de`: German
-- `it`: Italian
-- `pt`: Portuguese
-- `ru`: Russian
-- `zh`: Chinese
-- `ja`: Japanese
-- `ko`: Korean
-
-### Common LDAP Configurations
-
-**Active Directory:**
-```terraform
-resource "wallix-bastion_authdomain_ldap" "ad" {
-  domain_name     = "ad.company.com"
-  default_domain  = "COMPANY"
-  
-  ldap_hosts      = ["dc1.company.com", "dc2.company.com"]
-  ldap_port       = 389
-  ldap_base       = "dc=company,dc=com"
-  ldap_login      = "cn=bastion,ou=Service Accounts,dc=company,dc=com"
-  ldap_password   = var.ad_password
-  
-  user_cn         = "sAMAccountName"
-  user_dn         = "distinguishedName"
-  user_email      = "mail"
-  user_group      = "memberOf"
-  user_source_filter = "(objectCategory=person)"
-}
-```
-
-**OpenLDAP:**
-```terraform
-resource "wallix-bastion_authdomain_ldap" "openldap" {
-  domain_name     = "openldap.company.com"
-  default_domain  = "OPENLDAP"
-  
-  ldap_hosts      = ["openldap.company.com"]
-  ldap_port       = 389
-  ldap_base       = "dc=company,dc=com"
-  ldap_login      = "cn=bastion,ou=services,dc=company,dc=com"
-  ldap_password   = var.openldap_password
-  
-  user_cn         = "uid"
-  user_dn         = "dn"
-  user_email      = "mail"
-  user_group      = "memberOf"
-  user_source_filter = "(objectClass=inetOrgPerson)"
-}
-```
-
-**389 Directory Server:**
-```terraform
-resource "wallix-bastion_authdomain_ldap" "ds389" {
-  domain_name     = "ds389.company.com"
-  default_domain  = "DS389"
-  
-  ldap_hosts      = ["ds389.company.com"]
-  ldap_port       = 389
-  ldap_base       = "dc=company,dc=com"
-  ldap_login      = "cn=Directory Manager"
-  ldap_password   = var.ds389_password
-  
-  user_cn         = "uid"
-  user_dn         = "dn"
-  user_email      = "mail"
-  user_group      = "memberOf"
-}
-```
-
-### Troubleshooting
-
-**Connection Issues:**
-1. Verify LDAP server connectivity
-2. Check firewall rules for LDAP ports
-3. Validate service account credentials
-4. Test SSL certificate validity
-
-**Authentication Issues:**
-1. Verify user attribute mappings
-2. Check search base and filters
-3. Validate group membership requirements
-4. Review user permissions
-
-**Performance Optimization:**
-1. Use specific search filters
-2. Configure multiple LDAP servers
-3. Optimize LDAP base DN scope
-4. Consider connection pooling
+`check_x509_san_email`, `pubkey_attribute`, `x509_condition`, and `x509_search_filter` only
+matter if you're using certificate/smart-card-based authentication against this domain; omit
+them for password-based LDAP authentication.
 
 ## Import
 
 LDAP authentication domain can be imported using the domain name, e.g.
 
 ```shell
-terraform import wallix-bastion_authdomain_ldap.corporate "corporate.local"
+terraform import wallix-bastion_authdomain_ldap.corporate corporate.local
 ```

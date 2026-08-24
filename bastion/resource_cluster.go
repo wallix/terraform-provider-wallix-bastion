@@ -27,33 +27,33 @@ func resourceCluster() *schema.Resource {
 		UpdateContext: resourceClusterUpdate,
 		DeleteContext: resourceClusterDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceClusterImport,
+			StateContext: resourceClusterImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"cluster_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"accounts": {
+			skAccounts: {
 				Type:         schema.TypeSet,
 				Optional:     true,
-				AtLeastOneOf: []string{"accounts", "account_mappings", "interactive_logins"},
+				AtLeastOneOf: []string{skAccounts, skAccountMappings, skInteractiveLogins},
 				Elem:         &schema.Schema{Type: schema.TypeString},
 			},
-			"account_mappings": {
+			skAccountMappings: {
 				Type:         schema.TypeSet,
 				Optional:     true,
-				AtLeastOneOf: []string{"accounts", "account_mappings", "interactive_logins"},
+				AtLeastOneOf: []string{skAccounts, skAccountMappings, skInteractiveLogins},
 				Elem:         &schema.Schema{Type: schema.TypeString},
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"interactive_logins": {
+			skInteractiveLogins: {
 				Type:         schema.TypeSet,
 				Optional:     true,
-				AtLeastOneOf: []string{"accounts", "account_mappings", "interactive_logins"},
+				AtLeastOneOf: []string{skAccounts, skAccountMappings, skInteractiveLogins},
 				Elem:         &schema.Schema{Type: schema.TypeString},
 			},
 		},
@@ -82,16 +82,19 @@ func resourceClusterCreate(
 	if ex {
 		return diag.FromErr(fmt.Errorf("cluster_name %s already exists", d.Get("cluster_name").(string)))
 	}
-	err = addCluster(ctx, d, m)
+	id, err := addCluster(ctx, d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceCluster(ctx, d.Get("cluster_name").(string), m)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if !ex {
-		return diag.FromErr(fmt.Errorf("cluster_name %s not found after POST", d.Get("cluster_name").(string)))
+	if id == "" {
+		// Fallback for Bastion versions that don't return the X-Object-Id header on creation.
+		id, ex, err = searchResourceCluster(ctx, d.Get("cluster_name").(string), m)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if !ex {
+			return diag.FromErr(fmt.Errorf("cluster_name %s not found after POST", d.Get("cluster_name").(string)))
+		}
 	}
 	d.SetId(id)
 
@@ -149,11 +152,10 @@ func resourceClusterDelete(
 }
 
 func resourceClusterImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceClusterVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
@@ -204,18 +206,18 @@ func searchResourceCluster(
 
 func addCluster(
 	ctx context.Context, d *schema.ResourceData, m interface{},
-) error {
+) (string, error) {
 	c := m.(*Client)
 	jsonData := prepareClusterJSON(d)
-	body, code, err := c.newRequest(ctx, "/clusters/", http.MethodPost, jsonData)
+	body, headers, code, err := c.newRequestWithHeaders(ctx, "/clusters/", http.MethodPost, jsonData)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
+		return "", fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
-	return nil
+	return headers.Get("X-Object-Id"), nil
 }
 
 func updateCluster(
@@ -252,22 +254,22 @@ func deleteCluster(
 func prepareClusterJSON(d *schema.ResourceData) jsonCluster {
 	jsonData := jsonCluster{
 		ClusterName: d.Get("cluster_name").(string),
-		Description: d.Get("description").(string),
+		Description: d.Get(skDescription).(string),
 	}
 
-	listAccounts := d.Get("accounts").(*schema.Set).List()
+	listAccounts := d.Get(skAccounts).(*schema.Set).List()
 	jsonData.Accounts = make([]string, len(listAccounts))
 	for i, v := range listAccounts {
 		jsonData.Accounts[i] = v.(string)
 	}
 
-	listAccountMappings := d.Get("account_mappings").(*schema.Set).List()
+	listAccountMappings := d.Get(skAccountMappings).(*schema.Set).List()
 	jsonData.AccountMappings = make([]string, len(listAccountMappings))
 	for i, v := range listAccountMappings {
 		jsonData.AccountMappings[i] = v.(string)
 	}
 
-	listInteractiveLogins := d.Get("interactive_logins").(*schema.Set).List()
+	listInteractiveLogins := d.Get(skInteractiveLogins).(*schema.Set).List()
 	jsonData.InteractiveLogins = make([]string, len(listInteractiveLogins))
 	for i, v := range listInteractiveLogins {
 		jsonData.InteractiveLogins[i] = v.(string)
@@ -305,16 +307,16 @@ func fillCluster(d *schema.ResourceData, jsonData jsonCluster) {
 	if tfErr := d.Set("cluster_name", jsonData.ClusterName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("accounts", jsonData.Accounts); tfErr != nil {
+	if tfErr := d.Set(skAccounts, jsonData.Accounts); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("account_mappings", jsonData.AccountMappings); tfErr != nil {
+	if tfErr := d.Set(skAccountMappings, jsonData.AccountMappings); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("interactive_logins", jsonData.InteractiveLogins); tfErr != nil {
+	if tfErr := d.Set(skInteractiveLogins, jsonData.InteractiveLogins); tfErr != nil {
 		panic(tfErr)
 	}
 }

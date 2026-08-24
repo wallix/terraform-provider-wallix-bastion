@@ -28,6 +28,7 @@ type jsonApplication struct {
 	GlobalDomains    *[]string                     `json:"global_domains,omitempty"`
 	Paths            *[]jsonApplicationPath        `json:"paths,omitempty"`
 	LocalDomains     *[]jsonApplicationLocalDomain `json:"local_domains,omitempty"`
+	Tags             *[]map[string]string          `json:"tags,omitempty"`
 }
 
 type jsonApplicationPath struct {
@@ -43,14 +44,14 @@ func resourceApplication() *schema.Resource {
 		UpdateContext: resourceApplicationUpdate,
 		DeleteContext: resourceApplicationDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceApplicationImport,
+			StateContext: resourceApplicationImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"application_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"connection_policy": {
+			skConnectionPolicy: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -58,8 +59,8 @@ func resourceApplication() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				Default:      "standard",
-				ValidateFunc: validation.StringInSlice([]string{"standard", "jumphost"}, false),
+				Default:      skStandard,
+				ValidateFunc: validation.StringInSlice([]string{skStandard, "jumphost", "web_application"}, false),
 			},
 			"application_url": {
 				Type:     schema.TypeString,
@@ -73,11 +74,11 @@ func resourceApplication() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"global_domains": {
+			skGlobalDomains: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -91,7 +92,7 @@ func resourceApplication() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"target": {
+						skTarget: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -107,7 +108,7 @@ func resourceApplication() *schema.Resource {
 					},
 				},
 			},
-			"target": {
+			skTarget: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -120,33 +121,49 @@ func resourceApplication() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"admin_account": {
+						skAdminAccount: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"domain_name": {
+						skDomainName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"description": {
+						skDescription: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"enable_password_change": {
+						skEnablePasswordChange: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"password_change_policy": {
+						skPasswordChangePolicy: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"password_change_plugin": {
+						skPasswordChangePlugin: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"password_change_plugin_parameters": {
+						skPasswordChangePluginParameters: {
 							Type:     schema.TypeString,
 							Computed: true,
+						},
+					},
+				},
+			},
+			"tags": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						skKey: {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						skValue: {
+							Type:     schema.TypeString,
+							Required: true,
 						},
 					},
 				},
@@ -177,16 +194,19 @@ func resourceApplicationCreate(
 	if ex {
 		return diag.FromErr(fmt.Errorf("application_name %s already exists", d.Get("application_name").(string)))
 	}
-	err = addApplication(ctx, d, m, c.bastionAPIVersion)
+	id, err := addApplication(ctx, d, m, c.bastionAPIVersion)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceApplication(ctx, d.Get("application_name").(string), m)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if !ex {
-		return diag.FromErr(fmt.Errorf("application_name %s not found after POST", d.Get("application_name").(string)))
+	if id == "" {
+		// Fallback for Bastion versions that don't return the X-Object-Id header on creation.
+		id, ex, err = searchResourceApplication(ctx, d.Get("application_name").(string), m)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if !ex {
+			return diag.FromErr(fmt.Errorf("application_name %s not found after POST", d.Get("application_name").(string)))
+		}
 	}
 	d.SetId(id)
 
@@ -244,11 +264,10 @@ func resourceApplicationDelete(
 }
 
 func resourceApplicationImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceApplicationVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
@@ -299,21 +318,21 @@ func searchResourceApplication(
 
 func addApplication(
 	ctx context.Context, d *schema.ResourceData, m interface{}, apiVersion string,
-) error {
+) (string, error) {
 	c := m.(*Client)
 	jsonData, err := prepareApplicationJSON(d, true, apiVersion)
 	if err != nil {
-		return err
+		return "", err
 	}
-	body, code, err := c.newRequest(ctx, "/applications/", http.MethodPost, jsonData)
+	body, headers, code, err := c.newRequestWithHeaders(ctx, "/applications/", http.MethodPost, jsonData)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
+		return "", fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
-	return nil
+	return headers.Get("X-Object-Id"), nil
 }
 
 func updateApplication(
@@ -350,6 +369,7 @@ func deleteApplication(
 	return nil
 }
 
+//nolint:gocognit
 func prepareApplicationJSON(
 	d *schema.ResourceData, newResource bool, apiVersion string,
 ) (
@@ -357,16 +377,33 @@ func prepareApplicationJSON(
 ) {
 	jsonData := jsonApplication{
 		ApplicationName:  d.Get("application_name").(string),
-		ConnectionPolicy: d.Get("connection_policy").(string),
-		Description:      d.Get("description").(string),
+		ConnectionPolicy: d.Get(skConnectionPolicy).(string),
+		Description:      d.Get(skDescription).(string),
 		Parameters:       d.Get("parameters").(string),
 	}
+	if v, ok := d.GetOk("tags"); ok {
+		tagsSet := v.(*schema.Set)
+		tagsList := tagsSet.List()
+
+		tags := make([]map[string]string, len(tagsList))
+
+		for i, tagData := range tagsList {
+			tagMap := tagData.(map[string]interface{})
+
+			tags[i] = map[string]string{
+				skKey:   tagMap[skKey].(string),
+				skValue: tagMap[skValue].(string),
+			}
+		}
+		jsonData.Tags = &tags
+	}
+
 	if newResource &&
 		semver.Compare(apiVersion, VersionWallixAPI312) >= 0 {
 		jsonData.Category = d.Get("category").(string)
 	}
 	switch jsonData.Category {
-	case "", "standard":
+	case "", skStandard:
 		if d.Get("application_url").(string) != "" {
 			return jsonData, errors.New("application_url cannot be configured when category = standard")
 		}
@@ -377,7 +414,7 @@ func prepareApplicationJSON(
 			return jsonData, errors.New("browser_version cannot be configured when category = standard")
 		}
 
-		target := d.Get("target").(string)
+		target := d.Get(skTarget).(string)
 		if target == "" {
 			return jsonData, errors.New("target must be specified when category = standard")
 		}
@@ -391,14 +428,14 @@ func prepareApplicationJSON(
 		for i, v := range listPaths {
 			paths := v.(map[string]interface{})
 			jsonDataPaths[i] = jsonApplicationPath{
-				Target:     paths["target"].(string),
+				Target:     paths[skTarget].(string),
 				Program:    paths["program"].(string),
 				WorkingDir: paths["working_dir"].(string),
 			}
 		}
 		jsonData.Paths = &jsonDataPaths
 
-		listGlobalDomains := d.Get("global_domains").(*schema.Set).List()
+		listGlobalDomains := d.Get(skGlobalDomains).(*schema.Set).List()
 		jsonDataGlobalDomains := make([]string, len(listGlobalDomains))
 		for i, v := range listGlobalDomains {
 			jsonDataGlobalDomains[i] = v.(string)
@@ -406,17 +443,21 @@ func prepareApplicationJSON(
 		jsonData.GlobalDomains = &jsonDataGlobalDomains
 
 	case "jumphost":
-		if semver.Compare(apiVersion, VersionWallixAPI312) < 0 {
-			return jsonData, fmt.Errorf("category = jumphost not available with api version %s", apiVersion)
+		// jumphost was introduced in API v3.9 and deprecated/removed in API v3.12
+		if apiVersion != "" && semver.Compare(apiVersion, VersionWallixAPI312) >= 0 {
+			return jsonData, fmt.Errorf(
+				"category = jumphost is no longer supported in API version %s (deprecated in v3.12, use 'web_application' instead)",
+				apiVersion,
+			)
 		}
-		if d.Get("target").(string) != "" {
+		if d.Get(skTarget).(string) != "" {
 			return jsonData, errors.New("target cannot be configured when category = jumphost")
 		}
 		if len(d.Get("paths").(*schema.Set).List()) > 0 {
 			return jsonData, errors.New("paths cannot be configured when category = jumphost")
 		}
-		if len(d.Get("global_domains").(*schema.Set).List()) > 0 {
-			return jsonData, errors.New("paths cannot be configured when category = jumphost")
+		if len(d.Get(skGlobalDomains).(*schema.Set).List()) > 0 {
+			return jsonData, errors.New("global_domains cannot be configured when category = jumphost")
 		}
 
 		applicationURL := d.Get("application_url").(string)
@@ -433,6 +474,40 @@ func prepareApplicationJSON(
 
 		browserVersion := d.Get("browser_version").(string)
 		jsonData.BrowserVersion = &browserVersion
+
+	case "web_application":
+		// web_application category was introduced in API v3.12 to replace jumphost
+		if apiVersion != "" && semver.Compare(apiVersion, VersionWallixAPI312) < 0 {
+			return jsonData, fmt.Errorf(
+				"category = web_application not available with API version %s (requires v3.12+)",
+				apiVersion,
+			)
+		}
+		if d.Get(skTarget).(string) != "" {
+			return jsonData, errors.New("target cannot be configured when category = web_application")
+		}
+		if len(d.Get("paths").(*schema.Set).List()) > 0 {
+			return jsonData, errors.New("paths cannot be configured when category = web_application")
+		}
+		if d.Get("browser").(string) != "" {
+			return jsonData, errors.New("browser cannot be configured when category = web_application")
+		}
+		if d.Get("browser_version").(string) != "" {
+			return jsonData, errors.New("browser_version cannot be configured when category = web_application")
+		}
+
+		applicationURL := d.Get("application_url").(string)
+		if applicationURL == "" {
+			return jsonData, errors.New("application_url must be specified when category = web_application")
+		}
+		jsonData.ApplicationURL = &applicationURL
+
+		listGlobalDomains := d.Get(skGlobalDomains).(*schema.Set).List()
+		jsonDataGlobalDomains := make([]string, len(listGlobalDomains))
+		for i, v := range listGlobalDomains {
+			jsonDataGlobalDomains[i] = v.(string)
+		}
+		jsonData.GlobalDomains = &jsonDataGlobalDomains
 	}
 
 	return jsonData, nil
@@ -463,94 +538,106 @@ func readApplicationOptions(
 	return result, nil
 }
 
-func fillApplication(d *schema.ResourceData, jsonData jsonApplication) { //nolint:gocognit
+func fillApplication(d *schema.ResourceData, jsonData jsonApplication) {
 	if tfErr := d.Set("application_name", jsonData.ApplicationName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("connection_policy", jsonData.ConnectionPolicy); tfErr != nil {
+	if tfErr := d.Set(skConnectionPolicy, jsonData.ConnectionPolicy); tfErr != nil {
 		panic(tfErr)
 	}
 	category := jsonData.Category
 	if category == "" {
-		category = "standard"
+		category = skStandard
 	}
 	if tfErr := d.Set("category", category); tfErr != nil {
 		panic(tfErr)
 	}
-	if jsonData.ApplicationURL != nil {
-		if tfErr := d.Set("application_url", *jsonData.ApplicationURL); tfErr != nil {
-			panic(tfErr)
-		}
-	} else {
-		if tfErr := d.Set("application_url", ""); tfErr != nil {
-			panic(tfErr)
-		}
-	}
-	if jsonData.Browser != nil {
-		if tfErr := d.Set("browser", *jsonData.Browser); tfErr != nil {
-			panic(tfErr)
-		}
-	} else {
-		if tfErr := d.Set("browser", ""); tfErr != nil {
-			panic(tfErr)
-		}
-	}
-	if jsonData.BrowserVersion != nil {
-		if tfErr := d.Set("browser_version", *jsonData.BrowserVersion); tfErr != nil {
-			panic(tfErr)
-		}
-	} else {
-		if tfErr := d.Set("browser_version", ""); tfErr != nil {
-			panic(tfErr)
-		}
-	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	setApplicationOptionalString(d, "application_url", jsonData.ApplicationURL)
+	setApplicationOptionalString(d, "browser", jsonData.Browser)
+	setApplicationOptionalString(d, "browser_version", jsonData.BrowserVersion)
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("global_domains", jsonData.GlobalDomains); tfErr != nil {
+	if tfErr := d.Set(skGlobalDomains, jsonData.GlobalDomains); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("parameters", jsonData.Parameters); tfErr != nil {
 		panic(tfErr)
 	}
+	if tfErr := d.Set("paths", fillApplicationPaths(jsonData.Paths)); tfErr != nil {
+		panic(tfErr)
+	}
+	setApplicationOptionalString(d, skTarget, jsonData.Target)
+	if tfErr := d.Set("local_domains", fillApplicationLocalDomains(jsonData.LocalDomains)); tfErr != nil {
+		panic(tfErr)
+	}
+	if tfErr := d.Set("tags", fillApplicationTags(jsonData.Tags)); tfErr != nil {
+		panic(tfErr)
+	}
+}
+
+// setApplicationOptionalString sets key to the dereferenced value, or "" when value is nil -
+// shared by the four *string fields (application_url/browser/browser_version/target) that follow
+// the same "unset means empty" convention.
+func setApplicationOptionalString(d *schema.ResourceData, key string, value *string) {
+	v := ""
+	if value != nil {
+		v = *value
+	}
+	if tfErr := d.Set(key, v); tfErr != nil {
+		panic(tfErr)
+	}
+}
+
+func fillApplicationPaths(jsonPaths *[]jsonApplicationPath) []map[string]interface{} {
 	paths := make([]map[string]interface{}, 0)
-	if jsonData.Paths != nil {
-		paths = make([]map[string]interface{}, len(*jsonData.Paths))
-		for i, v := range *jsonData.Paths {
+	if jsonPaths != nil {
+		paths = make([]map[string]interface{}, len(*jsonPaths))
+		for i, v := range *jsonPaths {
 			paths[i] = map[string]interface{}{
-				"target":      v.Target,
+				skTarget:      v.Target,
 				"program":     v.Program,
 				"working_dir": v.WorkingDir,
 			}
 		}
 	}
-	if tfErr := d.Set("paths", paths); tfErr != nil {
-		panic(tfErr)
-	}
-	if jsonData.Target != nil {
-		if tfErr := d.Set("target", *jsonData.Target); tfErr != nil {
-			panic(tfErr)
+
+	return paths
+}
+
+func fillApplicationLocalDomains(jsonLocalDomains *[]jsonApplicationLocalDomain) []map[string]interface{} {
+	localDomains := make([]map[string]interface{}, 0)
+	if jsonLocalDomains != nil {
+		localDomains = make([]map[string]interface{}, len(*jsonLocalDomains))
+		for i, v := range *jsonLocalDomains {
+			localDomains[i] = map[string]interface{}{
+				"id":                   v.ID,
+				skAdminAccount:         v.AdminAccount,
+				skDomainName:           v.DomainName,
+				skDescription:          v.Description,
+				skEnablePasswordChange: v.EnablePasswordChange,
+				skPasswordChangePolicy: v.PasswordChangePolicy,
+				skPasswordChangePlugin: v.PasswordChangePlugin,
+			}
+			pluginParameters, _ := json.Marshal(v.PasswordChangePluginParameters) //nolint: errchkjson
+			localDomains[i][skPasswordChangePluginParameters] = string(pluginParameters)
 		}
-	} else {
-		if tfErr := d.Set("target", ""); tfErr != nil {
-			panic(tfErr)
+	}
+
+	return localDomains
+}
+
+func fillApplicationTags(jsonTags *[]map[string]string) []interface{} {
+	stateTags := make([]interface{}, 0)
+	if jsonTags != nil {
+		stateTags = make([]interface{}, len(*jsonTags))
+		for i, tagMap := range *jsonTags {
+			stateTags[i] = map[string]interface{}{
+				skKey:   tagMap[skKey],
+				skValue: tagMap[skValue],
+			}
 		}
 	}
-	localDomains := make([]map[string]interface{}, len(*jsonData.LocalDomains))
-	for i, v := range *jsonData.LocalDomains {
-		localDomains[i] = map[string]interface{}{
-			"id":                     v.ID,
-			"admin_account":          v.AdminAccount,
-			"domain_name":            v.DomainName,
-			"description":            v.Description,
-			"enable_password_change": v.EnablePasswordChange,
-			"password_change_policy": v.PasswordChangePolicy,
-			"password_change_plugin": v.PasswordChangePlugin,
-		}
-		pluginParameters, _ := json.Marshal(v.PasswordChangePluginParameters) //nolint: errchkjson
-		localDomains[len(localDomains)-1]["password_change_plugin_parameters"] = string(pluginParameters)
-	}
-	if tfErr := d.Set("local_domains", localDomains); tfErr != nil {
-		panic(tfErr)
-	}
+
+	return stateTags
 }

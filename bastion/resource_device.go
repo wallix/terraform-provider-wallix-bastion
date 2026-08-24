@@ -19,6 +19,7 @@ type jsonDevice struct {
 	Host         string                   `json:"host"`
 	LocalDomains *[]jsonDeviceLocalDomain `json:"local_domains,omitempty"`
 	Services     *[]jsonDeviceService     `json:"services,omitempty"`
+	Tags         *[]map[string]string     `json:"tags,omitempty"`
 }
 
 func resourceDevice() *schema.Resource {
@@ -28,14 +29,14 @@ func resourceDevice() *schema.Resource {
 		UpdateContext: resourceDeviceUpdate,
 		DeleteContext: resourceDeviceDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceDeviceImport,
+			StateContext: resourceDeviceImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"device_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"host": {
+			skHost: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -43,7 +44,7 @@ func resourceDevice() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -56,35 +57,35 @@ func resourceDevice() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"domain_name": {
+						skDomainName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"admin_account": {
+						skAdminAccount: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"ca_public_key": {
+						skCAPublicKey: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"description": {
+						skDescription: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"enable_password_change": {
+						skEnablePasswordChange: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"password_change_policy": {
+						skPasswordChangePolicy: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"password_change_plugin": {
+						skPasswordChangePlugin: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"password_change_plugin_parameters": {
+						skPasswordChangePluginParameters: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -100,34 +101,60 @@ func resourceDevice() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"service_name": {
+						skServiceName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"connection_policy": {
+						skConnectionPolicy: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"port": {
+						skPort: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"protocol": {
+						skProtocol: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"global_domains": {
+						skGlobalDomains: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"subprotocols": {
+						skSubprotocols: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
+			},
+			"tags": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						skKey: {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						skValue: {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+				Set: schema.HashResource(&schema.Resource{
+					Schema: map[string]*schema.Schema{
+						skKey: {
+							Type: schema.TypeString,
+						},
+						skValue: {
+							Type: schema.TypeString,
+						},
+					},
+				}),
 			},
 		},
 	}
@@ -155,16 +182,19 @@ func resourceDeviceCreate(
 	if ex {
 		return diag.FromErr(fmt.Errorf("device_name %s already exists", d.Get("device_name").(string)))
 	}
-	err = addDevice(ctx, d, m)
+	id, err := addDevice(ctx, d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceDevice(ctx, d.Get("device_name").(string), m)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if !ex {
-		return diag.FromErr(fmt.Errorf("device_name %s not found after POST", d.Get("device_name").(string)))
+	if id == "" {
+		// Fallback for Bastion versions that don't return the X-Object-Id header on creation.
+		id, ex, err = searchResourceDevice(ctx, d.Get("device_name").(string), m)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if !ex {
+			return diag.FromErr(fmt.Errorf("device_name %s not found after POST", d.Get("device_name").(string)))
+		}
 	}
 	d.SetId(id)
 
@@ -222,11 +252,10 @@ func resourceDeviceDelete(
 }
 
 func resourceDeviceImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceDeviceVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
@@ -277,18 +306,18 @@ func searchResourceDevice(
 
 func addDevice(
 	ctx context.Context, d *schema.ResourceData, m interface{},
-) error {
+) (string, error) {
 	c := m.(*Client)
 	jsonData := prepareDeviceJSON(d)
-	body, code, err := c.newRequest(ctx, "/devices/", http.MethodPost, jsonData)
+	body, headers, code, err := c.newRequestWithHeaders(ctx, "/devices/", http.MethodPost, jsonData)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
+		return "", fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
-	return nil
+	return headers.Get("X-Object-Id"), nil
 }
 
 func updateDevice(
@@ -323,12 +352,31 @@ func deleteDevice(
 }
 
 func prepareDeviceJSON(d *schema.ResourceData) jsonDevice {
-	return jsonDevice{
+	jsonData := jsonDevice{
 		DeviceName:  d.Get("device_name").(string),
-		Host:        d.Get("host").(string),
+		Host:        d.Get(skHost).(string),
 		Alias:       d.Get("alias").(string),
-		Description: d.Get("description").(string),
+		Description: d.Get(skDescription).(string),
 	}
+
+	if v, ok := d.GetOk("tags"); ok {
+		tagsSet := v.(*schema.Set)
+		tagsList := tagsSet.List()
+
+		tags := make([]map[string]string, len(tagsList))
+
+		for i, tagData := range tagsList {
+			tagMap := tagData.(map[string]interface{})
+
+			tags[i] = map[string]string{
+				skKey:   tagMap[skKey].(string),
+				skValue: tagMap[skValue].(string),
+			}
+		}
+		jsonData.Tags = &tags
+	}
+
+	return jsonData
 }
 
 func readDeviceOptions(
@@ -360,29 +408,29 @@ func fillDevice(d *schema.ResourceData, jsonData jsonDevice) {
 	if tfErr := d.Set("device_name", jsonData.DeviceName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("host", jsonData.Host); tfErr != nil {
+	if tfErr := d.Set(skHost, jsonData.Host); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("alias", jsonData.Alias); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
 	localDomains := make([]map[string]interface{}, len(*jsonData.LocalDomains))
 	for i, v := range *jsonData.LocalDomains {
 		localDomains[i] = map[string]interface{}{
-			"id":                     v.ID,
-			"admin_account":          v.AdminAccount,
-			"domain_name":            v.DomainName,
-			"ca_public_key":          v.CAPublicKey,
-			"description":            v.Description,
-			"enable_password_change": v.EnablePasswordChange,
-			"password_change_policy": v.PasswordChangePolicy,
-			"password_change_plugin": v.PasswordChangePlugin,
+			"id":                   v.ID,
+			skAdminAccount:         v.AdminAccount,
+			skDomainName:           v.DomainName,
+			skCAPublicKey:          v.CAPublicKey,
+			skDescription:          v.Description,
+			skEnablePasswordChange: v.EnablePasswordChange,
+			skPasswordChangePolicy: v.PasswordChangePolicy,
+			skPasswordChangePlugin: v.PasswordChangePlugin,
 		}
 		pluginParameters, _ := json.Marshal(v.PasswordChangePluginParameters) //nolint: errchkjson
-		localDomains[i]["password_change_plugin_parameters"] = string(pluginParameters)
+		localDomains[i][skPasswordChangePluginParameters] = string(pluginParameters)
 	}
 	if tfErr := d.Set("local_domains", localDomains); tfErr != nil {
 		panic(tfErr)
@@ -390,25 +438,47 @@ func fillDevice(d *schema.ResourceData, jsonData jsonDevice) {
 	services := make([]map[string]interface{}, len(*jsonData.Services))
 	for i, v := range *jsonData.Services {
 		service := map[string]interface{}{
-			"id":                v.ID,
-			"service_name":      v.ServiceName,
-			"connection_policy": v.ConnectionPolicy,
-			"port":              v.Port,
-			"protocol":          v.Protocol,
-			"global_domains":    make([]string, 0),
-			"subprotocols":      make([]string, 0),
+			"id":               v.ID,
+			skServiceName:      v.ServiceName,
+			skConnectionPolicy: v.ConnectionPolicy,
+			skPort:             v.Port,
+			skProtocol:         v.Protocol,
+			skGlobalDomains:    make([]string, 0),
+			skSubprotocols:     make([]string, 0),
 		}
 		if v.GlobalDomains != nil {
-			service["global_domains"] = make(([]string), len(*v.GlobalDomains))
-			copy(service["global_domains"].([]string), *v.GlobalDomains)
+			service[skGlobalDomains] = make(([]string), len(*v.GlobalDomains))
+			copy(service[skGlobalDomains].([]string), *v.GlobalDomains)
 		}
 		if v.SubProtocols != nil {
-			service["subprotocols"] = make(([]string), len(*v.SubProtocols))
-			copy(service["subprotocols"].([]string), *v.SubProtocols)
+			service[skSubprotocols] = make(([]string), len(*v.SubProtocols))
+			copy(service[skSubprotocols].([]string), *v.SubProtocols)
 		}
 		services[i] = service
 	}
 	if tfErr := d.Set("services", services); tfErr != nil {
 		panic(tfErr)
+	}
+
+	if jsonData.Tags != nil && len(*jsonData.Tags) > 0 {
+		apiTags := *jsonData.Tags
+
+		stateTags := make([]interface{}, len(apiTags))
+
+		for i, tagMap := range apiTags {
+			stateMap := map[string]interface{}{
+				skKey:   tagMap[skKey],
+				skValue: tagMap[skValue],
+			}
+			stateTags[i] = stateMap
+		}
+
+		if tfErr := d.Set("tags", stateTags); tfErr != nil {
+			panic(tfErr)
+		}
+	} else {
+		if tfErr := d.Set("tags", make([]interface{}, 0)); tfErr != nil {
+			panic(tfErr)
+		}
 	}
 }

@@ -35,61 +35,61 @@ func resourceDeviceLocalDomain() *schema.Resource {
 		UpdateContext: resourceDeviceLocalDomainUpdate,
 		DeleteContext: resourceDeviceLocalDomainDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceDeviceLocalDomainImport,
+			StateContext: resourceDeviceLocalDomainImport,
 		},
 		Schema: map[string]*schema.Schema{
-			"device_id": {
+			skDeviceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"domain_name": {
+			skDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"admin_account": {
+			skAdminAccount: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				RequiredWith: []string{"enable_password_change", "password_change_policy", "password_change_plugin"},
+				RequiredWith: []string{skEnablePasswordChange, skPasswordChangePolicy, skPasswordChangePlugin},
 			},
-			"ca_public_key": {
+			skCAPublicKey: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ca_private_key": {
+			skCAPrivateKey: {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"enable_password_change": {
+			skEnablePasswordChange: {
 				Type:         schema.TypeBool,
 				Optional:     true,
-				RequiredWith: []string{"password_change_policy", "password_change_plugin", "password_change_plugin_parameters"},
+				RequiredWith: []string{skPasswordChangePolicy, skPasswordChangePlugin, skPasswordChangePluginParameters},
 			},
-			"passphrase": {
+			skPassphrase: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
-				RequiredWith: []string{"ca_private_key"},
+				RequiredWith: []string{skCAPrivateKey},
 			},
-			"password_change_policy": {
+			skPasswordChangePolicy: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				RequiredWith: []string{"enable_password_change"},
+				RequiredWith: []string{skEnablePasswordChange},
 			},
-			"password_change_plugin": {
+			skPasswordChangePlugin: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				RequiredWith: []string{"enable_password_change"},
+				RequiredWith: []string{skEnablePasswordChange},
 			},
-			"password_change_plugin_parameters": {
+			skPasswordChangePluginParameters: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				RequiredWith: []string{"enable_password_change"},
+				RequiredWith: []string{skEnablePasswordChange},
 				ValidateFunc: validation.StringIsJSON,
 				Sensitive:    true,
 			},
@@ -112,32 +112,35 @@ func resourceDeviceLocalDomainCreate(
 	if err := resourceDeviceLocalDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	cfgDevice, err := readDeviceOptions(ctx, d.Get("device_id").(string), m)
+	cfgDevice, err := readDeviceOptions(ctx, d.Get(skDeviceID).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if cfgDevice.ID == "" {
-		return diag.FromErr(fmt.Errorf("device with ID %s doesn't exists", d.Get("device_id").(string)))
+		return diag.FromErr(fmt.Errorf("device with ID %s doesn't exists", d.Get(skDeviceID).(string)))
 	}
-	_, ex, err := searchResourceDeviceLocalDomain(ctx, d.Get("device_id").(string), d.Get("domain_name").(string), m)
+	_, ex, err := searchResourceDeviceLocalDomain(ctx, d.Get(skDeviceID).(string), d.Get(skDomainName).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if ex {
 		return diag.FromErr(fmt.Errorf("domain_name %s on device_id %s already exists",
-			d.Get("domain_name").(string), d.Get("device_id").(string)))
+			d.Get(skDomainName).(string), d.Get(skDeviceID).(string)))
 	}
-	err = addDeviceLocalDomain(ctx, d, m)
+	id, err := addDeviceLocalDomain(ctx, d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceDeviceLocalDomain(ctx, d.Get("device_id").(string), d.Get("domain_name").(string), m)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if !ex {
-		return diag.FromErr(fmt.Errorf("domain_name %s on device_id %s not found after POST",
-			d.Get("domain_name").(string), d.Get("device_id").(string)))
+	if id == "" {
+		// Fallback for Bastion versions that don't return the X-Object-Id header on creation.
+		id, ex, err = searchResourceDeviceLocalDomain(ctx, d.Get(skDeviceID).(string), d.Get(skDomainName).(string), m)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if !ex {
+			return diag.FromErr(fmt.Errorf("domain_name %s on device_id %s not found after POST",
+				d.Get(skDomainName).(string), d.Get(skDeviceID).(string)))
+		}
 	}
 	d.SetId(id)
 
@@ -151,7 +154,7 @@ func resourceDeviceLocalDomainRead(
 	if err := resourceDeviceLocalDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	cfg, err := readDeviceLocalDomainOptions(ctx, d.Get("device_id").(string), d.Id(), m)
+	cfg, err := readDeviceLocalDomainOptions(ctx, d.Get(skDeviceID).(string), d.Id(), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -195,11 +198,10 @@ func resourceDeviceLocalDomainDelete(
 }
 
 func resourceDeviceLocalDomainImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceDeviceLocalDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
@@ -222,7 +224,7 @@ func resourceDeviceLocalDomainImport(
 	fillDeviceLocalDomain(d, cfg)
 	result := make([]*schema.ResourceData, 1)
 	d.SetId(id)
-	if tfErr := d.Set("device_id", idSplit[0]); tfErr != nil {
+	if tfErr := d.Set(skDeviceID, idSplit[0]); tfErr != nil {
 		panic(tfErr)
 	}
 	result[0] = d
@@ -258,19 +260,19 @@ func searchResourceDeviceLocalDomain(
 
 func addDeviceLocalDomain(
 	ctx context.Context, d *schema.ResourceData, m interface{},
-) error {
+) (string, error) {
 	c := m.(*Client)
 	jsonData := prepareDeviceLocalDomainJSON(d, true)
-	body, code, err := c.newRequest(ctx, "/devices/"+d.Get("device_id").(string)+"/localdomains/",
+	body, headers, code, err := c.newRequestWithHeaders(ctx, "/devices/"+d.Get(skDeviceID).(string)+"/localdomains/",
 		http.MethodPost, jsonData)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
+		return "", fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
-	return nil
+	return headers.Get("X-Object-Id"), nil
 }
 
 func updateDeviceLocalDomain(
@@ -279,7 +281,7 @@ func updateDeviceLocalDomain(
 	c := m.(*Client)
 	jsonData := prepareDeviceLocalDomainJSON(d, false)
 	body, code, err := c.newRequest(ctx,
-		"/devices/"+d.Get("device_id").(string)+"/localdomains/"+d.Id(), http.MethodPut, jsonData)
+		"/devices/"+d.Get(skDeviceID).(string)+"/localdomains/"+d.Id(), http.MethodPut, jsonData)
 	if err != nil {
 		return err
 	}
@@ -295,7 +297,7 @@ func deleteDeviceLocalDomain(
 ) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
-		"/devices/"+d.Get("device_id").(string)+"/localdomains/"+d.Id(), http.MethodDelete, nil)
+		"/devices/"+d.Get(skDeviceID).(string)+"/localdomains/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
 		return err
 	}
@@ -308,30 +310,30 @@ func deleteDeviceLocalDomain(
 
 func prepareDeviceLocalDomainJSON(d *schema.ResourceData, newResource bool) jsonDeviceLocalDomain {
 	jsonData := jsonDeviceLocalDomain{
-		Description: d.Get("description").(string),
-		DomainName:  d.Get("domain_name").(string),
-		Passphrase:  d.Get("passphrase").(string),
+		Description: d.Get(skDescription).(string),
+		DomainName:  d.Get(skDomainName).(string),
+		Passphrase:  d.Get(skPassphrase).(string),
 	}
 
-	if !strings.HasPrefix(d.Get("ca_private_key").(string), "generate:") {
-		jsonData.CAPrivateKey = d.Get("ca_private_key").(string)
-	} else if d.HasChange("ca_private_key") {
-		oldKey, newKey := d.GetChange("ca_private_key")
+	if !strings.HasPrefix(d.Get(skCAPrivateKey).(string), "generate:") {
+		jsonData.CAPrivateKey = d.Get(skCAPrivateKey).(string)
+	} else if d.HasChange(skCAPrivateKey) {
+		oldKey, newKey := d.GetChange(skCAPrivateKey)
 		if oldKey.(string) == "" {
 			jsonData.CAPrivateKey = newKey.(string)
 		}
 	}
 
-	if d.Get("enable_password_change").(bool) {
+	if d.Get(skEnablePasswordChange).(bool) {
 		if !newResource {
-			adminAccount := d.Get("admin_account").(string)
+			adminAccount := d.Get(skAdminAccount).(string)
 			jsonData.AdminAccount = &adminAccount
 		}
-		jsonData.EnablePasswordChange = d.Get("enable_password_change").(bool)
-		jsonData.PasswordChangePolicy = d.Get("password_change_policy").(string)
-		jsonData.PasswordChangePlugin = d.Get("password_change_plugin").(string)
+		jsonData.EnablePasswordChange = d.Get(skEnablePasswordChange).(bool)
+		jsonData.PasswordChangePolicy = d.Get(skPasswordChangePolicy).(string)
+		jsonData.PasswordChangePlugin = d.Get(skPasswordChangePlugin).(string)
 		var passChgPlug map[string]interface{}
-		if v := d.Get("password_change_plugin_parameters").(string); v != "" {
+		if v := d.Get(skPasswordChangePluginParameters).(string); v != "" {
 			_ = json.Unmarshal([]byte(v),
 				&passChgPlug)
 		} else {
@@ -369,25 +371,25 @@ func readDeviceLocalDomainOptions(
 }
 
 func fillDeviceLocalDomain(d *schema.ResourceData, jsonData jsonDeviceLocalDomain) {
-	if tfErr := d.Set("domain_name", jsonData.DomainName); tfErr != nil {
+	if tfErr := d.Set(skDomainName, jsonData.DomainName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("admin_account", jsonData.AdminAccount); tfErr != nil {
+	if tfErr := d.Set(skAdminAccount, jsonData.AdminAccount); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("ca_public_key", jsonData.CAPublicKey); tfErr != nil {
+	if tfErr := d.Set(skCAPublicKey, jsonData.CAPublicKey); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("enable_password_change", jsonData.EnablePasswordChange); tfErr != nil {
+	if tfErr := d.Set(skEnablePasswordChange, jsonData.EnablePasswordChange); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("password_change_policy", jsonData.PasswordChangePolicy); tfErr != nil {
+	if tfErr := d.Set(skPasswordChangePolicy, jsonData.PasswordChangePolicy); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("password_change_plugin", jsonData.PasswordChangePlugin); tfErr != nil {
+	if tfErr := d.Set(skPasswordChangePlugin, jsonData.PasswordChangePlugin); tfErr != nil {
 		panic(tfErr)
 	}
 }

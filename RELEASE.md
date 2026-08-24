@@ -7,13 +7,24 @@ This document describes the release process for terraform-provider-wallix-bastio
 For a standard patch release:
 
 ```bash
-# 1. Prepare the release
+# 1. Merge develop into main and make sure main is up to date
+git checkout main
+git pull origin main
+git merge origin/develop
+git push origin main
+
+# 2. Prepare the release: updates deps, runs lint/test/build, creates an
+#    annotated tag, and prompts you to push the tag to origin
 make release-patch
 
-# 2. Push any remaining changes
-git push origin develop
+# 3. Push any commits the script made on main (changelog/dependency updates)
+git push origin main
 
-# 3. Create GitHub release from the new tag
+# 4. If you answered "no" to the push-tag prompt, push it now - the release
+#    workflow only runs on a tag actually reaching the remote, on any branch
+git push origin vX.Y.Z
+
+# 5. Create GitHub release from the new tag
 ```
 
 ## Detailed Process
@@ -21,9 +32,11 @@ git push origin develop
 ### 1. Prerequisites
 
 - Clean git working directory
-- On `develop` branch (recommended)
-- Go 1.23+ installed
-- golangci-lint installed
+- On `main` branch, with `develop` already merged in — releases are tagged from
+  `main` after it's brought up to date with `develop`, not from `develop` directly
+- Go 1.25+ installed (matches the `go` directive in `go.mod`)
+- golangci-lint installed (recommended, not enforced — `prepare-release.sh` skips
+  linting with just a warning if it isn't found, so don't rely on it as a safety net)
 - Git configured with proper user information
 
 ### 2. Release Types
@@ -120,18 +133,27 @@ For urgent fixes that need to skip some checks:
 ./scripts/prepare-release.sh --patch --skip-tests
 ```
 
+`--skip-tests` skips lint, unit tests, and the local build check — nothing else
+runs them before the tag is pushed (the tag-triggered release workflow only
+builds and publishes, see [CI/CD Integration](#10-cicd-integration)), so treat
+this as accepting that risk knowingly, not as deferring verification to CI.
+
 ### 6. Rollback
 
-If you need to undo a release:
+If you need to undo a release (replace `v0.14.8` with the actual tag):
 
 ```bash
 # Delete local tag
 git tag -d v0.14.8
 
-# Delete remote tag (if already pushed)
+# Delete remote tag (if already pushed) - this does NOT remove a GitHub Release
+# that GoReleaser already published from it; delete that separately from the
+# GitHub releases page if the workflow already ran
 git push origin --delete v0.14.8
 
-# Reset any committed changes
+# Only if the release script committed changes (e.g. dependency updates) that
+# have NOT been pushed yet - this rewrites local history, so never run it on a
+# commit already pushed to main; coordinate a revert instead in that case
 git reset --hard HEAD~1
 ```
 
@@ -174,11 +196,13 @@ git add .
 git commit -m "chore: prepare for release"
 ```
 
-#### "Not on develop branch"
+#### "Not on main branch"
 
 ```bash
-git checkout develop
-git pull origin develop
+git checkout main
+git pull origin main
+git merge origin/develop
+git push origin main
 ```
 
 #### "Tests failing"
@@ -207,9 +231,13 @@ go mod download
 
 The release process integrates with GitHub Actions:
 
-1. **On tag push**: Triggers release workflow
-2. **Release workflow**: Builds artifacts, runs tests, creates GitHub release
-3. **Documentation**: Updates provider registry documentation
+1. **On tag push**: Any `v*` tag pushed to any branch triggers `.github/workflows/release.yml`
+2. **Release workflow**: Runs `go mod tidy`, builds and signs artifacts with GoReleaser,
+   and creates the GitHub release — it does **not** re-run lint/test/build, so those
+   quality gates only ever run locally via `prepare-release.sh` before you tag (see
+   [Emergency Releases](#5-emergency-releases) for what `--skip-tests` bypasses)
+3. **Documentation**: Not a CI step — the Terraform Registry picks up `docs/` from the
+   tagged commit on its own when it indexes the new release
 
 Check `.github/workflows/` for workflow definitions.
 
@@ -218,6 +246,11 @@ Check `.github/workflows/` for workflow definitions.
 - Always test releases in a staging environment first
 - Keep CHANGELOG.md up to date throughout development
 - Use feature branches for new functionality
-- Tag releases promptly after merging to main
+- Merge `develop` into `main` before tagging — releases are cut from `main`, not
+  `develop`, so a release that skips this step ships whatever `main` last had
+- Confirm the tag actually reached the remote before walking away — since
+  `release.yml` triggers on any pushed `v*` tag, an un-pushed local tag just does
+  nothing silently, and a tag pushed from the wrong branch/commit still triggers
+  a real release
 - Monitor release workflows for failures
 - Communicate breaking changes clearly in release notes

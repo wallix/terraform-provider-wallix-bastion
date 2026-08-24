@@ -11,14 +11,14 @@ import (
 func TestAccResourceDeviceLocalDomain_basic(t *testing.T) {
 	resourceName := "wallix-bastion_device_localdomain.testacc_DeviceLocalDomain"
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
-			"random": {
-				Source: "hashicorp/random",
+			tvRandomProviderName: {
+				Source: tvRandomProviderSource,
 			},
-			"tls": {
-				Source: "hashicorp/tls",
+			tvTLSProviderName: {
+				Source: tvTLSProviderSource,
 			},
 		},
 		Steps: []resource.TestStep{
@@ -58,7 +58,7 @@ func testAccResourceDeviceLocalDomainCreate() string {
 	return `
 resource "wallix-bastion_device" "testacc_DeviceLocalDomain" {
   device_name = "testacc_DeviceLocalDomain"
-  host        = "testacc_localdomain.device"
+  host        = "192.168.100.3"
 }
 resource "wallix-bastion_device_localdomain" "testacc_DeviceLocalDomain" {
   device_id      = wallix-bastion_device.testacc_DeviceLocalDomain.id
@@ -78,7 +78,7 @@ func testAccResourceDeviceLocalDomainUpdate() string {
 	return `
 resource "wallix-bastion_device" "testacc_DeviceLocalDomain" {
   device_name = "testacc_DeviceLocalDomain"
-  host        = "testacc_localdomain.device"
+  host        = "192.168.100.3"
 }
 resource "wallix-bastion_device_localdomain" "testacc_DeviceLocalDomain" {
   device_id                         = wallix-bastion_device.testacc_DeviceLocalDomain.id

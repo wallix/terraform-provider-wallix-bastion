@@ -21,48 +21,48 @@ func resourceDeviceLocalDomainAccountCredential() *schema.Resource {
 		UpdateContext: resourceDeviceLocalDomainAccountCredentialUpdate,
 		DeleteContext: resourceDeviceLocalDomainAccountCredentialDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceDeviceLocalDomainAccountCredentialImport,
+			StateContext: resourceDeviceLocalDomainAccountCredentialImport,
 		},
 		Schema: map[string]*schema.Schema{
-			"device_id": {
+			skDeviceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"domain_id": {
+			skDomainID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"account_id": {
+			skAccountID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"type": {
+			skType: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{"password", "ssh_key"}, false),
+				ValidateFunc: validation.StringInSlice([]string{skPassword, "ssh_key"}, false),
 			},
-			"passphrase": {
+			skPassphrase: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
-				RequiredWith: []string{"private_key"},
+				RequiredWith: []string{skPrivateKey},
 			},
-			"password": {
+			skPassword: {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
 			},
-			"private_key": {
+			skPrivateKey: {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
 				ForceNew:  true,
 			},
-			"public_key": {
+			skPublicKey: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -86,52 +86,56 @@ func resourceDeviceLocalDomainAccountCredentialCreate(
 	if err := resourceDeviceLocalDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	cfgDevice, err := readDeviceOptions(ctx, d.Get("device_id").(string), m)
+	cfgDevice, err := readDeviceOptions(ctx, d.Get(skDeviceID).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if cfgDevice.ID == "" {
-		return diag.FromErr(fmt.Errorf("device with ID %s doesn't exists", d.Get("device_id").(string)))
+		return diag.FromErr(fmt.Errorf("device with ID %s doesn't exists", d.Get(skDeviceID).(string)))
 	}
-	cfgDomain, err := readDeviceLocalDomainOptions(ctx, d.Get("device_id").(string), d.Get("domain_id").(string), m)
+	cfgDomain, err := readDeviceLocalDomainOptions(ctx, d.Get(skDeviceID).(string), d.Get(skDomainID).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if cfgDomain.ID == "" {
 		return diag.FromErr(fmt.Errorf("domain_id with ID %s on device_id %s doesn't exists",
-			d.Get("domain_id").(string), d.Get("device_id").(string)))
+			d.Get(skDomainID).(string), d.Get(skDeviceID).(string)))
 	}
 	cfgAccount, err := readDeviceLocalDomainAccountOptions(ctx,
-		d.Get("device_id").(string), d.Get("domain_id").(string), d.Get("account_id").(string), m)
+		d.Get(skDeviceID).(string), d.Get(skDomainID).(string), d.Get(skAccountID).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if cfgAccount.ID == "" {
 		return diag.FromErr(fmt.Errorf("account_id with ID %s on domain_id %s, device_id %s doesn't exists",
-			d.Get("account_id").(string), d.Get("domain_id").(string), d.Get("device_id").(string)))
+			d.Get(skAccountID).(string), d.Get(skDomainID).(string), d.Get(skDeviceID).(string)))
 	}
 	_, ex, err := searchResourceDeviceLocalDomainAccountCredential(ctx,
-		d.Get("device_id").(string), d.Get("domain_id").(string), d.Get("account_id").(string), d.Get("type").(string), m)
+		d.Get(skDeviceID).(string), d.Get(skDomainID).(string), d.Get(skAccountID).(string), d.Get(skType).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if ex {
 		return diag.FromErr(fmt.Errorf("credential type %s on account_id %s, domain_id %s, device_id %s already exists",
-			d.Get("type").(string), d.Get("account_id").(string), d.Get("domain_id").(string), d.Get("device_id").(string)))
+			d.Get(skType).(string), d.Get(skAccountID).(string), d.Get(skDomainID).(string), d.Get(skDeviceID).(string)))
 	}
-	err = addDeviceLocalDomainAccountCredential(ctx, d, m)
+	id, err := addDeviceLocalDomainAccountCredential(ctx, d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceDeviceLocalDomainAccountCredential(ctx,
-		d.Get("device_id").(string), d.Get("domain_id").(string), d.Get("account_id").(string), d.Get("type").(string), m)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if !ex {
-		return diag.FromErr(fmt.Errorf(
-			"credential type %s on account_id %s, domain_id %s, device_id %s not found after POST",
-			d.Get("type").(string), d.Get("account_id").(string), d.Get("domain_id").(string), d.Get("device_id").(string)))
+	if id == "" {
+		// Fallback for Bastion versions that don't return the X-Object-Id header on creation.
+		id, ex, err = searchResourceDeviceLocalDomainAccountCredential(ctx,
+			d.Get(skDeviceID).(string), d.Get(skDomainID).(string), d.Get(skAccountID).(string), d.Get(skType).(string), m)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if !ex {
+			return diag.FromErr(fmt.Errorf(
+				"credential type %s on account_id %s, domain_id %s, device_id %s not found after POST",
+				d.Get(skType).(string), d.Get(skAccountID).(string), d.Get(skDomainID).(string),
+				d.Get(skDeviceID).(string)))
+		}
 	}
 	d.SetId(id)
 
@@ -146,9 +150,31 @@ func resourceDeviceLocalDomainAccountCredentialRead(
 		return diag.FromErr(err)
 	}
 	cfg, err := readDeviceLocalDomainAccountCredentialOptions(ctx,
-		d.Get("device_id").(string), d.Get("domain_id").(string), d.Get("account_id").(string), d.Id(), m)
+		d.Get(skDeviceID).(string), d.Get(skDomainID).(string), d.Get(skAccountID).(string), d.Id(), m)
 	if err != nil {
 		return diag.FromErr(err)
+	}
+	if cfg.ID == "" {
+		// WALLIX rotates a credential (manual regenerate, or an automatic
+		// rotation policy) by deleting the old object and creating a new one
+		// with a different internal ID, so the GET by the stored ID 404s.
+		// Retry a lookup by (account, type) before treating it as deleted.
+		newID, found, err := searchResourceDeviceLocalDomainAccountCredential(ctx,
+			d.Get(skDeviceID).(string), d.Get(skDomainID).(string), d.Get(skAccountID).(string),
+			d.Get(skType).(string), m)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if found {
+			cfg, err = readDeviceLocalDomainAccountCredentialOptions(ctx,
+				d.Get(skDeviceID).(string), d.Get(skDomainID).(string), d.Get(skAccountID).(string), newID, m)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			if cfg.ID != "" {
+				d.SetId(newID)
+			}
+		}
 	}
 	if cfg.ID == "" {
 		d.SetId("")
@@ -190,11 +216,10 @@ func resourceDeviceLocalDomainAccountCredentialDelete(
 }
 
 func resourceDeviceLocalDomainAccountCredentialImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceDeviceLocalDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
@@ -218,13 +243,13 @@ func resourceDeviceLocalDomainAccountCredentialImport(
 	fillDeviceLocalDomainAccountCredential(d, cfg)
 	result := make([]*schema.ResourceData, 1)
 	d.SetId(id)
-	if tfErr := d.Set("device_id", idSplit[0]); tfErr != nil {
+	if tfErr := d.Set(skDeviceID, idSplit[0]); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("domain_id", idSplit[1]); tfErr != nil {
+	if tfErr := d.Set(skDomainID, idSplit[1]); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("account_id", idSplit[2]); tfErr != nil {
+	if tfErr := d.Set(skAccountID, idSplit[2]); tfErr != nil {
 		panic(tfErr)
 	}
 	result[0] = d
@@ -263,20 +288,20 @@ func searchResourceDeviceLocalDomainAccountCredential(
 
 func addDeviceLocalDomainAccountCredential(
 	ctx context.Context, d *schema.ResourceData, m interface{},
-) error {
+) (string, error) {
 	c := m.(*Client)
 	jsonData := prepareDeviceLocalDomainAccountCredentialJSON(d)
-	body, code, err := c.newRequest(ctx,
-		"/devices/"+d.Get("device_id").(string)+"/localdomains/"+d.Get("domain_id").(string)+
-			"/accounts/"+d.Get("account_id").(string)+"/credentials/", http.MethodPost, jsonData)
+	body, headers, code, err := c.newRequestWithHeaders(ctx,
+		"/devices/"+d.Get(skDeviceID).(string)+"/localdomains/"+d.Get(skDomainID).(string)+
+			"/accounts/"+d.Get(skAccountID).(string)+"/credentials/", http.MethodPost, jsonData)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
+		return "", fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
-	return nil
+	return headers.Get("X-Object-Id"), nil
 }
 
 func updateDeviceLocalDomainAccountCredential(
@@ -285,8 +310,8 @@ func updateDeviceLocalDomainAccountCredential(
 	c := m.(*Client)
 	jsonData := prepareDeviceLocalDomainAccountCredentialJSON(d)
 	body, code, err := c.newRequest(ctx,
-		"/devices/"+d.Get("device_id").(string)+"/localdomains/"+d.Get("domain_id").(string)+
-			"/accounts/"+d.Get("account_id").(string)+"/credentials/"+d.Id(), http.MethodPut, jsonData)
+		"/devices/"+d.Get(skDeviceID).(string)+"/localdomains/"+d.Get(skDomainID).(string)+
+			"/accounts/"+d.Get(skAccountID).(string)+"/credentials/"+d.Id(), http.MethodPut, jsonData)
 	if err != nil {
 		return err
 	}
@@ -302,8 +327,8 @@ func deleteDeviceLocalDomainAccountCredential(
 ) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
-		"/devices/"+d.Get("device_id").(string)+"/localdomains/"+d.Get("domain_id").(string)+
-			"/accounts/"+d.Get("account_id").(string)+"/credentials/"+d.Id(), http.MethodDelete, nil)
+		"/devices/"+d.Get(skDeviceID).(string)+"/localdomains/"+d.Get(skDomainID).(string)+
+			"/accounts/"+d.Get(skAccountID).(string)+"/credentials/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
 		return err
 	}
@@ -318,15 +343,15 @@ func prepareDeviceLocalDomainAccountCredentialJSON(
 	d *schema.ResourceData,
 ) jsonCredential {
 	jsonData := jsonCredential{
-		Type: d.Get("type").(string),
+		Type: d.Get(skType).(string),
 	}
 
 	switch jsonData.Type {
-	case "password":
-		jsonData.Password = d.Get("password").(string)
+	case skPassword:
+		jsonData.Password = d.Get(skPassword).(string)
 	case "ssh_key":
-		jsonData.PrivateKey = d.Get("private_key").(string)
-		jsonData.Passphrase = d.Get("passphrase").(string)
+		jsonData.PrivateKey = d.Get(skPrivateKey).(string)
+		jsonData.Passphrase = d.Get(skPassphrase).(string)
 	}
 
 	return jsonData
@@ -372,10 +397,10 @@ func readDeviceLocalDomainAccountCredentialOptions(
 }
 
 func fillDeviceLocalDomainAccountCredential(d *schema.ResourceData, jsonData jsonCredential) {
-	if tfErr := d.Set("type", jsonData.Type); tfErr != nil {
+	if tfErr := d.Set(skType, jsonData.Type); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("public_key", jsonData.PublicKey); tfErr != nil {
+	if tfErr := d.Set(skPublicKey, jsonData.PublicKey); tfErr != nil {
 		panic(tfErr)
 	}
 }

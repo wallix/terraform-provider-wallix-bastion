@@ -23,7 +23,7 @@ func resourceEncryption() *schema.Resource {
 		UpdateContext: resourceEncryptionUpdate,
 		DeleteContext: resourceEncryptionDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceEncryptionImport,
+			StateContext: resourceEncryptionImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"current_passphrase": {
@@ -220,7 +220,7 @@ func prepareEncryptionJSON(d *schema.ResourceData, update bool) jsonEncryption {
 }
 
 func resourceEncryptionImport(
-	d *schema.ResourceData, _ interface{},
+	_ context.Context, d *schema.ResourceData, _ interface{},
 ) ([]*schema.ResourceData, error) {
 	// For import, assume the static ID
 	d.SetId("encryption")

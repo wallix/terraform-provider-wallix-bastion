@@ -29,7 +29,7 @@ func resourceUserGroup() *schema.Resource {
 		UpdateContext: resourceUserGroupUpdate,
 		DeleteContext: resourceUserGroupDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceUserGroupImport,
+			StateContext: resourceUserGroupImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"group_name": {
@@ -41,11 +41,11 @@ func resourceUserGroup() *schema.Resource {
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"profile": {
+			skProfile: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -54,16 +54,16 @@ func resourceUserGroup() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"action": {
+						skAction: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"kill", "notify"}, false),
 						},
-						"rules": {
+						skRules: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"subprotocol": {
+						skSubprotocol: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice(
@@ -73,9 +73,9 @@ func resourceUserGroup() *schema.Resource {
 									"SSH_SCP_UP",
 									"SSH_SCP_DOWN",
 									"SFTP_SESSION",
-									"RLOGIN",
-									"TELNET",
-									"RDP",
+									skProtoRLOGIN,
+									skProtoTELNET,
+									skProtoRDP,
 								},
 								false,
 							),
@@ -83,7 +83,7 @@ func resourceUserGroup() *schema.Resource {
 					},
 				},
 			},
-			"users": {
+			skUsers: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -115,16 +115,19 @@ func resourceUserGroupCreate(
 	if ex {
 		return diag.FromErr(fmt.Errorf("group_name %s already exists", d.Get("group_name").(string)))
 	}
-	err = addUserGroup(ctx, d, m)
+	id, err := addUserGroup(ctx, d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceUserGroup(ctx, d.Get("group_name").(string), m)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if !ex {
-		return diag.FromErr(fmt.Errorf("group_name %s not found after POST", d.Get("group_name").(string)))
+	if id == "" {
+		// Fallback for Bastion versions that don't return the X-Object-Id header on creation.
+		id, ex, err = searchResourceUserGroup(ctx, d.Get("group_name").(string), m)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if !ex {
+			return diag.FromErr(fmt.Errorf("group_name %s not found after POST", d.Get("group_name").(string)))
+		}
 	}
 	d.SetId(id)
 
@@ -182,11 +185,10 @@ func resourceUserGroupDelete(
 }
 
 func resourceUserGroupImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceUserGroupVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
@@ -237,18 +239,18 @@ func searchResourceUserGroup(
 
 func addUserGroup(
 	ctx context.Context, d *schema.ResourceData, m interface{},
-) error {
+) (string, error) {
 	c := m.(*Client)
 	jsonData := prepareUserGroupJSON(d)
-	body, code, err := c.newRequest(ctx, "/usergroups/", http.MethodPost, jsonData)
+	body, headers, code, err := c.newRequestWithHeaders(ctx, "/usergroups/", http.MethodPost, jsonData)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
+		return "", fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
-	return nil
+	return headers.Get("X-Object-Id"), nil
 }
 
 func updateUserGroup(
@@ -284,13 +286,13 @@ func deleteUserGroup(
 
 func prepareUserGroupJSON(d *schema.ResourceData) jsonUserGroup {
 	jsonData := jsonUserGroup{
-		Description: d.Get("description").(string),
+		Description: d.Get(skDescription).(string),
 		GroupName:   d.Get("group_name").(string),
-		Profile:     d.Get("profile").(string),
+		Profile:     d.Get(skProfile).(string),
 	}
 
-	if d.HasChanges("users") {
-		listUsers := d.Get("users").(*schema.Set).List()
+	if d.HasChanges(skUsers) {
+		listUsers := d.Get(skUsers).(*schema.Set).List()
 		users := make([]string, len(listUsers))
 		for i, v := range listUsers {
 			users[i] = v.(string)
@@ -309,9 +311,9 @@ func prepareUserGroupJSON(d *schema.ResourceData) jsonUserGroup {
 	for i, v := range listRestrictions {
 		restrictions := v.(map[string]interface{})
 		jsonData.Restrictions[i] = jsonRestriction{
-			Action:      restrictions["action"].(string),
-			Rules:       restrictions["rules"].(string),
-			SubProtocol: restrictions["subprotocol"].(string),
+			Action:      restrictions[skAction].(string),
+			Rules:       restrictions[skRules].(string),
+			SubProtocol: restrictions[skSubprotocol].(string),
 		}
 	}
 
@@ -350,24 +352,24 @@ func fillUserGroup(d *schema.ResourceData, jsonData jsonUserGroup) {
 	if tfErr := d.Set("timeframes", jsonData.TimeFrames); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("profile", jsonData.Profile); tfErr != nil {
+	if tfErr := d.Set(skProfile, jsonData.Profile); tfErr != nil {
 		panic(tfErr)
 	}
 	restrictions := make([]map[string]interface{}, len(jsonData.Restrictions))
 	for i, v := range jsonData.Restrictions {
 		restrictions[i] = map[string]interface{}{
-			"action":      v.Action,
-			"rules":       v.Rules,
-			"subprotocol": v.SubProtocol,
+			skAction:      v.Action,
+			skRules:       v.Rules,
+			skSubprotocol: v.SubProtocol,
 		}
 	}
 	if tfErr := d.Set("restrictions", restrictions); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("users", jsonData.Users); tfErr != nil {
+	if tfErr := d.Set(skUsers, jsonData.Users); tfErr != nil {
 		panic(tfErr)
 	}
 }

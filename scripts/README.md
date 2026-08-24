@@ -43,17 +43,19 @@ A comprehensive script that automates the release preparation process.
 ### Prerequisites
 
 - Git repository with existing tags following semantic versioning (vX.Y.Z)
-- Go 1.23+ installed
+- Go 1.25+ installed (matches the `go` directive in `go.mod`)
 - golangci-lint installed (optional, will be skipped if not available)
 - Clean git working directory
-- Recommended to be on `develop` branch
+- Recommended to be on `main`, with `develop` already merged in
 
 ### Example workflow
 
 ```bash
-# 1. Ensure you're on develop branch and it's up to date
-git checkout develop
-git pull origin develop
+# 1. Merge develop into main and make sure main is up to date
+git checkout main
+git pull origin main
+git merge origin/develop
+git push origin main
 
 # 2. Run the release script
 ./scripts/prepare-release.sh --minor
@@ -93,9 +95,10 @@ You can set these environment variables to customize behavior:
 
 - Install golangci-lint or use `--skip-tests` flag
 
-#### "Not on develop branch"
+#### "Not on main branch"
 
-- Switch to develop branch or continue with current branch when prompted
+- Merge `develop` into `main` and switch to `main`, or continue with the current
+  branch when prompted
 
 #### "Tag already exists"
 

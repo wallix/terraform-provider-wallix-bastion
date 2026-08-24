@@ -1,70 +1,104 @@
 package bastion_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"golang.org/x/mod/semver"
+
+	"github.com/wallix/terraform-provider-wallix-bastion/bastion"
 )
 
+// The update step sets authorize_session_sharing, which requires API v3.12+;
+// skip on older versions. Default (unset) is v3.12+.
 func TestAccResourceAuthorization_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccResourceAuthorizationCreate(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(
-						"wallix-bastion_authorization.testacc_Authorization",
-						"id"),
-				),
+	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); v == "" || semver.Compare(v, bastion.VersionWallixAPI312) >= 0 {
+		resource.Test(t, resource.TestCase{
+			PreCheck:          func() { testAccPreCheck(t) },
+			ProviderFactories: testAccProviderFactories,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccResourceAuthorizationCreate(),
+					Check: resource.ComposeTestCheckFunc(
+						resource.TestCheckResourceAttrSet(
+							"wallix-bastion_authorization.testacc_Authorization",
+							"id"),
+					),
+				},
+				{
+					Config: testAccResourceAuthorizationUpdate(),
+					Check: resource.ComposeTestCheckFunc(
+						resource.TestCheckResourceAttr(
+							"wallix-bastion_authorization.testacc_Authorization",
+							"authorize_password_retrieval", "true"),
+						resource.TestCheckResourceAttr(
+							"wallix-bastion_authorization.testacc_Authorization",
+							"authorize_session_sharing", "true"),
+						resource.TestCheckResourceAttr(
+							"wallix-bastion_authorization.testacc_Authorization",
+							"session_sharing_mode", "view_control"),
+						resource.TestCheckResourceAttr(
+							"wallix-bastion_authorization.testacc_Authorization",
+							"approval_required", "true"),
+						resource.TestCheckResourceAttr(
+							"wallix-bastion_authorization.testacc_Authorization",
+							"active_quorum", "2"),
+					),
+				},
+				{
+					ResourceName:  "wallix-bastion_authorization.testacc_Authorization",
+					ImportState:   true,
+					ImportStateId: "testacc_Authorization",
+				},
 			},
-			{
-				Config: testAccResourceAuthorizationUpdate(),
-			},
-			{
-				ResourceName:  "wallix-bastion_authorization.testacc_Authorization",
-				ImportState:   true,
-				ImportStateId: "testacc_Authorization",
-			},
-		},
-		PreventPostDestroyRefresh: true,
-	})
+			PreventPostDestroyRefresh: true,
+		})
+	}
 }
 
+// authorize_session_sharing/session_sharing_mode require API v3.12+; skip on older versions.
+// Default (unset) is v3.12+.
 func TestAccResourceAuthorization_sessionSharing(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccResourceAuthorizationSessionSharingViewOnly(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(
-						"wallix-bastion_authorization.testacc_Authorization_sharing",
-						"id"),
-					resource.TestCheckResourceAttr(
-						"wallix-bastion_authorization.testacc_Authorization_sharing",
-						"authorize_session_sharing", "true"),
-					resource.TestCheckResourceAttr(
-						"wallix-bastion_authorization.testacc_Authorization_sharing",
-						"session_sharing_mode", "view_only"),
-				),
+	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); v == "" || semver.Compare(v, bastion.VersionWallixAPI312) >= 0 {
+		resource.Test(t, resource.TestCase{
+			PreCheck:          func() { testAccPreCheck(t) },
+			ProviderFactories: testAccProviderFactories,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccResourceAuthorizationSessionSharingViewOnly(),
+					Check: resource.ComposeTestCheckFunc(
+						resource.TestCheckResourceAttrSet(
+							"wallix-bastion_authorization.testacc_Authorization_sharing",
+							"id"),
+						resource.TestCheckResourceAttr(
+							"wallix-bastion_authorization.testacc_Authorization_sharing",
+							"authorize_session_sharing", "true"),
+						resource.TestCheckResourceAttr(
+							"wallix-bastion_authorization.testacc_Authorization_sharing",
+							"session_sharing_mode", "view_only"),
+					),
+				},
+				{
+					Config: testAccResourceAuthorizationSessionSharingViewControl(),
+					Check: resource.ComposeTestCheckFunc(
+						resource.TestCheckResourceAttr(
+							"wallix-bastion_authorization.testacc_Authorization_sharing",
+							"authorize_session_sharing", "true"),
+						resource.TestCheckResourceAttr(
+							"wallix-bastion_authorization.testacc_Authorization_sharing",
+							"session_sharing_mode", "view_control"),
+					),
+				},
+				{
+					ResourceName:  "wallix-bastion_authorization.testacc_Authorization_sharing",
+					ImportState:   true,
+					ImportStateId: "testacc_Authorization_sharing",
+				},
 			},
-			{
-				Config: testAccResourceAuthorizationSessionSharingViewControl(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"wallix-bastion_authorization.testacc_Authorization_sharing",
-						"authorize_session_sharing", "true"),
-					resource.TestCheckResourceAttr(
-						"wallix-bastion_authorization.testacc_Authorization_sharing",
-						"session_sharing_mode", "view_control"),
-				),
-			},
-		},
-		PreventPostDestroyRefresh: true,
-	})
+			PreventPostDestroyRefresh: true,
+		})
+	}
 }
 
 // nolint: lll, nolintlint
@@ -102,12 +136,12 @@ resource "wallix-bastion_authorization" "testacc_Authorization" {
 }
 
 resource "wallix-bastion_usergroup" "testacc_Authorization" {
-  group_name = "testacc_Authorization"
+  group_name = "testacc_Authorization_ug"
   timeframes = ["allthetime"]
 }
 
 resource "wallix-bastion_targetgroup" "testacc_Authorization" {
-  group_name = "testacc_Authorization"
+  group_name = "testacc_Authorization_tg"
 }
 `
 }
@@ -162,17 +196,17 @@ resource "wallix-bastion_authorization" "testacc_Authorization" {
 }
 
 resource "wallix-bastion_usergroup" "testacc_Authorization" {
-  group_name = "testacc_Authorization"
+  group_name = "testacc_Authorization_ug"
   timeframes = ["allthetime"]
 }
 
 resource "wallix-bastion_usergroup" "testacc_Authorization2" {
-  group_name = "testacc_Authorization2"
+  group_name = "testacc_Authorization2_ug"
   timeframes = ["allthetime"]
 }
 
 resource "wallix-bastion_targetgroup" "testacc_Authorization" {
-  group_name = "testacc_Authorization"
+  group_name = "testacc_Authorization_tg"
 }
 `
 }
@@ -194,12 +228,12 @@ resource "wallix-bastion_authorization" "testacc_Authorization_sharing" {
 }
 
 resource "wallix-bastion_usergroup" "testacc_Authorization_sharing" {
-  group_name = "testacc_Authorization_sharing"
+  group_name = "testacc_Authorization_sharing_ug"
   timeframes = ["allthetime"]
 }
 
 resource "wallix-bastion_targetgroup" "testacc_Authorization_sharing" {
-  group_name = "testacc_Authorization_sharing"
+  group_name = "testacc_Authorization_sharing_tg"
 }
 `
 }
@@ -221,12 +255,12 @@ resource "wallix-bastion_authorization" "testacc_Authorization_sharing" {
 }
 
 resource "wallix-bastion_usergroup" "testacc_Authorization_sharing" {
-  group_name = "testacc_Authorization_sharing"
+  group_name = "testacc_Authorization_sharing_ug"
   timeframes = ["allthetime"]
 }
 
 resource "wallix-bastion_targetgroup" "testacc_Authorization_sharing" {
-  group_name = "testacc_Authorization_sharing"
+  group_name = "testacc_Authorization_sharing_tg"
 }
 `
 }

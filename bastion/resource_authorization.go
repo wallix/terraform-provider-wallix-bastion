@@ -43,7 +43,7 @@ func resourceAuthorization() *schema.Resource {
 		UpdateContext: resourceAuthorizationUpdate,
 		DeleteContext: resourceAuthorizationDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAuthorizationImport,
+			StateContext: resourceAuthorizationImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"authorization_name": {
@@ -60,7 +60,7 @@ func resourceAuthorization() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -72,7 +72,7 @@ func resourceAuthorization() *schema.Resource {
 			"authorize_sessions": {
 				Type:         schema.TypeBool,
 				Optional:     true,
-				RequiredWith: []string{"subprotocols"},
+				RequiredWith: []string{skSubprotocols},
 				AtLeastOneOf: []string{"authorize_sessions", "authorize_password_retrieval"},
 			},
 			"authorize_session_sharing": {
@@ -94,7 +94,7 @@ func resourceAuthorization() *schema.Resource {
 				},
 				RequiredWith: []string{"authorize_session_sharing"},
 			},
-			"subprotocols": {
+			skSubprotocols: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -107,7 +107,7 @@ func resourceAuthorization() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"approval_required": {
+			skApprovalRequired: {
 				Type:         schema.TypeBool,
 				Optional:     true,
 				RequiredWith: []string{"approvers"},
@@ -116,49 +116,49 @@ func resourceAuthorization() *schema.Resource {
 				Type:         schema.TypeList,
 				Optional:     true,
 				Elem:         &schema.Schema{Type: schema.TypeString},
-				RequiredWith: []string{"approval_required"},
+				RequiredWith: []string{skApprovalRequired},
 			},
 			"active_quorum": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      -1,
-				RequiredWith: []string{"approval_required"},
+				RequiredWith: []string{skApprovalRequired},
 			},
 			"inactive_quorum": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      -1,
-				RequiredWith: []string{"approval_required"},
+				RequiredWith: []string{skApprovalRequired},
 			},
 			"approval_timeout": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				RequiredWith: []string{"approval_required"},
+				RequiredWith: []string{skApprovalRequired},
 			},
 			"has_comment": {
 				Type:         schema.TypeBool,
 				Optional:     true,
-				RequiredWith: []string{"approval_required"},
+				RequiredWith: []string{skApprovalRequired},
 			},
 			"has_ticket": {
 				Type:         schema.TypeBool,
 				Optional:     true,
-				RequiredWith: []string{"approval_required"},
+				RequiredWith: []string{skApprovalRequired},
 			},
 			"mandatory_comment": {
 				Type:         schema.TypeBool,
 				Optional:     true,
-				RequiredWith: []string{"approval_required"},
+				RequiredWith: []string{skApprovalRequired},
 			},
 			"mandatory_ticket": {
 				Type:         schema.TypeBool,
 				Optional:     true,
-				RequiredWith: []string{"approval_required"},
+				RequiredWith: []string{skApprovalRequired},
 			},
 			"single_connection": {
 				Type:         schema.TypeBool,
 				Optional:     true,
-				RequiredWith: []string{"approval_required"},
+				RequiredWith: []string{skApprovalRequired},
 			},
 		},
 	}
@@ -186,16 +186,19 @@ func resourceAuthorizationCreate(
 	if ex {
 		return diag.FromErr(fmt.Errorf("authorization_name %s already exists", d.Get("authorization_name").(string)))
 	}
-	err = addAuthorization(ctx, d, m)
+	id, err := addAuthorization(ctx, d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceAuthorization(ctx, d.Get("authorization_name").(string), m)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if !ex {
-		return diag.FromErr(fmt.Errorf("authorization_name %s not found after POST", d.Get("authorization_name").(string)))
+	if id == "" {
+		// Fallback for Bastion versions that don't return the X-Object-Id header on creation.
+		id, ex, err = searchResourceAuthorization(ctx, d.Get("authorization_name").(string), m)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if !ex {
+			return diag.FromErr(fmt.Errorf("authorization_name %s not found after POST", d.Get("authorization_name").(string)))
+		}
 	}
 	d.SetId(id)
 
@@ -253,11 +256,10 @@ func resourceAuthorizationDelete(
 }
 
 func resourceAuthorizationImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceAuthorizationVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
@@ -308,18 +310,18 @@ func searchResourceAuthorization(
 
 func addAuthorization(
 	ctx context.Context, d *schema.ResourceData, m interface{},
-) error {
+) (string, error) {
 	c := m.(*Client)
 	jsonData := prepareAuthorizationJSON(d, true)
-	body, code, err := c.newRequest(ctx, "/authorizations/", http.MethodPost, jsonData)
+	body, headers, code, err := c.newRequestWithHeaders(ctx, "/authorizations/", http.MethodPost, jsonData)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
+		return "", fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
-	return nil
+	return headers.Get("X-Object-Id"), nil
 }
 
 func updateAuthorization(
@@ -358,8 +360,8 @@ func prepareAuthorizationJSON(d *schema.ResourceData, newResource bool) jsonAuth
 		AuthorizationName:          d.Get("authorization_name").(string),
 		AuthorizePasswordRetrieval: d.Get("authorize_password_retrieval").(bool),
 		AuthorizeSessions:          d.Get("authorize_sessions").(bool),
-		Description:                d.Get("description").(string),
-		ApprovalRequired:           d.Get("approval_required").(bool),
+		Description:                d.Get(skDescription).(string),
+		ApprovalRequired:           d.Get(skApprovalRequired).(bool),
 		IsCritical:                 d.Get("is_critical").(bool),
 		IsRecorded:                 d.Get("is_recorded").(bool),
 	}
@@ -376,7 +378,7 @@ func prepareAuthorizationJSON(d *schema.ResourceData, newResource bool) jsonAuth
 	}
 
 	// Only include approval fields if approval_required is true
-	if d.Get("approval_required").(bool) {
+	if d.Get(skApprovalRequired).(bool) {
 		activeQuorum := d.Get("active_quorum").(int)
 		jsonData.ActiveQuorum = &activeQuorum
 		inactiveQuorum := d.Get("inactive_quorum").(int)
@@ -404,7 +406,7 @@ func prepareAuthorizationJSON(d *schema.ResourceData, newResource bool) jsonAuth
 	}
 
 	// Only include subprotocols if protocols are defined
-	if listSubProtocols := d.Get("subprotocols").(*schema.Set).List(); len(listSubProtocols) > 0 {
+	if listSubProtocols := d.Get(skSubprotocols).(*schema.Set).List(); len(listSubProtocols) > 0 {
 		subProtocols := make([]string, len(listSubProtocols))
 		for i, v := range listSubProtocols {
 			subProtocols[i] = v.(string)
@@ -450,7 +452,7 @@ func fillAuthorization(d *schema.ResourceData, jsonData jsonAuthorization) {
 	if tfErr := d.Set("target_group", jsonData.TargetGroup); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("authorize_password_retrieval", jsonData.AuthorizePasswordRetrieval); tfErr != nil {
@@ -465,7 +467,7 @@ func fillAuthorization(d *schema.ResourceData, jsonData jsonAuthorization) {
 	if tfErr := d.Set("session_sharing_mode", jsonData.SessionSharingMode); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("subprotocols", jsonData.SubProtocols); tfErr != nil {
+	if tfErr := d.Set(skSubprotocols, jsonData.SubProtocols); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("is_critical", jsonData.IsCritical); tfErr != nil {
@@ -474,7 +476,7 @@ func fillAuthorization(d *schema.ResourceData, jsonData jsonAuthorization) {
 	if tfErr := d.Set("is_recorded", jsonData.IsRecorded); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("approval_required", jsonData.ApprovalRequired); tfErr != nil {
+	if tfErr := d.Set(skApprovalRequired, jsonData.ApprovalRequired); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("approvers", jsonData.Approvers); tfErr != nil {

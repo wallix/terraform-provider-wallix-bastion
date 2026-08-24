@@ -8,194 +8,52 @@ description: |-
 
 # {{ .Name }} ({{ .Type | title }})
 
-Provides an Active Directory authentication domain resource.
+Provides an Active Directory authentication domain resource. It depends on a
+`wallix-bastion_externalauth_ldap` resource for the actual directory connection, and adds
+Active Directory attribute mapping and optional X.509 certificate-based authentication on top.
 
 ## Example Usage
 
 ```terraform
-# Basic Active Directory authentication domain
+resource "wallix-bastion_externalauth_ldap" "corporate" {
+  authentication_name = "corporate_ad"
+  host                = "dc1.corporate.local"
+  port                = 636
+  is_ssl              = true
+  ldap_base           = "OU=Users,DC=corporate,DC=local"
+  cn_attribute        = "sAMAccountName"
+  login_attribute     = "sAMAccountName"
+  timeout             = 10
+  is_anonymous_access = true
+}
+
 resource "wallix-bastion_authdomain_ad" "corporate" {
-  domain_name     = "corporate.local"
-  default_domain  = "CORPORATE"
-  description     = "Corporate Active Directory domain"
-  default_language = "en"
-  
-  # AD server configuration
-  ldap_hosts       = ["dc1.corporate.local", "dc2.corporate.local"]
-  ldap_port        = 389
-  ldap_base        = "dc=corporate,dc=local"
-  ldap_login       = "cn=bastion,ou=service accounts,dc=corporate,dc=local"
-  ldap_password    = var.ad_service_password
+  domain_name          = "corporate.local"
+  auth_domain_name     = "corporate.com"
+  external_auths       = [wallix-bastion_externalauth_ldap.corporate.authentication_name]
+  default_language     = "en"
+  default_email_domain = "corporate.com"
+  description          = "Corporate Active Directory domain"
 }
+```
 
-# Secure AD with SSL/TLS
-resource "wallix-bastion_authdomain_ad" "secure_ad" {
-  domain_name     = "secure.corporate.local"
-  default_domain  = "SECURE_AD"
-  description     = "Secure Active Directory with SSL"
-  default_language = "en"
-  
-  # Secure AD configuration
-  ldap_hosts       = ["adcs.corporate.local"]
-  ldap_port        = 636
-  ldap_base        = "dc=corporate,dc=local"
-  ldap_login       = "cn=bastion,ou=service accounts,dc=corporate,dc=local"
-  ldap_password    = var.ad_secure_password
-  use_ssl          = true
-  verify_certificate = true
-}
+### With X.509 Certificate-Based Authentication
 
-# AD with custom user attribute mapping
-resource "wallix-bastion_authdomain_ad" "custom_mapping" {
-  domain_name     = "custom.corporate.local"
-  default_domain  = "CUSTOM_AD"
-  description     = "AD with custom attribute mapping"
-  default_language = "en"
-  
-  # AD server configuration
-  ldap_hosts       = ["dc.corporate.local"]
-  ldap_port        = 389
-  ldap_base        = "dc=corporate,dc=local"
-  ldap_login       = "cn=bastion,ou=service accounts,dc=corporate,dc=local"
-  ldap_password    = var.ad_password
-  
-  # Custom AD attribute mapping
-  user_cn          = "sAMAccountName"
-  user_dn          = "distinguishedName"
-  user_email       = "mail"
-  user_group       = "memberOf"
-  user_source      = "objectCategory"
-  user_source_filter = "(objectCategory=person)"
-}
+```terraform
+resource "wallix-bastion_authdomain_ad" "smartcard" {
+  domain_name          = "smartcard.corporate.local"
+  auth_domain_name     = "corporate.com"
+  external_auths       = [wallix-bastion_externalauth_ldap.corporate.authentication_name]
+  default_language     = "en"
+  default_email_domain = "corporate.com"
 
-# AD with group-based access control
-resource "wallix-bastion_authdomain_ad" "group_controlled" {
-  domain_name     = "group.corporate.local"
-  default_domain  = "GROUP_AD"
-  description     = "AD with group-based access control"
-  default_language = "en"
-  
-  # AD server configuration
-  ldap_hosts       = ["dc.corporate.local"]
-  ldap_port        = 389
-  ldap_base        = "dc=corporate,dc=local"
-  ldap_login       = "cn=bastion,ou=service accounts,dc=corporate,dc=local"
-  ldap_password    = var.ad_password
-  
-  # Group-based access control
-  check_user_group = true
-  user_group       = "memberOf"
-  group_source_filter = "(objectClass=group)"
-  
-  # Restrict to specific groups
-  required_groups = [
-    "CN=VPN Users,OU=Security Groups,DC=corporate,DC=local",
-    "CN=Remote Access,OU=Security Groups,DC=corporate,DC=local"
-  ]
-}
-
-# Multi-forest AD configuration
-resource "wallix-bastion_authdomain_ad" "multi_forest" {
-  domain_name     = "multiforest.corporate.local"
-  default_domain  = "MULTI_AD"
-  description     = "Multi-forest AD configuration"
-  default_language = "en"
-  
-  # Primary forest
-  ldap_hosts       = ["dc1.corporate.local", "dc2.corporate.local"]
-  ldap_port        = 389
-  ldap_base        = "dc=corporate,dc=local"
-  ldap_login       = "cn=bastion,ou=service accounts,dc=corporate,dc=local"
-  ldap_password    = var.ad_password
-  
-  # External forest references
-  external_ldaps   = [
-    "dc1.partner.local:389",
-    "dc2.subsidiary.local:389"
-  ]
-}
-
-# Global Catalog AD configuration
-resource "wallix-bastion_authdomain_ad" "global_catalog" {
-  domain_name     = "gc.corporate.local"
-  default_domain  = "GC_AD"
-  description     = "Global Catalog AD configuration"
-  default_language = "en"
-  
-  # Global Catalog servers
-  ldap_hosts       = ["gc1.corporate.local", "gc2.corporate.local"]
-  ldap_port        = 3268  # Global Catalog port
-  ldap_base        = "dc=corporate,dc=local"
-  ldap_login       = "cn=bastion,ou=service accounts,dc=corporate,dc=local"
-  ldap_password    = var.ad_password
-  
-  # Global Catalog specific settings
-  user_source_filter = "(&(objectCategory=person)(objectClass=user))"
-  group_source_filter = "(objectClass=group)"
-}
-
-# AD with comprehensive security settings
-resource "wallix-bastion_authdomain_ad" "enterprise" {
-  domain_name     = "enterprise.corporate.local"
-  default_domain  = "ENTERPRISE"
-  description     = "Enterprise AD with comprehensive security"
-  default_language = "en"
-  
-  # Highly available AD configuration
-  ldap_hosts       = [
-    "dc1.corporate.local",
-    "dc2.corporate.local", 
-    "dc3.corporate.local"
-  ]
-  ldap_port        = 636
-  ldap_base        = "dc=corporate,dc=local"
-  ldap_login       = "cn=bastion,ou=service accounts,dc=corporate,dc=local"
-  ldap_password    = var.ad_enterprise_password
-  
-  # Maximum security
-  use_ssl          = true
-  verify_certificate = true
-  
-  # Comprehensive user mapping
-  user_cn          = "sAMAccountName"
-  user_dn          = "distinguishedName"
-  user_email       = "mail"
-  user_group       = "memberOf"
-  user_source      = "objectCategory"
-  user_source_filter = "(&(objectCategory=person)(objectClass=user)(!(userAccountControl:1.2.840.113556.1.4.803:=2)))"
-  
-  # Strict group validation
-  check_user_group = true
-  group_source_filter = "(objectClass=group)"
-  
-  # External references
-  external_ldaps   = [
-    "dc1.partner1.local:636",
-    "dc1.partner2.local:636"
-  ]
-  
-  # Default domain setting
-  is_default       = true
-}
-
-# Read-only Domain Controller (RODC) configuration
-resource "wallix-bastion_authdomain_ad" "rodc" {
-  domain_name     = "rodc.corporate.local"
-  default_domain  = "RODC_AD"
-  description     = "Read-only Domain Controller configuration"
-  default_language = "en"
-  
-  # RODC servers
-  ldap_hosts       = ["rodc1.corporate.local", "rodc2.corporate.local"]
-  ldap_port        = 389
-  ldap_base        = "dc=corporate,dc=local"
-  ldap_login       = "cn=bastion,ou=service accounts,dc=corporate,dc=local"
-  ldap_password    = var.ad_password
-  
-  # RODC specific settings
-  user_source_filter = "(objectCategory=person)"
-  group_source_filter = "(objectClass=group)"
-  check_user_group = true
+  check_x509_san_email   = true
+  pubkey_attribute       = "userCertificate"
+  x509_condition         = "AND"
+  x509_search_filter     = "(sAMAccountName={login})"
+  display_name_attribute = "displayName"
+  email_attribute        = "mail"
+  group_attribute        = "memberOf"
 }
 ```
 
@@ -203,235 +61,27 @@ resource "wallix-bastion_authdomain_ad" "rodc" {
 
 ## Usage Notes
 
-### Active Directory Configuration
+### Relationship to externalauth_ldap
 
-**Basic Connection:**
-- **ldap_hosts**: List of domain controllers (DCs)
-- **ldap_port**: 389 (LDAP), 636 (LDAPS), 3268 (Global Catalog)
-- **ldap_base**: Domain base DN (e.g., "dc=company,dc=com")
-- **ldap_login**: Service account DN
-- **ldap_password**: Service account password
+`external_auths` references one or more `wallix-bastion_externalauth_ldap.authentication_name`
+values, which hold the actual LDAP connection details (host, port, bind credentials, base DN).
+This resource layers Active Directory-specific attribute mapping and authentication-domain
+settings (default language, default email domain) on top.
 
-### Security Configuration
+### default_language
 
-**SSL/TLS Encryption:**
-```terraform
-use_ssl          = true    # Enable LDAPS
-verify_certificate = true  # Verify server certificates
-ldap_port        = 636     # LDAPS port
-```
+Must be one of `de`, `en`, `es`, `fr`, `ru`.
 
-**Service Account Security:**
-- Use dedicated service account with minimal privileges
-- Grant "Log on as a service" right
-- Add to "Read" permissions on domain
-- Consider using Managed Service Account (MSA)
+### X.509 Attributes Are Optional
 
-### Active Directory Attribute Mapping
-
-**Standard AD Mappings:**
-```terraform
-user_cn    = "sAMAccountName"      # Username (pre-Windows 2000)
-user_dn    = "distinguishedName"   # Full distinguished name
-user_email = "mail"                # Email address
-user_group = "memberOf"            # Group membership
-```
-
-**Alternative Mappings:**
-```terraform
-user_cn    = "userPrincipalName"   # UPN format (user@domain.com)
-user_email = "proxyAddresses"      # All email addresses
-user_group = "primaryGroupID"      # Primary group only
-```
-
-### LDAP Filters
-
-**User Filtering:**
-```terraform
-user_source        = "objectCategory"
-user_source_filter = "(&(objectCategory=person)(objectClass=user)(!(userAccountControl:1.2.840.113556.1.4.803:=2)))"
-```
-
-**Group Filtering:**
-```terraform
-group_source_filter = "(&(objectClass=group)(groupType:1.2.840.113556.1.4.803:=2147483648))"
-```
-
-**Common AD Filters:**
-- Active users only: `(!(userAccountControl:1.2.840.113556.1.4.803:=2))`
-- Security groups only: `(groupType:1.2.840.113556.1.4.803:=2147483648)`
-- Distribution groups: `(groupType:1.2.840.113556.1.4.803:=2)`
-
-### Group-Based Access Control
-
-**Enable Group Validation:**
-```terraform
-check_user_group = true
-user_group       = "memberOf"
-group_source_filter = "(objectClass=group)"
-```
-
-**Specific Group Requirements:**
-```terraform
-required_groups = [
-  "CN=Bastion Users,OU=Security Groups,DC=company,DC=com",
-  "CN=VPN Access,OU=Security Groups,DC=company,DC=com"
-]
-```
-
-### High Availability
-
-**Multiple Domain Controllers:**
-```terraform
-ldap_hosts = [
-  "dc1.company.com",
-  "dc2.company.com",
-  "dc3.company.com"
-]
-```
-
-**Site-Aware Configuration:**
-```terraform
-ldap_hosts = [
-  "dc-site1.company.com",  # Local site
-  "dc-site2.company.com",  # Remote site 1
-  "dc-site3.company.com"   # Remote site 2
-]
-```
-
-### Multi-Forest and Trust Configurations
-
-**Cross-Forest References:**
-```terraform
-external_ldaps = [
-  "dc1.partner.com:389",
-  "dc1.subsidiary.com:636"
-]
-```
-
-### Global Catalog Configuration
-
-**Global Catalog Servers:**
-```terraform
-ldap_hosts = ["gc1.company.com", "gc2.company.com"]
-ldap_port  = 3268  # Global Catalog port (3269 for SSL)
-```
-
-### Common AD Configurations
-
-**Standard Corporate AD:**
-```terraform
-resource "wallix-bastion_authdomain_ad" "corporate" {
-  domain_name = "company.com"
-  ldap_hosts  = ["dc1.company.com", "dc2.company.com"]
-  ldap_port   = 389
-  ldap_base   = "dc=company,dc=com"
-  ldap_login  = "cn=bastion,ou=service accounts,dc=company,dc=com"
-  
-  user_cn     = "sAMAccountName"
-  user_email  = "mail"
-  user_group  = "memberOf"
-  user_source_filter = "(objectCategory=person)"
-}
-```
-
-**Secure AD with Groups:**
-```terraform
-resource "wallix-bastion_authdomain_ad" "secure" {
-  domain_name = "secure.company.com"
-  ldap_hosts  = ["adcs.company.com"]
-  ldap_port   = 636
-  use_ssl     = true
-  verify_certificate = true
-  
-  check_user_group = true
-  user_group = "memberOf"
-  group_source_filter = "(objectClass=group)"
-}
-```
-
-### Performance Optimization
-
-**Connection Optimization:**
-- Use closest domain controllers
-- Implement connection pooling
-- Configure appropriate timeouts
-- Use Global Catalog for cross-domain queries
-
-**Query Optimization:**
-- Use specific LDAP filters
-- Limit search scope
-- Index frequently queried attributes
-- Avoid wildcard searches
-
-### Troubleshooting
-
-**Connection Issues:**
-1. Verify network connectivity to DCs
-2. Check firewall rules (ports 389, 636, 3268, 3269)
-3. Validate service account credentials
-4. Test DNS resolution of DC names
-
-**Authentication Issues:**
-1. Verify user attribute mappings
-2. Check group membership requirements
-3. Validate LDAP filters
-4. Review AD user account status
-
-**SSL/TLS Issues:**
-1. Verify certificate validity
-2. Check certificate chain
-3. Validate certificate subject names
-4. Review SSL/TLS settings
-
-### Monitoring and Maintenance
-
-**Health Checks:**
-- Monitor DC availability
-- Track authentication success rates
-- Monitor service account status
-- Check certificate expiration
-
-**Regular Maintenance:**
-- Rotate service account passwords
-- Update SSL certificates
-- Review group memberships
-- Audit access patterns
-
-### Security Best Practices
-
-1. **Service Account**: Use dedicated account with minimal privileges
-2. **SSL/TLS**: Always use encryption for production
-3. **Certificate Validation**: Verify server certificates
-4. **Group Validation**: Enable group membership checking
-5. **Least Privilege**: Restrict access to necessary groups
-6. **Monitoring**: Log and monitor authentication events
-
-### Integration Examples
-
-**With User Management:**
-```terraform
-resource "wallix-bastion_user" "ad_user" {
-  user_name   = "john.doe"
-  auth_domain = wallix-bastion_authdomain_ad.corporate.domain_name
-  user_source = "active_directory"
-}
-```
-
-**With Domain Mapping:**
-```terraform
-resource "wallix-bastion_authdomain_mapping" "ad_mapping" {
-  domain_name  = wallix-bastion_authdomain_ad.corporate.domain_name
-  auth_domain  = wallix-bastion_authdomain_ad.corporate.domain_name
-  user_group   = "memberOf"
-  group_filter = "(objectClass=group)"
-}
-```
+`check_x509_san_email`, `pubkey_attribute`, `x509_condition`, and `x509_search_filter` only
+matter if you're using certificate/smart-card-based authentication against this domain; omit
+them for password-based AD authentication.
 
 ## Import
 
 Active Directory authentication domain can be imported using the domain name, e.g.
 
 ```shell
-terraform import wallix-bastion_authdomain_ad.corporate "corporate.local"
+terraform import wallix-bastion_authdomain_ad.corporate corporate.local
 ```

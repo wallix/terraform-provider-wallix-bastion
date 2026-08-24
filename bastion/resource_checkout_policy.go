@@ -29,18 +29,18 @@ func resourceCheckoutPolicy() *schema.Resource {
 		UpdateContext: resourceCheckoutPolicyUpdate,
 		DeleteContext: resourceCheckoutPolicyDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceCheckoutPolicyImport,
+			StateContext: resourceCheckoutPolicyImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"checkout_policy_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"enable_lock": {
+			skEnableLock: {
 				Type:         schema.TypeBool,
 				Optional:     true,
 				RequiredWith: []string{"duration", "max_duration"},
@@ -48,22 +48,22 @@ func resourceCheckoutPolicy() *schema.Resource {
 			"change_credentials_at_checkin": {
 				Type:         schema.TypeBool,
 				Optional:     true,
-				RequiredWith: []string{"enable_lock"},
+				RequiredWith: []string{skEnableLock},
 			},
 			"duration": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				RequiredWith: []string{"enable_lock"},
+				RequiredWith: []string{skEnableLock},
 			},
 			"extension": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				RequiredWith: []string{"enable_lock"},
+				RequiredWith: []string{skEnableLock},
 			},
 			"max_duration": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				RequiredWith: []string{"enable_lock"},
+				RequiredWith: []string{skEnableLock},
 			},
 		},
 	}
@@ -91,17 +91,20 @@ func resourceCheckoutPolicyCreate(
 	if ex {
 		return diag.FromErr(fmt.Errorf("checkout_policy_name %s already exists", d.Get("checkout_policy_name").(string)))
 	}
-	err = addCheckoutPolicy(ctx, d, m)
+	id, err := addCheckoutPolicy(ctx, d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceCheckoutPolicy(ctx, d.Get("checkout_policy_name").(string), m)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if !ex {
-		return diag.FromErr(fmt.Errorf("checkout_policy_name %s not found after POST",
-			d.Get("checkout_policy_name").(string)))
+	if id == "" {
+		// Fallback for Bastion versions that don't return the X-Object-Id header on creation.
+		id, ex, err = searchResourceCheckoutPolicy(ctx, d.Get("checkout_policy_name").(string), m)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if !ex {
+			return diag.FromErr(fmt.Errorf("checkout_policy_name %s not found after POST",
+				d.Get("checkout_policy_name").(string)))
+		}
 	}
 	d.SetId(id)
 
@@ -159,11 +162,10 @@ func resourceCheckoutPolicyDelete(
 }
 
 func resourceCheckoutPolicyImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceCheckoutPolicyVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
@@ -215,18 +217,18 @@ func searchResourceCheckoutPolicy(
 
 func addCheckoutPolicy(
 	ctx context.Context, d *schema.ResourceData, m interface{},
-) error {
+) (string, error) {
 	c := m.(*Client)
 	jsonData := prepareCheckoutPolicyJSON(d)
-	body, code, err := c.newRequest(ctx, "/checkoutpolicies/", http.MethodPost, jsonData)
+	body, headers, code, err := c.newRequestWithHeaders(ctx, "/checkoutpolicies/", http.MethodPost, jsonData)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
+		return "", fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
-	return nil
+	return headers.Get("X-Object-Id"), nil
 }
 
 func updateCheckoutPolicy(
@@ -264,8 +266,8 @@ func prepareCheckoutPolicyJSON(d *schema.ResourceData) jsonCheckoutPolicy {
 	jsonData := jsonCheckoutPolicy{
 		ChangeCredentialsAtCheckin: d.Get("change_credentials_at_checkin").(bool),
 		CheckoutPolicyName:         d.Get("checkout_policy_name").(string),
-		Description:                d.Get("description").(string),
-		EnableLock:                 d.Get("enable_lock").(bool),
+		Description:                d.Get(skDescription).(string),
+		EnableLock:                 d.Get(skEnableLock).(bool),
 		Duration:                   d.Get("duration").(int),
 		Extension:                  d.Get("extension").(int),
 		MaxDuration:                d.Get("max_duration").(int),
@@ -303,10 +305,10 @@ func fillCheckoutPolicy(d *schema.ResourceData, jsonData jsonCheckoutPolicy) {
 	if tfErr := d.Set("checkout_policy_name", jsonData.CheckoutPolicyName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("enable_lock", jsonData.EnableLock); tfErr != nil {
+	if tfErr := d.Set(skEnableLock, jsonData.EnableLock); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("change_credentials_at_checkin", jsonData.ChangeCredentialsAtCheckin); tfErr != nil {

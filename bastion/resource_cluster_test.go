@@ -8,8 +8,8 @@ import (
 
 func TestAccResourceCluster_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceClusterCreate(),
@@ -37,7 +37,7 @@ func testAccResourceClusterCreate() string {
 	return `
 resource "wallix-bastion_device" "testacc_Cluster" {
   device_name = "testacc_Cluster"
-  host        = "testacc_Cluster"
+  host        = "192.168.100.10"
 }
 
 resource "wallix-bastion_device_service" "testacc_Cluster" {
@@ -63,7 +63,7 @@ func testAccResourceClusterUpdate() string {
 	return `
 resource "wallix-bastion_device" "testacc_Cluster" {
   device_name = "testacc_Cluster"
-  host        = "testacc_Cluster"
+  host        = "192.168.100.10"
 }
 
 resource "wallix-bastion_device_service" "testacc_Cluster" {

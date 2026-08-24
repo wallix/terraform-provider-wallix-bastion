@@ -21,43 +21,43 @@ func resourceDomainAccountCredential() *schema.Resource {
 		UpdateContext: resourceDomainAccountCredentialUpdate,
 		DeleteContext: resourceDomainAccountCredentialDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceDomainAccountCredentialImport,
+			StateContext: resourceDomainAccountCredentialImport,
 		},
 		Schema: map[string]*schema.Schema{
-			"domain_id": {
+			skDomainID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"account_id": {
+			skAccountID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"type": {
+			skType: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{"password", "ssh_key"}, false),
+				ValidateFunc: validation.StringInSlice([]string{skPassword, "ssh_key"}, false),
 			},
-			"passphrase": {
+			skPassphrase: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
-				RequiredWith: []string{"private_key"},
+				RequiredWith: []string{skPrivateKey},
 			},
-			"password": {
+			skPassword: {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
 			},
-			"private_key": {
+			skPrivateKey: {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
 				ForceNew:  true,
 			},
-			"public_key": {
+			skPublicKey: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -84,43 +84,46 @@ func resourceDomainAccountCredentialCreate(
 	if err := resourceDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	cfgDomain, err := readDomainOptions(ctx, d.Get("domain_id").(string), m)
+	cfgDomain, err := readDomainOptions(ctx, d.Get(skDomainID).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if cfgDomain.ID == "" {
-		return diag.FromErr(fmt.Errorf("domain_id with ID %s doesn't exists", d.Get("domain_id").(string)))
+		return diag.FromErr(fmt.Errorf("domain_id with ID %s doesn't exists", d.Get(skDomainID).(string)))
 	}
-	cfgAccount, err := readDomainAccountOptions(ctx, d.Get("domain_id").(string), d.Get("account_id").(string), m)
+	cfgAccount, err := readDomainAccountOptions(ctx, d.Get(skDomainID).(string), d.Get(skAccountID).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if cfgAccount.ID == "" {
 		return diag.FromErr(fmt.Errorf("account_id with ID %s on domain_id %s doesn't exists",
-			d.Get("account_id").(string), d.Get("domain_id").(string)))
+			d.Get(skAccountID).(string), d.Get(skDomainID).(string)))
 	}
 	_, ex, err := searchResourceDomainAccountCredential(ctx,
-		d.Get("domain_id").(string), d.Get("account_id").(string), d.Get("type").(string), m)
+		d.Get(skDomainID).(string), d.Get(skAccountID).(string), d.Get(skType).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if ex {
 		return diag.FromErr(fmt.Errorf("credential type %s on account_id %s, domain_id %s already exists",
-			d.Get("type").(string), d.Get("account_id").(string), d.Get("domain_id").(string)))
+			d.Get(skType).(string), d.Get(skAccountID).(string), d.Get(skDomainID).(string)))
 	}
-	err = addDomainAccountCredential(ctx, d, m)
+	id, err := addDomainAccountCredential(ctx, d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceDomainAccountCredential(ctx,
-		d.Get("domain_id").(string), d.Get("account_id").(string), d.Get("type").(string), m)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if !ex {
-		return diag.FromErr(fmt.Errorf(
-			"credential type %s on account_id %s, domain_id %s not found after POST",
-			d.Get("type").(string), d.Get("account_id").(string), d.Get("domain_id").(string)))
+	if id == "" {
+		// Fallback for Bastion versions that don't return the X-Object-Id header on creation.
+		id, ex, err = searchResourceDomainAccountCredential(ctx,
+			d.Get(skDomainID).(string), d.Get(skAccountID).(string), d.Get(skType).(string), m)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if !ex {
+			return diag.FromErr(fmt.Errorf(
+				"credential type %s on account_id %s, domain_id %s not found after POST",
+				d.Get(skType).(string), d.Get(skAccountID).(string), d.Get(skDomainID).(string)))
+		}
 	}
 	d.SetId(id)
 
@@ -135,7 +138,7 @@ func resourceDomainAccountCredentialRead(
 		return diag.FromErr(err)
 	}
 	cfg, err := readDomainAccountCredentialOptions(ctx,
-		d.Get("domain_id").(string), d.Get("account_id").(string), d.Id(), m)
+		d.Get(skDomainID).(string), d.Get(skAccountID).(string), d.Id(), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -179,11 +182,10 @@ func resourceDomainAccountCredentialDelete(
 }
 
 func resourceDomainAccountCredentialImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceDomainAccountCredentialVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
@@ -207,10 +209,10 @@ func resourceDomainAccountCredentialImport(
 	fillDomainAccountCredential(d, cfg)
 	result := make([]*schema.ResourceData, 1)
 	d.SetId(id)
-	if tfErr := d.Set("domain_id", idSplit[0]); tfErr != nil {
+	if tfErr := d.Set(skDomainID, idSplit[0]); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("account_id", idSplit[1]); tfErr != nil {
+	if tfErr := d.Set(skAccountID, idSplit[1]); tfErr != nil {
 		panic(tfErr)
 	}
 	result[0] = d
@@ -249,37 +251,38 @@ func searchResourceDomainAccountCredential(
 
 func addDomainAccountCredential(
 	ctx context.Context, d *schema.ResourceData, m interface{},
-) error {
+) (string, error) {
 	c := m.(*Client)
 	propagate := d.Get("propagate_credential_change").(bool)
 	jsonData := prepareDomainAccountCredentialJSON(d, propagate, true)
 
-	body, code, err := c.newRequest(ctx,
-		"/domains/"+d.Get("domain_id").(string)+"/accounts/"+d.Get("account_id").(string)+"/credentials/",
+	body, headers, code, err := c.newRequestWithHeaders(ctx,
+		"/domains/"+d.Get(skDomainID).(string)+"/accounts/"+d.Get(skAccountID).(string)+"/credentials/",
 		http.MethodPost, jsonData)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
+		return "", fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
+	id := headers.Get("X-Object-Id")
 
 	if propagate {
-		accountID := d.Get("account_id")
+		accountID := d.Get(skAccountID)
 		jsonDataPropagate := prepareDomainAccountCredentialJSON(d, propagate, false)
 
 		body, code, err = c.newRequest(ctx,
 			fmt.Sprintf("/accountchangepassword/%s/password", accountID),
 			http.MethodPut, jsonDataPropagate)
 		if err != nil {
-			return err
+			return "", err
 		}
 		if code != http.StatusOK && code != http.StatusNoContent {
-			return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
+			return "", fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 		}
 	}
 
-	return nil
+	return id, nil
 }
 
 func updateDomainAccountCredential(
@@ -292,12 +295,12 @@ func updateDomainAccountCredential(
 	}
 
 	// Get the account ID and domain ID from the resource data
-	accountID, ok := d.Get("account_id").(string)
+	accountID, ok := d.Get(skAccountID).(string)
 	if !ok {
 		return errors.New("failed to get account_id from resource data")
 	}
 
-	domainID, ok := d.Get("domain_id").(string)
+	domainID, ok := d.Get(skDomainID).(string)
 	if !ok {
 		return errors.New("failed to get domain_id from resource data")
 	}
@@ -332,7 +335,7 @@ func deleteDomainAccountCredential(
 ) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
-		"/domains/"+d.Get("domain_id").(string)+"/accounts/"+d.Get("account_id").(string)+"/credentials/"+d.Id(),
+		"/domains/"+d.Get(skDomainID).(string)+"/accounts/"+d.Get(skAccountID).(string)+"/credentials/"+d.Id(),
 		http.MethodDelete, nil)
 	if err != nil {
 		return err
@@ -353,20 +356,20 @@ func prepareDomainAccountCredentialJSON(
 
 	if propagate {
 		// Only include the password key
-		jsonData.Password = d.Get("password").(string)
+		jsonData.Password = d.Get(skPassword).(string)
 		if propagateAdd {
-			jsonData.Type = d.Get("type").(string)
+			jsonData.Type = d.Get(skType).(string)
 		}
 	} else {
 		// Include the type and other fields based on the type
-		jsonData.Type = d.Get("type").(string)
+		jsonData.Type = d.Get(skType).(string)
 
 		switch jsonData.Type {
-		case "password":
-			jsonData.Password = d.Get("password").(string)
+		case skPassword:
+			jsonData.Password = d.Get(skPassword).(string)
 		case "ssh_key":
-			jsonData.PrivateKey = d.Get("private_key").(string)
-			jsonData.Passphrase = d.Get("passphrase").(string)
+			jsonData.PrivateKey = d.Get(skPrivateKey).(string)
+			jsonData.Passphrase = d.Get(skPassphrase).(string)
 		}
 	}
 
@@ -412,10 +415,10 @@ func readDomainAccountCredentialOptions(
 }
 
 func fillDomainAccountCredential(d *schema.ResourceData, jsonData jsonCredential) {
-	if tfErr := d.Set("type", jsonData.Type); tfErr != nil {
+	if tfErr := d.Set(skType, jsonData.Type); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("public_key", jsonData.PublicKey); tfErr != nil {
+	if tfErr := d.Set(skPublicKey, jsonData.PublicKey); tfErr != nil {
 		panic(tfErr)
 	}
 }

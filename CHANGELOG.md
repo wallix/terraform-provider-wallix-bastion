@@ -1,5 +1,56 @@
 # changelog
 
+## 0.15.0 (August 24, 2026)
+
+BREAKING CHANGES:
+
+- **provider**: TLS certificate verification is now enabled by default (`insecure_skip_verify` now defaults to `false`). Users connecting to a Bastion with a self-signed certificate must explicitly set `insecure_skip_verify = true` or the `WALLIX_INSECURE_SKIP_VERIFY` environment variable.
+- **resource/wallix-bastion_externalauth_saml**: `claim_customization` is now required, matching the API's actual requirement on API v3.12+; existing configs that omit it must add the block. This resource is not usable on API v3.8, where `claim_customization` isn't part of the API at all.
+
+FEATURES:
+
+- add `wallix-bastion_apikey` resource
+- add `wallix-bastion_apikey_v2` resource (requires API v3.12+; adds a required `profile` argument on top of `wallix-bastion_apikey`)
+- add `wallix-bastion_application_localdomain_account_credential` resource (only `type = "password"` is supported by the API for this endpoint)
+- add `wallix-bastion_certificate_authority` resource (requires API v3.12+)
+- add `wallix-bastion_passwordchangepolicy` resource
+- add `wallix-bastion_notification` resource
+- add `wallix-bastion_config_smtp` resource (SMTP server configuration)
+- add `wallix-bastion_config_wsm` resource (Web Session Manager configuration, requires API v3.12+)
+- **provider**: add `session_timeout`, `csrf_enabled`, and `insecure_skip_verify` arguments
+- **client**: cookie-based session authentication, avoiding re-authentication on every API request
+- **client**: CSRF token protection, with automatic extraction from responses and refresh on expiry
+- add 39 data sources for read-only lookup of infrastructure that already exists on the Bastion,
+  covering every resource that previously had none (`wallix-bastion_device`,
+  `wallix-bastion_application`, `wallix-bastion_user`, `wallix-bastion_usergroup`,
+  `wallix-bastion_targetgroup`, `wallix-bastion_cluster`, `wallix-bastion_profile`,
+  `wallix-bastion_authorization`, and 31 others including the full `device_*`/`domain_*`/
+  `application_*` nested-resource families, `externalauth_*`, `authdomain_*`, and the singleton
+  configs `wallix-bastion_config_x509`/`wallix-bastion_config_smtp`/`wallix-bastion_config_wsm`/
+  `wallix-bastion_encryption`)
+- default API now use v3.12
+
+ENHANCEMENTS:
+
+- reduced resource creation time across almost every resource: creation now reads the new resource's ID from the API's `X-Object-Id` response header instead of an extra search request afterward, falling back to the search only against older Bastion versions that don't return the header
+- **resource/wallix-bastion_device**, **resource/wallix-bastion_application**: add `tags` argument (repeatable `key`/`value` blocks)
+- **resource/wallix-bastion_application**: add `web_application` category, replacing the `jumphost` category deprecated on API v3.12+
+- dependency updates addressing multiple security advisories in `golang.org/x/net`, `golang.org/x/crypto`, `google.golang.org/grpc`, and `github.com/cloudflare/circl`
+- **ci**: migrated `golangci-lint` configuration to the v2 schema and updated CI Go versions to 1.25/1.26
+- **ci**: migrated acceptance tests off the deprecated `resource.TestCase.Providers` field to `ProviderFactories`, and resource importers off the deprecated `schema.ResourceImporter.State` to `StateContext`, clearing 129 `staticcheck` SA1019 findings
+- **ci**: introduced shared string constants for schema key names and other repeated literals, replacing ~1300 duplicate occurrences across resources/data sources, and re-enabled the `goconst` linter
+
+BUG FIXES:
+
+- **resource/wallix-bastion_domain_account**: fixed a bug where changing the domain account without also updating its associated resources caused those resources to be deleted
+- **resource/wallix-bastion_application**: fixed a regression in the web application category where the default category wasn't applied when left unset
+- **resource/wallix-bastion_device_localdomain_account**: fixed a potential panic when the API omits the `credentials` field from a read response
+- **resource/wallix-bastion_authdomain_azuread**: fixed `passphrase` always being sent to the API as an empty string when unset, which made it impossible to create this resource without also setting `private_key`/`passphrase`, even though both are documented as optional
+- **resource/wallix-bastion_device_localdomain_account_credential**, **resource/wallix-bastion_application_localdomain_account_credential**: fixed `apply` failing with "already exists" after WALLIX rotates a credential outside of Terraform (manual regenerate, or an automatic rotation policy); `Read` now retries a lookup by `(account, type)` before treating a 404 on the stored ID as a deletion
+- **data-source/wallix-bastion_device_localdomain_account_credential**, **data-source/wallix-bastion_domain_account_credential**, **data-source/wallix-bastion_application_localdomain_account_credential**: fixed `password`/`passphrase`/`private_key` never being populated even though declared as computed attributes
+- **client**: fixed a race condition on session state checks, a bug where POST/PUT requests could fail on re-authentication due to request body reuse, and defensive error handling around URL parsing and cookie jar creation
+- **docs**: rewrote the `wallix-bastion_authdomain_ad`, `wallix-bastion_authdomain_azuread`, `wallix-bastion_authdomain_ldap`, `wallix-bastion_authdomain_mapping`, `wallix-bastion_authdomain_saml`, `wallix-bastion_externalauth_kerberos`, `wallix-bastion_externalauth_ldap`, `wallix-bastion_externalauth_radius`, `wallix-bastion_externalauth_saml`, and `wallix-bastion_externalauth_tacacs` resource docs, whose examples referenced arguments that don't exist on these resources (e.g. `identity_provider_url`, `user_attribute_mapping`, `ldap_hosts`, `tenant_id`) instead of their real schemas
+
 ## 0.14.8 (October 10, 2025)
 
 BUG FIXES:

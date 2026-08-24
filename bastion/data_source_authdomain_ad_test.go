@@ -9,7 +9,7 @@ import (
 func TestAccDataSourceAuthDomainAD_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                  func() { testAccPreCheck(t) },
-		Providers:                 testAccProviders,
+		ProviderFactories:         testAccProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
@@ -20,13 +20,13 @@ func TestAccDataSourceAuthDomainAD_basic(t *testing.T) {
 				// Validate that the datasource correctly retrieves the resource.
 				Config: testAccDataSourceAuthDomainADConfigData(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.wallix-bastion_authdomain.testacc_dataDomain",
-						"domain_name", "testacc-domain"),
-					resource.TestCheckResourceAttr("data.wallix-bastion_authdomain.testacc_dataDomain",
-						"auth_domain_name", "testacc-auth-domain"),
-					resource.TestCheckResourceAttr("data.wallix-bastion_authdomain.testacc_dataDomain",
+					resource.TestCheckResourceAttr("data.wallix-bastion_authdomain_ad.testacc_dataDomain",
+						"domain_name", "testacc-domain-ds"),
+					resource.TestCheckResourceAttr("data.wallix-bastion_authdomain_ad.testacc_dataDomain",
+						"auth_domain_name", "testacc-auth-domain-ds"),
+					resource.TestCheckResourceAttr("data.wallix-bastion_authdomain_ad.testacc_dataDomain",
 						"default_language", "en"),
-					resource.TestCheckResourceAttr("data.wallix-bastion_authdomain.testacc_dataDomain",
+					resource.TestCheckResourceAttr("data.wallix-bastion_authdomain_ad.testacc_dataDomain",
 						"default_email_domain", "example.com"),
 				),
 			},
@@ -37,12 +37,24 @@ func TestAccDataSourceAuthDomainAD_basic(t *testing.T) {
 // Resource creation configuration.
 func testAccDataSourceAuthDomainADConfigCreate() string {
 	return `
-resource "wallix-bastion_authdomain_ad" "testacc_dataAuthDomain" {
-  domain_name          = "testacc-domain"
-  auth_domain_name     = "testacc-auth-domain"
+resource "wallix-bastion_externalauth_ldap" "testacc_dataAuthDomain_ds" {
+  authentication_name = "testacc_dataAuthDomain_ds"
+  cn_attribute        = "sAMAccountName"
+  host                = "192.168.100.20"
+  ldap_base           = "OU=Test,DC=example,DC=com"
+  login_attribute     = "sAMAccountName"
+  port                = 636
+  timeout             = 10
+  is_ssl              = true
+  is_anonymous_access = true
+}
+
+resource "wallix-bastion_authdomain_ad" "testacc_dataAuthDomain_ds" {
+  domain_name          = "testacc-domain-ds"
+  auth_domain_name     = "testacc-auth-domain-ds"
   default_language     = "en"
   default_email_domain = "example.com"
-  external_auths       = ["auth1", "auth2"]
+  external_auths       = [wallix-bastion_externalauth_ldap.testacc_dataAuthDomain_ds.authentication_name]
 }
 `
 }
@@ -50,17 +62,29 @@ resource "wallix-bastion_authdomain_ad" "testacc_dataAuthDomain" {
 // Datasource configuration to retrieve the created resource.
 func testAccDataSourceAuthDomainADConfigData() string {
 	return `
-resource "wallix-bastion_authdomain_ad" "testacc_dataAuthDomain" {
-  domain_name          = "testacc-domain"
-  auth_domain_name     = "testacc-auth-domain"
-  default_language     = "en"
-  default_email_domain = "example.com"
-  external_auths       = ["auth1", "auth2"]
+resource "wallix-bastion_externalauth_ldap" "testacc_dataAuthDomain_ds" {
+  authentication_name = "testacc_dataAuthDomain_ds"
+  cn_attribute        = "sAMAccountName"
+  host                = "192.168.100.20"
+  ldap_base           = "OU=Test,DC=example,DC=com"
+  login_attribute     = "sAMAccountName"
+  port                = 636
+  timeout             = 10
+  is_ssl              = true
+  is_anonymous_access = true
 }
 
-data "wallix-bastion_authdomain" "testacc_dataDomain" {
-  domain_name      = wallix-bastion_domain.testacc_dataDomain.domain_name
-  auth_domain_name = wallix-bastion_domain.testacc_dataDomain.domain_real_name
+resource "wallix-bastion_authdomain_ad" "testacc_dataAuthDomain_ds" {
+  domain_name          = "testacc-domain-ds"
+  auth_domain_name     = "testacc-auth-domain-ds"
+  default_language     = "en"
+  default_email_domain = "example.com"
+  external_auths       = [wallix-bastion_externalauth_ldap.testacc_dataAuthDomain_ds.authentication_name]
+}
+
+data "wallix-bastion_authdomain_ad" "testacc_dataDomain" {
+  domain_name      = wallix-bastion_authdomain_ad.testacc_dataAuthDomain_ds.domain_name
+  auth_domain_name = wallix-bastion_authdomain_ad.testacc_dataAuthDomain_ds.auth_domain_name
 }
 `
 }

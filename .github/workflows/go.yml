@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        go-version: ['1.23', '1.24']
+        go-version: ['1.25', '1.26']
     
     steps:
       - name: Checkout code
@@ -55,7 +55,7 @@ jobs:
       
       # Codecov upload disabled due to token issues with protected branches
       # - name: Upload coverage to Codecov
-      #   if: matrix.go-version == '1.23'  # Only upload once
+      #   if: matrix.go-version == '1.25'  # Only upload once
       #   uses: codecov/codecov-action@v5
       #   with:
       #     file: ./coverage-${{ matrix.go-version }}.out

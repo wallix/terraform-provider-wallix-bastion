@@ -34,23 +34,23 @@ func resourceDomainAccount() *schema.Resource {
 		UpdateContext: resourceDomainAccountUpdate,
 		DeleteContext: resourceDomainAccountDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceDomainAccountImport,
+			StateContext: resourceDomainAccountImport,
 		},
 		Schema: map[string]*schema.Schema{
-			"domain_id": {
+			skDomainID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"account_name": {
+			skAccountName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"account_login": {
+			skAccountLogin: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"auto_change_password": {
+			skAutoChangePassword: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -62,7 +62,7 @@ func resourceDomainAccount() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"checkout_policy": {
+			skCheckoutPolicy: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "default",
@@ -76,22 +76,22 @@ func resourceDomainAccount() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"public_key": {
+						skPublicKey: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"type": {
+						skType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"domain_password_change": {
+			skDomainPasswordChange: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -120,32 +120,35 @@ func resourceDomainAccountCreate(
 	if err := resourceDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	cfgDomain, err := readDomainOptions(ctx, d.Get("domain_id").(string), m)
+	cfgDomain, err := readDomainOptions(ctx, d.Get(skDomainID).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if cfgDomain.ID == "" {
-		return diag.FromErr(fmt.Errorf("domain_id with ID %s doesn't exists", d.Get("domain_id").(string)))
+		return diag.FromErr(fmt.Errorf("domain_id with ID %s doesn't exists", d.Get(skDomainID).(string)))
 	}
-	_, ex, err := searchResourceDomainAccount(ctx, d.Get("domain_id").(string), d.Get("account_name").(string), m)
+	_, ex, err := searchResourceDomainAccount(ctx, d.Get(skDomainID).(string), d.Get(skAccountName).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if ex {
 		return diag.FromErr(fmt.Errorf("account_name %s on domain_id %s already exists",
-			d.Get("account_name").(string), d.Get("domain_id").(string)))
+			d.Get(skAccountName).(string), d.Get(skDomainID).(string)))
 	}
-	err = addDomainAccount(ctx, d, m)
+	id, err := addDomainAccount(ctx, d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceDomainAccount(ctx, d.Get("domain_id").(string), d.Get("account_name").(string), m)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if !ex {
-		return diag.FromErr(fmt.Errorf("account_name %s on domain_id %s not found after POST",
-			d.Get("account_name").(string), d.Get("domain_id").(string)))
+	if id == "" {
+		// Fallback for Bastion versions that don't return the X-Object-Id header on creation.
+		id, ex, err = searchResourceDomainAccount(ctx, d.Get(skDomainID).(string), d.Get(skAccountName).(string), m)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if !ex {
+			return diag.FromErr(fmt.Errorf("account_name %s on domain_id %s not found after POST",
+				d.Get(skAccountName).(string), d.Get(skDomainID).(string)))
+		}
 	}
 	d.SetId(id)
 
@@ -159,7 +162,7 @@ func resourceDomainAccountRead(
 	if err := resourceDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	cfg, err := readDomainAccountOptions(ctx, d.Get("domain_id").(string), d.Id(), m)
+	cfg, err := readDomainAccountOptions(ctx, d.Get(skDomainID).(string), d.Id(), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -203,11 +206,10 @@ func resourceDomainAccountDelete(
 }
 
 func resourceDomainAccountImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceDomainAccountVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
@@ -231,7 +233,7 @@ func resourceDomainAccountImport(
 	fillDomainAccount(d, cfg)
 	result := make([]*schema.ResourceData, 1)
 	d.SetId(id)
-	if tfErr := d.Set("domain_id", idSplit[0]); tfErr != nil {
+	if tfErr := d.Set(skDomainID, idSplit[0]); tfErr != nil {
 		panic(tfErr)
 	}
 	result[0] = d
@@ -267,22 +269,22 @@ func searchResourceDomainAccount(
 
 func addDomainAccount(
 	ctx context.Context, d *schema.ResourceData, m interface{},
-) error {
+) (string, error) {
 	c := m.(*Client)
 	jsonData, err := prepareDomainAccountJSON(d)
 	if err != nil {
-		return err
+		return "", err
 	}
-	body, code, err := c.newRequest(ctx,
-		"/domains/"+d.Get("domain_id").(string)+"/accounts/", http.MethodPost, jsonData)
+	body, headers, code, err := c.newRequestWithHeaders(ctx,
+		"/domains/"+d.Get(skDomainID).(string)+"/accounts/", http.MethodPost, jsonData)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
+		return "", fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
-	return nil
+	return headers.Get("X-Object-Id"), nil
 }
 
 func updateDomainAccount(
@@ -294,7 +296,7 @@ func updateDomainAccount(
 		return err
 	}
 	body, code, err := c.newRequest(ctx,
-		"/domains/"+d.Get("domain_id").(string)+"/accounts/"+d.Id()+"?force=true", http.MethodPut, jsonData)
+		"/domains/"+d.Get(skDomainID).(string)+"/accounts/"+d.Id()+"?force=true", http.MethodPut, jsonData)
 	if err != nil {
 		return err
 	}
@@ -310,7 +312,7 @@ func deleteDomainAccount(
 ) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
-		"/domains/"+d.Get("domain_id").(string)+"/accounts/"+d.Id(), http.MethodDelete, nil)
+		"/domains/"+d.Get(skDomainID).(string)+"/accounts/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
 		return err
 	}
@@ -323,17 +325,17 @@ func deleteDomainAccount(
 
 func prepareDomainAccountJSON(d *schema.ResourceData) (jsonDomainAccount, error) {
 	jsonData := jsonDomainAccount{
-		AccountLogin:        d.Get("account_login").(string),
-		AccountName:         d.Get("account_name").(string),
-		AutoChangePassword:  d.Get("auto_change_password").(bool),
+		AccountLogin:        d.Get(skAccountLogin).(string),
+		AccountName:         d.Get(skAccountName).(string),
+		AutoChangePassword:  d.Get(skAutoChangePassword).(bool),
 		AutoChangeSSHKey:    d.Get("auto_change_ssh_key").(bool),
 		CertificateValidity: d.Get("certificate_validity").(string),
-		CheckoutPolicy:      d.Get("checkout_policy").(string),
-		Description:         d.Get("description").(string),
+		CheckoutPolicy:      d.Get(skCheckoutPolicy).(string),
+		Description:         d.Get(skDescription).(string),
 	}
 
-	if d.HasChange("resources") {
-		listResources := d.Get("resources").(*schema.Set).List()
+	listResources := d.Get("resources").(*schema.Set).List()
+	if len(listResources) > 0 {
 		resources := make([]string, len(listResources))
 		for i, v := range listResources {
 			vSplt := strings.Split(v.(string), ":")
@@ -374,16 +376,16 @@ func readDomainAccountOptions(
 }
 
 func fillDomainAccount(d *schema.ResourceData, jsonData jsonDomainAccount) {
-	if tfErr := d.Set("account_name", jsonData.AccountName); tfErr != nil {
+	if tfErr := d.Set(skAccountName, jsonData.AccountName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("account_login", jsonData.AccountLogin); tfErr != nil {
+	if tfErr := d.Set(skAccountLogin, jsonData.AccountLogin); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("checkout_policy", jsonData.CheckoutPolicy); tfErr != nil {
+	if tfErr := d.Set(skCheckoutPolicy, jsonData.CheckoutPolicy); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("auto_change_password", jsonData.AutoChangePassword); tfErr != nil {
+	if tfErr := d.Set(skAutoChangePassword, jsonData.AutoChangePassword); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("auto_change_ssh_key", jsonData.AutoChangeSSHKey); tfErr != nil {
@@ -392,24 +394,33 @@ func fillDomainAccount(d *schema.ResourceData, jsonData jsonDomainAccount) {
 	if tfErr := d.Set("certificate_validity", jsonData.CertificateValidity); tfErr != nil {
 		panic(tfErr)
 	}
-	credentials := make([]map[string]interface{}, len(*jsonData.Credentials))
-	for i, v := range *jsonData.Credentials {
-		credentials[i] = map[string]interface{}{
-			"id":         v.ID,
-			"public_key": v.PublicKey,
-			"type":       v.Type,
+	credentials := make([]map[string]interface{}, 0)
+	if jsonData.Credentials != nil {
+		credentials = make([]map[string]interface{}, len(*jsonData.Credentials))
+		for i, v := range *jsonData.Credentials {
+			credentials[i] = map[string]interface{}{
+				"id":        v.ID,
+				skPublicKey: v.PublicKey,
+				skType:      v.Type,
+			}
 		}
 	}
 	if tfErr := d.Set("credentials", credentials); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("domain_password_change", jsonData.DomainPasswordChange); tfErr != nil {
+	if tfErr := d.Set(skDomainPasswordChange, jsonData.DomainPasswordChange); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("resources", jsonData.Resources); tfErr != nil {
-		panic(tfErr)
+	if jsonData.Resources == nil {
+		if tfErr := d.Set("resources", []string{}); tfErr != nil {
+			panic(tfErr)
+		}
+	} else {
+		if tfErr := d.Set("resources", *jsonData.Resources); tfErr != nil {
+			panic(tfErr)
+		}
 	}
 }

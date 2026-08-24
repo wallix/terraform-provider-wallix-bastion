@@ -11,8 +11,8 @@ import (
 func TestAccResourceApplicationLocalDomain_basic(t *testing.T) {
 	resourceName := "wallix-bastion_application_localdomain.testacc_AppLocalDom"
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceApplicationLocalDomainCreate(),
@@ -51,7 +51,7 @@ func testAccResourceApplicationLocalDomainCreate() string {
 	return `
 resource "wallix-bastion_device" "testacc_AppLocalDom" {
   device_name = "testacc_AppLocalDom"
-  host        = "testacc_AppLocalDom"
+  host        = "192.168.100.8"
 }
 
 resource "wallix-bastion_device_service" "testacc_AppLocalDom" {
@@ -100,7 +100,7 @@ func testAccResourceApplicationLocalDomainUpdate() string {
 	return `
 resource "wallix-bastion_device" "testacc_AppLocalDom" {
   device_name = "testacc_AppLocalDom"
-  host        = "testacc_AppLocalDom"
+  host        = "192.168.100.8"
 }
 
 resource "wallix-bastion_device_service" "testacc_AppLocalDom" {

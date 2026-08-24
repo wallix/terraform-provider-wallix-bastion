@@ -27,7 +27,7 @@ Provide any relevant context about what you're trying to achieve.
 
 - **Provider version**: [e.g. v1.0.0]
 - **Terraform version**: [e.g. v1.5.0]
-- **Wallix Bastion version**: [e.g. v3.12.0]
+- **WALLIX Bastion version**: [e.g. v3.12.0]
 
 ### What have you tried?
 

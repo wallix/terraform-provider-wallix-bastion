@@ -13,7 +13,7 @@ func dataSourceDomain() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceDomainRead,
 		Schema: map[string]*schema.Schema{
-			"domain_name": {
+			skDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -21,31 +21,31 @@ func dataSourceDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"admin_account": {
+			skAdminAccount: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ca_public_key": {
+			skCAPublicKey: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"enable_password_change": {
+			skEnablePasswordChange: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"password_change_policy": {
+			skPasswordChangePolicy: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"password_change_plugin": {
+			skPasswordChangePlugin: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vault_plugin": {
+			skVaultPlugin: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -68,12 +68,12 @@ func dataSourceDomainRead(
 	if err := dataSourceDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceDomain(ctx, d.Get("domain_name").(string), m)
+	id, ex, err := searchResourceDomain(ctx, d.Get(skDomainName).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if !ex {
-		return diag.FromErr(fmt.Errorf("domain_name %s doesn't exists", d.Get("domain_name").(string)))
+		return diag.FromErr(fmt.Errorf("domain_name %s doesn't exists", d.Get(skDomainName).(string)))
 	}
 	cfg, err := readDomainOptions(ctx, id, m)
 	if err != nil {
@@ -89,25 +89,25 @@ func fillSourceDomain(d *schema.ResourceData, jsonData jsonDomain) {
 	if tfErr := d.Set("domain_real_name", jsonData.DomainRealName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("admin_account", jsonData.AdminAccount); tfErr != nil {
+	if tfErr := d.Set(skAdminAccount, jsonData.AdminAccount); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("ca_public_key", jsonData.CAPublicKey); tfErr != nil {
+	if tfErr := d.Set(skCAPublicKey, jsonData.CAPublicKey); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("enable_password_change", jsonData.EnablePasswordChange); tfErr != nil {
+	if tfErr := d.Set(skEnablePasswordChange, jsonData.EnablePasswordChange); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("password_change_policy", jsonData.PasswordChangePolicy); tfErr != nil {
+	if tfErr := d.Set(skPasswordChangePolicy, jsonData.PasswordChangePolicy); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("password_change_plugin", jsonData.PasswordChangePlugin); tfErr != nil {
+	if tfErr := d.Set(skPasswordChangePlugin, jsonData.PasswordChangePlugin); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("vault_plugin", jsonData.VaultPlugin); tfErr != nil {
+	if tfErr := d.Set(skVaultPlugin, jsonData.VaultPlugin); tfErr != nil {
 		panic(tfErr)
 	}
 }

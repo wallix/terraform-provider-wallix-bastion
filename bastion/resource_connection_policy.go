@@ -30,32 +30,32 @@ func resourceConnectionPolicy() *schema.Resource {
 		UpdateContext: resourceConnectionPolicyUpdate,
 		DeleteContext: resourceConnectionPolicyDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceConnectionPolicyImport,
+			StateContext: resourceConnectionPolicyImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"connection_policy_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"protocol": {
+			skProtocol: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice(
-					[]string{"SSH", "RAWTCPIP", "RDP", "RLOGIN", "TELNET", "VNC"},
+					[]string{skProtoSSH, "RAWTCPIP", skProtoRDP, skProtoRLOGIN, skProtoTELNET, "VNC"},
 					false,
 				),
 			},
-			"type": {
+			skType: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice(
-					[]string{"SSH", "RAWTCPIP", "RDP", "RDP-JUMPHOST", "RLOGIN", "TELNET", "VNC"},
+					[]string{skProtoSSH, "RAWTCPIP", skProtoRDP, "RDP-JUMPHOST", skProtoRLOGIN, skProtoTELNET, "VNC"},
 					false,
 				),
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -95,17 +95,20 @@ func resourceConnectionPolicyCreate(
 	if ex {
 		return diag.FromErr(fmt.Errorf("connection_policy_name %s already exists", d.Get("connection_policy_name").(string)))
 	}
-	err = addConnectionPolicy(ctx, d, m, c.bastionAPIVersion)
+	id, err := addConnectionPolicy(ctx, d, m, c.bastionAPIVersion)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceConnectionPolicy(ctx, d.Get("connection_policy_name").(string), m)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if !ex {
-		return diag.FromErr(fmt.Errorf("connection_policy_name %s not found after POST",
-			d.Get("connection_policy_name").(string)))
+	if id == "" {
+		// Fallback for Bastion versions that don't return the X-Object-Id header on creation.
+		id, ex, err = searchResourceConnectionPolicy(ctx, d.Get("connection_policy_name").(string), m)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if !ex {
+			return diag.FromErr(fmt.Errorf("connection_policy_name %s not found after POST",
+				d.Get("connection_policy_name").(string)))
+		}
 	}
 	d.SetId(id)
 
@@ -163,11 +166,10 @@ func resourceConnectionPolicyDelete(
 }
 
 func resourceConnectionPolicyImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceConnectionPolicyVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
@@ -219,21 +221,21 @@ func searchResourceConnectionPolicy(
 
 func addConnectionPolicy(
 	ctx context.Context, d *schema.ResourceData, m interface{}, apiVersion string,
-) error {
+) (string, error) {
 	c := m.(*Client)
 	jsonData, err := prepareConnectionPolicyJSON(d, true, apiVersion)
 	if err != nil {
-		return err
+		return "", err
 	}
-	body, code, err := c.newRequest(ctx, "/connectionpolicies/", http.MethodPost, jsonData)
+	body, headers, code, err := c.newRequestWithHeaders(ctx, "/connectionpolicies/", http.MethodPost, jsonData)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
+		return "", fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
-	return nil
+	return headers.Get("X-Object-Id"), nil
 }
 
 func updateConnectionPolicy(
@@ -277,12 +279,12 @@ func prepareConnectionPolicyJSON(
 ) {
 	jsonData := jsonConnectionPolicy{
 		ConnectionPolicyName: d.Get("connection_policy_name").(string),
-		Description:          d.Get("description").(string),
+		Description:          d.Get(skDescription).(string),
 	}
 	if newResource {
-		jsonData.Protocol = d.Get("protocol").(string)
+		jsonData.Protocol = d.Get(skProtocol).(string)
 		if semver.Compare(apiVersion, VersionWallixAPI312) >= 0 {
-			if v := d.Get("type").(string); v != "" {
+			if v := d.Get(skType).(string); v != "" {
 				jsonData.Type = v
 			} else {
 				jsonData.Type = jsonData.Protocol
@@ -350,18 +352,18 @@ func fillConnectionPolicy(d *schema.ResourceData, jsonData jsonConnectionPolicy)
 	if tfErr := d.Set("connection_policy_name", jsonData.ConnectionPolicyName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("protocol", jsonData.Protocol); tfErr != nil {
+	if tfErr := d.Set(skProtocol, jsonData.Protocol); tfErr != nil {
 		panic(tfErr)
 	}
 	if jsonData.Type != "" {
-		if tfErr := d.Set("type", jsonData.Type); tfErr != nil {
+		if tfErr := d.Set(skType, jsonData.Type); tfErr != nil {
 			panic(tfErr)
 		}
 	} else {
-		if tfErr := d.Set("type", jsonData.Protocol); tfErr != nil {
+		if tfErr := d.Set(skType, jsonData.Protocol); tfErr != nil {
 			panic(tfErr)
 		}
 	}

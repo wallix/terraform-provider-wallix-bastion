@@ -13,159 +13,34 @@ Provides a LDAP external authentication resource.
 ## Example Usage
 
 ```terraform
-# Basic LDAP external authentication
 resource "wallix-bastion_externalauth_ldap" "corporate" {
-  auth_name       = "corporate_ldap"
-  description     = "Corporate LDAP external authentication"
-  host            = "ldap.corporate.local"
-  port            = 389
-  login           = "cn=bastion,ou=services,dc=corporate,dc=local"
-  password        = var.ldap_service_password
-  domain          = "dc=corporate,dc=local"
-  type            = "OpenLDAP"
+  authentication_name = "corporate_ldap"
+  host                = "ldap.corporate.local"
+  port                = 389
+  timeout             = 10
+  ldap_base           = "ou=people,dc=corporate,dc=local"
+  cn_attribute        = "uid"
+  login_attribute     = "uid"
+  is_anonymous_access = true
 }
+```
 
-# Secure LDAP with SSL/TLS
-resource "wallix-bastion_externalauth_ldap" "secure" {
-  auth_name       = "secure_ldap"
-  description     = "Secure LDAP with SSL"
-  host            = "ldaps.corporate.local"
-  port            = 636
-  login           = "cn=bastion,ou=services,dc=corporate,dc=local"
-  password        = var.ldap_secure_password
-  domain          = "dc=corporate,dc=local"
-  type            = "OpenLDAP"
-  use_ssl         = true
-  verify_cert     = true
-}
+### With an Authenticated Bind Account and TLS
 
-# Active Directory external authentication
-resource "wallix-bastion_externalauth_ldap" "active_directory" {
-  auth_name       = "ad_auth"
-  description     = "Active Directory external authentication"
-  host            = "dc1.company.com"
-  port            = 389
-  login           = "cn=bastion,ou=Service Accounts,dc=company,dc=com"
-  password        = var.ad_service_password
-  domain          = "dc=company,dc=com"
-  type            = "ActiveDirectory"
-  
-  # AD-specific settings
-  user_dn         = "sAMAccountName"
-  user_email      = "mail"
-  user_group      = "memberOf"
-}
-
-# Multi-server LDAP configuration
-resource "wallix-bastion_externalauth_ldap" "redundant" {
-  auth_name       = "redundant_ldap"
-  description     = "Redundant LDAP configuration"
-  host            = "ldap1.corporate.local"
-  port            = 389
-  login           = "cn=bastion,ou=services,dc=corporate,dc=local"
-  password        = var.ldap_password
-  domain          = "dc=corporate,dc=local"
-  type            = "OpenLDAP"
-  
-  # Secondary servers for failover
-  secondary_auth = [
-    {
-      host = "ldap2.corporate.local"
-      port = 389
-    },
-    {
-      host = "ldap3.corporate.local"
-      port = 389
-    }
-  ]
-}
-
-# LDAP with custom user mapping
-resource "wallix-bastion_externalauth_ldap" "custom_mapping" {
-  auth_name       = "custom_ldap"
-  description     = "LDAP with custom user attribute mapping"
-  host            = "ldap.custom.local"
-  port            = 389
-  login           = "cn=bastion,ou=services,dc=custom,dc=local"
-  password        = var.ldap_password
-  domain          = "dc=custom,dc=local"
-  type            = "OpenLDAP"
-  
-  # Custom attribute mapping
-  user_dn         = "uid"
-  user_email      = "mail"
-  user_group      = "memberOf"
-  user_firstname  = "givenName"
-  user_lastname   = "sn"
-  user_phone      = "telephoneNumber"
-}
-
-# LDAP with group filtering
-resource "wallix-bastion_externalauth_ldap" "filtered" {
-  auth_name       = "filtered_ldap"
-  description     = "LDAP with group-based access control"
-  host            = "ldap.filtered.local"
-  port            = 389
-  login           = "cn=bastion,ou=services,dc=filtered,dc=local"
-  password        = var.ldap_password
-  domain          = "dc=filtered,dc=local"
-  type            = "OpenLDAP"
-  
-  # Group-based filtering
-  user_group      = "memberOf"
-  required_group  = "cn=bastion_users,ou=groups,dc=filtered,dc=local"
-  admin_group     = "cn=bastion_admins,ou=groups,dc=filtered,dc=local"
-}
-
-# 389 Directory Server configuration
-resource "wallix-bastion_externalauth_ldap" "ds389" {
-  auth_name       = "ds389_auth"
-  description     = "389 Directory Server authentication"
-  host            = "ds389.corporate.local"
-  port            = 389
-  login           = "cn=Directory Manager"
-  password        = var.ds389_password
-  domain          = "dc=corporate,dc=local"
-  type            = "389DS"
-  
-  # 389DS-specific settings
-  user_dn         = "uid"
-  user_email      = "mail"
-  user_group      = "memberOf"
-}
-
-# Complete LDAP configuration
-resource "wallix-bastion_externalauth_ldap" "complete" {
-  auth_name       = "complete_ldap"
-  description     = "Complete LDAP external authentication configuration"
-  host            = "ldap.complete.local"
-  port            = 636
-  login           = "cn=bastion,ou=services,dc=complete,dc=local"
-  password        = var.ldap_password
-  domain          = "dc=complete,dc=local"
-  type            = "OpenLDAP"
-  
-  # Security settings
-  use_ssl         = true
-  verify_cert     = true
-  timeout         = 30
-  
-  # User mapping
-  user_dn         = "uid"
-  user_email      = "mail"
-  user_group      = "memberOf"
-  user_firstname  = "givenName"
-  user_lastname   = "sn"
-  user_phone      = "telephoneNumber"
-  
-  # Group settings
-  required_group  = "cn=allowed_users,ou=groups,dc=complete,dc=local"
-  admin_group     = "cn=administrators,ou=groups,dc=complete,dc=local"
-  
-  # Connection settings
-  connection_pool_size = 10
-  connection_timeout   = 15
-  search_timeout       = 10
+```terraform
+resource "wallix-bastion_externalauth_ldap" "corporate_secure" {
+  authentication_name = "corporate_ldap_secure"
+  host                = "ldap.corporate.local"
+  port                = 636
+  timeout             = 10
+  ldap_base           = "ou=people,dc=corporate,dc=local"
+  cn_attribute        = "sAMAccountName"
+  login_attribute     = "sAMAccountName"
+  is_active_directory = true
+  is_ssl              = true
+  ca_certificate      = file("${path.module}/ldap-ca.pem")
+  login               = "cn=bastion,ou=service accounts,dc=corporate,dc=local"
+  password            = var.ldap_bind_password
 }
 ```
 
@@ -173,219 +48,23 @@ resource "wallix-bastion_externalauth_ldap" "complete" {
 
 ## Usage Notes
 
-### LDAP Server Types
+### Bind Modes
 
-**OpenLDAP:**
-- Open-source LDAP implementation
-- Standard LDAP v3 protocol
-- Common in Linux environments
+Set `is_anonymous_access = true` for an anonymous bind, or provide `login`/`password` for an
+authenticated bind. `is_active_directory` should be set when the directory is Active Directory,
+which affects how the Bastion interprets certain LDAP attributes.
 
-**Active Directory:**
-- Microsoft's directory service
-- Extended LDAP with AD-specific features
-- Common in Windows environments
+### Transport Security
 
-**389 Directory Server:**
-- Red Hat's directory server
-- Fork of Netscape Directory Server
-- Enterprise-grade LDAP solution
-
-### Connection Configuration
-
-**Basic Connection:**
-```terraform
-host     = "ldap.example.com"  # LDAP server hostname/IP
-port     = 389                 # Standard LDAP port
-login    = "cn=service,dc=..."  # Service account DN
-password = var.password        # Service account password
-domain   = "dc=example,dc=com" # Base DN for searches
-```
-
-**Secure Connection:**
-```terraform
-host        = "ldaps.example.com"
-port        = 636                # LDAPS port
-use_ssl     = true               # Enable SSL/TLS
-verify_cert = true               # Verify server certificate
-```
-
-### User Attribute Mapping
-
-**Standard Mappings:**
-```terraform
-user_dn        = "uid"           # Username attribute
-user_email     = "mail"          # Email attribute
-user_group     = "memberOf"      # Group membership
-user_firstname = "givenName"     # First name
-user_lastname  = "sn"            # Last name (surname)
-user_phone     = "telephoneNumber" # Phone number
-```
-
-**Active Directory Mappings:**
-```terraform
-user_dn        = "sAMAccountName"      # AD username
-user_email     = "mail"                # Email address
-user_group     = "memberOf"            # Group membership
-user_firstname = "givenName"           # First name
-user_lastname  = "sn"                  # Last name
-```
-
-### Group-Based Access Control
-
-**Required Group:**
-```terraform
-required_group = "cn=bastion_users,ou=groups,dc=example,dc=com"
-```
-Only users in this group can authenticate.
-
-**Admin Group:**
-```terraform
-admin_group = "cn=bastion_admins,ou=groups,dc=example,dc=com"
-```
-Users in this group receive administrative privileges.
-
-### High Availability
-
-**Multiple Servers:**
-```terraform
-secondary_auth = [
-  {
-    host = "ldap2.example.com"
-    port = 389
-  },
-  {
-    host = "ldap3.example.com"
-    port = 636
-    use_ssl = true
-  }
-]
-```
-
-### Performance Tuning
-
-**Connection Settings:**
-```terraform
-timeout                = 30    # Authentication timeout (seconds)
-connection_timeout     = 15    # Connection establishment timeout
-search_timeout         = 10    # LDAP search timeout
-connection_pool_size   = 10    # Connection pool size
-```
-
-### Security Best Practices
-
-1. **Use Service Accounts**: Dedicated accounts with minimal privileges
-2. **Enable SSL/TLS**: Encrypt LDAP communications
-3. **Verify Certificates**: Validate server identity
-4. **Group-Based Access**: Restrict access to specific groups
-5. **Regular Rotation**: Rotate service account passwords
-
-### Common Configurations
-
-**Corporate Active Directory:**
-```terraform
-resource "wallix-bastion_externalauth_ldap" "corporate_ad" {
-  auth_name    = "corporate_ad"
-  host         = "dc.company.com"
-  port         = 389
-  login        = "bastion@company.com"
-  password     = var.ad_password
-  domain       = "dc=company,dc=com"
-  type         = "ActiveDirectory"
-  
-  user_dn      = "sAMAccountName"
-  user_email   = "mail"
-  user_group   = "memberOf"
-  required_group = "CN=VPN Users,OU=Groups,DC=company,DC=com"
-}
-```
-
-**Secure OpenLDAP:**
-```terraform
-resource "wallix-bastion_externalauth_ldap" "secure_openldap" {
-  auth_name    = "secure_openldap"
-  host         = "ldaps.company.com"
-  port         = 636
-  login        = "cn=bastion,ou=services,dc=company,dc=com"
-  password     = var.ldap_password
-  domain       = "dc=company,dc=com"
-  type         = "OpenLDAP"
-  
-  use_ssl      = true
-  verify_cert  = true
-  user_dn      = "uid"
-  user_email   = "mail"
-  user_group   = "memberOf"
-}
-```
-
-**389 Directory Server:**
-```terraform
-resource "wallix-bastion_externalauth_ldap" "ds389" {
-  auth_name    = "ds389"
-  host         = "ds.company.com"
-  port         = 389
-  login        = "cn=Directory Manager"
-  password     = var.ds389_password
-  domain       = "dc=company,dc=com"
-  type         = "389DS"
-  
-  user_dn      = "uid"
-  user_email   = "mail"
-  user_group   = "memberOf"
-}
-```
-
-### Integration with Authentication Domains
-
-Use external auth with authentication domains:
-```terraform
-resource "wallix-bastion_authdomain_ldap" "domain" {
-  domain_name         = "company.local"
-  external_auth_name  = wallix-bastion_externalauth_ldap.corporate.auth_name
-  # ... other domain settings
-}
-```
-
-### Troubleshooting
-
-**Connection Issues:**
-1. Verify network connectivity to LDAP server
-2. Check firewall rules for LDAP ports (389, 636)
-3. Validate service account credentials
-4. Test SSL certificate validity
-
-**Authentication Issues:**
-1. Verify user DN format and attribute mapping
-2. Check group membership requirements
-3. Validate search base and scope
-4. Review LDAP server logs
-
-**Performance Issues:**
-1. Optimize connection pool settings
-2. Adjust timeout values
-3. Consider multiple LDAP servers
-4. Monitor LDAP server performance
-
-### Monitoring and Maintenance
-
-**Regular Tasks:**
-1. Monitor service account status
-2. Rotate service account passwords
-3. Review group membership changes
-4. Update SSL certificates
-5. Monitor authentication success rates
-
-**Health Checks:**
-```terraform
-# Test connection settings
-timeout            = 10  # Quick timeout for monitoring
-connection_timeout = 5   # Fast connection test
-```
+`is_ssl` enables LDAPS; `is_starttls` enables StartTLS on a plaintext connection instead.
+`ca_certificate` validates the LDAP server's certificate. `certificate`/`private_key`/`passphrase`
+configure client certificate authentication instead of a bind account; `passphrase` requires
+`private_key`.
 
 ## Import
 
-LDAP external authentication can be imported using the auth name, e.g.
+LDAP external authentication can be imported using the authentication name, e.g.
 
 ```shell
-terraform import wallix-bastion_externalauth_ldap.corporate "corporate_ldap"
+terraform import wallix-bastion_externalauth_ldap.corporate corporate_ldap
 ```

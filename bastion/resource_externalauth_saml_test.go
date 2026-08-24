@@ -13,11 +13,11 @@ import (
 func TestAccResourceExternalAuthSaml_basic38(t *testing.T) {
 	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); v == bastion.VersionWallixAPI38 {
 		resource.Test(t, resource.TestCase{
-			PreCheck:  func() { testAccPreCheck(t) },
-			Providers: testAccProviders,
+			PreCheck:          func() { testAccPreCheck(t) },
+			ProviderFactories: testAccProviderFactories,
 			ExternalProviders: map[string]resource.ExternalProvider{
-				"tls": {
-					Source:            "hashicorp/tls",
+				tvTLSProviderName: {
+					Source:            tvTLSProviderSource,
 					VersionConstraint: "~> 4.0",
 				},
 			},
@@ -65,15 +65,16 @@ func TestAccResourceExternalAuthSaml_basic38(t *testing.T) {
 	}
 }
 
+// WALLIX_BASTION_API_VERSION defaults to v3.12 when unset (see provider.go's EnvDefaultFunc), so
+// an empty env var must be treated the same as an explicit v3.12 here.
 func TestAccResourceExternalAuthSaml_basic(t *testing.T) {
-	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); v != "" &&
-		v != bastion.VersionWallixAPI38 {
+	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); v == "" || v == bastion.VersionWallixAPI312 {
 		resource.Test(t, resource.TestCase{
-			PreCheck:  func() { testAccPreCheck(t) },
-			Providers: testAccProviders,
+			PreCheck:          func() { testAccPreCheck(t) },
+			ProviderFactories: testAccProviderFactories,
 			ExternalProviders: map[string]resource.ExternalProvider{
-				"tls": {
-					Source:            "hashicorp/tls",
+				tvTLSProviderName: {
+					Source:            tvTLSProviderSource,
 					VersionConstraint: "~> 4.0",
 				},
 			},
@@ -155,6 +156,9 @@ resource "wallix-bastion_externalauth_saml" "testacc_ExternalAuthSaml" {
 %s
 EOT
   timeout             = 30
+  claim_customization {
+    username = "email"
+  }
 }
 `, idpMetadataSAML)
 }
@@ -185,6 +189,9 @@ EOT
   description         = "testacc_ExternalAuthSaml description"
   certificate         = tls_self_signed_cert.example.cert_pem
   private_key         = tls_private_key.example.private_key_pem
+  claim_customization {
+    username = "email"
+  }
 }
 
 resource "tls_private_key" "example" {

@@ -35,14 +35,14 @@ func resourceTimeframe() *schema.Resource {
 		UpdateContext: resourceTimeframeUpdate,
 		DeleteContext: resourceTimeframeDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceTimeframeImport,
+			StateContext: resourceTimeframeImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"timeframe_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -180,11 +180,10 @@ func resourceTimeframeDelete(
 }
 
 func resourceTimeframeImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceTimeframeVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
@@ -283,7 +282,7 @@ func deleteTimeframe(
 
 func prepareTimeframeJSON(d *schema.ResourceData) (jsonTimeframe, error) {
 	jsonData := jsonTimeframe{
-		Description:   d.Get("description").(string),
+		Description:   d.Get(skDescription).(string),
 		IsOvertimable: d.Get("is_overtimable").(bool),
 		TimeframeName: d.Get("timeframe_name").(string),
 	}
@@ -349,7 +348,7 @@ func fillTimeframe(d *schema.ResourceData, jsonData jsonTimeframe) {
 	if tfErr := d.Set("timeframe_name", jsonData.TimeframeName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("is_overtimable", jsonData.IsOvertimable); tfErr != nil {

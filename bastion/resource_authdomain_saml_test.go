@@ -1,35 +1,42 @@
 package bastion_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"golang.org/x/mod/semver"
+
+	"github.com/wallix/terraform-provider-wallix-bastion/bastion"
 )
 
+// The claim_customization block requires API v3.12+; skip on older versions. Default (unset) is v3.12+.
 func TestAccResourceAuthDomainSAML_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccResourceAuthDomainSAMLCreate(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(
-						"wallix-bastion_authdomain_saml.testacc_AuthDomainSAML",
-						"id"),
-				),
+	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); v == "" || semver.Compare(v, bastion.VersionWallixAPI312) >= 0 {
+		resource.Test(t, resource.TestCase{
+			PreCheck:          func() { testAccPreCheck(t) },
+			ProviderFactories: testAccProviderFactories,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccResourceAuthDomainSAMLCreate(),
+					Check: resource.ComposeTestCheckFunc(
+						resource.TestCheckResourceAttrSet(
+							"wallix-bastion_authdomain_saml.testacc_AuthDomainSAML",
+							"id"),
+					),
+				},
+				{
+					Config: testAccResourceAuthDomainSAMLUpdate(),
+				},
+				{
+					ResourceName:  "wallix-bastion_authdomain_saml.testacc_AuthDomainSAML",
+					ImportState:   true,
+					ImportStateId: "testacc.AuthDomainSAML-u",
+				},
 			},
-			{
-				Config: testAccResourceAuthDomainSAMLUpdate(),
-			},
-			{
-				ResourceName:  "wallix-bastion_authdomain_saml.testacc_AuthDomainSAML",
-				ImportState:   true,
-				ImportStateId: "testacc.AuthDomainSAML-u",
-			},
-		},
-		PreventPostDestroyRefresh: true,
-	})
+			PreventPostDestroyRefresh: true,
+		})
+	}
 }
 
 func testAccResourceAuthDomainSAMLCreate() string {

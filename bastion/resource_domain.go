@@ -37,10 +37,10 @@ func resourceDomain() *schema.Resource {
 		UpdateContext: resourceDomainUpdate,
 		DeleteContext: resourceDomainDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceDomainImport,
+			StateContext: resourceDomainImport,
 		},
 		Schema: map[string]*schema.Schema{
-			"domain_name": {
+			skDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -48,65 +48,65 @@ func resourceDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"admin_account": {
+			skAdminAccount: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				RequiredWith: []string{"enable_password_change", "password_change_policy", "password_change_plugin"},
+				RequiredWith: []string{skEnablePasswordChange, skPasswordChangePolicy, skPasswordChangePlugin},
 			},
-			"ca_public_key": {
+			skCAPublicKey: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ca_private_key": {
+			skCAPrivateKey: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Sensitive:     true,
-				ConflictsWith: []string{"vault_plugin"},
+				ConflictsWith: []string{skVaultPlugin},
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"enable_password_change": {
+			skEnablePasswordChange: {
 				Type:          schema.TypeBool,
 				Optional:      true,
-				RequiredWith:  []string{"password_change_policy", "password_change_plugin", "password_change_plugin_parameters"},
-				ConflictsWith: []string{"vault_plugin"},
+				RequiredWith:  []string{skPasswordChangePolicy, skPasswordChangePlugin, skPasswordChangePluginParameters},
+				ConflictsWith: []string{skVaultPlugin},
 			},
-			"passphrase": {
+			skPassphrase: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
-				RequiredWith: []string{"ca_private_key"},
+				RequiredWith: []string{skCAPrivateKey},
 			},
-			"password_change_policy": {
+			skPasswordChangePolicy: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				RequiredWith: []string{"enable_password_change"},
+				RequiredWith: []string{skEnablePasswordChange},
 			},
-			"password_change_plugin": {
+			skPasswordChangePlugin: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				RequiredWith: []string{"enable_password_change"},
+				RequiredWith: []string{skEnablePasswordChange},
 			},
-			"password_change_plugin_parameters": {
+			skPasswordChangePluginParameters: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				RequiredWith: []string{"enable_password_change"},
+				RequiredWith: []string{skEnablePasswordChange},
 				ValidateFunc: validation.StringIsJSON,
 				Sensitive:    true,
 			},
-			"vault_plugin": {
+			skVaultPlugin: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"enable_password_change", "ca_private_key"},
+				ConflictsWith: []string{skEnablePasswordChange, skCAPrivateKey},
 				RequiredWith:  []string{"vault_plugin_parameters"},
 			},
 			"vault_plugin_parameters": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				RequiredWith: []string{"vault_plugin"},
+				RequiredWith: []string{skVaultPlugin},
 				ValidateFunc: validation.StringIsJSON,
 				Sensitive:    true,
 			},
@@ -129,23 +129,26 @@ func resourceDomainCreate(
 	if err := resourceDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	_, ex, err := searchResourceDomain(ctx, d.Get("domain_name").(string), m)
+	_, ex, err := searchResourceDomain(ctx, d.Get(skDomainName).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if ex {
-		return diag.FromErr(fmt.Errorf("domain_name %s already exists", d.Get("domain_name").(string)))
+		return diag.FromErr(fmt.Errorf("domain_name %s already exists", d.Get(skDomainName).(string)))
 	}
-	err = addDomain(ctx, d, m)
+	id, err := addDomain(ctx, d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceDomain(ctx, d.Get("domain_name").(string), m)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if !ex {
-		return diag.FromErr(fmt.Errorf("domain_name %s not found after POST", d.Get("domain_name").(string)))
+	if id == "" {
+		// Fallback for Bastion versions that don't return the X-Object-Id header on creation.
+		id, ex, err = searchResourceDomain(ctx, d.Get(skDomainName).(string), m)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if !ex {
+			return diag.FromErr(fmt.Errorf("domain_name %s not found after POST", d.Get(skDomainName).(string)))
+		}
 	}
 	d.SetId(id)
 
@@ -203,11 +206,10 @@ func resourceDomainDelete(
 }
 
 func resourceDomainImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
@@ -258,18 +260,18 @@ func searchResourceDomain(
 
 func addDomain(
 	ctx context.Context, d *schema.ResourceData, m interface{},
-) error {
+) (string, error) {
 	c := m.(*Client)
 	jsonData := prepareDomainJSON(d, true)
-	body, code, err := c.newRequest(ctx, "/domains/", http.MethodPost, jsonData)
+	body, headers, code, err := c.newRequestWithHeaders(ctx, "/domains/", http.MethodPost, jsonData)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
+		return "", fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
-	return nil
+	return headers.Get("X-Object-Id"), nil
 }
 
 func updateDomain(
@@ -305,38 +307,38 @@ func deleteDomain(
 
 func prepareDomainJSON(d *schema.ResourceData, newResource bool) jsonDomain {
 	jsonData := jsonDomain{
-		Description:    d.Get("description").(string),
-		DomainName:     d.Get("domain_name").(string),
+		Description:    d.Get(skDescription).(string),
+		DomainName:     d.Get(skDomainName).(string),
 		DomainRealName: d.Get("domain_real_name").(string),
-		Passphrase:     d.Get("passphrase").(string),
+		Passphrase:     d.Get(skPassphrase).(string),
 	}
 
-	if !strings.HasPrefix(d.Get("ca_private_key").(string), "generate:") {
-		jsonData.CAPrivateKey = d.Get("ca_private_key").(string)
-	} else if d.HasChange("ca_private_key") {
-		oldKey, newKey := d.GetChange("ca_private_key")
+	if !strings.HasPrefix(d.Get(skCAPrivateKey).(string), "generate:") {
+		jsonData.CAPrivateKey = d.Get(skCAPrivateKey).(string)
+	} else if d.HasChange(skCAPrivateKey) {
+		oldKey, newKey := d.GetChange(skCAPrivateKey)
 		if oldKey.(string) == "" {
 			jsonData.CAPrivateKey = newKey.(string)
 		}
 	}
 
-	if d.Get("enable_password_change").(bool) {
+	if d.Get(skEnablePasswordChange).(bool) {
 		if !newResource {
-			adminAccount := d.Get("admin_account").(string)
+			adminAccount := d.Get(skAdminAccount).(string)
 			jsonData.AdminAccount = &adminAccount
 		}
-		jsonData.EnablePasswordChange = d.Get("enable_password_change").(bool)
-		jsonData.PasswordChangePolicy = d.Get("password_change_policy").(string)
-		jsonData.PasswordChangePlugin = d.Get("password_change_plugin").(string)
+		jsonData.EnablePasswordChange = d.Get(skEnablePasswordChange).(bool)
+		jsonData.PasswordChangePolicy = d.Get(skPasswordChangePolicy).(string)
+		jsonData.PasswordChangePlugin = d.Get(skPasswordChangePlugin).(string)
 		var passChgPlug map[string]interface{}
-		if v := d.Get("password_change_plugin_parameters").(string); v != "" {
+		if v := d.Get(skPasswordChangePluginParameters).(string); v != "" {
 			_ = json.Unmarshal([]byte(v),
 				&passChgPlug)
 		} else {
 			_ = json.Unmarshal([]byte(`{}`), &passChgPlug)
 		}
 		jsonData.PasswordChangePluginParameters = &passChgPlug
-	} else if v := d.Get("vault_plugin").(string); v != "" {
+	} else if v := d.Get(skVaultPlugin).(string); v != "" {
 		jsonData.VaultPlugin = v
 		var vaultPlugParams map[string]interface{}
 		if v2 := d.Get("vault_plugin_parameters").(string); v2 != "" {
@@ -377,31 +379,31 @@ func readDomainOptions(
 }
 
 func fillDomain(d *schema.ResourceData, jsonData jsonDomain) {
-	if tfErr := d.Set("domain_name", jsonData.DomainName); tfErr != nil {
+	if tfErr := d.Set(skDomainName, jsonData.DomainName); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("domain_real_name", jsonData.DomainRealName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("admin_account", jsonData.AdminAccount); tfErr != nil {
+	if tfErr := d.Set(skAdminAccount, jsonData.AdminAccount); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("ca_public_key", jsonData.CAPublicKey); tfErr != nil {
+	if tfErr := d.Set(skCAPublicKey, jsonData.CAPublicKey); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("enable_password_change", jsonData.EnablePasswordChange); tfErr != nil {
+	if tfErr := d.Set(skEnablePasswordChange, jsonData.EnablePasswordChange); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("password_change_policy", jsonData.PasswordChangePolicy); tfErr != nil {
+	if tfErr := d.Set(skPasswordChangePolicy, jsonData.PasswordChangePolicy); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("password_change_plugin", jsonData.PasswordChangePlugin); tfErr != nil {
+	if tfErr := d.Set(skPasswordChangePlugin, jsonData.PasswordChangePlugin); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("vault_plugin", jsonData.VaultPlugin); tfErr != nil {
+	if tfErr := d.Set(skVaultPlugin, jsonData.VaultPlugin); tfErr != nil {
 		panic(tfErr)
 	}
 }

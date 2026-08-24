@@ -11,8 +11,8 @@ import (
 func TestAccResourceDeviceService_basic(t *testing.T) {
 	resourceName := "wallix-bastion_device_service.testacc_DeviceService"
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceDeviceServiceCreate(),
@@ -24,6 +24,11 @@ func TestAccResourceDeviceService_basic(t *testing.T) {
 			},
 			{
 				Config: testAccResourceDeviceServiceUpdate(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						resourceName,
+						"port", "2242"),
+				),
 			},
 			{
 				ResourceName: resourceName,
@@ -50,7 +55,7 @@ func testAccResourceDeviceServiceCreate() string {
 	return `
 resource "wallix-bastion_device" "testacc_DeviceService" {
   device_name = "testacc_DeviceService"
-  host        = "testacc_service.device"
+  host        = "192.168.100.2"
 }
 resource "wallix-bastion_domain" "testacc_DeviceService" {
   domain_name = "testacc_DeviceService"
@@ -71,7 +76,7 @@ func testAccResourceDeviceServiceUpdate() string {
 	return `
 resource "wallix-bastion_device" "testacc_DeviceService" {
   device_name = "testacc_DeviceService"
-  host        = "testacc_service.device"
+  host        = "192.168.100.2"
 }
 resource "wallix-bastion_domain" "testacc_DeviceService" {
   domain_name = "testacc_DeviceService"

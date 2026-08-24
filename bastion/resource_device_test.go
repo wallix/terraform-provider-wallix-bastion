@@ -8,8 +8,8 @@ import (
 
 func TestAccResourceDevice_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceDeviceCreate(),
@@ -17,11 +17,38 @@ func TestAccResourceDevice_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(
 						"wallix-bastion_device.testacc_Device",
 						"id"),
+
+					resource.TestCheckResourceAttr(
+						"wallix-bastion_device.testacc_Device",
+						"tags.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						"wallix-bastion_device.testacc_Device",
+						"tags.*", map[string]string{
+							tvKey:   tvTestKey,
+							tvValue: tvTestValue,
+						}),
 				),
 			},
 			{
 				Config: testAccResourceDeviceUpdate(),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"wallix-bastion_device.testacc_Device",
+						"alias", "testacc-Device"),
+					resource.TestCheckResourceAttr(
+						"wallix-bastion_device.testacc_Device",
+						"description", "testacc Device"),
+
+					resource.TestCheckResourceAttr(
+						"wallix-bastion_device.testacc_Device",
+						"tags.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						"wallix-bastion_device.testacc_Device",
+						"tags.*", map[string]string{
+							tvKey:   tvTestKey,
+							tvValue: tvTestValue,
+						}),
+
 					resource.TestCheckResourceAttr(
 						"wallix-bastion_device.testacc_Device",
 						"local_domains.#", "1"),
@@ -45,7 +72,17 @@ func testAccResourceDeviceCreate() string {
 resource "wallix-bastion_device" "testacc_Device" {
   device_name = "testacc_Device"
   host        = "testacc.device"
+  
+  tags {
+    key   = "testkey"
+    value = "testvalue"
+  }
+  tags {
+    key   = "testkey2"
+    value = "testvalue2"
+  }
 }
+
 resource "wallix-bastion_device_localdomain" "testacc_Device" {
   device_id   = wallix-bastion_device.testacc_Device.id
   domain_name = "testacc_Device"
@@ -68,6 +105,15 @@ resource "wallix-bastion_device" "testacc_Device" {
   host        = "testacc.device"
   alias       = "testacc-Device"
   description = "testacc Device"
+  
+  tags {
+    key   = "testkey"
+    value = "testvalue"
+  }
+  tags {
+    key   = "testkey2"
+    value = "testvalue2"
+  }	
 }
 resource "wallix-bastion_device_localdomain" "testacc_Device" {
   device_id   = wallix-bastion_device.testacc_Device.id

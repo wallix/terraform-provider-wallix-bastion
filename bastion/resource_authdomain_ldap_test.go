@@ -8,8 +8,8 @@ import (
 
 func TestAccResourceAuthDomainLdap_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceAuthDomainLdapCreate(),
@@ -44,7 +44,7 @@ resource "wallix-bastion_authdomain_ldap" "testacc_AuthDomainLDAP" {
 resource "wallix-bastion_externalauth_ldap" "testacc_AuthDomainLDAP" {
   authentication_name = "testacc_AuthDomainLDAP"
   cn_attribute        = "sAMAccountName"
-  host                = "server2"
+  host                = "192.168.100.21"
   ldap_base           = "OU=FR,DC=test,DC=com"
   login_attribute     = "sAMAccountName"
   port                = 636
@@ -70,7 +70,7 @@ resource "wallix-bastion_authdomain_ldap" "testacc_AuthDomainLDAP" {
 resource "wallix-bastion_externalauth_ldap" "testacc_AuthDomainLDAP" {
   authentication_name = "testacc_LDAPDomain"
   cn_attribute        = "sAMAccountName"
-  host                = "server1"
+  host                = "192.168.100.20"
   ldap_base           = "OU=FR,DC=test,DC=com"
   login_attribute     = "sAMAccountName"
   port                = 636

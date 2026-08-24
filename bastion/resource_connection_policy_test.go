@@ -8,8 +8,8 @@ import (
 
 func TestAccResourceConnectionPolicy_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceConnectionPolicyCreate(),
@@ -21,6 +21,14 @@ func TestAccResourceConnectionPolicy_basic(t *testing.T) {
 			},
 			{
 				Config: testAccResourceConnectionPolicyUpdate(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(
+						"wallix-bastion_connection_policy.testacc_ConnectionPolicy",
+						"id"),
+					resource.TestCheckResourceAttr(
+						"wallix-bastion_connection_policy.testacc_ConnectionPolicy2",
+						"authentication_methods.#", "2"),
+				),
 			},
 			{
 				ResourceName:  "wallix-bastion_connection_policy.testacc_ConnectionPolicy2",
@@ -238,6 +246,10 @@ locals {
       enable = false
       host   = ""
       port   = 0
+    }
+    seamless_connection = {
+      ipredir_apps = ""
+      mode         = "iploop"
     }
   }
 
@@ -466,6 +478,18 @@ locals {
       store_file = "never"
     }
   }
+  optionsRAWTCPIP = {
+    nat_redirection = {
+      enable = true
+      host   = "192.168.100.99"
+      port   = 4242
+    }
+    seamless_connection = {
+      ipredir_apps = ""
+      mode         = "iploop"
+    }
+  }
+
   options = {
     "8"  = local.optionsv8
     "9"  = local.optionsv9
@@ -481,6 +505,11 @@ resource "wallix-bastion_connection_policy" "testacc_ConnectionPolicy2" {
   protocol               = "SSH"
   authentication_methods = ["PASSWORD_VAULT", "PASSWORD_MAPPING"]
   options                = jsonencode(local.options[split(".", data.wallix-bastion_version.v.wab_version)[0]])
+}
+resource "wallix-bastion_connection_policy" "testacc_ConnectionPolicy" {
+  connection_policy_name = "testacc_ConnectionPolicy"
+  protocol               = "RAWTCPIP"
+  options                = jsonencode(local.optionsRAWTCPIP)
 }
 `
 }

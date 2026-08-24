@@ -32,46 +32,46 @@ func resourceApplicationLocalDomain() *schema.Resource {
 		UpdateContext: resourceApplicationLocalDomainUpdate,
 		DeleteContext: resourceApplicationLocalDomainDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceApplicationLocalDomainImport,
+			StateContext: resourceApplicationLocalDomainImport,
 		},
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			skApplicationID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"domain_name": {
+			skDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"admin_account": {
+			skAdminAccount: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				RequiredWith: []string{"enable_password_change"},
+				RequiredWith: []string{skEnablePasswordChange},
 			},
-			"description": {
+			skDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"enable_password_change": {
+			skEnablePasswordChange: {
 				Type:         schema.TypeBool,
 				Optional:     true,
-				RequiredWith: []string{"password_change_policy", "password_change_plugin", "password_change_plugin_parameters"},
+				RequiredWith: []string{skPasswordChangePolicy, skPasswordChangePlugin, skPasswordChangePluginParameters},
 			},
-			"password_change_policy": {
+			skPasswordChangePolicy: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				RequiredWith: []string{"enable_password_change"},
+				RequiredWith: []string{skEnablePasswordChange},
 			},
-			"password_change_plugin": {
+			skPasswordChangePlugin: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				RequiredWith: []string{"enable_password_change"},
+				RequiredWith: []string{skEnablePasswordChange},
 			},
-			"password_change_plugin_parameters": {
+			skPasswordChangePluginParameters: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				RequiredWith: []string{"enable_password_change"},
+				RequiredWith: []string{skEnablePasswordChange},
 				ValidateFunc: validation.StringIsJSON,
 				Sensitive:    true,
 			},
@@ -94,34 +94,37 @@ func resourceApplicationLocalDomainCreate(
 	if err := resourceApplicationLocalDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	cfgApplication, err := readApplicationOptions(ctx, d.Get("application_id").(string), m)
+	cfgApplication, err := readApplicationOptions(ctx, d.Get(skApplicationID).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if cfgApplication.ID == "" {
-		return diag.FromErr(fmt.Errorf("application with ID %s doesn't exists", d.Get("application_id").(string)))
+		return diag.FromErr(fmt.Errorf("application with ID %s doesn't exists", d.Get(skApplicationID).(string)))
 	}
 	_, ex, err := searchResourceApplicationLocalDomain(ctx,
-		d.Get("application_id").(string), d.Get("domain_name").(string), m)
+		d.Get(skApplicationID).(string), d.Get(skDomainName).(string), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if ex {
 		return diag.FromErr(fmt.Errorf("domain_name %s on application_id %s already exists",
-			d.Get("domain_name").(string), d.Get("application_id").(string)))
+			d.Get(skDomainName).(string), d.Get(skApplicationID).(string)))
 	}
-	err = addApplicationLocalDomain(ctx, d, m)
+	id, err := addApplicationLocalDomain(ctx, d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	id, ex, err := searchResourceApplicationLocalDomain(ctx,
-		d.Get("application_id").(string), d.Get("domain_name").(string), m)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if !ex {
-		return diag.FromErr(fmt.Errorf("domain_name %s on application_id %s not found after POST",
-			d.Get("domain_name").(string), d.Get("application_id").(string)))
+	if id == "" {
+		// Fallback for Bastion versions that don't return the X-Object-Id header on creation.
+		id, ex, err = searchResourceApplicationLocalDomain(ctx,
+			d.Get(skApplicationID).(string), d.Get(skDomainName).(string), m)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if !ex {
+			return diag.FromErr(fmt.Errorf("domain_name %s on application_id %s not found after POST",
+				d.Get(skDomainName).(string), d.Get(skApplicationID).(string)))
+		}
 	}
 	d.SetId(id)
 
@@ -135,7 +138,7 @@ func resourceApplicationLocalDomainRead(
 	if err := resourceApplicationLocalDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	cfg, err := readApplicationLocalDomainOptions(ctx, d.Get("application_id").(string), d.Id(), m)
+	cfg, err := readApplicationLocalDomainOptions(ctx, d.Get(skApplicationID).(string), d.Id(), m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -179,11 +182,10 @@ func resourceApplicationLocalDomainDelete(
 }
 
 func resourceApplicationLocalDomainImport(
-	d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (
 	[]*schema.ResourceData, error,
 ) {
-	ctx := context.Background()
 	c := m.(*Client)
 	if err := resourceApplicationLocalDomainVersionCheck(c.bastionAPIVersion); err != nil {
 		return nil, err
@@ -206,7 +208,7 @@ func resourceApplicationLocalDomainImport(
 	fillApplicationLocalDomain(d, cfg)
 	result := make([]*schema.ResourceData, 1)
 	d.SetId(id)
-	if tfErr := d.Set("application_id", idSplit[0]); tfErr != nil {
+	if tfErr := d.Set(skApplicationID, idSplit[0]); tfErr != nil {
 		panic(tfErr)
 	}
 	result[0] = d
@@ -242,19 +244,19 @@ func searchResourceApplicationLocalDomain(
 
 func addApplicationLocalDomain(
 	ctx context.Context, d *schema.ResourceData, m interface{},
-) error {
+) (string, error) {
 	c := m.(*Client)
 	jsonData := prepareApplicationLocalDomainJSON(d, true)
-	body, code, err := c.newRequest(ctx, "/applications/"+d.Get("application_id").(string)+"/localdomains/",
-		http.MethodPost, jsonData)
+	body, headers, code, err := c.newRequestWithHeaders(ctx,
+		"/applications/"+d.Get(skApplicationID).(string)+"/localdomains/", http.MethodPost, jsonData)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
+		return "", fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
-	return nil
+	return headers.Get("X-Object-Id"), nil
 }
 
 func updateApplicationLocalDomain(
@@ -263,7 +265,7 @@ func updateApplicationLocalDomain(
 	c := m.(*Client)
 	jsonData := prepareApplicationLocalDomainJSON(d, false)
 	body, code, err := c.newRequest(ctx,
-		"/applications/"+d.Get("application_id").(string)+"/localdomains/"+d.Id(), http.MethodPut, jsonData)
+		"/applications/"+d.Get(skApplicationID).(string)+"/localdomains/"+d.Id(), http.MethodPut, jsonData)
 	if err != nil {
 		return err
 	}
@@ -279,7 +281,7 @@ func deleteApplicationLocalDomain(
 ) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
-		"/applications/"+d.Get("application_id").(string)+"/localdomains/"+d.Id(), http.MethodDelete, nil)
+		"/applications/"+d.Get(skApplicationID).(string)+"/localdomains/"+d.Id(), http.MethodDelete, nil)
 	if err != nil {
 		return err
 	}
@@ -292,20 +294,20 @@ func deleteApplicationLocalDomain(
 
 func prepareApplicationLocalDomainJSON(d *schema.ResourceData, newResource bool) jsonApplicationLocalDomain {
 	jsonData := jsonApplicationLocalDomain{
-		Description: d.Get("description").(string),
-		DomainName:  d.Get("domain_name").(string),
+		Description: d.Get(skDescription).(string),
+		DomainName:  d.Get(skDomainName).(string),
 	}
 
-	if d.Get("enable_password_change").(bool) {
+	if d.Get(skEnablePasswordChange).(bool) {
 		if !newResource {
-			adminAccount := d.Get("admin_account").(string)
+			adminAccount := d.Get(skAdminAccount).(string)
 			jsonData.AdminAccount = &adminAccount
 		}
-		jsonData.EnablePasswordChange = d.Get("enable_password_change").(bool)
-		jsonData.PasswordChangePolicy = d.Get("password_change_policy").(string)
-		jsonData.PasswordChangePlugin = d.Get("password_change_plugin").(string)
+		jsonData.EnablePasswordChange = d.Get(skEnablePasswordChange).(bool)
+		jsonData.PasswordChangePolicy = d.Get(skPasswordChangePolicy).(string)
+		jsonData.PasswordChangePlugin = d.Get(skPasswordChangePlugin).(string)
 		var passChgPlug map[string]interface{}
-		if v := d.Get("password_change_plugin_parameters").(string); v != "" {
+		if v := d.Get(skPasswordChangePluginParameters).(string); v != "" {
 			_ = json.Unmarshal([]byte(v),
 				&passChgPlug)
 		} else {
@@ -344,22 +346,22 @@ func readApplicationLocalDomainOptions(
 }
 
 func fillApplicationLocalDomain(d *schema.ResourceData, jsonData jsonApplicationLocalDomain) {
-	if tfErr := d.Set("domain_name", jsonData.DomainName); tfErr != nil {
+	if tfErr := d.Set(skDomainName, jsonData.DomainName); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("admin_account", jsonData.AdminAccount); tfErr != nil {
+	if tfErr := d.Set(skAdminAccount, jsonData.AdminAccount); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("description", jsonData.Description); tfErr != nil {
+	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("enable_password_change", jsonData.EnablePasswordChange); tfErr != nil {
+	if tfErr := d.Set(skEnablePasswordChange, jsonData.EnablePasswordChange); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("password_change_policy", jsonData.PasswordChangePolicy); tfErr != nil {
+	if tfErr := d.Set(skPasswordChangePolicy, jsonData.PasswordChangePolicy); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("password_change_plugin", jsonData.PasswordChangePlugin); tfErr != nil {
+	if tfErr := d.Set(skPasswordChangePlugin, jsonData.PasswordChangePlugin); tfErr != nil {
 		panic(tfErr)
 	}
 }

@@ -23,7 +23,7 @@ assignees: ''
 
 - **Terraform version**: [e.g. v1.5.0]
 - **Operating System**: [e.g. Ubuntu 22.04]
-- **Wallix Bastion version**: [e.g. v3.12.0]
+- **WALLIX Bastion version**: [e.g. v3.12.0]
 - **Installation method**: [e.g. Terraform Registry, local build]
 
 ### Configuration Attempt
