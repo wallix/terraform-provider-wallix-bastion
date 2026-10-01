@@ -45,6 +45,7 @@ output "app1_summary" {
 
 ### Read-Only
 
+- `allow_non_post_form` (Boolean)
 - `application_url` (String)
 - `browser` (String)
 - `browser_version` (String)

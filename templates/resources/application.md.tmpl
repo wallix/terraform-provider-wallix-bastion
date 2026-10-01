@@ -28,7 +28,7 @@ resource "wallix-bastion_application" "app1" {
 # Configure a web application (API v3.12+)
 resource "wallix-bastion_application" "web_app" {
   application_name  = "web_app"
-  connection_policy = "WebApp"
+  connection_policy = "WEBAPP"
   category          = "web_application"
   application_url   = "https://example.com"
   description       = "Web application accessed via browser"
@@ -70,7 +70,9 @@ When `category = "web_application"` (API v3.12+), the following fields are requi
 - **application_url**: The URL of the web application
 - **connection_policy**: The connection policy name
 
-Note: The `target`, `paths`, `browser`, and `browser_version` fields cannot be used with web_application.
+Note: The `target`, `paths`, `browser`, `browser_version`, and `parameters` fields cannot be used with web_application.
+
+Optionally, `allow_non_post_form` (default `false`) allows credentials injection in non-POST forms. It can only be set to `true` with `category = "web_application"`.
 
 ### Jumphost Application Configuration (Deprecated)
 
