@@ -25,6 +25,10 @@ func dataSourceApplication() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			skAllowNonPostForm: {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"application_url": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -45,6 +49,14 @@ func dataSourceApplication() *schema.Resource {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			skLoginButtonSelector: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			skLoginFormURL: {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"parameters": {
 				Type:     schema.TypeString,
@@ -181,6 +193,9 @@ func fillSourceApplication(d *schema.ResourceData, jsonData jsonApplication) {
 		panic(tfErr)
 	}
 	setApplicationOptionalString(d, "application_url", jsonData.ApplicationURL)
+	setApplicationOptionalString(d, skLoginFormURL, jsonData.LoginFormURL)
+	setApplicationOptionalString(d, skLoginButtonSelector, jsonData.LoginButtonSelector)
+	setApplicationOptionalBool(d, skAllowNonPostForm, jsonData.AllowNonPostForm)
 	setApplicationOptionalString(d, "browser", jsonData.Browser)
 	setApplicationOptionalString(d, "browser_version", jsonData.BrowserVersion)
 	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {

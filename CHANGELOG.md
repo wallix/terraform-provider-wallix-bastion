@@ -1,5 +1,20 @@
 # changelog
 
+## 0.15.2 (October 01, 2026)
+
+ENHANCEMENTS:
+
+- **resource/wallix-bastion_application**: add `login_form_url`, `login_button_selector`, and `allow_non_post_form` arguments (API v3.12+, `category = "web_application"` only) to configure the automatic injection of credentials into the application's login form; they are only sent to the API when set, or on update to clear them, so existing configurations send the same requests as before
+- **data-source/wallix-bastion_application**: add `login_form_url`, `login_button_selector`, and `allow_non_post_form` attributes
+
+BUG FIXES:
+
+- **resource/wallix-bastion_application**: fixed updating an application with `category = "web_application"`, which always failed with `application_url cannot be configured when category = standard`: the category was only read at creation, so the update was validated and built as a standard application; the update now follows the resource category, and `category` is still only sent at creation since it forces a new resource
+
+NOTES:
+
+- **resource/wallix-bastion_application**: as a side effect, the `jumphost` branch is now reachable on create and update. On API versions below v3.12, a create sends `application_url` and `browser` without `category` (which is only sent from v3.12) instead of being rejected client-side; on API v3.12+, updating a legacy `jumphost` application now returns the existing deprecation error. Both paths were already unsupported
+
 ## 0.15.1 (September 16, 2026)
 
 BUG FIXES:

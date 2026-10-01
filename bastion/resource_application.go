@@ -15,20 +15,23 @@ import (
 )
 
 type jsonApplication struct {
-	ID               string                        `json:"id,omitempty"`
-	ApplicationName  string                        `json:"application_name"`
-	ConnectionPolicy string                        `json:"connection_policy"`
-	Category         string                        `json:"category,omitempty"`
-	ApplicationURL   *string                       `json:"application_url,omitempty"`
-	Browser          *string                       `json:"browser,omitempty"`
-	BrowserVersion   *string                       `json:"browser_version,omitempty"`
-	Description      string                        `json:"description"`
-	Parameters       *string                       `json:"parameters,omitempty"`
-	Target           *string                       `json:"target,omitempty"`
-	GlobalDomains    *[]string                     `json:"global_domains,omitempty"`
-	Paths            *[]jsonApplicationPath        `json:"paths,omitempty"`
-	LocalDomains     *[]jsonApplicationLocalDomain `json:"local_domains,omitempty"`
-	Tags             *[]map[string]string          `json:"tags,omitempty"`
+	ID                  string                        `json:"id,omitempty"`
+	ApplicationName     string                        `json:"application_name"`
+	ConnectionPolicy    string                        `json:"connection_policy"`
+	Category            string                        `json:"category,omitempty"`
+	ApplicationURL      *string                       `json:"application_url,omitempty"`
+	LoginFormURL        *string                       `json:"login_form_url,omitempty"`
+	LoginButtonSelector *string                       `json:"login_button_selector,omitempty"`
+	AllowNonPostForm    *bool                         `json:"allow_non_post_form,omitempty"`
+	Browser             *string                       `json:"browser,omitempty"`
+	BrowserVersion      *string                       `json:"browser_version,omitempty"`
+	Description         string                        `json:"description"`
+	Parameters          *string                       `json:"parameters,omitempty"`
+	Target              *string                       `json:"target,omitempty"`
+	GlobalDomains       *[]string                     `json:"global_domains,omitempty"`
+	Paths               *[]jsonApplicationPath        `json:"paths,omitempty"`
+	LocalDomains        *[]jsonApplicationLocalDomain `json:"local_domains,omitempty"`
+	Tags                *[]map[string]string          `json:"tags,omitempty"`
 }
 
 type jsonApplicationPath struct {
@@ -62,6 +65,11 @@ func resourceApplication() *schema.Resource {
 				Default:      skStandard,
 				ValidateFunc: validation.StringInSlice([]string{skStandard, "jumphost", "web_application"}, false),
 			},
+			skAllowNonPostForm: {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"application_url": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -82,6 +90,14 @@ func resourceApplication() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			skLoginButtonSelector: {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			skLoginFormURL: {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"parameters": {
 				Type:     schema.TypeString,
@@ -401,11 +417,14 @@ func prepareApplicationJSON(
 		jsonData.Tags = &tags
 	}
 
+	// The category drives validation and the payload on every call, but it is only sent at
+	// creation: it is ForceNew in the schema, so an update never changes it.
+	category := d.Get("category").(string)
 	if newResource &&
 		semver.Compare(apiVersion, VersionWallixAPI312) >= 0 {
-		jsonData.Category = d.Get("category").(string)
+		jsonData.Category = category
 	}
-	switch jsonData.Category {
+	switch category {
 	case "", skStandard:
 		if d.Get("application_url").(string) != "" {
 			return jsonData, errors.New("application_url cannot be configured when category = standard")
@@ -415,6 +434,9 @@ func prepareApplicationJSON(
 		}
 		if d.Get("browser_version").(string) != "" {
 			return jsonData, errors.New("browser_version cannot be configured when category = standard")
+		}
+		if err := rejectApplicationWebLoginFields(d, skStandard); err != nil {
+			return jsonData, err
 		}
 
 		target := d.Get(skTarget).(string)
@@ -462,6 +484,9 @@ func prepareApplicationJSON(
 		if len(d.Get(skGlobalDomains).(*schema.Set).List()) > 0 {
 			return jsonData, errors.New("global_domains cannot be configured when category = jumphost")
 		}
+		if err := rejectApplicationWebLoginFields(d, "jumphost"); err != nil {
+			return jsonData, err
+		}
 
 		applicationURL := d.Get("application_url").(string)
 		if applicationURL == "" {
@@ -507,6 +532,9 @@ func prepareApplicationJSON(
 			return jsonData, errors.New("application_url must be specified when category = web_application")
 		}
 		jsonData.ApplicationURL = &applicationURL
+		jsonData.LoginFormURL = applicationStringToSend(d, skLoginFormURL, newResource)
+		jsonData.LoginButtonSelector = applicationStringToSend(d, skLoginButtonSelector, newResource)
+		jsonData.AllowNonPostForm = applicationBoolToSend(d, skAllowNonPostForm, newResource)
 
 		listGlobalDomains := d.Get(skGlobalDomains).(*schema.Set).List()
 		jsonDataGlobalDomains := make([]string, len(listGlobalDomains))
@@ -517,6 +545,43 @@ func prepareApplicationJSON(
 	}
 
 	return jsonData, nil
+}
+
+// rejectApplicationWebLoginFields returns an error when one of the login automation fields,
+// which only apply to category = web_application, is set for another category.
+func rejectApplicationWebLoginFields(d *schema.ResourceData, category string) error {
+	for _, key := range []string{skLoginFormURL, skLoginButtonSelector} {
+		if d.Get(key).(string) != "" {
+			return fmt.Errorf("%s cannot be configured when category = %s", key, category)
+		}
+	}
+	if d.Get(skAllowNonPostForm).(bool) {
+		return fmt.Errorf("%s cannot be configured when category = %s", skAllowNonPostForm, category)
+	}
+
+	return nil
+}
+
+// applicationStringToSend returns the value of an optional field for the request, or nil to leave
+// it out. An empty value is left out at creation and when it is unchanged, so a configuration
+// that never sets the field never sends it; it is only sent to clear the field on update.
+func applicationStringToSend(d *schema.ResourceData, key string, newResource bool) *string {
+	v := d.Get(key).(string)
+	if v == "" && (newResource || !d.HasChange(key)) {
+		return nil
+	}
+
+	return &v
+}
+
+// applicationBoolToSend is applicationStringToSend for a boolean field, with false as the empty value.
+func applicationBoolToSend(d *schema.ResourceData, key string, newResource bool) *bool {
+	v := d.Get(key).(bool)
+	if !v && (newResource || !d.HasChange(key)) {
+		return nil
+	}
+
+	return &v
 }
 
 func readApplicationOptions(
@@ -559,6 +624,9 @@ func fillApplication(d *schema.ResourceData, jsonData jsonApplication) {
 		panic(tfErr)
 	}
 	setApplicationOptionalString(d, "application_url", jsonData.ApplicationURL)
+	setApplicationOptionalString(d, skLoginFormURL, jsonData.LoginFormURL)
+	setApplicationOptionalString(d, skLoginButtonSelector, jsonData.LoginButtonSelector)
+	setApplicationOptionalBool(d, skAllowNonPostForm, jsonData.AllowNonPostForm)
 	setApplicationOptionalString(d, "browser", jsonData.Browser)
 	setApplicationOptionalString(d, "browser_version", jsonData.BrowserVersion)
 	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
@@ -581,13 +649,21 @@ func fillApplication(d *schema.ResourceData, jsonData jsonApplication) {
 }
 
 // setApplicationOptionalString sets key to the dereferenced value, or "" when value is nil -
-// shared by the four *string fields (application_url/browser/browser_version/target) that follow
-// the same "unset means empty" convention.
+// shared by the *string fields that follow the same "unset means empty" convention.
 func setApplicationOptionalString(d *schema.ResourceData, key string, value *string) {
 	v := ""
 	if value != nil {
 		v = *value
 	}
+	if tfErr := d.Set(key, v); tfErr != nil {
+		panic(tfErr)
+	}
+}
+
+// setApplicationOptionalBool is setApplicationOptionalString for a *bool field, with false
+// when value is nil.
+func setApplicationOptionalBool(d *schema.ResourceData, key string, value *bool) {
+	v := value != nil && *value
 	if tfErr := d.Set(key, v); tfErr != nil {
 		panic(tfErr)
 	}

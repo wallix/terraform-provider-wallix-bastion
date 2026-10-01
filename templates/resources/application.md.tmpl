@@ -28,10 +28,21 @@ resource "wallix-bastion_application" "app1" {
 # Configure a web application (API v3.12+)
 resource "wallix-bastion_application" "web_app" {
   application_name  = "web_app"
-  connection_policy = "WebApp"
+  connection_policy = "WEBAPP"
   category          = "web_application"
   application_url   = "https://example.com"
   description       = "Web application accessed via browser"
+}
+
+# Configure a web application with automatic credential injection into its login form (API v3.12+)
+resource "wallix-bastion_application" "web_app_login" {
+  application_name      = "web_app_login"
+  connection_policy     = "WEBAPP"
+  category              = "web_application"
+  application_url       = "https://example.com"
+  login_form_url        = "https://example.com/login"
+  login_button_selector = "#submit-button"
+  allow_non_post_form   = true
 }
 
 # Configure a jumphost application (deprecated in API v3.12+, use 'web_application' instead)
@@ -70,7 +81,17 @@ When `category = "web_application"` (API v3.12+), the following fields are requi
 - **application_url**: The URL of the web application
 - **connection_policy**: The connection policy name
 
-Note: The `target`, `paths`, `browser`, and `browser_version` fields cannot be used with web_application.
+Note: The `target`, `paths`, `browser`, `browser_version`, and `parameters` fields cannot be used with web_application.
+
+The following optional fields configure the automatic injection of credentials into the application's
+login form. They match the fields of the same name in the Bastion web interface, and can only be used
+with web_application:
+- **login_form_url**: The URL of the login page ("Login page URL")
+- **login_button_selector**: The identifier of the login button, such as `#submit-button` ("Login button identifier")
+- **allow_non_post_form**: Allow the injection into login forms that are not submitted with a POST request
+  ("Allow automatic injection of authentication information in non-POST forms"), defaults to `false`
+
+Removing one of these fields from the configuration clears it on the Bastion.
 
 ### Jumphost Application Configuration (Deprecated)
 

@@ -72,6 +72,9 @@ func TestAccResourceApplication_web(t *testing.T) {
 							resource.TestCheckResourceAttr(
 								"wallix-bastion_application.testacc_Appli_web",
 								"application_url", "https://github.com/login"),
+							resource.TestCheckResourceAttr(
+								"wallix-bastion_application.testacc_Appli_web",
+								"allow_non_post_form", "false"),
 						),
 					},
 					{
@@ -83,12 +86,40 @@ func TestAccResourceApplication_web(t *testing.T) {
 							resource.TestCheckResourceAttr(
 								"wallix-bastion_application.testacc_Appli_web",
 								"application_url", "https://github.com/login"),
+							resource.TestCheckResourceAttr(
+								"wallix-bastion_application.testacc_Appli_web",
+								"global_domains.#", "1"),
+							resource.TestCheckResourceAttr(
+								"wallix-bastion_application.testacc_Appli_web",
+								"login_form_url", "https://github.com/session"),
+							resource.TestCheckResourceAttr(
+								"wallix-bastion_application.testacc_Appli_web",
+								"login_button_selector", "input[name=commit]"),
+							resource.TestCheckResourceAttr(
+								"wallix-bastion_application.testacc_Appli_web",
+								"allow_non_post_form", "true"),
 						),
 					},
 					{
-						ResourceName:  "wallix-bastion_application.testacc_Appli_web",
-						ImportState:   true,
-						ImportStateId: "testacc_Appli_web",
+						// Removing the login automation fields from the configuration must clear them.
+						Config: testAccResourceApplicationCreateWeb(),
+						Check: resource.ComposeTestCheckFunc(
+							resource.TestCheckResourceAttr(
+								"wallix-bastion_application.testacc_Appli_web",
+								"login_form_url", ""),
+							resource.TestCheckResourceAttr(
+								"wallix-bastion_application.testacc_Appli_web",
+								"login_button_selector", ""),
+							resource.TestCheckResourceAttr(
+								"wallix-bastion_application.testacc_Appli_web",
+								"allow_non_post_form", "false"),
+						),
+					},
+					{
+						ResourceName:      "wallix-bastion_application.testacc_Appli_web",
+						ImportState:       true,
+						ImportStateId:     "testacc_Appli_web",
+						ImportStateVerify: true,
 					},
 				},
 				PreventPostDestroyRefresh: true,
@@ -196,10 +227,14 @@ resource "wallix-bastion_application" "testacc_Appli_jumphost" {
 // nolint: lll, nolintlint
 func testAccResourceApplicationCreateWeb() string {
 	return `
+resource "wallix-bastion_domain" "testacc_Appli_web" {
+  domain_name = "testacc_Appli_web"
+}
+
 resource "wallix-bastion_application" "testacc_Appli_web" {
   application_name  = "testacc_Appli_web"
   category          = "web_application"
-  connection_policy = "WebApp"
+  connection_policy = "WEBAPP"
   application_url   = "https://github.com/login"
 }
 `
@@ -273,13 +308,20 @@ resource "wallix-bastion_application" "testacc_Appli" {
 
 func testAccResourceApplicationUpdateWeb() string {
 	return `
+resource "wallix-bastion_domain" "testacc_Appli_web" {
+  domain_name = "testacc_Appli_web"
+}
+
 resource "wallix-bastion_application" "testacc_Appli_web" {
-  application_name  = "testacc_Appli_web"
-  description       = "testacc Web Application"
-  category          = "web_application"
-  connection_policy = "WebApp"
-  application_url   = "https://github.com/login"
-  parameters        = "app_parameters"
+  application_name      = "testacc_Appli_web"
+  description           = "testacc Web Application"
+  category              = "web_application"
+  connection_policy     = "WEBAPP"
+  application_url       = "https://github.com/login"
+  global_domains        = [wallix-bastion_domain.testacc_Appli_web.domain_name]
+  login_form_url        = "https://github.com/session"
+  login_button_selector = "input[name=commit]"
+  allow_non_post_form   = true
 }
 `
 }

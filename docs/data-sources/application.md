@@ -45,6 +45,7 @@ output "app1_summary" {
 
 ### Read-Only
 
+- `allow_non_post_form` (Boolean)
 - `application_url` (String)
 - `browser` (String)
 - `browser_version` (String)
@@ -54,6 +55,8 @@ output "app1_summary" {
 - `global_domains` (Set of String)
 - `id` (String) The ID of this resource.
 - `local_domains` (List of Object) (see [below for nested schema](#nestedatt--local_domains))
+- `login_button_selector` (String)
+- `login_form_url` (String)
 - `parameters` (String)
 - `paths` (Set of Object) (see [below for nested schema](#nestedatt--paths))
 - `tags` (Set of Object) (see [below for nested schema](#nestedatt--tags))
@@ -109,6 +112,12 @@ application with that name exists on the Bastion.
 - **web_application**: Web applications accessed through a browser (API v3.12+)
 - **jumphost**: Web applications accessed through a browser (deprecated in API v3.12+ in favor
   of `web_application`)
+
+### Login Form
+
+For `web_application` applications (API v3.12+), `login_form_url`, `login_button_selector`, and
+`allow_non_post_form` reflect the automatic injection of credentials into the application's login
+form. They are empty, or `false`, for the other categories.
 
 ### Paths
 
