@@ -8,6 +8,54 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+const (
+	testAppName        = "application_name"
+	testAppCategory    = "category"
+	testAppURLKey      = "application_url"
+	testAppCategoryWeb = "web_application"
+	testAppURL         = "https://example.com"
+)
+
+// testWebApplicationResourceData builds a web_application resource whose fields can be extended or overridden.
+func testWebApplicationResourceData(t *testing.T, extra map[string]interface{}) *schema.ResourceData {
+	t.Helper()
+
+	raw := map[string]interface{}{
+		testAppName:        "web-app",
+		skConnectionPolicy: "WEBAPP",
+		testAppCategory:    testAppCategoryWeb,
+		testAppURLKey:      testAppURL,
+	}
+	for k, v := range extra {
+		raw[k] = v
+	}
+
+	return schema.TestResourceDataRaw(t, resourceApplication().Schema, raw)
+}
+
+func testStandardApplicationResourceData(t *testing.T, extra map[string]interface{}) *schema.ResourceData {
+	t.Helper()
+
+	raw := map[string]interface{}{
+		testAppName:        "std-app",
+		skConnectionPolicy: "RDP",
+		testAppCategory:    skStandard,
+		skTarget:           "cluster",
+		"paths": []interface{}{
+			map[string]interface{}{
+				skTarget:      "Interactive@device:SSH",
+				"program":     "application_path",
+				"working_dir": "directory",
+			},
+		},
+	}
+	for k, v := range extra {
+		raw[k] = v
+	}
+
+	return schema.TestResourceDataRaw(t, resourceApplication().Schema, raw)
+}
+
 func TestFillApplicationHandlesNilLocalDomains(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, resourceApplication().Schema, map[string]interface{}{})
 
@@ -24,13 +72,7 @@ func TestFillApplicationHandlesNilLocalDomains(t *testing.T) {
 }
 
 func TestPrepareApplicationJSONRejectsParametersForWebApplication(t *testing.T) {
-	d := schema.TestResourceDataRaw(t, resourceApplication().Schema, map[string]interface{}{
-		"application_name":  "web-app",
-		"connection_policy": "WebApp",
-		"category":          "web_application",
-		"application_url":   "https://example.com",
-		"parameters":        "some-value",
-	})
+	d := testWebApplicationResourceData(t, map[string]interface{}{"parameters": "some-value"})
 
 	_, err := prepareApplicationJSON(d, true, VersionWallixAPI312)
 	if err == nil {
@@ -42,12 +84,7 @@ func TestPrepareApplicationJSONRejectsParametersForWebApplication(t *testing.T) 
 }
 
 func TestPrepareApplicationJSONOmitsParametersForWebApplication(t *testing.T) {
-	d := schema.TestResourceDataRaw(t, resourceApplication().Schema, map[string]interface{}{
-		"application_name":  "web-app",
-		"connection_policy": "WebApp",
-		"category":          "web_application",
-		"application_url":   "https://example.com",
-	})
+	d := testWebApplicationResourceData(t, nil)
 
 	jsonData, err := prepareApplicationJSON(d, true, VersionWallixAPI312)
 	if err != nil {
@@ -67,20 +104,7 @@ func TestPrepareApplicationJSONOmitsParametersForWebApplication(t *testing.T) {
 }
 
 func TestPrepareApplicationJSONKeepsParametersForStandard(t *testing.T) {
-	d := schema.TestResourceDataRaw(t, resourceApplication().Schema, map[string]interface{}{
-		"application_name":  "std-app",
-		"connection_policy": "RDP",
-		"category":          "standard",
-		"target":            "cluster",
-		"parameters":        "some-value",
-		"paths": []interface{}{
-			map[string]interface{}{
-				"target":      "Interactive@device:SSH",
-				"program":     "application_path",
-				"working_dir": "directory",
-			},
-		},
-	})
+	d := testStandardApplicationResourceData(t, map[string]interface{}{"parameters": "some-value"})
 
 	jsonData, err := prepareApplicationJSON(d, true, VersionWallixAPI312)
 	if err != nil {
@@ -92,13 +116,7 @@ func TestPrepareApplicationJSONKeepsParametersForStandard(t *testing.T) {
 }
 
 func TestPrepareApplicationJSONUpdateWebApplication(t *testing.T) {
-	d := schema.TestResourceDataRaw(t, resourceApplication().Schema, map[string]interface{}{
-		"application_name":  "web-app",
-		"connection_policy": "WEBAPP",
-		"category":          "web_application",
-		"application_url":   "https://example.com",
-		"global_domains":    []interface{}{"domain1"},
-	})
+	d := testWebApplicationResourceData(t, map[string]interface{}{skGlobalDomains: []interface{}{"domain1"}})
 
 	jsonData, err := prepareApplicationJSON(d, false, VersionWallixAPI312)
 	if err != nil {
@@ -107,7 +125,7 @@ func TestPrepareApplicationJSONUpdateWebApplication(t *testing.T) {
 	if jsonData.Category != "" {
 		t.Fatalf("expected category to be omitted on update, got %q", jsonData.Category)
 	}
-	if jsonData.ApplicationURL == nil || *jsonData.ApplicationURL != "https://example.com" {
+	if jsonData.ApplicationURL == nil || *jsonData.ApplicationURL != testAppURL {
 		t.Fatalf("expected application_url to be sent on update, got %v", jsonData.ApplicationURL)
 	}
 	if jsonData.GlobalDomains == nil || len(*jsonData.GlobalDomains) != 1 {
@@ -118,19 +136,37 @@ func TestPrepareApplicationJSONUpdateWebApplication(t *testing.T) {
 	}
 }
 
+func TestPrepareApplicationJSONUpdateStandard(t *testing.T) {
+	d := testStandardApplicationResourceData(t, nil)
+
+	jsonData, err := prepareApplicationJSON(d, false, VersionWallixAPI312)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if jsonData.Category != "" {
+		t.Fatalf("expected category to be omitted on update, got %q", jsonData.Category)
+	}
+	if jsonData.Target == nil || *jsonData.Target != "cluster" {
+		t.Fatalf("expected target to be sent on update, got %v", jsonData.Target)
+	}
+	if jsonData.Paths == nil || len(*jsonData.Paths) != 1 {
+		t.Fatalf("expected paths to be sent on update, got %v", jsonData.Paths)
+	}
+
+	d = testStandardApplicationResourceData(t, map[string]interface{}{skTarget: ""})
+	if _, err = prepareApplicationJSON(d, false, VersionWallixAPI312); err == nil {
+		t.Fatalf("expected an error when target is missing on update of a standard application")
+	}
+}
+
 func TestPrepareApplicationJSONCreateSendsCategory(t *testing.T) {
-	d := schema.TestResourceDataRaw(t, resourceApplication().Schema, map[string]interface{}{
-		"application_name":  "web-app",
-		"connection_policy": "WEBAPP",
-		"category":          "web_application",
-		"application_url":   "https://example.com",
-	})
+	d := testWebApplicationResourceData(t, nil)
 
 	jsonData, err := prepareApplicationJSON(d, true, VersionWallixAPI312)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if jsonData.Category != "web_application" {
+	if jsonData.Category != testAppCategoryWeb {
 		t.Fatalf("expected category to be sent on creation, got %q", jsonData.Category)
 	}
 }

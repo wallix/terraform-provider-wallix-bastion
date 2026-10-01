@@ -83,12 +83,16 @@ func TestAccResourceApplication_web(t *testing.T) {
 							resource.TestCheckResourceAttr(
 								"wallix-bastion_application.testacc_Appli_web",
 								"application_url", "https://github.com/login"),
+							resource.TestCheckResourceAttr(
+								"wallix-bastion_application.testacc_Appli_web",
+								"global_domains.#", "1"),
 						),
 					},
 					{
-						ResourceName:  "wallix-bastion_application.testacc_Appli_web",
-						ImportState:   true,
-						ImportStateId: "testacc_Appli_web",
+						ResourceName:      "wallix-bastion_application.testacc_Appli_web",
+						ImportState:       true,
+						ImportStateId:     "testacc_Appli_web",
+						ImportStateVerify: true,
 					},
 				},
 				PreventPostDestroyRefresh: true,
@@ -196,6 +200,10 @@ resource "wallix-bastion_application" "testacc_Appli_jumphost" {
 // nolint: lll, nolintlint
 func testAccResourceApplicationCreateWeb() string {
 	return `
+resource "wallix-bastion_domain" "testacc_Appli_web" {
+  domain_name = "testacc_Appli_web"
+}
+
 resource "wallix-bastion_application" "testacc_Appli_web" {
   application_name  = "testacc_Appli_web"
   category          = "web_application"
@@ -273,12 +281,17 @@ resource "wallix-bastion_application" "testacc_Appli" {
 
 func testAccResourceApplicationUpdateWeb() string {
 	return `
+resource "wallix-bastion_domain" "testacc_Appli_web" {
+  domain_name = "testacc_Appli_web"
+}
+
 resource "wallix-bastion_application" "testacc_Appli_web" {
   application_name  = "testacc_Appli_web"
   description       = "testacc Web Application"
   category          = "web_application"
   connection_policy = "WEBAPP"
   application_url   = "https://github.com/login"
+  global_domains    = [wallix-bastion_domain.testacc_Appli_web.domain_name]
 }
 `
 }

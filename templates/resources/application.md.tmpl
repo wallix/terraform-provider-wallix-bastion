@@ -28,7 +28,7 @@ resource "wallix-bastion_application" "app1" {
 # Configure a web application (API v3.12+)
 resource "wallix-bastion_application" "web_app" {
   application_name  = "web_app"
-  connection_policy = "WebApp"
+  connection_policy = "WEBAPP"
   category          = "web_application"
   application_url   = "https://example.com"
   description       = "Web application accessed via browser"
