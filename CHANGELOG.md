@@ -1,5 +1,11 @@
 # changelog
 
+## 0.15.2 (October 01, 2026)
+
+BUG FIXES:
+
+- **resource/wallix-bastion_application**: fixed updating an application with `category = "web_application"`: the category was not taken into account on update, so the request was validated and built as a standard application (`application_url` and `global_domains` were not sent, or the update failed); `category` is still only sent at creation since it forces a new resource
+
 ## 0.15.1 (September 16, 2026)
 
 BUG FIXES:

@@ -199,7 +199,7 @@ func testAccResourceApplicationCreateWeb() string {
 resource "wallix-bastion_application" "testacc_Appli_web" {
   application_name  = "testacc_Appli_web"
   category          = "web_application"
-  connection_policy = "WebApp"
+  connection_policy = "WEBAPP"
   application_url   = "https://github.com/login"
 }
 `
@@ -277,9 +277,8 @@ resource "wallix-bastion_application" "testacc_Appli_web" {
   application_name  = "testacc_Appli_web"
   description       = "testacc Web Application"
   category          = "web_application"
-  connection_policy = "WebApp"
+  connection_policy = "WEBAPP"
   application_url   = "https://github.com/login"
-  parameters        = "app_parameters"
 }
 `
 }

@@ -90,3 +90,47 @@ func TestPrepareApplicationJSONKeepsParametersForStandard(t *testing.T) {
 		t.Fatalf("expected Parameters to be \"some-value\", got %v", jsonData.Parameters)
 	}
 }
+
+func TestPrepareApplicationJSONUpdateWebApplication(t *testing.T) {
+	d := schema.TestResourceDataRaw(t, resourceApplication().Schema, map[string]interface{}{
+		"application_name":  "web-app",
+		"connection_policy": "WEBAPP",
+		"category":          "web_application",
+		"application_url":   "https://example.com",
+		"global_domains":    []interface{}{"domain1"},
+	})
+
+	jsonData, err := prepareApplicationJSON(d, false, VersionWallixAPI312)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if jsonData.Category != "" {
+		t.Fatalf("expected category to be omitted on update, got %q", jsonData.Category)
+	}
+	if jsonData.ApplicationURL == nil || *jsonData.ApplicationURL != "https://example.com" {
+		t.Fatalf("expected application_url to be sent on update, got %v", jsonData.ApplicationURL)
+	}
+	if jsonData.GlobalDomains == nil || len(*jsonData.GlobalDomains) != 1 {
+		t.Fatalf("expected global_domains to be sent on update, got %v", jsonData.GlobalDomains)
+	}
+	if jsonData.Target != nil || jsonData.Paths != nil {
+		t.Fatalf("expected target and paths to be omitted for web_application")
+	}
+}
+
+func TestPrepareApplicationJSONCreateSendsCategory(t *testing.T) {
+	d := schema.TestResourceDataRaw(t, resourceApplication().Schema, map[string]interface{}{
+		"application_name":  "web-app",
+		"connection_policy": "WEBAPP",
+		"category":          "web_application",
+		"application_url":   "https://example.com",
+	})
+
+	jsonData, err := prepareApplicationJSON(d, true, VersionWallixAPI312)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if jsonData.Category != "web_application" {
+		t.Fatalf("expected category to be sent on creation, got %q", jsonData.Category)
+	}
+}

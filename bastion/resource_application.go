@@ -401,11 +401,14 @@ func prepareApplicationJSON(
 		jsonData.Tags = &tags
 	}
 
+	// The category drives validation and the payload on every call, but it is only sent at
+	// creation: it is ForceNew in the schema, so an update never changes it.
+	category := d.Get("category").(string)
 	if newResource &&
 		semver.Compare(apiVersion, VersionWallixAPI312) >= 0 {
-		jsonData.Category = d.Get("category").(string)
+		jsonData.Category = category
 	}
-	switch jsonData.Category {
+	switch category {
 	case "", skStandard:
 		if d.Get("application_url").(string) != "" {
 			return jsonData, errors.New("application_url cannot be configured when category = standard")
