@@ -57,6 +57,7 @@ resource "wallix-bastion_application" "jumphost_app" {
 
 ### Optional
 
+- `allow_non_post_form` (Boolean)
 - `application_url` (String)
 - `browser` (String)
 - `browser_version` (String)
@@ -134,6 +135,8 @@ When `category = "web_application"` (API v3.12+), the following fields are requi
 - **connection_policy**: The connection policy name
 
 Note: The `target`, `paths`, `browser`, `browser_version`, and `parameters` fields cannot be used with web_application.
+
+Optionally, `allow_non_post_form` (default `false`) allows credentials injection in non-POST forms. It can only be set to `true` with `category = "web_application"`.
 
 ### Jumphost Application Configuration (Deprecated)
 

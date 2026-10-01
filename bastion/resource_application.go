@@ -22,6 +22,7 @@ type jsonApplication struct {
 	ApplicationURL   *string                       `json:"application_url,omitempty"`
 	Browser          *string                       `json:"browser,omitempty"`
 	BrowserVersion   *string                       `json:"browser_version,omitempty"`
+	AllowNonPostForm *bool                         `json:"allow_non_post_form,omitempty"`
 	Description      string                        `json:"description"`
 	Parameters       *string                       `json:"parameters,omitempty"`
 	Target           *string                       `json:"target,omitempty"`
@@ -65,6 +66,11 @@ func resourceApplication() *schema.Resource {
 			"application_url": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"allow_non_post_form": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"browser": {
 				Type:     schema.TypeString,
@@ -410,6 +416,9 @@ func prepareApplicationJSON(
 	}
 	switch category {
 	case "", skStandard:
+		if d.Get("allow_non_post_form").(bool) {
+			return jsonData, errors.New("allow_non_post_form cannot be configured when category = standard")
+		}
 		if d.Get("application_url").(string) != "" {
 			return jsonData, errors.New("application_url cannot be configured when category = standard")
 		}
@@ -449,6 +458,9 @@ func prepareApplicationJSON(
 		jsonData.GlobalDomains = &jsonDataGlobalDomains
 
 	case "jumphost":
+		if d.Get("allow_non_post_form").(bool) {
+			return jsonData, errors.New("allow_non_post_form cannot be configured when category = jumphost")
+		}
 		// jumphost was introduced in API v3.9 and deprecated/removed in API v3.12
 		if apiVersion != "" && semver.Compare(apiVersion, VersionWallixAPI312) >= 0 {
 			return jsonData, fmt.Errorf(
@@ -511,6 +523,9 @@ func prepareApplicationJSON(
 		}
 		jsonData.ApplicationURL = &applicationURL
 
+		allowNonPostForm := d.Get("allow_non_post_form").(bool)
+		jsonData.AllowNonPostForm = &allowNonPostForm
+
 		listGlobalDomains := d.Get(skGlobalDomains).(*schema.Set).List()
 		jsonDataGlobalDomains := make([]string, len(listGlobalDomains))
 		for i, v := range listGlobalDomains {
@@ -564,6 +579,7 @@ func fillApplication(d *schema.ResourceData, jsonData jsonApplication) {
 	setApplicationOptionalString(d, "application_url", jsonData.ApplicationURL)
 	setApplicationOptionalString(d, "browser", jsonData.Browser)
 	setApplicationOptionalString(d, "browser_version", jsonData.BrowserVersion)
+	setApplicationAllowNonPostForm(d, jsonData.AllowNonPostForm)
 	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
@@ -592,6 +608,14 @@ func setApplicationOptionalString(d *schema.ResourceData, key string, value *str
 		v = *value
 	}
 	if tfErr := d.Set(key, v); tfErr != nil {
+		panic(tfErr)
+	}
+}
+
+// setApplicationAllowNonPostForm sets allow_non_post_form to the dereferenced value, or false when the API
+// doesn't return it (every category but web_application).
+func setApplicationAllowNonPostForm(d *schema.ResourceData, value *bool) {
+	if tfErr := d.Set("allow_non_post_form", value != nil && *value); tfErr != nil {
 		panic(tfErr)
 	}
 }

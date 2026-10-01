@@ -170,3 +170,38 @@ func TestPrepareApplicationJSONCreateSendsCategory(t *testing.T) {
 		t.Fatalf("expected category to be sent on creation, got %q", jsonData.Category)
 	}
 }
+
+func TestPrepareApplicationJSONAllowNonPostForm(t *testing.T) {
+	for _, want := range []bool{false, true} {
+		d := testWebApplicationResourceData(t, map[string]interface{}{"allow_non_post_form": want})
+
+		jsonData, err := prepareApplicationJSON(d, false, VersionWallixAPI312)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if jsonData.AllowNonPostForm == nil || *jsonData.AllowNonPostForm != want {
+			t.Fatalf("expected allow_non_post_form to be sent as %t, got %v", want, jsonData.AllowNonPostForm)
+		}
+	}
+}
+
+func TestPrepareApplicationJSONRejectsAllowNonPostFormForStandard(t *testing.T) {
+	d := testStandardApplicationResourceData(t, map[string]interface{}{"allow_non_post_form": true})
+
+	_, err := prepareApplicationJSON(d, true, VersionWallixAPI312)
+	if err == nil {
+		t.Fatalf("expected an error when allow_non_post_form is set with category = standard")
+	}
+	if want := "allow_non_post_form cannot be configured when category = standard"; err.Error() != want {
+		t.Fatalf("unexpected error message: got %q, want %q", err.Error(), want)
+	}
+
+	d = testStandardApplicationResourceData(t, nil)
+	jsonData, err := prepareApplicationJSON(d, true, VersionWallixAPI312)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if jsonData.AllowNonPostForm != nil {
+		t.Fatalf("expected allow_non_post_form to be omitted for standard, got %v", *jsonData.AllowNonPostForm)
+	}
+}

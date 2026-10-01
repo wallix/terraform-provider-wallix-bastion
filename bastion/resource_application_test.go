@@ -72,6 +72,9 @@ func TestAccResourceApplication_web(t *testing.T) {
 							resource.TestCheckResourceAttr(
 								"wallix-bastion_application.testacc_Appli_web",
 								"application_url", "https://github.com/login"),
+							resource.TestCheckResourceAttr(
+								"wallix-bastion_application.testacc_Appli_web",
+								"allow_non_post_form", "false"),
 						),
 					},
 					{
@@ -86,6 +89,9 @@ func TestAccResourceApplication_web(t *testing.T) {
 							resource.TestCheckResourceAttr(
 								"wallix-bastion_application.testacc_Appli_web",
 								"global_domains.#", "1"),
+							resource.TestCheckResourceAttr(
+								"wallix-bastion_application.testacc_Appli_web",
+								"allow_non_post_form", "true"),
 						),
 					},
 					{
@@ -292,6 +298,7 @@ resource "wallix-bastion_application" "testacc_Appli_web" {
   connection_policy = "WEBAPP"
   application_url   = "https://github.com/login"
   global_domains    = [wallix-bastion_domain.testacc_Appli_web.domain_name]
+  allow_non_post_form = true
 }
 `
 }

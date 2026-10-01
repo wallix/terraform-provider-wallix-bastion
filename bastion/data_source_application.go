@@ -29,6 +29,10 @@ func dataSourceApplication() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"allow_non_post_form": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"browser": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -183,6 +187,7 @@ func fillSourceApplication(d *schema.ResourceData, jsonData jsonApplication) {
 	setApplicationOptionalString(d, "application_url", jsonData.ApplicationURL)
 	setApplicationOptionalString(d, "browser", jsonData.Browser)
 	setApplicationOptionalString(d, "browser_version", jsonData.BrowserVersion)
+	setApplicationAllowNonPostForm(d, jsonData.AllowNonPostForm)
 	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
 		panic(tfErr)
 	}
