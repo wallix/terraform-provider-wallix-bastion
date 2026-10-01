@@ -2,58 +2,69 @@ package bastion
 
 import (
 	"encoding/json"
+	"fmt"
+	"maps"
 	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const (
-	testAppName        = "application_name"
-	testAppCategory    = "category"
-	testAppURLKey      = "application_url"
-	testAppCategoryWeb = "web_application"
-	testAppURL         = "https://example.com"
+	testWebApplicationURL         = "https://example.com"
+	testWebApplicationLoginURL    = "https://example.com/login"
+	testWebApplicationLoginButton = "#submit-button"
 )
 
-// testWebApplicationResourceData builds a web_application resource whose fields can be extended or overridden.
-func testWebApplicationResourceData(t *testing.T, extra map[string]interface{}) *schema.ResourceData {
-	t.Helper()
-
+// webApplicationRaw returns the configuration of a valid web_application, merged with overrides.
+func webApplicationRaw(overrides map[string]interface{}) map[string]interface{} {
 	raw := map[string]interface{}{
-		testAppName:        "web-app",
+		"application_name": "web-app",
 		skConnectionPolicy: "WEBAPP",
-		testAppCategory:    testAppCategoryWeb,
-		testAppURLKey:      testAppURL,
+		"category":         "web_application",
+		"application_url":  testWebApplicationURL,
 	}
-	for k, v := range extra {
-		raw[k] = v
-	}
+	maps.Copy(raw, overrides)
 
-	return schema.TestResourceDataRaw(t, resourceApplication().Schema, raw)
+	return raw
 }
 
-func testStandardApplicationResourceData(t *testing.T, extra map[string]interface{}) *schema.ResourceData {
+// webApplicationData returns resource data for the creation of a valid web_application, merged
+// with overrides.
+func webApplicationData(t *testing.T, overrides map[string]interface{}) *schema.ResourceData {
 	t.Helper()
 
-	raw := map[string]interface{}{
-		testAppName:        "std-app",
-		skConnectionPolicy: "RDP",
-		testAppCategory:    skStandard,
-		skTarget:           "cluster",
-		"paths": []interface{}{
-			map[string]interface{}{
-				skTarget:      "Interactive@device:SSH",
-				"program":     "application_path",
-				"working_dir": "directory",
-			},
-		},
+	return schema.TestResourceDataRaw(t, resourceApplication().Schema, webApplicationRaw(overrides))
+}
+
+// webApplicationUpdateData returns resource data for the update of a web_application, from a
+// state made of the valid configuration plus stateOverrides, to the valid configuration merged
+// with overrides.
+func webApplicationUpdateData(
+	t *testing.T, stateOverrides map[string]string, overrides map[string]interface{},
+) *schema.ResourceData {
+	t.Helper()
+
+	attributes := map[string]string{"id": "app-id"}
+	for k, v := range webApplicationRaw(nil) {
+		attributes[k] = fmt.Sprint(v)
 	}
-	for k, v := range extra {
-		raw[k] = v
+	maps.Copy(attributes, stateOverrides)
+	state := &terraform.InstanceState{ID: "app-id", Attributes: attributes}
+
+	sm := schema.InternalMap(resourceApplication().Schema)
+	config := terraform.NewResourceConfigRaw(webApplicationRaw(overrides))
+	diff, err := sm.Diff(t.Context(), state, config, nil, nil, true)
+	if err != nil {
+		t.Fatalf("unexpected error computing the diff: %v", err)
+	}
+	d, err := sm.Data(state, diff)
+	if err != nil {
+		t.Fatalf("unexpected error building the resource data: %v", err)
 	}
 
-	return schema.TestResourceDataRaw(t, resourceApplication().Schema, raw)
+	return d
 }
 
 func TestFillApplicationHandlesNilLocalDomains(t *testing.T) {
@@ -72,7 +83,7 @@ func TestFillApplicationHandlesNilLocalDomains(t *testing.T) {
 }
 
 func TestPrepareApplicationJSONRejectsParametersForWebApplication(t *testing.T) {
-	d := testWebApplicationResourceData(t, map[string]interface{}{"parameters": "some-value"})
+	d := webApplicationData(t, map[string]interface{}{"parameters": "some-value"})
 
 	_, err := prepareApplicationJSON(d, true, VersionWallixAPI312)
 	if err == nil {
@@ -84,7 +95,7 @@ func TestPrepareApplicationJSONRejectsParametersForWebApplication(t *testing.T) 
 }
 
 func TestPrepareApplicationJSONOmitsParametersForWebApplication(t *testing.T) {
-	d := testWebApplicationResourceData(t, nil)
+	d := webApplicationData(t, nil)
 
 	jsonData, err := prepareApplicationJSON(d, true, VersionWallixAPI312)
 	if err != nil {
@@ -103,8 +114,30 @@ func TestPrepareApplicationJSONOmitsParametersForWebApplication(t *testing.T) {
 	}
 }
 
+// standardApplicationData returns resource data for a valid standard application, merged with overrides.
+func standardApplicationData(t *testing.T, overrides map[string]interface{}) *schema.ResourceData {
+	t.Helper()
+
+	raw := map[string]interface{}{
+		"application_name": "std-app",
+		skConnectionPolicy: skProtoRDP,
+		"category":         skStandard,
+		skTarget:           "cluster",
+		"paths": []interface{}{
+			map[string]interface{}{
+				skTarget:      "Interactive@device:SSH",
+				"program":     "application_path",
+				"working_dir": "directory",
+			},
+		},
+	}
+	maps.Copy(raw, overrides)
+
+	return schema.TestResourceDataRaw(t, resourceApplication().Schema, raw)
+}
+
 func TestPrepareApplicationJSONKeepsParametersForStandard(t *testing.T) {
-	d := testStandardApplicationResourceData(t, map[string]interface{}{"parameters": "some-value"})
+	d := standardApplicationData(t, map[string]interface{}{"parameters": "some-value"})
 
 	jsonData, err := prepareApplicationJSON(d, true, VersionWallixAPI312)
 	if err != nil {
@@ -115,29 +148,8 @@ func TestPrepareApplicationJSONKeepsParametersForStandard(t *testing.T) {
 	}
 }
 
-func TestPrepareApplicationJSONUpdateWebApplication(t *testing.T) {
-	d := testWebApplicationResourceData(t, map[string]interface{}{skGlobalDomains: []interface{}{"domain1"}})
-
-	jsonData, err := prepareApplicationJSON(d, false, VersionWallixAPI312)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if jsonData.Category != "" {
-		t.Fatalf("expected category to be omitted on update, got %q", jsonData.Category)
-	}
-	if jsonData.ApplicationURL == nil || *jsonData.ApplicationURL != testAppURL {
-		t.Fatalf("expected application_url to be sent on update, got %v", jsonData.ApplicationURL)
-	}
-	if jsonData.GlobalDomains == nil || len(*jsonData.GlobalDomains) != 1 {
-		t.Fatalf("expected global_domains to be sent on update, got %v", jsonData.GlobalDomains)
-	}
-	if jsonData.Target != nil || jsonData.Paths != nil {
-		t.Fatalf("expected target and paths to be omitted for web_application")
-	}
-}
-
 func TestPrepareApplicationJSONUpdateStandard(t *testing.T) {
-	d := testStandardApplicationResourceData(t, nil)
+	d := standardApplicationData(t, nil)
 
 	jsonData, err := prepareApplicationJSON(d, false, VersionWallixAPI312)
 	if err != nil {
@@ -153,55 +165,180 @@ func TestPrepareApplicationJSONUpdateStandard(t *testing.T) {
 		t.Fatalf("expected paths to be sent on update, got %v", jsonData.Paths)
 	}
 
-	d = testStandardApplicationResourceData(t, map[string]interface{}{skTarget: ""})
+	d = standardApplicationData(t, map[string]interface{}{skTarget: ""})
 	if _, err = prepareApplicationJSON(d, false, VersionWallixAPI312); err == nil {
 		t.Fatalf("expected an error when target is missing on update of a standard application")
 	}
 }
 
+func TestPrepareApplicationJSONUpdateWebApplication(t *testing.T) {
+	d := webApplicationData(t, map[string]interface{}{skGlobalDomains: []interface{}{"domain1"}})
+
+	jsonData, err := prepareApplicationJSON(d, false, VersionWallixAPI312)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if jsonData.Category != "" {
+		t.Fatalf("expected category to be omitted on update, got %q", jsonData.Category)
+	}
+	if jsonData.ApplicationURL == nil || *jsonData.ApplicationURL != testWebApplicationURL {
+		t.Fatalf("expected application_url to be sent on update, got %v", jsonData.ApplicationURL)
+	}
+	if jsonData.GlobalDomains == nil || len(*jsonData.GlobalDomains) != 1 {
+		t.Fatalf("expected global_domains to be sent on update, got %v", jsonData.GlobalDomains)
+	}
+	if jsonData.Target != nil || jsonData.Paths != nil {
+		t.Fatalf("expected target and paths to be omitted for web_application")
+	}
+}
+
 func TestPrepareApplicationJSONCreateSendsCategory(t *testing.T) {
-	d := testWebApplicationResourceData(t, nil)
+	d := webApplicationData(t, nil)
 
 	jsonData, err := prepareApplicationJSON(d, true, VersionWallixAPI312)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if jsonData.Category != testAppCategoryWeb {
+	if jsonData.Category != "web_application" {
 		t.Fatalf("expected category to be sent on creation, got %q", jsonData.Category)
 	}
 }
 
-func TestPrepareApplicationJSONAllowNonPostForm(t *testing.T) {
-	for _, want := range []bool{false, true} {
-		d := testWebApplicationResourceData(t, map[string]interface{}{"allow_non_post_form": want})
+func TestPrepareApplicationJSONSendsWebLoginFields(t *testing.T) {
+	d := webApplicationData(t, map[string]interface{}{
+		skLoginFormURL:        testWebApplicationLoginURL,
+		skLoginButtonSelector: testWebApplicationLoginButton,
+		skAllowNonPostForm:    true,
+	})
 
-		jsonData, err := prepareApplicationJSON(d, false, VersionWallixAPI312)
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-		if jsonData.AllowNonPostForm == nil || *jsonData.AllowNonPostForm != want {
-			t.Fatalf("expected allow_non_post_form to be sent as %t, got %v", want, jsonData.AllowNonPostForm)
-		}
-	}
-}
-
-func TestPrepareApplicationJSONRejectsAllowNonPostFormForStandard(t *testing.T) {
-	d := testStandardApplicationResourceData(t, map[string]interface{}{"allow_non_post_form": true})
-
-	_, err := prepareApplicationJSON(d, true, VersionWallixAPI312)
-	if err == nil {
-		t.Fatalf("expected an error when allow_non_post_form is set with category = standard")
-	}
-	if want := "allow_non_post_form cannot be configured when category = standard"; err.Error() != want {
-		t.Fatalf("unexpected error message: got %q, want %q", err.Error(), want)
-	}
-
-	d = testStandardApplicationResourceData(t, nil)
 	jsonData, err := prepareApplicationJSON(d, true, VersionWallixAPI312)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if jsonData.AllowNonPostForm != nil {
-		t.Fatalf("expected allow_non_post_form to be omitted for standard, got %v", *jsonData.AllowNonPostForm)
+	if jsonData.LoginFormURL == nil || *jsonData.LoginFormURL != testWebApplicationLoginURL {
+		t.Fatalf("expected login_form_url to be sent, got %v", jsonData.LoginFormURL)
+	}
+	if jsonData.LoginButtonSelector == nil || *jsonData.LoginButtonSelector != testWebApplicationLoginButton {
+		t.Fatalf("expected login_button_selector to be sent, got %v", jsonData.LoginButtonSelector)
+	}
+	if jsonData.AllowNonPostForm == nil || !*jsonData.AllowNonPostForm {
+		t.Fatalf("expected allow_non_post_form to be sent as true, got %v", jsonData.AllowNonPostForm)
+	}
+}
+
+func TestPrepareApplicationJSONOmitsUnsetWebLoginFields(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		d           *schema.ResourceData
+		newResource bool
+	}{
+		{"create", webApplicationData(t, nil), true},
+		{"unchanged update", webApplicationUpdateData(t, nil, nil), false},
+	} {
+		jsonData, err := prepareApplicationJSON(tc.d, tc.newResource, VersionWallixAPI312)
+		if err != nil {
+			t.Fatalf("%s: unexpected error: %v", tc.name, err)
+		}
+		body, err := json.Marshal(jsonData)
+		if err != nil {
+			t.Fatalf("%s: unexpected error marshaling: %v", tc.name, err)
+		}
+		for _, key := range []string{skLoginFormURL, skLoginButtonSelector, skAllowNonPostForm} {
+			if strings.Contains(string(body), `"`+key+`"`) {
+				t.Fatalf("%s: expected marshaled JSON to omit the %s key, got: %s", tc.name, key, body)
+			}
+		}
+	}
+}
+
+func TestPrepareApplicationJSONClearsWebLoginFieldsOnUpdate(t *testing.T) {
+	d := webApplicationUpdateData(t, map[string]string{
+		skLoginFormURL:        testWebApplicationLoginURL,
+		skLoginButtonSelector: testWebApplicationLoginButton,
+		skAllowNonPostForm:    "true",
+	}, nil)
+
+	jsonData, err := prepareApplicationJSON(d, false, VersionWallixAPI312)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if jsonData.LoginFormURL == nil || *jsonData.LoginFormURL != "" {
+		t.Fatalf("expected login_form_url to be sent empty to clear it, got %v", jsonData.LoginFormURL)
+	}
+	if jsonData.LoginButtonSelector == nil || *jsonData.LoginButtonSelector != "" {
+		t.Fatalf("expected login_button_selector to be sent empty to clear it, got %v", jsonData.LoginButtonSelector)
+	}
+	if jsonData.AllowNonPostForm == nil || *jsonData.AllowNonPostForm {
+		t.Fatalf("expected allow_non_post_form to be sent as false to clear it, got %v", jsonData.AllowNonPostForm)
+	}
+}
+
+func TestPrepareApplicationJSONRejectsWebLoginFieldsForOtherCategories(t *testing.T) {
+	for _, tc := range []struct {
+		category   string
+		apiVersion string
+		key        string
+		value      interface{}
+	}{
+		{skStandard, VersionWallixAPI312, skLoginFormURL, testWebApplicationLoginURL},
+		{skStandard, VersionWallixAPI312, skLoginButtonSelector, testWebApplicationLoginButton},
+		{skStandard, VersionWallixAPI312, skAllowNonPostForm, true},
+		{"jumphost", VersionWallixAPI38, skLoginFormURL, testWebApplicationLoginURL},
+		{"jumphost", VersionWallixAPI38, skLoginButtonSelector, testWebApplicationLoginButton},
+		{"jumphost", VersionWallixAPI38, skAllowNonPostForm, true},
+	} {
+		d := schema.TestResourceDataRaw(t, resourceApplication().Schema, map[string]interface{}{
+			"application_name": "app",
+			skConnectionPolicy: skProtoRDP,
+			"category":         tc.category,
+			tc.key:             tc.value,
+		})
+
+		_, err := prepareApplicationJSON(d, true, tc.apiVersion)
+		want := tc.key + " cannot be configured when category = " + tc.category
+		if err == nil || err.Error() != want {
+			t.Fatalf("expected error %q, got %v", want, err)
+		}
+	}
+}
+
+func TestFillApplicationWebLoginFields(t *testing.T) {
+	loginURL, loginButton, allowNonPostForm := testWebApplicationLoginURL, testWebApplicationLoginButton, true
+	withFields := jsonApplication{
+		ApplicationName:     "web-app",
+		ConnectionPolicy:    "WEBAPP",
+		Category:            "web_application",
+		LoginFormURL:        &loginURL,
+		LoginButtonSelector: &loginButton,
+		AllowNonPostForm:    &allowNonPostForm,
+	}
+	withoutFields := withFields
+	withoutFields.LoginFormURL, withoutFields.LoginButtonSelector, withoutFields.AllowNonPostForm = nil, nil, nil
+
+	for name, tc := range map[string]struct {
+		resourceSchema map[string]*schema.Schema
+		fill           func(*schema.ResourceData, jsonApplication)
+	}{
+		"resource":    {resourceApplication().Schema, fillApplication},
+		"data source": {dataSourceApplication().Schema, fillSourceApplication},
+	} {
+		d := schema.TestResourceDataRaw(t, tc.resourceSchema, map[string]interface{}{})
+
+		tc.fill(d, withFields)
+		if got := d.Get(skLoginFormURL).(string); got != loginURL {
+			t.Fatalf("%s: expected login_form_url %q, got %q", name, loginURL, got)
+		}
+		if got := d.Get(skLoginButtonSelector).(string); got != loginButton {
+			t.Fatalf("%s: expected login_button_selector %q, got %q", name, loginButton, got)
+		}
+		if !d.Get(skAllowNonPostForm).(bool) {
+			t.Fatalf("%s: expected allow_non_post_form to be true", name)
+		}
+
+		tc.fill(d, withoutFields)
+		if d.Get(skLoginFormURL).(string) != "" || d.Get(skLoginButtonSelector).(string) != "" ||
+			d.Get(skAllowNonPostForm).(bool) {
+			t.Fatalf("%s: expected login automation fields to be reset when absent from the API response", name)
+		}
 	}
 }

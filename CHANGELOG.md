@@ -2,9 +2,10 @@
 
 ## 0.15.2 (October 01, 2026)
 
-FEATURES:
+ENHANCEMENTS:
 
-- **resource/wallix-bastion_application**: add `allow_non_post_form` argument (only for `category = "web_application"`, default `false`) to allow credentials injection in non-POST forms; also exposed by the `wallix-bastion_application` data source
+- **resource/wallix-bastion_application**: add `login_form_url`, `login_button_selector`, and `allow_non_post_form` arguments (API v3.12+, `category = "web_application"` only) to configure the automatic injection of credentials into the application's login form; they are only sent to the API when set, or on update to clear them, so existing configurations send the same requests as before
+- **data-source/wallix-bastion_application**: add `login_form_url`, `login_button_selector`, and `allow_non_post_form` attributes
 
 BUG FIXES:
 

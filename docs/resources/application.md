@@ -34,6 +34,17 @@ resource "wallix-bastion_application" "web_app" {
   description       = "Web application accessed via browser"
 }
 
+# Configure a web application with automatic credential injection into its login form (API v3.12+)
+resource "wallix-bastion_application" "web_app_login" {
+  application_name      = "web_app_login"
+  connection_policy     = "WEBAPP"
+  category              = "web_application"
+  application_url       = "https://example.com"
+  login_form_url        = "https://example.com/login"
+  login_button_selector = "#submit-button"
+  allow_non_post_form   = true
+}
+
 # Configure a jumphost application (deprecated in API v3.12+, use 'web_application' instead)
 # Only supported for API versions < v3.12
 resource "wallix-bastion_application" "jumphost_app" {
@@ -64,6 +75,8 @@ resource "wallix-bastion_application" "jumphost_app" {
 - `category` (String)
 - `description` (String)
 - `global_domains` (Set of String)
+- `login_button_selector` (String)
+- `login_form_url` (String)
 - `parameters` (String)
 - `paths` (Block Set) (see [below for nested schema](#nestedblock--paths))
 - `tags` (Block Set) (see [below for nested schema](#nestedblock--tags))
@@ -136,7 +149,16 @@ When `category = "web_application"` (API v3.12+), the following fields are requi
 
 Note: The `target`, `paths`, `browser`, `browser_version`, and `parameters` fields cannot be used with web_application.
 
-Optionally, `allow_non_post_form` (default `false`) allows credentials injection in non-POST forms. It can only be set to `true` with `category = "web_application"`.
+The following optional fields configure the automatic injection of credentials into the application's
+login form. They match the fields of the same name in the Bastion web interface, and can only be used
+with web_application:
+
+- **login_form_url**: The URL of the login page ("Login page URL")
+- **login_button_selector**: The identifier of the login button, such as `#submit-button` ("Login button identifier")
+- **allow_non_post_form**: Allow the injection into login forms that are not submitted with a POST request
+  ("Allow automatic injection of authentication information in non-POST forms"), defaults to `false`
+
+Removing one of these fields from the configuration clears it on the Bastion.
 
 ### Jumphost Application Configuration (Deprecated)
 
