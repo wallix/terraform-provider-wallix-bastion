@@ -137,6 +137,7 @@ func Provider() *schema.Provider {
 			"wallix-bastion_certificate_authority":                      resourceCertificateAuthority(),
 			"wallix-bastion_cluster":                                    resourceCluster(),
 			"wallix-bastion_config_smtp":                                resourceConfigSMTP(),
+			"wallix-bastion_configoption":                               resourceConfigoption(),
 			"wallix-bastion_config_wsm":                                 resourceConfigWSM(),
 			"wallix-bastion_config_x509":                                resourceConfigX509(),
 			"wallix-bastion_connection_message":                         resourceConnectionMessage(),
