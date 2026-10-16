@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"regexp"
 	"slices"
 
@@ -213,7 +214,7 @@ func checkResourceTimeframeExits(
 	bool, error,
 ) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/timeframes/"+timeframeName, http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/timeframes/"+url.PathEscape(timeframeName), http.MethodGet, nil)
 	if err != nil {
 		return false, err
 	}
@@ -254,7 +255,7 @@ func updateTimeframe(
 	if err != nil {
 		return err
 	}
-	body, code, err := c.newRequest(ctx, "/timeframes/"+d.Id()+"?force=true", http.MethodPut, jsonData)
+	body, code, err := c.newRequest(ctx, "/timeframes/"+url.PathEscape(d.Id())+"?force=true", http.MethodPut, jsonData)
 	if err != nil {
 		return err
 	}
@@ -269,7 +270,7 @@ func deleteTimeframe(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) error {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/timeframes/"+d.Id(), http.MethodDelete, nil)
+	body, code, err := c.newRequest(ctx, "/timeframes/"+url.PathEscape(d.Id()), http.MethodDelete, nil)
 	if err != nil {
 		return err
 	}
@@ -326,7 +327,7 @@ func readTimeframeOptions(
 ) {
 	c := m.(*Client)
 	var result jsonTimeframe
-	body, code, err := c.newRequest(ctx, "/timeframes/"+timeframeID, http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/timeframes/"+url.PathEscape(timeframeID), http.MethodGet, nil)
 	if err != nil {
 		return result, err
 	}
