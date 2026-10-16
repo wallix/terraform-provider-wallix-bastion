@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"slices"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -40,6 +41,8 @@ func resourceConnectionPolicy() *schema.Resource {
 			skProtocol: {
 				Type:     schema.TypeString,
 				Required: true,
+				// Only sent on creation: changing it replaces the policy, as for type.
+				ForceNew: true,
 				ValidateFunc: validation.StringInSlice(
 					[]string{skProtoSSH, "RAWTCPIP", skProtoRDP, skProtoRLOGIN, skProtoTELNET, "VNC"},
 					false,
@@ -200,7 +203,7 @@ func searchResourceConnectionPolicy(
 ) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
-		"/connectionpolicies/?q=connection_policy_name="+connectionPolicyName, http.MethodGet, nil)
+		"/connectionpolicies/?q=connection_policy_name="+url.QueryEscape(connectionPolicyName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}

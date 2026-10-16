@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"slices"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -384,9 +385,6 @@ func resourceProfileImport(
 	fillProfile(d, cfg)
 	result := make([]*schema.ResourceData, 1)
 	d.SetId(id)
-	if tfErr := d.Set("profile_name", d.Id()); tfErr != nil {
-		panic(tfErr)
-	}
 	result[0] = d
 
 	return result, nil
@@ -398,7 +396,7 @@ func searchResourceProfile(
 	string, bool, error,
 ) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/profiles/?q=profile_name="+profileName, http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/profiles/?q=profile_name="+url.QueryEscape(profileName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
@@ -631,6 +629,13 @@ func readProfileOptions(
 }
 
 func fillProfile(d *schema.ResourceData, jsonData jsonProfile) {
+	// The import used to set profile_name to the API id, which forced a replacement on the next
+	// plan.
+	if jsonData.ProfileName != "" {
+		if tfErr := d.Set("profile_name", jsonData.ProfileName); tfErr != nil {
+			panic(tfErr)
+		}
+	}
 	guiFeatures := []map[string]interface{}{{
 		"wab_audit":          jsonData.GuiFeatures.WabAudit,
 		skSystemAudit:        jsonData.GuiFeatures.SystemAudit,

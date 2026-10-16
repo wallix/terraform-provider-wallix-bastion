@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"slices"
 	"strings"
 
@@ -14,14 +15,14 @@ import (
 )
 
 type jsonApplicationLocalDomainAccount struct {
-	ID                   string           `json:"id,omitempty"`
-	AccountName          string           `json:"account_name"`
-	AccountLogin         string           `json:"account_login"`
-	Description          string           `json:"description"`
-	DomainPasswordChange *bool            `json:"domain_password_change,omitempty"`
-	AutoChangePassword   bool             `json:"auto_change_password"`
-	CheckoutPolicy       string           `json:"checkout_policy"`
-	Credentials          []jsonCredential `json:"credentials"`
+	ID                   string            `json:"id,omitempty"`
+	AccountName          string            `json:"account_name"`
+	AccountLogin         string            `json:"account_login"`
+	Description          string            `json:"description"`
+	DomainPasswordChange *bool             `json:"domain_password_change,omitempty"`
+	AutoChangePassword   bool              `json:"auto_change_password"`
+	CheckoutPolicy       string            `json:"checkout_policy"`
+	Credentials          *[]jsonCredential `json:"credentials,omitempty"`
 }
 
 func resourceApplicationLocalDomainAccount() *schema.Resource {
@@ -237,7 +238,7 @@ func searchResourceApplicationLocalDomainAccount(
 ) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/applications/"+applicationID+"/localdomains/"+domainID+
-		"/accounts/?q=account_name="+accountName, http.MethodGet, nil)
+		"/accounts/?q=account_name="+url.QueryEscape(accountName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
@@ -260,7 +261,7 @@ func addApplicationLocalDomainAccount(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (string, error) {
 	c := m.(*Client)
-	jsonData := prepareApplicationLocalDomainAccountJSON(d)
+	jsonData := prepareApplicationLocalDomainAccountJSON(d, true)
 	body, headers, code, err := c.newRequestWithHeaders(ctx,
 		"/applications/"+d.Get(skApplicationID).(string)+"/localdomains/"+d.Get(skDomainID).(string)+
 			"/accounts/", http.MethodPost, jsonData)
@@ -278,7 +279,7 @@ func updateApplicationLocalDomainAccount(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) error {
 	c := m.(*Client)
-	jsonData := prepareApplicationLocalDomainAccountJSON(d)
+	jsonData := prepareApplicationLocalDomainAccountJSON(d, false)
 	body, code, err := c.newRequest(ctx,
 		"/applications/"+d.Get(skApplicationID).(string)+"/localdomains/"+d.Get(skDomainID).(string)+
 			"/accounts/"+d.Id()+"?force=true", http.MethodPut, jsonData)
@@ -309,7 +310,12 @@ func deleteApplicationLocalDomainAccount(
 	return nil
 }
 
-func prepareApplicationLocalDomainAccountJSON(d *schema.ResourceData) jsonApplicationLocalDomainAccount {
+// The update is sent with force=true, which replaces the credentials of the account with the
+// ones in the request: they are only sent on creation and when password changes, otherwise an
+// update would wipe the password set by this argument, by a credential resource or by a rotation.
+func prepareApplicationLocalDomainAccountJSON(
+	d *schema.ResourceData, newResource bool,
+) jsonApplicationLocalDomainAccount {
 	jsonData := jsonApplicationLocalDomainAccount{
 		AccountLogin:       d.Get(skAccountLogin).(string),
 		AccountName:        d.Get(skAccountName).(string),
@@ -318,14 +324,13 @@ func prepareApplicationLocalDomainAccountJSON(d *schema.ResourceData) jsonApplic
 		Description:        d.Get(skDescription).(string),
 	}
 
-	credentials := make([]jsonCredential, 0)
-	if d.Get(skPassword).(string) != "" {
-		credentials = append(credentials, jsonCredential{
+	password := d.Get(skPassword).(string)
+	if password != "" && (newResource || d.HasChange(skPassword)) {
+		jsonData.Credentials = &[]jsonCredential{{
 			Type:     skPassword,
-			Password: d.Get(skPassword).(string),
-		})
+			Password: password,
+		}}
 	}
-	jsonData.Credentials = credentials
 
 	return jsonData
 }

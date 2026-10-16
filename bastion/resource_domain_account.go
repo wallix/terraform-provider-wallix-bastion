@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"slices"
 	"strings"
 
@@ -248,7 +249,7 @@ func searchResourceDomainAccount(
 ) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
-		"/domains/"+domainID+"/accounts/?q=account_name="+accountName, http.MethodGet, nil)
+		"/domains/"+domainID+"/accounts/?q=account_name="+url.QueryEscape(accountName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
@@ -345,6 +346,10 @@ func prepareDomainAccountJSON(d *schema.ResourceData) (jsonDomainAccount, error)
 			resources[i] = v.(string)
 		}
 		jsonData.Resources = &resources
+	} else if d.HasChange("resources") {
+		// Removing every resource must be sent as an empty list: an omitted field keeps them. When
+		// resources isn't set (computed), it doesn't change and the resources in state are sent as is.
+		jsonData.Resources = &[]string{}
 	}
 
 	return jsonData, nil

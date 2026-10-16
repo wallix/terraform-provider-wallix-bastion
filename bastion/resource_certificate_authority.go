@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -181,7 +182,8 @@ func searchResourceCertificateAuthority(
 ) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
-		"/certificate_authorities/?q=certificate_authority_name="+certificateAuthorityName, http.MethodGet, nil)
+		"/certificate_authorities/?q=certificate_authority_name="+url.QueryEscape(certificateAuthorityName),
+		http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}

@@ -191,3 +191,79 @@ resource "random_password" "testacc_AppLocalDomAccountCred2" {
 }
 `
 }
+
+// Changing the account must keep the password set by the credential resource: the account update
+// used to send an empty credential list with force=true, which wiped it.
+func TestAccResourceApplicationLocalDomainAccountCred_accountUpdateKeepsCredential(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceApplicationLocalDomainAccountCredKeep("first"),
+			},
+			{
+				// The post-apply plan would recreate the credential if the update wiped it.
+				Config: testAccResourceApplicationLocalDomainAccountCredKeep("second"),
+			},
+		},
+	})
+}
+
+// nolint: lll, nolintlint
+func testAccResourceApplicationLocalDomainAccountCredKeep(description string) string {
+	return fmt.Sprintf(`
+resource "wallix-bastion_device" "testacc_AppAccountKeepCred" {
+  device_name = "testacc_AppAccountKeepCred"
+  host        = "192.168.100.13"
+}
+
+resource "wallix-bastion_device_service" "testacc_AppAccountKeepCred" {
+  device_id         = wallix-bastion_device.testacc_AppAccountKeepCred.id
+  service_name      = "testacc_AppAccountKeepCred"
+  connection_policy = "RDP"
+  port              = 3389
+  protocol          = "RDP"
+  subprotocols      = ["RDP_CLIPBOARD_UP"]
+}
+
+resource "wallix-bastion_cluster" "testacc_AppAccountKeepCred" {
+  cluster_name = "testacc_AppAccountKeepCred"
+  interactive_logins = [
+    "${wallix-bastion_device.testacc_AppAccountKeepCred.device_name}:${wallix-bastion_device_service.testacc_AppAccountKeepCred.service_name}",
+  ]
+}
+
+resource "wallix-bastion_application" "testacc_AppAccountKeepCred" {
+  application_name  = "testacc_AppAccountKeepCred_application"
+  connection_policy = "RDP"
+  paths {
+    target      = "Interactive@${wallix-bastion_device.testacc_AppAccountKeepCred.device_name}:${wallix-bastion_device_service.testacc_AppAccountKeepCred.service_name}"
+    program     = "application_path"
+    working_dir = "directory"
+  }
+  target = wallix-bastion_cluster.testacc_AppAccountKeepCred.cluster_name
+}
+
+resource "wallix-bastion_application_localdomain" "testacc_AppAccountKeepCred" {
+  application_id = wallix-bastion_application.testacc_AppAccountKeepCred.id
+  domain_name    = "testacc_AppAccountKeepCred"
+}
+
+resource "wallix-bastion_application_localdomain_account" "testacc_AppAccountKeepCred" {
+  application_id = wallix-bastion_application.testacc_AppAccountKeepCred.id
+  domain_id      = wallix-bastion_application_localdomain.testacc_AppAccountKeepCred.id
+  account_name   = "testacc_AppAccountKeepCred_admin"
+  account_login  = "admin"
+  description    = %q
+}
+
+resource "wallix-bastion_application_localdomain_account_credential" "testacc_AppAccountKeepCred" {
+  application_id = wallix-bastion_application.testacc_AppAccountKeepCred.id
+  domain_id      = wallix-bastion_application_localdomain.testacc_AppAccountKeepCred.id
+  account_id     = wallix-bastion_application_localdomain_account.testacc_AppAccountKeepCred.id
+  type           = "password"
+  password       = "Testacc-Passw0rd-1x"
+}
+`, description)
+}
