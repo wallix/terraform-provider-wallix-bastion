@@ -1,5 +1,11 @@
 # changelog
 
+## Unreleased
+
+BUG FIXES:
+
+- **provider**: reuse the HTTP connections to the Bastion instead of opening a new one for every API request and leaving it open (one client per provider instance, at most 10 connections, idle ones closed after 4 seconds); with a few dozen API calls within seconds, a Bastion 12.4 stopped accepting new connections and requests failed at random with `context deadline exceeded`
+
 ## 0.15.2 (October 01, 2026)
 
 ENHANCEMENTS:
