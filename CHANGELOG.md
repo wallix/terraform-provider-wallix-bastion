@@ -10,6 +10,7 @@ BUG FIXES:
 - **resource/wallix-bastion_application**: fixed the destroy failing with `409 The given application is still associated with one target` when an account of one of its global domains was attached to it (for example by a target group session account; destroying the target group leaves the attachment): on this conflict, the application is detached from the accounts of its global domains, then deleted
 - **resource/wallix-bastion_profile**: fixed the import setting `profile_name` to the API id, which forced the replacement of the profile on the next plan; `profile_name` is now read from the API
 - **resource/wallix-bastion_authorization**: fixed `authorize_session_sharing = false` never being applied, which left session sharing enabled on the Bastion; disabling it is now sent on update (without the mode, and enabling or untouched sharing send the same requests as before); while sharing is disabled, the mode the Bastion keeps is no longer reported as a change
+- **resource/wallix-bastion_domain_account**: fixed `resources = []` never being applied, which left the account attached to its resources on the Bastion; an emptied list is now sent on update (when `resources` isn't set, the resources in state are still sent unchanged)
 
 ## 0.15.2 (October 01, 2026)
 
