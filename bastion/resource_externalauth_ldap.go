@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"slices"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -270,7 +271,8 @@ func searchResourceExternalAuthLdap(
 	string, bool, error,
 ) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/externalauths/?q=authentication_name="+authenticationName, http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx,
+		"/externalauths/?q=authentication_name="+url.QueryEscape(authenticationName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}

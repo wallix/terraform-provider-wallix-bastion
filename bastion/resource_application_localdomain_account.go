@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"slices"
 	"strings"
 
@@ -237,7 +238,7 @@ func searchResourceApplicationLocalDomainAccount(
 ) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/applications/"+applicationID+"/localdomains/"+domainID+
-		"/accounts/?q=account_name="+accountName, http.MethodGet, nil)
+		"/accounts/?q=account_name="+url.QueryEscape(accountName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}

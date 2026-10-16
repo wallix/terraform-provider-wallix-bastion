@@ -97,3 +97,29 @@ resource "wallix-bastion_usergroup" "testacc_Usergroup" {
 }
 `
 }
+
+// The name is sent in the search before the creation and on import: unescaped, the creation
+// failed with "not found after POST" and the import didn't find the group.
+func TestAccResourceUserGroup_nameWithSpecialCharacters(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+resource "wallix-bastion_usergroup" "testacc_UsergroupEsc" {
+  group_name = "testacc_UsergroupEsc a&b+c#d"
+  timeframes = ["allthetime"]
+}
+`,
+			},
+			{
+				ResourceName:      "wallix-bastion_usergroup.testacc_UsergroupEsc",
+				ImportState:       true,
+				ImportStateId:     "testacc_UsergroupEsc a&b+c#d",
+				ImportStateVerify: true,
+			},
+		},
+		PreventPostDestroyRefresh: true,
+	})
+}

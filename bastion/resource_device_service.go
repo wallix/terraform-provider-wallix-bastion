@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"slices"
 	"strings"
 
@@ -219,7 +220,7 @@ func searchResourceDeviceService(
 ) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/devices/"+deviceID+
-		"/services/?q=service_name="+serviceName, http.MethodGet, nil)
+		"/services/?q=service_name="+url.QueryEscape(serviceName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
