@@ -1,5 +1,13 @@
 # changelog
 
+## Unreleased
+
+ENHANCEMENTS:
+
+- **resource/wallix-bastion_connection_policy**: accept `WEBAPP` for `protocol` and `type` (API v3.12+); creating a `WEBAPP` policy with an older API version returns an error before the creation request is sent
+- **resource/wallix-bastion_connection_policy**: rewrite the documentation, whose examples used authentication methods the provider rejects (`password`, `public_key`, `ntlm`) and options that don't exist; document that `options` must hold the complete set of options returned by the API, otherwise every plan shows a difference, and how to copy an existing policy (e.g. a default one) with the data source while changing some of its options
+- **data-source/wallix-bastion_connection_policy**: fix the documentation example (`wallix-bastion_device_service` requires `protocol`) and the listed authentication methods
+
 ## 0.15.2 (October 01, 2026)
 
 ENHANCEMENTS:
