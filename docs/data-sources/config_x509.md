@@ -33,7 +33,7 @@ output "x509_status" {
 - `ca_certificate` (String)
 - `enable` (Boolean)
 - `id` (String) The ID of this resource.
-- `server_private_key` (String)
+- `server_private_key` (String, Sensitive)
 - `server_public_key` (String)
 
 ## Usage Notes

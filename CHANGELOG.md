@@ -13,6 +13,8 @@ BUG FIXES:
 - **resource/wallix-bastion_domain_account**: fixed `resources = []` never being applied, which left the account attached to its resources on the Bastion; an emptied list is now sent on update (when `resources` isn't set, the resources in state are still sent unchanged)
 - **resource/wallix-bastion_timeframe**: fixed renaming a timeframe failing with `Root object was present, but now absent` and leaving it on the Bastion out of state; the API renames it, and the resource id (the name) now follows the new name
 - **resource/wallix-bastion_connection_policy**: changing `protocol` now replaces the policy, like `type`; `protocol` is only sent on creation, so the change was never applied and the plan showed it again after every apply
+- **resource/wallix-bastion_encryption**: mark `current_passphrase` and `new_passphrase` as sensitive; they were shown in plans
+- **resource/wallix-bastion_config_x509**, **data-source/wallix-bastion_config_x509**: mark `server_private_key` as sensitive; the private key was shown in plans
 
 ## 0.15.2 (October 01, 2026)
 
