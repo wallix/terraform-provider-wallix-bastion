@@ -98,3 +98,47 @@ resource "wallix-bastion_user" "testacc_User" {
 }
 `
 }
+
+// A "#" in a user name was not escaped: destroying "testacc_UserHash#1" sent DELETE
+// /users/testacc_UserHash and deleted the other user.
+func TestAccResourceUser_nameWithHash(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceUserHash(true),
+			},
+			{
+				// The post-apply plan would recreate testacc_UserHash if the destroy of
+				// testacc_UserHash#1 deleted it.
+				Config: testAccResourceUserHash(false),
+			},
+		},
+	})
+}
+
+func testAccResourceUserHash(withHash bool) string {
+	config := `
+resource "wallix-bastion_user" "testacc_UserHash" {
+  user_name  = "testacc_UserHash"
+  email      = "testacc-user@none.none"
+  profile    = "user"
+  user_auths = ["local_password"]
+  password   = "Testacc-Passw0rd-1x"
+}
+`
+	if withHash {
+		config += `
+resource "wallix-bastion_user" "testacc_UserHash1" {
+  user_name  = "testacc_UserHash#1"
+  email      = "testacc-user@none.none"
+  profile    = "user"
+  user_auths = ["local_password"]
+  password   = "Testacc-Passw0rd-1x"
+}
+`
+	}
+
+	return config
+}

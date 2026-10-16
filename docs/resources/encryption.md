@@ -64,11 +64,11 @@ resource "wallix-bastion_encryption" "main" {
 
 ### Required
 
-- `new_passphrase` (String)
+- `new_passphrase` (String, Sensitive)
 
 ### Optional
 
-- `current_passphrase` (String)
+- `current_passphrase` (String, Sensitive)
 
 ### Read-Only
 

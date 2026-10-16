@@ -46,8 +46,9 @@ func resourceConfigX509() *schema.Resource {
 				Required: true,
 			},
 			"server_private_key": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:      schema.TypeString,
+				Required:  true,
+				Sensitive: true,
 			},
 			"enable": {
 				Type:     schema.TypeBool,

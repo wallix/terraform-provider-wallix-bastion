@@ -6,7 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"slices"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -378,11 +380,86 @@ func deleteApplication(
 	if err != nil {
 		return err
 	}
+	if code == http.StatusConflict {
+		detached, err := detachApplicationFromDomainAccounts(ctx, d.Id(), m)
+		if err != nil {
+			return fmt.Errorf("detaching the application from global domain accounts: %w", err)
+		}
+		if detached > 0 {
+			body, code, err = c.newRequest(ctx, "/applications/"+d.Id(), http.MethodDelete, nil)
+			if err != nil {
+				return err
+			}
+		}
+	}
 	if code != http.StatusOK && code != http.StatusNoContent {
 		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
+}
+
+// detachApplicationFromDomainAccounts removes the application from the resources of the
+// accounts of its global domains, and returns how many attachments were removed. An account
+// attached to the application, for example by a target group session account, keeps the
+// application from being deleted (409 "still associated with one target"); deleting the target
+// group doesn't remove the attachment, and it can't outlive the application.
+func detachApplicationFromDomainAccounts(
+	ctx context.Context, applicationID string, m interface{},
+) (int, error) {
+	c := m.(*Client)
+	app, err := readApplicationOptions(ctx, applicationID, m)
+	if err != nil {
+		return 0, err
+	}
+	if app.GlobalDomains == nil {
+		return 0, nil
+	}
+	// An account lists the application as "<name>:APP" or "<name>:WEBAPP", but the detach request
+	// only takes "<name>:APP": "<name>:WEBAPP" is read as the service WEBAPP of a device <name>.
+	prefix := app.ApplicationName + ":"
+	detachResource := url.PathEscape(app.ApplicationName + ":APP")
+	detached := 0
+	for _, domainName := range *app.GlobalDomains {
+		domainID, exists, err := searchResourceDomain(ctx, domainName, m)
+		if err != nil {
+			return detached, err
+		}
+		if !exists {
+			continue
+		}
+		body, code, err := c.newRequest(ctx,
+			"/domains/"+domainID+"/accounts/?fields=id,resources&limit=-1", http.MethodGet, nil)
+		if err != nil {
+			return detached, err
+		}
+		if code != http.StatusOK {
+			return detached, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
+		}
+		var accounts []struct {
+			ID        string   `json:"id"`
+			Resources []string `json:"resources"`
+		}
+		if err := json.Unmarshal([]byte(body), &accounts); err != nil {
+			return detached, fmt.Errorf("unmarshaling json: %w", err)
+		}
+		for _, account := range accounts {
+			if !slices.ContainsFunc(account.Resources, func(r string) bool { return strings.HasPrefix(r, prefix) }) {
+				continue
+			}
+			body, code, err := c.newRequest(ctx,
+				"/domains/"+domainID+"/accounts/"+account.ID+"/resource/"+detachResource, http.MethodDelete, nil)
+			if err != nil {
+				return detached, err
+			}
+			if code != http.StatusOK && code != http.StatusNoContent {
+				return detached, fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
+			}
+			detached++
+		}
+	}
+
+	return detached, nil
 }
 
 //nolint:gocognit

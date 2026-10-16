@@ -45,6 +45,9 @@ type Client struct {
 	sessionTimeout  int
 	csrfEnabled     bool
 	authMu          sync.Mutex
+
+	httpClient     *http.Client
+	httpClientOnce sync.Once
 }
 
 func (c *Client) initJar() {
@@ -58,14 +61,32 @@ func (c *Client) initJar() {
 	}
 }
 
-func (c *Client) getHTTPClient() *http.Client {
-	transport := cleanhttp.DefaultPooledTransport()
-	transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: c.insecureSkipVerify}
+const (
+	// Terraform runs up to 10 operations in parallel by default: the Bastion may refuse new
+	// connections when too many are open, so they are capped and kept for reuse.
+	httpMaxConnsPerHost = 10
+	// Shorter than the keep-alive timeout of the Bastion web server (Apache, 5 s by default), so
+	// that a connection is never reused while the server is closing it.
+	httpIdleConnTimeout = 4 * time.Second
+)
 
-	return &http.Client{
-		Transport: transport,
-		Jar:       c.jar,
-	}
+// getHTTPClient returns the HTTP client shared by all the requests of the provider, so that its
+// transport reuses the connections to the Bastion.
+func (c *Client) getHTTPClient() *http.Client {
+	c.httpClientOnce.Do(func() {
+		c.initJar()
+		transport := cleanhttp.DefaultPooledTransport()
+		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: c.insecureSkipVerify}
+		transport.MaxConnsPerHost = httpMaxConnsPerHost
+		transport.MaxIdleConnsPerHost = httpMaxConnsPerHost
+		transport.IdleConnTimeout = httpIdleConnTimeout
+		c.httpClient = &http.Client{
+			Transport: transport,
+			Jar:       c.jar,
+		}
+	})
+
+	return c.httpClient
 }
 
 func (c *Client) buildURL(path string) string {
@@ -128,6 +149,8 @@ func (c *Client) authenticate(ctx context.Context) error {
 
 		return fmt.Errorf("authentication failed: status %d: %s", resp.StatusCode, strings.TrimSpace(string(body)))
 	}
+	// Read the body to the end so that the connection can be reused.
+	_, _ = io.Copy(io.Discard, resp.Body)
 
 	u, err := url.Parse(authURL)
 	if err != nil {

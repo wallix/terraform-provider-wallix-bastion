@@ -154,7 +154,8 @@ func fillSourceAuthorization(d *schema.ResourceData, jsonData jsonAuthorization)
 	if tfErr := d.Set("authorize_sessions", jsonData.AuthorizeSessions); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("authorize_session_sharing", jsonData.AuthorizeSessionSharing); tfErr != nil {
+	if tfErr := d.Set("authorize_session_sharing",
+		jsonData.AuthorizeSessionSharing != nil && *jsonData.AuthorizeSessionSharing); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set("session_sharing_mode", jsonData.SessionSharingMode); tfErr != nil {

@@ -325,3 +325,59 @@ resource "wallix-bastion_application" "testacc_Appli_web" {
 }
 `
 }
+
+// A global domain account attached to the application through a target group kept the
+// application from being deleted (409 "still associated with one target"), even after the
+// target group was deleted.
+func TestAccResourceApplication_deleteWithAttachedGlobalAccount(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceApplicationAttachedAccount(true),
+			},
+			{
+				Config: testAccResourceApplicationAttachedAccount(false),
+			},
+		},
+	})
+}
+
+func testAccResourceApplicationAttachedAccount(withApplication bool) string {
+	config := `
+resource "wallix-bastion_domain" "testacc_AppAttachedAccount" {
+  domain_name = "testacc_AppAttachedAccount"
+}
+
+resource "wallix-bastion_domain_account" "testacc_AppAttachedAccount" {
+  domain_id     = wallix-bastion_domain.testacc_AppAttachedAccount.id
+  account_name  = "testacc_AppAttachedAccount"
+  account_login = "testacc_AppAttachedAccount"
+}
+`
+	if withApplication {
+		config += `
+resource "wallix-bastion_application" "testacc_AppAttachedAccount" {
+  application_name  = "testacc_AppAttachedAccount_app"
+  category          = "web_application"
+  connection_policy = "WEBAPP"
+  application_url   = "https://example.com/login"
+  global_domains    = [wallix-bastion_domain.testacc_AppAttachedAccount.domain_name]
+  depends_on        = [wallix-bastion_domain_account.testacc_AppAttachedAccount]
+}
+
+resource "wallix-bastion_targetgroup" "testacc_AppAttachedAccount" {
+  group_name = "testacc_AppAttachedAccount"
+  session_accounts {
+    account     = wallix-bastion_domain_account.testacc_AppAttachedAccount.account_name
+    domain      = wallix-bastion_domain.testacc_AppAttachedAccount.domain_name
+    domain_type = "global"
+    application = wallix-bastion_application.testacc_AppAttachedAccount.application_name
+  }
+}
+`
+	}
+
+	return config
+}

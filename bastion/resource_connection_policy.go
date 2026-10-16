@@ -40,6 +40,8 @@ func resourceConnectionPolicy() *schema.Resource {
 			skProtocol: {
 				Type:     schema.TypeString,
 				Required: true,
+				// Only sent on creation: changing it replaces the policy, as for type.
+				ForceNew: true,
 				ValidateFunc: validation.StringInSlice(
 					[]string{skProtoSSH, "RAWTCPIP", skProtoRDP, skProtoRLOGIN, skProtoTELNET, "VNC"},
 					false,

@@ -143,6 +143,28 @@ func resourceDomainAccountCredentialRead(
 		return diag.FromErr(err)
 	}
 	if cfg.ID == "" {
+		// WALLIX rotates a credential (manual regenerate, or an automatic
+		// rotation policy) by deleting the old object and creating a new one
+		// with a different internal ID, so the GET by the stored ID 404s.
+		// Retry a lookup by (account, type) before treating it as deleted,
+		// as the device and application variants do.
+		newID, found, err := searchResourceDomainAccountCredential(ctx,
+			d.Get(skDomainID).(string), d.Get(skAccountID).(string), d.Get(skType).(string), m)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if found {
+			cfg, err = readDomainAccountCredentialOptions(ctx,
+				d.Get(skDomainID).(string), d.Get(skAccountID).(string), newID, m)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			if cfg.ID != "" {
+				d.SetId(newID)
+			}
+		}
+	}
+	if cfg.ID == "" {
 		d.SetId("")
 	} else {
 		fillDomainAccountCredential(d, cfg)
@@ -231,6 +253,10 @@ func searchResourceDomainAccountCredential(
 			"/credentials/", http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
+	}
+	// The account no longer exists: neither does its credential.
+	if code == http.StatusNotFound {
+		return "", false, nil
 	}
 	if code != http.StatusOK {
 		return "", false, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)

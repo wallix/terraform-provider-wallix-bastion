@@ -27,8 +27,9 @@ func dataSourceConfigX509() *schema.Resource {
 				Computed: true,
 			},
 			"server_private_key": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
 			},
 			"enable": {
 				Type:     schema.TypeBool,
