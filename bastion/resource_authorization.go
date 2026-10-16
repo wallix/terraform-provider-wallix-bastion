@@ -15,7 +15,7 @@ type jsonAuthorization struct {
 	ApprovalRequired           bool      `json:"approval_required"`
 	AuthorizePasswordRetrieval bool      `json:"authorize_password_retrieval"`
 	AuthorizeSessions          bool      `json:"authorize_sessions"`
-	AuthorizeSessionSharing    bool      `json:"authorize_session_sharing,omitempty"`
+	AuthorizeSessionSharing    *bool     `json:"authorize_session_sharing,omitempty"`
 	IsCritical                 bool      `json:"is_critical"`
 	IsRecorded                 bool      `json:"is_recorded"`
 	ID                         string    `json:"id,omitempty"`
@@ -371,10 +371,16 @@ func prepareAuthorizationJSON(d *schema.ResourceData, newResource bool) jsonAuth
 		jsonData.TargetGroup = d.Get("target_group").(string)
 	}
 
-	// Only include authorize_session_sharing if it is enabled
+	// authorize_session_sharing and session_sharing_mode are only sent when sharing is enabled, so
+	// that a state without them sends the same request as before (034a630). Disabling sharing must
+	// still be sent, without the mode: an omitted field keeps its value on the Bastion.
 	if d.Get("authorize_session_sharing").(bool) {
-		jsonData.AuthorizeSessionSharing = true
+		enabled := true
+		jsonData.AuthorizeSessionSharing = &enabled
 		jsonData.SessionSharingMode = d.Get("session_sharing_mode").(string)
+	} else if !newResource && d.HasChange("authorize_session_sharing") {
+		disabled := false
+		jsonData.AuthorizeSessionSharing = &disabled
 	}
 
 	// Only include approval fields if approval_required is true
@@ -461,10 +467,17 @@ func fillAuthorization(d *schema.ResourceData, jsonData jsonAuthorization) {
 	if tfErr := d.Set("authorize_sessions", jsonData.AuthorizeSessions); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("authorize_session_sharing", jsonData.AuthorizeSessionSharing); tfErr != nil {
+	sessionSharing := jsonData.AuthorizeSessionSharing != nil && *jsonData.AuthorizeSessionSharing
+	if tfErr := d.Set("authorize_session_sharing", sessionSharing); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("session_sharing_mode", jsonData.SessionSharingMode); tfErr != nil {
+	// The Bastion keeps the mode after sharing is disabled, and the mode has no effect then: keep
+	// the value in state instead of reporting the stale one as a change.
+	sessionSharingMode := d.Get("session_sharing_mode").(string)
+	if sessionSharing {
+		sessionSharingMode = jsonData.SessionSharingMode
+	}
+	if tfErr := d.Set("session_sharing_mode", sessionSharingMode); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set(skSubprotocols, jsonData.SubProtocols); tfErr != nil {
