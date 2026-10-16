@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"slices"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -285,7 +286,7 @@ func searchResourceDevice(
 	string, bool, error,
 ) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/devices/?q=device_name="+deviceName, http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/devices/?q=device_name="+url.QueryEscape(deviceName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
