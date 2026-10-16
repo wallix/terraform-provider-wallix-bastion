@@ -2,12 +2,8 @@ package bastion
 
 import (
 	"fmt"
-	"net"
 	"net/http"
-	"net/http/httptest"
-	"net/url"
 	"slices"
-	"strconv"
 	"sync"
 	"testing"
 
@@ -25,12 +21,6 @@ type appDeleteMock struct {
 }
 
 func (mock *appDeleteMock) serveHTTP(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost && r.URL.Path == "/api" {
-		http.SetCookie(w, &http.Cookie{Name: "wab_session_id", Value: "test-session", Path: "/"})
-		w.WriteHeader(http.StatusNoContent)
-
-		return
-	}
 	mock.mu.Lock()
 	defer mock.mu.Unlock()
 	mock.requests = append(mock.requests, r.Method+" "+r.URL.Path)
@@ -70,29 +60,8 @@ func (mock *appDeleteMock) serveHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (mock *appDeleteMock) client(t *testing.T) *Client {
 	t.Helper()
-	server := httptest.NewTLSServer(http.HandlerFunc(mock.serveHTTP))
-	t.Cleanup(server.Close)
-	u, err := url.Parse(server.URL)
-	if err != nil {
-		t.Fatalf("parsing server URL: %v", err)
-	}
-	host, port, err := net.SplitHostPort(u.Host)
-	if err != nil {
-		t.Fatalf("splitting server host: %v", err)
-	}
-	portNum, err := strconv.Atoi(port)
-	if err != nil {
-		t.Fatalf("parsing server port: %v", err)
-	}
 
-	return &Client{
-		bastionIP:          host,
-		bastionPort:        portNum,
-		bastionAPIVersion:  VersionWallixAPI312,
-		bastionUser:        "app-delete-user",
-		bastionPwd:         "app-delete-password",
-		insecureSkipVerify: true,
-	}
+	return newTestAPIClient(t, mock.serveHTTP)
 }
 
 func deleteTestApplication(t *testing.T, mock *appDeleteMock) error {

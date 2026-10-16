@@ -161,6 +161,11 @@ func resourceTimeframeUpdate(
 	if err := updateTimeframe(ctx, d, m); err != nil {
 		return diag.FromErr(err)
 	}
+	// The timeframe is identified by its name, and the API renames it: follow the new name, or
+	// the read after the update doesn't find it and drops it from state.
+	if d.HasChange("timeframe_name") {
+		d.SetId(d.Get("timeframe_name").(string))
+	}
 	d.Partial(false)
 
 	return resourceTimeframeRead(ctx, d, m)

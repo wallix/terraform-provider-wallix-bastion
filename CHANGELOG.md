@@ -11,6 +11,7 @@ BUG FIXES:
 - **resource/wallix-bastion_profile**: fixed the import setting `profile_name` to the API id, which forced the replacement of the profile on the next plan; `profile_name` is now read from the API
 - **resource/wallix-bastion_authorization**: fixed `authorize_session_sharing = false` never being applied, which left session sharing enabled on the Bastion; disabling it is now sent on update (without the mode, and enabling or untouched sharing send the same requests as before); while sharing is disabled, the mode the Bastion keeps is no longer reported as a change
 - **resource/wallix-bastion_domain_account**: fixed `resources = []` never being applied, which left the account attached to its resources on the Bastion; an emptied list is now sent on update (when `resources` isn't set, the resources in state are still sent unchanged)
+- **resource/wallix-bastion_timeframe**: fixed renaming a timeframe failing with `Root object was present, but now absent` and leaving it on the Bastion out of state; the API renames it, and the resource id (the name) now follows the new name
 
 ## 0.15.2 (October 01, 2026)
 

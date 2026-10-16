@@ -1,11 +1,7 @@
 package bastion
 
 import (
-	"net"
 	"net/http"
-	"net/http/httptest"
-	"net/url"
-	"strconv"
 	"sync"
 	"testing"
 
@@ -18,40 +14,12 @@ func newRecordingClient(t *testing.T) (*Client, func() []string) {
 	t.Helper()
 	var mu sync.Mutex
 	var requests []string
-	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost && r.URL.Path == "/api" {
-			http.SetCookie(w, &http.Cookie{Name: "wab_session_id", Value: "test-session", Path: "/"})
-			w.WriteHeader(http.StatusNoContent)
-
-			return
-		}
+	client := newTestAPIClient(t, func(w http.ResponseWriter, r *http.Request) {
 		mu.Lock()
 		requests = append(requests, r.Method+" "+r.RequestURI)
 		mu.Unlock()
 		w.WriteHeader(http.StatusNoContent)
-	}))
-	t.Cleanup(server.Close)
-
-	u, err := url.Parse(server.URL)
-	if err != nil {
-		t.Fatalf("parsing server URL: %v", err)
-	}
-	host, port, err := net.SplitHostPort(u.Host)
-	if err != nil {
-		t.Fatalf("splitting server host: %v", err)
-	}
-	portNum, err := strconv.Atoi(port)
-	if err != nil {
-		t.Fatalf("parsing server port: %v", err)
-	}
-	client := &Client{
-		bastionIP:          host,
-		bastionPort:        portNum,
-		bastionAPIVersion:  VersionWallixAPI312,
-		bastionUser:        "escape-test-user",
-		bastionPwd:         "escape-test-password",
-		insecureSkipVerify: true,
-	}
+	})
 
 	return client, func() []string {
 		mu.Lock()
