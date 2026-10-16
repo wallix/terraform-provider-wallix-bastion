@@ -8,6 +8,7 @@ BUG FIXES:
 - **resource/wallix-bastion_application_localdomain_account**: fixed every update wiping the password of the account; the update replaces the credentials of the account (`force=true`) and always sent them, empty when `password` isn't set (the documented setup with a `wallix-bastion_application_localdomain_account_credential` resource); they are now only sent on creation and when `password` changes
 - **resource/wallix-bastion_user**, **resource/wallix-bastion_timeframe** (and their data sources): escape the name in the request path; a name with `#` or `?` was cut there, so that destroying the user `a#b` deleted the user `a` (checked on a Bastion 12.4), and updating it updated `a`
 - **resource/wallix-bastion_application**: fixed the destroy failing with `409 The given application is still associated with one target` when an account of one of its global domains was attached to it (for example by a target group session account; destroying the target group leaves the attachment): on this conflict, the application is detached from the accounts of its global domains, then deleted
+- **resource/wallix-bastion_profile**: fixed the import setting `profile_name` to the API id, which forced the replacement of the profile on the next plan; `profile_name` is now read from the API
 
 ## 0.15.2 (October 01, 2026)
 
