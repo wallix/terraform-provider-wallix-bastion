@@ -65,6 +65,7 @@ const (
 	skProtoRLOGIN                    = "RLOGIN"
 	skProtoSSH                       = "SSH"
 	skProtoTELNET                    = "TELNET"
+	skProtoWEBAPP                    = "WEBAPP"
 	skProtocol                       = "protocol"
 	skPublicKey                      = "public_key"
 	skRules                          = "rules"
