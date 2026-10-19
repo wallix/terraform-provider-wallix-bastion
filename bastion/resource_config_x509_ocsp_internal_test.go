@@ -112,3 +112,13 @@ func TestDataSourceConfigX509OCSPRead(t *testing.T) {
 			d.Id(), d.Get(skOCSPCheck), d.Get(skDefaultOCSPResponder))
 	}
 }
+
+// The proxy URL can hold credentials, and the API returns them: keep them out of plans.
+func TestConfigX509OCSPProxyIsSensitive(t *testing.T) {
+	if !resourceConfigX509OCSP().Schema[skOCSPProxy].Sensitive {
+		t.Error("resource ocsp_proxy must be sensitive")
+	}
+	if !dataSourceConfigX509OCSP().Schema[skOCSPProxy].Sensitive {
+		t.Error("data source ocsp_proxy must be sensitive")
+	}
+}

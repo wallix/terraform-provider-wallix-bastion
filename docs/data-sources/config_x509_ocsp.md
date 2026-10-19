@@ -28,7 +28,7 @@ output "ocsp_responder" {
 - `default_ocsp_responder` (String)
 - `id` (String) The ID of this resource.
 - `ocsp_check` (Boolean)
-- `ocsp_proxy` (String)
+- `ocsp_proxy` (String, Sensitive)
 - `override_ocsp_responder` (Boolean)
 
 ## Usage Notes

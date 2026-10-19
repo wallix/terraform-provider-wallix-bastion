@@ -30,7 +30,7 @@ resource "wallix-bastion_config_x509_ocsp" "main" {
 ### Optional
 
 - `default_ocsp_responder` (String)
-- `ocsp_proxy` (String)
+- `ocsp_proxy` (String, Sensitive)
 - `override_ocsp_responder` (Boolean)
 
 ### Read-Only

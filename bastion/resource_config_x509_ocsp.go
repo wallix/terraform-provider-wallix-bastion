@@ -45,9 +45,11 @@ func resourceConfigX509OCSP() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			// The proxy URL can hold credentials (http://user:pass@proxy:3128), which the API returns.
 			skOCSPProxy: {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 		},
 	}
