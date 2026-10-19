@@ -4,12 +4,41 @@
 
 FEATURES:
 
+- add `wallix-bastion_config_x509_crl` resource and data source (CRL revocation check of the X509 authentication certificates, `/config/x509/crl`)
+- add `wallix-bastion_config_x509_ocsp` resource and data source (OCSP revocation check of the X509 authentication certificates, `/config/x509/ocsp`)
 - add `wallix-bastion_configoption` resource to manage options of a configuration file (requires API v3.12+ and the REST API option `preview_resources` enabled on the Bastion); only the options set in `values` are managed, destroying the resource leaves the options unchanged on the Bastion; numbers in `values` are adapted to the type of the option before each update (a whole number is sent as `60.0` for a `float` option, which the API requires but `jsonencode` never produces, and a number is sent as a string for a `string` or `option` option), and a section set with something other than an object, or an option set with an object, returns a clear error instead of the API internal error
 
 ENHANCEMENTS:
 
+- **resource/wallix-bastion_connection_policy**: accept `WEBAPP` for `protocol` and `type` (API v3.12+); creating a `WEBAPP` policy with an older API version returns an error before the creation request is sent
+- **resource/wallix-bastion_connection_policy**: rewrite the documentation, whose examples used authentication methods the provider rejects (`password`, `public_key`, `ntlm`) and options that don't exist; document that `options` must hold the complete set of options returned by the API, otherwise every plan shows a difference, and how to copy an existing policy (e.g. a default one) with the data source while changing some of its options
+- **data-source/wallix-bastion_connection_policy**: fix the documentation example (`wallix-bastion_device_service` requires `protocol`) and the listed authentication methods
 - **data-source/wallix-bastion_configoption**: add `values` attribute, the option values as a JSON object in the format of the resource `values` argument
 - **data-source/wallix-bastion_configoption**: rewrite the documentation, which described arguments and attributes that don't exist (`option_name`, `value`)
+
+BUG FIXES:
+
+- **provider**: reuse the HTTP connections to the Bastion instead of opening a new one for every API request and leaving it open (one client per provider instance, at most 10 connections, idle ones closed after 4 seconds); with a few dozen API calls within seconds, a Bastion 12.4 stopped accepting new connections and requests failed at random with `context deadline exceeded`
+- **resource/wallix-bastion_application_localdomain_account**: fixed every update wiping the password of the account; the update replaces the credentials of the account (`force=true`) and always sent them, empty when `password` isn't set (the documented setup with a `wallix-bastion_application_localdomain_account_credential` resource); they are now only sent on creation and when `password` changes
+- **resource/wallix-bastion_user**, **resource/wallix-bastion_timeframe** (and their data sources): escape the name in the request path; a name with `#` or `?` was cut there, so that destroying the user `a#b` deleted the user `a` (checked on a Bastion 12.4), and updating it updated `a`
+- **resource/wallix-bastion_application**: fixed the destroy failing with `409 The given application is still associated with one target` when an account of one of its global domains was attached to it (for example by a target group session account; destroying the target group leaves the attachment): on this conflict, the application is detached from the accounts of its global domains, then deleted
+- **resource/wallix-bastion_profile**: fixed the import setting `profile_name` to the API id, which forced the replacement of the profile on the next plan; `profile_name` is now read from the API
+- **resource/wallix-bastion_authorization**: fixed `authorize_session_sharing = false` never being applied, which left session sharing enabled on the Bastion; disabling it is now sent on update (without the mode, and enabling or untouched sharing send the same requests as before); while sharing is disabled, the mode the Bastion keeps is no longer reported as a change
+- **resource/wallix-bastion_domain_account**: fixed `resources = []` never being applied, which left the account attached to its resources on the Bastion; an emptied list is now sent on update (when `resources` isn't set, the resources in state are still sent unchanged)
+- **resource/wallix-bastion_timeframe**: fixed renaming a timeframe failing with `Root object was present, but now absent` and leaving it on the Bastion out of state; the API renames it, and the resource id (the name) now follows the new name
+- **resource/wallix-bastion_connection_policy**: changing `protocol` now replaces the policy, like `type`; `protocol` is only sent on creation, so the change was never applied and the plan showed it again after every apply
+- **resource/wallix-bastion_encryption**: mark `current_passphrase` and `new_passphrase` as sensitive; they were shown in plans
+- **resource/wallix-bastion_config_x509**, **data-source/wallix-bastion_config_x509**: mark `server_private_key` as sensitive; the private key was shown in plans
+- **resource/wallix-bastion_domain_account_credential**: after a rotation recreated the credential with a new id, the read dropped it from state and every following apply failed with `already exists`; the read now looks the credential up by account and type, as the device and application variants do since 0.15.0, and a deleted account no longer makes the read fail
+- **resource/wallix-bastion_device_localdomain_account_credential**, **resource/wallix-bastion_application_localdomain_account_credential**: fixed every plan failing with `api doesn't return OK: 404` once the account, local domain, device or application of the credential was deleted outside of Terraform; the credential is now dropped from state, as the domain variant does
+- **provider**: escape the name in the API searches by name (`?q=<field>=<name>`) that the resources run before a creation and on import, and that the data sources use; a name with `&`, `+`, `#` or a space was cut or altered (`a+b` was searched as `a b` on a Bastion 12.4), so the creation of `a&b` failed with `already exists` when `a` existed, and its import imported `a`; the name is also escaped for the Bastion search expression, where a name with `&&` or `||` failed with `Invalid expression` and one with `\` was not found
+
+NOTES:
+
+- **resource/wallix-bastion_connection_policy**: if your plan showed the same `protocol` change after every apply, the next plan replaces the policy (destroy, then create, under the same name); the destroy fails while devices or applications still use the policy
+- **resource/wallix-bastion_encryption**, **resource/wallix-bastion_config_x509**, **data-source/wallix-bastion_config_x509**: an `output` that references `current_passphrase`, `new_passphrase` or `server_private_key` must now set `sensitive = true`, or the plan fails with `Output refers to sensitive values`
+- **resource/wallix-bastion_profile**: `profile_name` is now read on every refresh, so a profile renamed outside Terraform shows as a change, which replaces the profile
+- **resource/wallix-bastion_application_localdomain_account**: removing `password` from the configuration no longer clears the password on the Bastion
 
 ## 0.15.2 (October 01, 2026)
 

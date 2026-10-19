@@ -188,7 +188,8 @@ func searchResourceExternalAuthTacacs(
 	string, bool, error,
 ) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/externalauths/?q=authentication_name="+authenticationName, http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx,
+		"/externalauths/?"+searchQuery("authentication_name", authenticationName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}

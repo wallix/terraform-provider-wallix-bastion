@@ -395,7 +395,7 @@ func searchResourceTargetGroup(
 	string, bool, error,
 ) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/targetgroups/?q=group_name="+groupName, http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/targetgroups/?"+searchQuery("group_name", groupName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}

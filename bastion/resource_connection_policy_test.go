@@ -513,3 +513,39 @@ resource "wallix-bastion_connection_policy" "testacc_ConnectionPolicy" {
 }
 `
 }
+
+// protocol was only sent on creation: changing it never reached the Bastion. It now replaces the
+// policy.
+func TestAccResourceConnectionPolicy_protocolChange(t *testing.T) {
+	resourceName := "wallix-bastion_connection_policy.testacc_ConnPolicyProtocol"
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceConnectionPolicyProtocol("SSH"),
+				Check:  resource.TestCheckResourceAttr(resourceName, "protocol", "SSH"),
+			},
+			{
+				Config: testAccResourceConnectionPolicyProtocol("RAWTCPIP"),
+				Check:  resource.TestCheckResourceAttr(resourceName, "protocol", "RAWTCPIP"),
+			},
+		},
+	})
+}
+
+// The options and authentication methods are copied from the default policy of the protocol.
+func testAccResourceConnectionPolicyProtocol(protocol string) string {
+	return `
+data "wallix-bastion_connection_policy" "testacc_ConnPolicyProtocol" {
+  connection_policy_name = "` + protocol + `"
+}
+
+resource "wallix-bastion_connection_policy" "testacc_ConnPolicyProtocol" {
+  connection_policy_name = "testacc_ConnPolicyProtocol"
+  protocol               = "` + protocol + `"
+  authentication_methods = data.wallix-bastion_connection_policy.testacc_ConnPolicyProtocol.authentication_methods
+  options                = data.wallix-bastion_connection_policy.testacc_ConnPolicyProtocol.options
+}
+`
+}

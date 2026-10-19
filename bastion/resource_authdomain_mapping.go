@@ -224,7 +224,7 @@ func searchResourceAuthDomainMapping(
 	c := m.(*Client)
 	body, code, err := c.newRequest(
 		ctx,
-		"/authdomains/"+domainID+"/mappings/?q=user_group="+userGroup,
+		"/authdomains/"+domainID+"/mappings/?"+searchQuery("user_group", userGroup),
 		http.MethodGet,
 		nil,
 	)

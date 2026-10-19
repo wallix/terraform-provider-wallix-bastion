@@ -218,7 +218,7 @@ func searchResourceUserGroup(
 	string, bool, error,
 ) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/usergroups/?q=group_name="+groupName, http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/usergroups/?"+searchQuery("group_name", groupName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
