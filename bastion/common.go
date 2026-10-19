@@ -1,6 +1,7 @@
 package bastion
 
 import (
+	"net/http"
 	"net/url"
 	"strings"
 )
@@ -16,6 +17,13 @@ func searchQuery(field, value string) string {
 	).Replace(value)
 
 	return "q=" + field + "=" + url.QueryEscape(escaped)
+}
+
+// deleteDone reports whether the response to a DELETE means that the object is gone: deleted now
+// (200, 204) or already deleted outside of Terraform (404). Terraform then drops it from state;
+// returning the 404 as an error failed the destroy, and left the objects depending on it.
+func deleteDone(code int) bool {
+	return code == http.StatusOK || code == http.StatusNoContent || code == http.StatusNotFound
 }
 
 type jsonRestriction struct {
