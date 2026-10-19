@@ -684,8 +684,8 @@ func fillProfile(d *schema.ResourceData, jsonData jsonProfile) {
 	}
 	if jsonData.TargetGroupsLimitation.Enabled {
 		targetGroupsLimitation := []map[string]interface{}{{
-			"default_target_group": *jsonData.TargetGroupsLimitation.DefaultTargetGroup,
-			skTargetGroups:         *jsonData.TargetGroupsLimitation.TargetGroups,
+			"default_target_group": profileDefaultGroup(jsonData.TargetGroupsLimitation.DefaultTargetGroup),
+			skTargetGroups:         profileGroups(jsonData.TargetGroupsLimitation.TargetGroups),
 		}}
 		if tfErr := d.Set("target_groups_limitation", targetGroupsLimitation); tfErr != nil {
 			panic(tfErr)
@@ -698,7 +698,7 @@ func fillProfile(d *schema.ResourceData, jsonData jsonProfile) {
 	}
 	if jsonData.UserGroupsLimitation.Enabled {
 		userGroupsLimitation := []map[string]interface{}{{
-			skUserGroups: *jsonData.UserGroupsLimitation.UserGroups,
+			skUserGroups: profileGroups(jsonData.UserGroupsLimitation.UserGroups),
 		}}
 		if tfErr := d.Set("user_groups_limitation", userGroupsLimitation); tfErr != nil {
 			panic(tfErr)
@@ -709,4 +709,25 @@ func fillProfile(d *schema.ResourceData, jsonData jsonProfile) {
 			panic(tfErr)
 		}
 	}
+}
+
+// profileDefaultGroup returns the default group of a limitation as read from the API, which is
+// null for a limitation enabled without any group (checked on a Bastion 12.4): dereferencing it
+// crashed the provider on a refresh, an import or the data source.
+func profileDefaultGroup(defaultGroup *interface{}) string {
+	if defaultGroup == nil {
+		return ""
+	}
+	name, _ := (*defaultGroup).(string)
+
+	return name
+}
+
+// profileGroups returns the groups of a limitation as read from the API, where they can be null.
+func profileGroups(groups *[]string) []string {
+	if groups == nil {
+		return []string{}
+	}
+
+	return *groups
 }

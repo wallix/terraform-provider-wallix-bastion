@@ -269,8 +269,8 @@ func fillSourceProfile(d *schema.ResourceData, jsonData jsonProfile) {
 	}
 	if jsonData.TargetGroupsLimitation.Enabled {
 		targetGroupsLimitation := []map[string]interface{}{{
-			"default_target_group": *jsonData.TargetGroupsLimitation.DefaultTargetGroup,
-			skTargetGroups:         *jsonData.TargetGroupsLimitation.TargetGroups,
+			"default_target_group": profileDefaultGroup(jsonData.TargetGroupsLimitation.DefaultTargetGroup),
+			skTargetGroups:         profileGroups(jsonData.TargetGroupsLimitation.TargetGroups),
 		}}
 		if tfErr := d.Set("target_groups_limitation", targetGroupsLimitation); tfErr != nil {
 			panic(tfErr)
@@ -283,7 +283,7 @@ func fillSourceProfile(d *schema.ResourceData, jsonData jsonProfile) {
 	}
 	if jsonData.UserGroupsLimitation.Enabled {
 		userGroupsLimitation := []map[string]interface{}{{
-			skUserGroups: *jsonData.UserGroupsLimitation.UserGroups,
+			skUserGroups: profileGroups(jsonData.UserGroupsLimitation.UserGroups),
 		}}
 		if tfErr := d.Set("user_groups_limitation", userGroupsLimitation); tfErr != nil {
 			panic(tfErr)
