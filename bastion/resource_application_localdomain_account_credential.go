@@ -258,6 +258,11 @@ func searchResourceApplicationLocalDomainAccountCredential(
 	if err != nil {
 		return "", false, err
 	}
+	// The account, its local domain or its application no longer exists: neither does its
+	// credential.
+	if code == http.StatusNotFound {
+		return "", false, nil
+	}
 	if code != http.StatusOK {
 		return "", false, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
 	}

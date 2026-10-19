@@ -16,6 +16,7 @@ BUG FIXES:
 - **resource/wallix-bastion_encryption**: mark `current_passphrase` and `new_passphrase` as sensitive; they were shown in plans
 - **resource/wallix-bastion_config_x509**, **data-source/wallix-bastion_config_x509**: mark `server_private_key` as sensitive; the private key was shown in plans
 - **resource/wallix-bastion_domain_account_credential**: after a rotation recreated the credential with a new id, the read dropped it from state and every following apply failed with `already exists`; the read now looks the credential up by account and type, as the device and application variants do since 0.15.0, and a deleted account no longer makes the read fail
+- **resource/wallix-bastion_device_localdomain_account_credential**, **resource/wallix-bastion_application_localdomain_account_credential**: fixed every plan failing with `api doesn't return OK: 404` once the account, local domain, device or application of the credential was deleted outside of Terraform; the credential is now dropped from state, as the domain variant does
 
 NOTES:
 
