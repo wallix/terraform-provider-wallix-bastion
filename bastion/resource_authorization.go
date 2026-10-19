@@ -419,6 +419,9 @@ func prepareAuthorizationJSON(d *schema.ResourceData, newResource bool) jsonAuth
 			subProtocols[i] = v.(string)
 		}
 		jsonData.SubProtocols = &subProtocols
+	} else if d.HasChange(skSubprotocols) {
+		// The last subprotocols were removed: an empty list clears them, an omitted one keeps them.
+		jsonData.SubProtocols = &[]string{}
 	}
 
 	return jsonData
