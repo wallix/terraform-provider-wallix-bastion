@@ -24,6 +24,19 @@ func TestAccDataSourceConfigoption_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.wallix-bastion_configoption.global",
 						"config_name", "wabengine"),
 					resource.TestCheckResourceAttrWith("data.wallix-bastion_configoption.global",
+						"values", func(value string) error {
+							jsonData := make(map[string]interface{})
+							if err := json.Unmarshal([]byte(value), &jsonData); err != nil {
+								return err
+							}
+							if _, ok := jsonData["one_time_password_ttl"].(float64); !ok || len(jsonData) != 1 {
+								return errors.New("values must only contain one_time_password_ttl as a number")
+							}
+
+							return nil
+						},
+					),
+					resource.TestCheckResourceAttrWith("data.wallix-bastion_configoption.global",
 						"options.0", func(value string) error {
 							jsonData := make(map[string]interface{})
 							if err := json.Unmarshal([]byte(value), &jsonData); err != nil {
