@@ -7,6 +7,16 @@ FEATURES:
 - add `wallix-bastion_config_x509_crl` resource and data source to configure the CRL revocation check of the certificates used for X509 authentication (`/config/x509/crl`); the CRL is either downloaded by the Bastion from `crl_auto_fetch` while the configuration is applied (the URL must be reachable from the Bastion, otherwise the apply fails) or uploaded with `crl_file`, which the API never returns (changes made to it outside of Terraform aren't detected, and a failed upload keeps the previous file in state so that the next plan retries it); `crl_auto_fetch` is sent empty when unset, since uploading a file alone leaves the previous URL on the Bastion; destroying the resource leaves the check as configured on the Bastion, since disabling it would silently weaken certificate validation
 - add `wallix-bastion_config_x509_ocsp` resource and data source to configure the OCSP revocation check of the certificates used for X509 authentication (`/config/x509/ocsp`); every argument is sent on each update, so removing one from the configuration resets it on the Bastion; destroying the resource leaves the check as configured on the Bastion
 
+ENHANCEMENTS:
+
+- **resource/wallix-bastion_connection_policy**: accept `WEBAPP` for `protocol` and `type` (API v3.12+); creating a `WEBAPP` policy with an older API version returns an error before the creation request is sent
+- **resource/wallix-bastion_connection_policy**: rewrite the documentation, whose examples used authentication methods the provider rejects (`password`, `public_key`, `ntlm`) and options that don't exist; document that `options` must hold the complete set of options returned by the API, otherwise every plan shows a difference, and how to copy an existing policy (e.g. a default one) with the data source while changing some of its options
+- **data-source/wallix-bastion_connection_policy**: fix the documentation example (`wallix-bastion_device_service` requires `protocol`) and the listed authentication methods
+
+BUG FIXES:
+
+- **provider**: reuse the HTTP connections to the Bastion instead of opening a new one for every API request and leaving it open (one client per provider instance, at most 10 connections, idle ones closed after 4 seconds); with a few dozen API calls within seconds, a Bastion 12.4 stopped accepting new connections and requests failed at random with `context deadline exceeded`
+
 ## 0.15.2 (October 01, 2026)
 
 ENHANCEMENTS:

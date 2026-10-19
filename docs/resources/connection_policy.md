@@ -13,122 +13,65 @@ Provides a connection_policy resource.
 ## Example Usage
 
 ```terraform
-# Configure SSH connection policy
-resource "wallix-bastion_connection_policy" "ssh_policy" {
-  connection_policy_name = "SSH_Standard"
+# Copy the default SSH policy and change some of its options. options must hold the complete set
+# of options of the protocol (see Usage Notes), so the options of the default policy are merged,
+# section by section, with the ones to change.
+data "wallix-bastion_connection_policy" "ssh" {
+  connection_policy_name = "SSH"
+}
+
+locals {
+  ssh_options = jsondecode(data.wallix-bastion_connection_policy.ssh.options)
+  ssh_changes = {
+    session = {
+      inactivity_timeout = 900
+    }
+  }
+}
+
+resource "wallix-bastion_connection_policy" "ssh_timeout" {
+  connection_policy_name = "SSH_Timeout"
   protocol               = "SSH"
-  description            = "Standard SSH connection policy"
-  
-  authentication_methods = [
-    "password",
-    "public_key"
-  ]
-  
+  description            = "SSH with an inactivity timeout"
+  authentication_methods = ["PASSWORD_VAULT", "PUBKEY_VAULT"]
   options = jsonencode({
-    general = {
-      allow_x11_forwarding    = true
-      allow_agent_forwarding  = false
-      max_session_duration    = 7200
-    }
-    ssh = {
-      compression = true
-      encryption  = ["aes256-ctr", "aes192-ctr", "aes128-ctr"]
-    }
+    for section in setunion(keys(local.ssh_options), keys(local.ssh_changes)) :
+    section => merge(try(local.ssh_options[section], {}), try(local.ssh_changes[section], {}))
   })
 }
+```
 
-# Configure RDP connection policy
-resource "wallix-bastion_connection_policy" "rdp_policy" {
-  connection_policy_name = "RDP_Secure"
-  protocol               = "RDP"
-  description            = "Secure RDP connection policy"
-  
-  authentication_methods = [
-    "password",
-    "ntlm"
-  ]
-  
-  options = jsonencode({
-    general = {
-      session_timeout         = 3600
-      idle_timeout           = 900
-      record_session         = true
-    }
-    rdp = {
-      color_depth            = 24
-      disable_clipboard      = false
-      disable_drive_redirect = true
-      disable_printer        = true
-    }
-  })
-}
-
-# Configure jumphost RDP policy
-resource "wallix-bastion_connection_policy" "rdp_jumphost" {
-  connection_policy_name = "RDP_Jumphost"
-  protocol               = "RDP"
-  type                   = "RDP-JUMPHOST"
-  description            = "RDP policy for jumphost applications"
-  
-  options = jsonencode({
-    general = {
-      session_recording = true
-    }
-    jumphost = {
-      browser_isolation = true
-      file_download     = false
-    }
-  })
-}
-
-# Configure RAWTCPIP policy
-resource "wallix-bastion_connection_policy" "tcp_policy" {
+```terraform
+# Write the complete set of options
+resource "wallix-bastion_connection_policy" "tcp" {
   connection_policy_name = "TCP_Standard"
   protocol               = "RAWTCPIP"
-  description            = "Raw TCP/IP connection policy"
-  
   options = jsonencode({
-    general = {
-      connection_timeout = 30
-      idle_timeout      = 1800
+    nat_redirection = {
+      enable = false
+      host   = ""
+      port   = 0
+    }
+    seamless_connection = {
+      ipredir_apps = ""
+      mode         = "iploop"
     }
   })
 }
+```
 
-# Configure VNC policy
-resource "wallix-bastion_connection_policy" "vnc_policy" {
-  connection_policy_name = "VNC_Standard"
-  protocol               = "VNC"
-  description            = "VNC connection policy"
-  
-  authentication_methods = [
-    "password"
-  ]
-  
-  options = jsonencode({
-    general = {
-      record_session = true
-    }
-    vnc = {
-      color_depth   = 16
-      view_only     = false
-      shared_access = false
-    }
-  })
+```terraform
+# Web application policy (API v3.12+), with the options of the default WEBAPP policy
+data "wallix-bastion_connection_policy" "webapp" {
+  connection_policy_name = "WEBAPP"
 }
 
-# Configure Telnet policy
-resource "wallix-bastion_connection_policy" "telnet_policy" {
-  connection_policy_name = "TELNET_Legacy"
-  protocol               = "TELNET"
-  description            = "Legacy Telnet connection policy"
-  
-  options = jsonencode({
-    general = {
-      echo_mode = true
-      charset   = "UTF-8"
-    }
-  })
+resource "wallix-bastion_connection_policy" "webapp_custom" {
+  connection_policy_name = "WEBAPP_Custom"
+  protocol               = data.wallix-bastion_connection_policy.webapp.protocol
+  type                   = data.wallix-bastion_connection_policy.webapp.type
+  authentication_methods = data.wallix-bastion_connection_policy.webapp.authentication_methods
+  options                = data.wallix-bastion_connection_policy.webapp.options
 }
 ```
 
@@ -153,115 +96,42 @@ resource "wallix-bastion_connection_policy" "telnet_policy" {
 
 ## Usage Notes
 
-### Supported Protocols
+### `options` Must Hold the Complete Set of Options
 
-- **SSH**: Secure Shell connections
-- **RDP**: Remote Desktop Protocol
-- **RAWTCPIP**: Raw TCP/IP connections
-- **TELNET**: Telnet protocol
-- **RLOGIN**: Remote login protocol
-- **VNC**: Virtual Network Computing
+The API returns every option of the protocol with its current value, and the provider stores
+them as returned. If `options` only sets some of them, or isn't set at all, every plan shows a
+difference. Set the complete set, either written out or read from an existing policy with the
+`wallix-bastion_connection_policy` data source, as in the examples above. Keep the type of each
+value as returned by the API (some options are strings holding a number, e.g. `"1"`).
 
-### Policy Types
+The available options depend on the Bastion version. After an upgrade that adds options, a policy
+whose options are written out shows a difference until the new ones are added. A policy copied
+from another one with the data source follows the changes made to that policy, including the
+upgrade: review the plan before applying.
 
-- **SSH**: Standard SSH connections
-- **RDP**: Standard RDP connections
-- **RDP-JUMPHOST**: RDP connections for jumphost applications
-- **RAWTCPIP**: Raw TCP connections
-- **TELNET**: Telnet connections
-- **RLOGIN**: Remote login connections
-- **VNC**: VNC connections
+### Protocols and Types
 
-The `type` field defaults to the `protocol` value but can be set to specific variants like "RDP-JUMPHOST".
+`protocol` is one of `SSH`, `RAWTCPIP`, `RDP`, `RLOGIN`, `TELNET`, `VNC` or `WEBAPP` (API v3.12+).
+
+`type` is only sent with API v3.12+ and defaults to the `protocol` value. It also accepts
+`RDP-JUMPHOST`.
 
 ### Authentication Methods
 
-Configure allowed authentication methods based on protocol:
+`authentication_methods` accepts `KERBEROS_FORWARDING`, `PASSWORD_INTERACTIVE`,
+`PASSWORD_MAPPING`, `PASSWORD_VAULT`, `PUBKEY_AGENT_FORWARDING` and `PUBKEY_VAULT`. Some protocols, such
+as `WEBAPP`, require at least one. On update, the list replaces the methods of the policy.
 
-**SSH:**
+### Default Policies
 
-- `password`: Username/password authentication
-- `public_key`: SSH public key authentication
-- `keyboard_interactive`: Interactive authentication
-- `gssapi`: GSSAPI authentication
-
-**RDP:**
-
-- `password`: Username/password authentication
-- `ntlm`: NTLM authentication
-- `kerberos`: Kerberos authentication
-
-**Other protocols:**
-
-- `password`: Username/password (most protocols)
-
-### Options Configuration
-
-The `options` field accepts a JSON object with protocol-specific settings:
-
-**SSH Options:**
-
-```json
-{
-  "general": {
-    "allow_x11_forwarding": true,
-    "allow_agent_forwarding": false,
-    "max_session_duration": 7200,
-    "session_recording": true
-  },
-  "ssh": {
-    "compression": true,
-    "encryption": ["aes256-ctr", "aes192-ctr"],
-    "mac": ["hmac-sha2-256", "hmac-sha2-512"]
-  }
-}
-```
-
-**RDP Options:**
-
-```json
-{
-  "general": {
-    "session_timeout": 3600,
-    "idle_timeout": 900,
-    "record_session": true
-  },
-  "rdp": {
-    "color_depth": 24,
-    "disable_clipboard": false,
-    "disable_drive_redirect": true,
-    "disable_printer": true,
-    "audio_redirect": false
-  }
-}
-```
-
-**VNC Options:**
-
-```json
-{
-  "general": {
-    "record_session": true
-  },
-  "vnc": {
-    "color_depth": 16,
-    "view_only": false,
-    "shared_access": false
-  }
-}
-```
-
-### Common General Options
-
-- `session_timeout`: Maximum session duration (seconds)
-- `idle_timeout`: Idle timeout before disconnection (seconds)
-- `record_session`: Enable session recording
-- `connection_timeout`: Connection establishment timeout
+The API doesn't allow deleting the default policies of the Bastion (e.g. `SSH` or `RDP`): destroying
+one that was imported fails. To stop managing it, remove it from the state with
+`terraform state rm`, or with a `removed` block and `lifecycle { destroy = false }` (Terraform 1.7+).
 
 ## Import
 
 Connection policy can be imported using an id made up of `<connection_policy_name>`, e.g.
 
 ```shell
-terraform import wallix-bastion_connection_policy.ssh_policy SSH_Standard
+terraform import wallix-bastion_connection_policy.ssh_timeout SSH_Timeout
 ```
