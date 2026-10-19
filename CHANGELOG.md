@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+FEATURES:
+
+- add `wallix-bastion_config_x509_crl` resource and data source (CRL revocation check of the X509 authentication certificates, `/config/x509/crl`)
+- add `wallix-bastion_config_x509_ocsp` resource and data source (OCSP revocation check of the X509 authentication certificates, `/config/x509/ocsp`)
+
 ENHANCEMENTS:
 
 - **resource/wallix-bastion_connection_policy**: accept `WEBAPP` for `protocol` and `type` (API v3.12+); creating a `WEBAPP` policy with an older API version returns an error before the creation request is sent
