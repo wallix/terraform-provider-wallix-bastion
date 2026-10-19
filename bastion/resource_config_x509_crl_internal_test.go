@@ -15,6 +15,8 @@ const (
 	testCRLPEM = "-----BEGIN X509 CRL-----\n" +
 		"MIIB3DCBxQIBATANBgkqhkiG9w0BAQUFADCBgjELMAkGA1UEBhMCRlIx\n" +
 		"-----END X509 CRL-----\n"
+	// The state value of a disabled crl_check.
+	testCRLCheckOff = "false"
 )
 
 func TestConfigX509CRLCreateSendsAutoFetchForm(t *testing.T) {
@@ -89,7 +91,7 @@ func TestConfigX509CRLUpdateFromURLToFileClearsURL(t *testing.T) {
 		map[string]interface{}{skCRLAutoFetch: testCRLURL, skCRLCheck: false}, skCRLFile)
 
 	state, diags := applyConfigX509CRL(t, mock,
-		map[string]string{skCRLAutoFetch: testCRLURL, skCRLCheck: "false"},
+		map[string]string{skCRLAutoFetch: testCRLURL, skCRLCheck: testCRLCheckOff},
 		map[string]interface{}{skCRLCheck: false, skCRLFile: testCRLPEM})
 	if diags.HasError() {
 		t.Fatalf("apply: %v", diags)
@@ -115,7 +117,7 @@ func TestConfigX509CRLFailedUpdateKeepsPreviousFile(t *testing.T) {
 	mock.failPuts(http.StatusBadRequest)
 
 	state, diags := applyConfigX509CRL(t, mock,
-		map[string]string{skCRLAutoFetch: "", skCRLCheck: "false", skCRLFile: "OLD-CRL"},
+		map[string]string{skCRLAutoFetch: "", skCRLCheck: testCRLCheckOff, skCRLFile: "OLD-CRL"},
 		map[string]interface{}{skCRLCheck: false, skCRLFile: testCRLPEM})
 	if !diags.HasError() {
 		t.Fatal("expected the update to fail")
@@ -132,7 +134,7 @@ func TestConfigX509CRLUpdateWithoutFileChangeKeepsFile(t *testing.T) {
 		map[string]interface{}{skCRLAutoFetch: "", skCRLCheck: false}, skCRLFile)
 
 	_, diags := applyConfigX509CRL(t, mock,
-		map[string]string{skCRLAutoFetch: "", skCRLCheck: "false", skCRLFile: testCRLPEM},
+		map[string]string{skCRLAutoFetch: "", skCRLCheck: testCRLCheckOff, skCRLFile: testCRLPEM},
 		map[string]interface{}{skCRLCheck: true, skCRLFile: testCRLPEM})
 	if diags.HasError() {
 		t.Fatalf("apply: %v", diags)
