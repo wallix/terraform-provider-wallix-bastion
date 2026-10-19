@@ -50,7 +50,7 @@ output "ssh_policy_info" {
 - `authentication_methods` (Set of String)
 - `description` (String)
 - `id` (String) The ID of this resource.
-- `options` (String)
+- `options` (String, Sensitive)
 - `protocol` (String)
 - `type` (String)
 
