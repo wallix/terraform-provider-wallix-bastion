@@ -1,9 +1,11 @@
 package bastion_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccResourceProfile_basic(t *testing.T) {
@@ -26,6 +28,14 @@ func TestAccResourceProfile_basic(t *testing.T) {
 				ResourceName:  "wallix-bastion_profile.testacc_Profile",
 				ImportState:   true,
 				ImportStateId: "testacc_Profile",
+				// The import used to set profile_name to the API id, which forced a replacement.
+				ImportStateCheck: func(states []*terraform.InstanceState) error {
+					if got := states[0].Attributes["profile_name"]; got != "testacc_Profile" {
+						return fmt.Errorf("profile_name = %q after import, want testacc_Profile", got)
+					}
+
+					return nil
+				},
 			},
 			{
 				Config: testAccResourceProfileUpdate2(),

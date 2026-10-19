@@ -16,6 +16,24 @@ ENHANCEMENTS:
 BUG FIXES:
 
 - **provider**: reuse the HTTP connections to the Bastion instead of opening a new one for every API request and leaving it open (one client per provider instance, at most 10 connections, idle ones closed after 4 seconds); with a few dozen API calls within seconds, a Bastion 12.4 stopped accepting new connections and requests failed at random with `context deadline exceeded`
+- **resource/wallix-bastion_application_localdomain_account**: fixed every update wiping the password of the account; the update replaces the credentials of the account (`force=true`) and always sent them, empty when `password` isn't set (the documented setup with a `wallix-bastion_application_localdomain_account_credential` resource); they are now only sent on creation and when `password` changes
+- **resource/wallix-bastion_user**, **resource/wallix-bastion_timeframe** (and their data sources): escape the name in the request path; a name with `#` or `?` was cut there, so that destroying the user `a#b` deleted the user `a` (checked on a Bastion 12.4), and updating it updated `a`
+- **resource/wallix-bastion_application**: fixed the destroy failing with `409 The given application is still associated with one target` when an account of one of its global domains was attached to it (for example by a target group session account; destroying the target group leaves the attachment): on this conflict, the application is detached from the accounts of its global domains, then deleted
+- **resource/wallix-bastion_profile**: fixed the import setting `profile_name` to the API id, which forced the replacement of the profile on the next plan; `profile_name` is now read from the API
+- **resource/wallix-bastion_authorization**: fixed `authorize_session_sharing = false` never being applied, which left session sharing enabled on the Bastion; disabling it is now sent on update (without the mode, and enabling or untouched sharing send the same requests as before); while sharing is disabled, the mode the Bastion keeps is no longer reported as a change
+- **resource/wallix-bastion_domain_account**: fixed `resources = []` never being applied, which left the account attached to its resources on the Bastion; an emptied list is now sent on update (when `resources` isn't set, the resources in state are still sent unchanged)
+- **resource/wallix-bastion_timeframe**: fixed renaming a timeframe failing with `Root object was present, but now absent` and leaving it on the Bastion out of state; the API renames it, and the resource id (the name) now follows the new name
+- **resource/wallix-bastion_connection_policy**: changing `protocol` now replaces the policy, like `type`; `protocol` is only sent on creation, so the change was never applied and the plan showed it again after every apply
+- **resource/wallix-bastion_encryption**: mark `current_passphrase` and `new_passphrase` as sensitive; they were shown in plans
+- **resource/wallix-bastion_config_x509**, **data-source/wallix-bastion_config_x509**: mark `server_private_key` as sensitive; the private key was shown in plans
+- **resource/wallix-bastion_domain_account_credential**: after a rotation recreated the credential with a new id, the read dropped it from state and every following apply failed with `already exists`; the read now looks the credential up by account and type, as the device and application variants do since 0.15.0, and a deleted account no longer makes the read fail
+
+NOTES:
+
+- **resource/wallix-bastion_connection_policy**: if your plan showed the same `protocol` change after every apply, the next plan replaces the policy (destroy, then create, under the same name); the destroy fails while devices or applications still use the policy
+- **resource/wallix-bastion_encryption**, **resource/wallix-bastion_config_x509**, **data-source/wallix-bastion_config_x509**: an `output` that references `current_passphrase`, `new_passphrase` or `server_private_key` must now set `sensitive = true`, or the plan fails with `Output refers to sensitive values`
+- **resource/wallix-bastion_profile**: `profile_name` is now read on every refresh, so a profile renamed outside Terraform shows as a change, which replaces the profile
+- **resource/wallix-bastion_application_localdomain_account**: removing `password` from the configuration no longer clears the password on the Bastion
 
 ## 0.15.2 (October 01, 2026)
 

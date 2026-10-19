@@ -27,7 +27,7 @@ resource "wallix-bastion_config_x509" "acme-cert" {
 
 ### Required
 
-- `server_private_key` (String) The server certificate private key
+- `server_private_key` (String, Sensitive) The server certificate private key
 - `server_public_key` (String) The server certificate public key
 
 ### Optional
