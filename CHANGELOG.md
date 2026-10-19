@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+ENHANCEMENTS:
+
+- **resource/wallix-bastion_connection_policy**: accept `WEBAPP` for `protocol` and `type` (API v3.12+); creating a `WEBAPP` policy with an older API version returns an error before the creation request is sent
+- **resource/wallix-bastion_connection_policy**: rewrite the documentation, whose examples used authentication methods the provider rejects (`password`, `public_key`, `ntlm`) and options that don't exist; document that `options` must hold the complete set of options returned by the API, otherwise every plan shows a difference, and how to copy an existing policy (e.g. a default one) with the data source while changing some of its options
+- **data-source/wallix-bastion_connection_policy**: fix the documentation example (`wallix-bastion_device_service` requires `protocol`) and the listed authentication methods
+
 BUG FIXES:
 
 - **provider**: reuse the HTTP connections to the Bastion instead of opening a new one for every API request and leaving it open (one client per provider instance, at most 10 connections, idle ones closed after 4 seconds); with a few dozen API calls within seconds, a Bastion 12.4 stopped accepting new connections and requests failed at random with `context deadline exceeded`
