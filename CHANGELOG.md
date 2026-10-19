@@ -27,6 +27,7 @@ BUG FIXES:
 - **resource/wallix-bastion_encryption**: mark `current_passphrase` and `new_passphrase` as sensitive; they were shown in plans
 - **resource/wallix-bastion_config_x509**, **data-source/wallix-bastion_config_x509**: mark `server_private_key` as sensitive; the private key was shown in plans
 - **resource/wallix-bastion_domain_account_credential**: after a rotation recreated the credential with a new id, the read dropped it from state and every following apply failed with `already exists`; the read now looks the credential up by account and type, as the device and application variants do since 0.15.0, and a deleted account no longer makes the read fail
+- **provider**: escape the name in the API searches by name (`?q=<field>=<name>`) that the resources run before a creation and on import, and that the data sources use; a name with `&`, `+`, `#` or a space was cut or altered (`a+b` was searched as `a b` on a Bastion 12.4), so the creation of `a&b` failed with `already exists` when `a` existed, and its import imported `a`; the name is also escaped for the Bastion search expression, where a name with `&&` or `||` failed with `Invalid expression` and one with `\` was not found
 
 NOTES:
 

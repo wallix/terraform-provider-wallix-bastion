@@ -204,7 +204,7 @@ func searchResourceConnectionPolicy(
 ) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
-		"/connectionpolicies/?q=connection_policy_name="+connectionPolicyName, http.MethodGet, nil)
+		"/connectionpolicies/?"+searchQuery("connection_policy_name", connectionPolicyName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
