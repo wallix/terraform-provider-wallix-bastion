@@ -27,7 +27,9 @@ output "encryption_enabled" {
 ### Read-Only
 
 - `enabled` (Boolean)
+- `encryption_mode` (String)
 - `id` (String) The ID of this resource.
+- `seal_state` (String)
 
 ## Usage Notes
 
@@ -46,17 +48,20 @@ is no way - via this data source, the resource, or the underlying API - to retri
 configured passphrase. Attempting to "read back" the passphrase from Terraform is not possible;
 you must keep the passphrase in your own secret management system if you need to know its value.
 
-### The `enabled` Attribute
+### Attributes
 
-The only attribute this data source exposes is:
+- **enabled** (Boolean): whether the encryption has been set up on the Bastion, sealed or not.
+- **seal_state** (String): `need_setup` (the encryption was never set up), `sealed` (set up, but
+  the Bastion waits for its passphrase, for example after a reboot) or `unsealed` (ready for use).
+- **encryption_mode** (String): `need_setup`, `unprotected` (no passphrase), `passphrase`, or
+  `[hidden]` when the API user can't read it.
 
-- **enabled** (Boolean): whether disk encryption is currently enabled/configured on the Bastion.
-
-Use this to gate other resources or checks on whether encryption has already been set up, without
-needing to know or manage the passphrase itself:
+Use them to gate other resources or checks on the encryption state, without needing to know or
+manage the passphrase itself:
 
 ```terraform
 locals {
-  encryption_ready = data.wallix-bastion_encryption.current.enabled
+  encryption_set_up = data.wallix-bastion_encryption.current.enabled
+  bastion_unsealed  = data.wallix-bastion_encryption.current.seal_state == "unsealed"
 }
 ```

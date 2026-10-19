@@ -81,13 +81,14 @@ func resourceEncryptionRead(
 	if err := resourceEncryptionVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	// Verify existence
-	exists, err := verifyEncryption(ctx, m)
+	state, err := readEncryptionState(ctx, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	if !exists {
-		// Clear the resource ID if it no longer exists
+	// Encryption that was never set up doesn't exist yet. A sealed Bastion (after a reboot, until
+	// the passphrase is entered) still has its encryption set up: keep it in state, or the next
+	// plan would propose to set the encryption up again.
+	if state.SealState == encryptionNeedSetup {
 		d.SetId("")
 
 		return nil
@@ -171,45 +172,6 @@ func resourceEncryptionDelete(
 	return nil
 }
 
-func verifyEncryption(
-	ctx context.Context, m interface{},
-) (bool, error) {
-	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/encryption", http.MethodGet, nil)
-	if err != nil {
-		return false, err
-	}
-
-	if code != http.StatusOK {
-		return false, fmt.Errorf("API didn't return OK: %d with body:\n%s", code, body)
-	}
-
-	// Check if encryption exists
-	var result map[string]interface{}
-	err = json.Unmarshal([]byte(body), &result)
-	if err != nil {
-		return false, fmt.Errorf("unmarshaling JSON: %w", err)
-	}
-
-	// Check if encryption status exists
-	var encryptionStatus string
-	switch c.bastionAPIVersion {
-	case "3.8":
-		encryptionStatus, _ = result["encryption"].(string)
-		if encryptionStatus != "ready" {
-			return false, nil // Return false if encryption is not "ready"
-		}
-	case "3.12":
-		encryptionStatus, _ = result["sealed_state"].(string)
-		if encryptionStatus != "unsealed" {
-			return false, nil // Return false if encryption is not "unsealed"
-		}
-	}
-
-	// If encryption is ready (or unsealed for 3.12), return true
-	return true, nil
-}
-
 func prepareEncryptionJSON(d *schema.ResourceData, update bool) jsonEncryption {
 	var jsonData jsonEncryption
 
@@ -228,4 +190,44 @@ func resourceEncryptionImport(
 	d.SetId("encryption")
 
 	return []*schema.ResourceData{d}, nil
+}
+
+const (
+	encryptionNeedSetup = "need_setup"
+	encryptionSealed    = "sealed"
+	encryptionUnsealed  = "unsealed"
+)
+
+// jsonEncryptionState is the response of GET /encryption. API 3.8 renamed the fields "encryption"
+// to "seal_state" and "security_level" to "encryption_mode", so both supported API versions (3.8
+// and 3.12) return these ones (checked on a Bastion 12.4).
+type jsonEncryptionState struct {
+	SealState      string `json:"seal_state"`
+	EncryptionMode string `json:"encryption_mode"`
+}
+
+// readEncryptionState returns the encryption state of the Bastion. seal_state is need_setup
+// (encryption never set up), sealed (set up, waiting for the passphrase after a reboot) or
+// unsealed (ready for use).
+func readEncryptionState(
+	ctx context.Context, m interface{},
+) (jsonEncryptionState, error) {
+	c := m.(*Client)
+	var state jsonEncryptionState
+	body, code, err := c.newRequest(ctx, "/encryption", http.MethodGet, nil)
+	if err != nil {
+		return state, err
+	}
+	if code != http.StatusOK {
+		return state, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
+	}
+	if err := json.Unmarshal([]byte(body), &state); err != nil {
+		return state, fmt.Errorf("unmarshaling json: %w", err)
+	}
+	switch state.SealState {
+	case encryptionNeedSetup, encryptionSealed, encryptionUnsealed:
+		return state, nil
+	default:
+		return state, fmt.Errorf("unexpected seal_state %q in the encryption state:\n%s", state.SealState, body)
+	}
 }

@@ -26,6 +26,14 @@ func dataSourceEncryption() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"seal_state": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"encryption_mode": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -45,18 +53,26 @@ func dataSourceEncryptionRead(
 	if err := dataSourceEncryptionVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	enabled, err := verifyEncryption(ctx, m)
+	state, err := readEncryptionState(ctx, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	fillSourceEncryption(d, enabled)
+	fillSourceEncryption(d, state)
 	d.SetId("encryption")
 
 	return nil
 }
 
-func fillSourceEncryption(d *schema.ResourceData, enabled bool) {
-	if tfErr := d.Set("enabled", enabled); tfErr != nil {
+// enabled is whether the encryption is set up, sealed or not: seal_state tells whether the
+// Bastion waits for its passphrase.
+func fillSourceEncryption(d *schema.ResourceData, state jsonEncryptionState) {
+	if tfErr := d.Set("enabled", state.SealState != encryptionNeedSetup); tfErr != nil {
+		panic(tfErr)
+	}
+	if tfErr := d.Set("seal_state", state.SealState); tfErr != nil {
+		panic(tfErr)
+	}
+	if tfErr := d.Set("encryption_mode", state.EncryptionMode); tfErr != nil {
 		panic(tfErr)
 	}
 }
