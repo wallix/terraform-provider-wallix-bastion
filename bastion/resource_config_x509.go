@@ -214,7 +214,7 @@ func deleteConfigX509(ctx context.Context, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	if !deleteDone(code) {
+	if !deleteDone(code, body) {
 		return fmt.Errorf("API returned error: %d with body:\n%s", code, body)
 	}
 

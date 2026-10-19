@@ -345,7 +345,7 @@ func deleteApplicationLocalDomainAccountCredential(
 			}
 		}
 	}
-	if !deleteDone(code) {
+	if !deleteDone(code, body) {
 		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
