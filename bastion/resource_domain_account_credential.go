@@ -360,11 +360,28 @@ func deleteDomainAccountCredential(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) error {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx,
-		"/domains/"+d.Get(skDomainID).(string)+"/accounts/"+d.Get(skAccountID).(string)+"/credentials/"+d.Id(),
-		http.MethodDelete, nil)
+	domainID := d.Get(skDomainID).(string)
+	accountID := d.Get(skAccountID).(string)
+	credentials := "/domains/" + domainID + "/accounts/" + accountID + "/credentials/"
+	body, code, err := c.newRequest(ctx, credentials+d.Id(), http.MethodDelete, nil)
 	if err != nil {
 		return err
+	}
+	if code == http.StatusNotFound {
+		// A rotation recreates the credential under a new id, which the read only follows after a
+		// refresh: without one (-refresh=false, a saved plan), delete the credential of the same
+		// account and type, or the rotated credential would stay on the Bastion out of state.
+		rotatedID, found, err := searchResourceDomainAccountCredential(ctx,
+			domainID, accountID, d.Get(skType).(string), m)
+		if err != nil {
+			return err
+		}
+		if found && rotatedID != d.Id() {
+			body, code, err = c.newRequest(ctx, credentials+rotatedID, http.MethodDelete, nil)
+			if err != nil {
+				return err
+			}
+		}
 	}
 	if !deleteDone(code) {
 		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
