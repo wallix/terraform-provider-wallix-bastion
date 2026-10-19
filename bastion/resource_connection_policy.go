@@ -43,7 +43,7 @@ func resourceConnectionPolicy() *schema.Resource {
 				// Only sent on creation: changing it replaces the policy, as for type.
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice(
-					[]string{skProtoSSH, "RAWTCPIP", skProtoRDP, skProtoRLOGIN, skProtoTELNET, "VNC"},
+					[]string{skProtoSSH, "RAWTCPIP", skProtoRDP, skProtoRLOGIN, skProtoTELNET, "VNC", skProtoWEBAPP},
 					false,
 				),
 			},
@@ -53,7 +53,9 @@ func resourceConnectionPolicy() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice(
-					[]string{skProtoSSH, "RAWTCPIP", skProtoRDP, "RDP-JUMPHOST", skProtoRLOGIN, skProtoTELNET, "VNC"},
+					[]string{
+						skProtoSSH, "RAWTCPIP", skProtoRDP, "RDP-JUMPHOST", skProtoRLOGIN, skProtoTELNET, "VNC", skProtoWEBAPP,
+					},
 					false,
 				),
 			},
@@ -285,6 +287,11 @@ func prepareConnectionPolicyJSON(
 	}
 	if newResource {
 		jsonData.Protocol = d.Get(skProtocol).(string)
+		// WEBAPP connection policies don't exist before API v3.12.
+		if semver.Compare(apiVersion, VersionWallixAPI312) < 0 &&
+			(jsonData.Protocol == skProtoWEBAPP || d.Get(skType).(string) == skProtoWEBAPP) {
+			return jsonData, fmt.Errorf("%s connection policy not available with api version %s", skProtoWEBAPP, apiVersion)
+		}
 		if semver.Compare(apiVersion, VersionWallixAPI312) >= 0 {
 			if v := d.Get(skType).(string); v != "" {
 				jsonData.Type = v
