@@ -6,12 +6,15 @@ FEATURES:
 
 - add `wallix-bastion_config_x509_crl` resource and data source (CRL revocation check of the X509 authentication certificates, `/config/x509/crl`)
 - add `wallix-bastion_config_x509_ocsp` resource and data source (OCSP revocation check of the X509 authentication certificates, `/config/x509/ocsp`)
+- add `wallix-bastion_configoption` resource to manage options of a configuration file (requires API v3.12+ and the REST API option `preview_resources` enabled on the Bastion); only the options set in `values` are managed, destroying the resource leaves the options unchanged on the Bastion; numbers in `values` are adapted to the type of the option before each update (a whole number is sent as `60.0` for a `float` option, which the API requires but `jsonencode` never produces, and a number is sent as a string for a `string` or `option` option), and a section set with something other than an object, or an option set with an object, returns a clear error instead of the API internal error
 
 ENHANCEMENTS:
 
 - **resource/wallix-bastion_connection_policy**: accept `WEBAPP` for `protocol` and `type` (API v3.12+); creating a `WEBAPP` policy with an older API version returns an error before the creation request is sent
 - **resource/wallix-bastion_connection_policy**: rewrite the documentation, whose examples used authentication methods the provider rejects (`password`, `public_key`, `ntlm`) and options that don't exist; document that `options` must hold the complete set of options returned by the API, otherwise every plan shows a difference, and how to copy an existing policy (e.g. a default one) with the data source while changing some of its options
 - **data-source/wallix-bastion_connection_policy**: fix the documentation example (`wallix-bastion_device_service` requires `protocol`) and the listed authentication methods
+- **data-source/wallix-bastion_configoption**: add `values` attribute, the option values as a JSON object in the format of the resource `values` argument
+- **data-source/wallix-bastion_configoption**: rewrite the documentation, which described arguments and attributes that don't exist (`option_name`, `value`)
 
 BUG FIXES:
 
