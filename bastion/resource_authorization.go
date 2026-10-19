@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	"slices"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -291,7 +290,7 @@ func searchResourceAuthorization(
 ) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
-		"/authorizations/?q=authorization_name="+url.QueryEscape(authorizationName), http.MethodGet, nil)
+		"/authorizations/?"+searchQuery("authorization_name", authorizationName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}

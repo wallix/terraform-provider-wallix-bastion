@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	"slices"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -396,7 +395,7 @@ func searchResourceProfile(
 	string, bool, error,
 ) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/profiles/?q=profile_name="+url.QueryEscape(profileName), http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/profiles/?"+searchQuery("profile_name", profileName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}

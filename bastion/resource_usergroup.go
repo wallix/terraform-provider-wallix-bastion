@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	"slices"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -219,7 +218,7 @@ func searchResourceUserGroup(
 	string, bool, error,
 ) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/usergroups/?q=group_name="+url.QueryEscape(groupName), http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/usergroups/?"+searchQuery("group_name", groupName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}

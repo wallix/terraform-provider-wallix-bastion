@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	"slices"
 	"strings"
 
@@ -240,7 +239,7 @@ func searchResourceDomain(
 	string, bool, error,
 ) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/domains/?q=domain_name="+url.QueryEscape(domainName), http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/domains/?"+searchQuery("domain_name", domainName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}

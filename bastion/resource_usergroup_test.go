@@ -99,7 +99,8 @@ resource "wallix-bastion_usergroup" "testacc_Usergroup" {
 }
 
 // The name is sent in the search before the creation and on import: unescaped, the creation
-// failed with "not found after POST" and the import didn't find the group.
+// failed with "not found after POST" and the import didn't find the group, and "&&", "||" and
+// "\" were read as part of the search expression.
 func TestAccResourceUserGroup_nameWithSpecialCharacters(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -108,7 +109,7 @@ func TestAccResourceUserGroup_nameWithSpecialCharacters(t *testing.T) {
 			{
 				Config: `
 resource "wallix-bastion_usergroup" "testacc_UsergroupEsc" {
-  group_name = "testacc_UsergroupEsc a&b+c#d"
+  group_name = "testacc_UsergroupEsc a&b+c#d&&e||f\\g(h)"
   timeframes = ["allthetime"]
 }
 `,
@@ -116,7 +117,7 @@ resource "wallix-bastion_usergroup" "testacc_UsergroupEsc" {
 			{
 				ResourceName:      "wallix-bastion_usergroup.testacc_UsergroupEsc",
 				ImportState:       true,
-				ImportStateId:     "testacc_UsergroupEsc a&b+c#d",
+				ImportStateId:     `testacc_UsergroupEsc a&b+c#d&&e||f\g(h)`,
 				ImportStateVerify: true,
 			},
 		},

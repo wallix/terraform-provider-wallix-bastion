@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -183,7 +182,7 @@ func searchResourceAPIKeyV2(
 	string, bool, error,
 ) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/apikeys-v2/?q=apikey_name="+url.QueryEscape(apikeyName), http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/apikeys-v2/?"+searchQuery("apikey_name", apikeyName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}

@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
 	"slices"
 	"strings"
 
@@ -225,7 +224,7 @@ func searchResourceAuthDomainMapping(
 	c := m.(*Client)
 	body, code, err := c.newRequest(
 		ctx,
-		"/authdomains/"+domainID+"/mappings/?q=user_group="+url.QueryEscape(userGroup),
+		"/authdomains/"+domainID+"/mappings/?"+searchQuery("user_group", userGroup),
 		http.MethodGet,
 		nil,
 	)

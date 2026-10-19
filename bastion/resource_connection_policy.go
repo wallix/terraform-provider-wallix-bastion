@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	"slices"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -203,7 +202,7 @@ func searchResourceConnectionPolicy(
 ) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
-		"/connectionpolicies/?q=connection_policy_name="+url.QueryEscape(connectionPolicyName), http.MethodGet, nil)
+		"/connectionpolicies/?"+searchQuery("connection_policy_name", connectionPolicyName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}

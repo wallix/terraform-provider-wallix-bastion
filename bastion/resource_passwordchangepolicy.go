@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	"slices"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -223,7 +222,7 @@ func searchResourcePasswordChangePolicy(
 ) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
-		"/passwordchangepolicies/?q=password_change_policy_name="+url.QueryEscape(policyName), http.MethodGet, nil)
+		"/passwordchangepolicies/?"+searchQuery("password_change_policy_name", policyName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}

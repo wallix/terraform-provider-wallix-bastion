@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	"slices"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -129,7 +128,7 @@ func readLocalPasswordPolicyOptions(
 ) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
-		"/localpasswordpolicies/?q=password_policy_name="+url.QueryEscape(passwordPolicyName), http.MethodGet, nil)
+		"/localpasswordpolicies/?"+searchQuery("password_policy_name", passwordPolicyName), http.MethodGet, nil)
 	if err != nil {
 		return jsonLocalPasswordPolicy{}, err
 	}

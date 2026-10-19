@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	"slices"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -221,7 +220,7 @@ func searchResourceNotification(
 ) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
-		"/notifications/?q=notification_name="+url.QueryEscape(notificationName), http.MethodGet, nil)
+		"/notifications/?"+searchQuery("notification_name", notificationName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
