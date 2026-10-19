@@ -315,7 +315,8 @@ func searchResourceApplication(
 	string, bool, error,
 ) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/applications/?q=application_name="+applicationName, http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx,
+		"/applications/?"+searchQuery("application_name", applicationName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}

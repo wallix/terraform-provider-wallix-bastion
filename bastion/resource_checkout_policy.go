@@ -196,7 +196,7 @@ func searchResourceCheckoutPolicy(
 ) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
-		"/checkoutpolicies/?q=checkout_policy_name="+checkoutPolicyName, http.MethodGet, nil)
+		"/checkoutpolicies/?"+searchQuery("checkout_policy_name", checkoutPolicyName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}

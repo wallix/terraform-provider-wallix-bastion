@@ -395,7 +395,7 @@ func searchResourceProfile(
 	string, bool, error,
 ) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/profiles/?q=profile_name="+profileName, http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/profiles/?"+searchQuery("profile_name", profileName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}

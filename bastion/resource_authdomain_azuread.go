@@ -239,7 +239,7 @@ func searchResourceAuthDomainAzureAD(
 	string, bool, error,
 ) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/authdomains/?q=domain_name="+domainName, http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/authdomains/?"+searchQuery("domain_name", domainName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}

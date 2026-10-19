@@ -239,7 +239,7 @@ func searchResourceDeviceLocalDomain(
 ) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/devices/"+deviceID+
-		"/localdomains/?q=domain_name="+domainName, http.MethodGet, nil)
+		"/localdomains/?"+searchQuery("domain_name", domainName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}

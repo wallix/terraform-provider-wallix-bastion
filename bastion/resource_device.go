@@ -285,7 +285,7 @@ func searchResourceDevice(
 	string, bool, error,
 ) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/devices/?q=device_name="+deviceName, http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/devices/?"+searchQuery("device_name", deviceName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}

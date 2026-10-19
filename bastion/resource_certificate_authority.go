@@ -181,7 +181,8 @@ func searchResourceCertificateAuthority(
 ) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
-		"/certificate_authorities/?q=certificate_authority_name="+certificateAuthorityName, http.MethodGet, nil)
+		"/certificate_authorities/?"+searchQuery("certificate_authority_name", certificateAuthorityName),
+		http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}

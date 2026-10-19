@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+FEATURES:
+
+- add `wallix-bastion_config_x509_crl` resource and data source (CRL revocation check of the X509 authentication certificates, `/config/x509/crl`)
+- add `wallix-bastion_config_x509_ocsp` resource and data source (OCSP revocation check of the X509 authentication certificates, `/config/x509/ocsp`)
+
+ENHANCEMENTS:
+
+- **resource/wallix-bastion_connection_policy**: accept `WEBAPP` for `protocol` and `type` (API v3.12+); creating a `WEBAPP` policy with an older API version returns an error before the creation request is sent
+- **resource/wallix-bastion_connection_policy**: rewrite the documentation, whose examples used authentication methods the provider rejects (`password`, `public_key`, `ntlm`) and options that don't exist; document that `options` must hold the complete set of options returned by the API, otherwise every plan shows a difference, and how to copy an existing policy (e.g. a default one) with the data source while changing some of its options
+- **data-source/wallix-bastion_connection_policy**: fix the documentation example (`wallix-bastion_device_service` requires `protocol`) and the listed authentication methods
+
 BUG FIXES:
 
 - **provider**: reuse the HTTP connections to the Bastion instead of opening a new one for every API request and leaving it open (one client per provider instance, at most 10 connections, idle ones closed after 4 seconds); with a few dozen API calls within seconds, a Bastion 12.4 stopped accepting new connections and requests failed at random with `context deadline exceeded`
@@ -17,6 +28,7 @@ BUG FIXES:
 - **resource/wallix-bastion_config_x509**, **data-source/wallix-bastion_config_x509**: mark `server_private_key` as sensitive; the private key was shown in plans
 - **resource/wallix-bastion_domain_account_credential**: after a rotation recreated the credential with a new id, the read dropped it from state and every following apply failed with `already exists`; the read now looks the credential up by account and type, as the device and application variants do since 0.15.0, and a deleted account no longer makes the read fail
 - **resource/wallix-bastion_device_localdomain_account_credential**, **resource/wallix-bastion_application_localdomain_account_credential**: fixed every plan failing with `api doesn't return OK: 404` once the account, local domain, device or application of the credential was deleted outside of Terraform; the credential is now dropped from state, as the domain variant does
+- **provider**: escape the name in the API searches by name (`?q=<field>=<name>`) that the resources run before a creation and on import, and that the data sources use; a name with `&`, `+`, `#` or a space was cut or altered (`a+b` was searched as `a b` on a Bastion 12.4), so the creation of `a&b` failed with `already exists` when `a` existed, and its import imported `a`; the name is also escaped for the Bastion search expression, where a name with `&&` or `||` failed with `Invalid expression` and one with `\` was not found
 
 NOTES:
 

@@ -248,7 +248,7 @@ func searchResourceDomainAccount(
 ) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
-		"/domains/"+domainID+"/accounts/?q=account_name="+accountName, http.MethodGet, nil)
+		"/domains/"+domainID+"/accounts/?"+searchQuery("account_name", accountName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
