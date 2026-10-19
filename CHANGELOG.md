@@ -4,8 +4,8 @@
 
 FEATURES:
 
-- add `wallix-bastion_config_x509_crl` resource and data source to configure the CRL revocation check of the certificates used for X509 authentication (`/config/x509/crl`); the CRL is either downloaded by the Bastion from `crl_auto_fetch` while the configuration is applied (the URL must be reachable from the Bastion, otherwise the apply fails) or uploaded with `crl_file`, which the API never returns (changes made to it outside of Terraform aren't detected, and a failed upload keeps the previous file in state so that the next plan retries it); `crl_auto_fetch` is sent empty when unset, since uploading a file alone leaves the previous URL on the Bastion; destroying the resource leaves the check as configured on the Bastion, since disabling it would silently weaken certificate validation
-- add `wallix-bastion_config_x509_ocsp` resource and data source to configure the OCSP revocation check of the certificates used for X509 authentication (`/config/x509/ocsp`); every argument is sent on each update, so removing one from the configuration resets it on the Bastion; destroying the resource leaves the check as configured on the Bastion
+- add `wallix-bastion_config_x509_crl` resource and data source (CRL revocation check of the X509 authentication certificates, `/config/x509/crl`)
+- add `wallix-bastion_config_x509_ocsp` resource and data source (OCSP revocation check of the X509 authentication certificates, `/config/x509/ocsp`)
 
 ENHANCEMENTS:
 
