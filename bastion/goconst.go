@@ -68,6 +68,7 @@ const (
 	skPrivateKey                     = "private_key"
 	skProfile                        = "profile"
 	skProfiles                       = "profiles"
+	skPropagateCredentialChange      = "propagate_credential_change"
 	skProtoRDP                       = "RDP"
 	skProtoRLOGIN                    = "RLOGIN"
 	skProtoSSH                       = "SSH"

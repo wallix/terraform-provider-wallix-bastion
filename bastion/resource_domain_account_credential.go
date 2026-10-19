@@ -23,6 +23,7 @@ func resourceDomainAccountCredential() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceDomainAccountCredentialImport,
 		},
+		CustomizeDiff: validateDomainAccountCredentialPropagate,
 		Schema: map[string]*schema.Schema{
 			skDomainID: {
 				Type:     schema.TypeString,
@@ -61,7 +62,7 @@ func resourceDomainAccountCredential() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"propagate_credential_change": {
+			skPropagateCredentialChange: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -126,6 +127,13 @@ func resourceDomainAccountCredentialCreate(
 		}
 	}
 	d.SetId(id)
+	// The credential exists on the Bastion from here: if the propagation fails, the resource is
+	// saved as tainted and replaced on the next apply, instead of leaving it out of state.
+	if d.Get(skPropagateCredentialChange).(bool) {
+		if err := propagateDomainAccountCredential(ctx, d, m); err != nil {
+			return diag.FromErr(err)
+		}
+	}
 
 	return resourceDomainAccountCredentialRead(ctx, d, m)
 }
@@ -279,78 +287,74 @@ func addDomainAccountCredential(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (string, error) {
 	c := m.(*Client)
-	propagate := d.Get("propagate_credential_change").(bool)
-	jsonData := prepareDomainAccountCredentialJSON(d, propagate, true)
-
 	body, headers, code, err := c.newRequestWithHeaders(ctx,
 		"/domains/"+d.Get(skDomainID).(string)+"/accounts/"+d.Get(skAccountID).(string)+"/credentials/",
-		http.MethodPost, jsonData)
+		http.MethodPost, prepareDomainAccountCredentialJSON(d))
 	if err != nil {
 		return "", err
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
 		return "", fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
-	id := headers.Get("X-Object-Id")
 
-	if propagate {
-		accountID := d.Get(skAccountID)
-		jsonDataPropagate := prepareDomainAccountCredentialJSON(d, propagate, false)
-
-		body, code, err = c.newRequest(ctx,
-			fmt.Sprintf("/accountchangepassword/%s/password", accountID),
-			http.MethodPut, jsonDataPropagate)
-		if err != nil {
-			return "", err
-		}
-		if code != http.StatusOK && code != http.StatusNoContent {
-			return "", fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
-		}
-	}
-
-	return id, nil
+	return headers.Get("X-Object-Id"), nil
 }
 
 func updateDomainAccountCredential(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) error {
-	// Extract the client from the meta parameter
-	client, ok := m.(*Client)
-	if !ok {
-		return errors.New("failed to cast interface to *Client")
+	if d.Get(skPropagateCredentialChange).(bool) {
+		// Only a new value is pushed to the target host: enabling the propagation alone changes
+		// nothing on it.
+		if !d.HasChanges(skPassword, skPassphrase) {
+			return nil
+		}
+
+		return propagateDomainAccountCredential(ctx, d, m)
 	}
-
-	// Get the account ID and domain ID from the resource data
-	accountID, ok := d.Get(skAccountID).(string)
-	if !ok {
-		return errors.New("failed to get account_id from resource data")
-	}
-
-	domainID, ok := d.Get(skDomainID).(string)
-	if !ok {
-		return errors.New("failed to get domain_id from resource data")
-	}
-
-	// Check the value of propagate_credential_change option
-	propagate := d.Get("propagate_credential_change").(bool)
-
-	// Prepare the JSON data for the request
-	jsonData := prepareDomainAccountCredentialJSON(d, propagate, false)
-	var url string
-	if propagate {
-		url = fmt.Sprintf("/accountchangepassword/%s/password", accountID)
-	} else {
-		url = fmt.Sprintf("/domains/%s/accounts/%s/credentials/%s", domainID, accountID, d.Id())
-	}
-
-	// Make the appropriate request based on the propagate_credential_change value
-	body, code, err := client.newRequest(ctx, url, http.MethodPut, jsonData)
+	c := m.(*Client)
+	body, code, err := c.newRequest(ctx,
+		"/domains/"+d.Get(skDomainID).(string)+"/accounts/"+d.Get(skAccountID).(string)+"/credentials/"+d.Id(),
+		http.MethodPut, prepareDomainAccountCredentialJSON(d))
 	if err != nil {
-		return fmt.Errorf("request failed: %w", err)
+		return err
+	}
+	if code != http.StatusOK && code != http.StatusNoContent {
+		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
+	return nil
+}
+
+// propagateDomainAccountCredential changes the credential on the Bastion and on the target host of
+// the account (PUT /accountchangepassword/<account_id>/<password|ssh_key>). Per the API, an empty
+// body makes the Bastion generate a new value and change it on the target host: the configured
+// value is always sent, and a missing one is an error instead of an unrequested change.
+func propagateDomainAccountCredential(
+	ctx context.Context, d *schema.ResourceData, m interface{},
+) error {
+	c := m.(*Client)
+	credentialType := d.Get(skType).(string)
+	var jsonData jsonCredential
+	if credentialType == skPassword {
+		jsonData.Password = d.Get(skPassword).(string)
+		if jsonData.Password == "" {
+			return errors.New(errPropagateWithoutPassword)
+		}
+	} else {
+		jsonData.PrivateKey = d.Get(skPrivateKey).(string)
+		jsonData.Passphrase = d.Get(skPassphrase).(string)
+		if jsonData.PrivateKey == "" || strings.HasPrefix(jsonData.PrivateKey, "generate:") {
+			return errors.New(errPropagateWithoutPrivateKey)
+		}
+	}
+	body, code, err := c.newRequest(ctx,
+		"/accountchangepassword/"+d.Get(skAccountID).(string)+"/"+credentialType, http.MethodPut, jsonData)
+	if err != nil {
+		return err
+	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return fmt.Errorf("API didn't return OK or NoContent: %d with body:\n%s", code, body)
+		return fmt.Errorf("propagating the credential to the target host: %d with body:\n%s", code, body)
 	}
 
 	return nil
@@ -390,33 +394,50 @@ func deleteDomainAccountCredential(
 	return nil
 }
 
-func prepareDomainAccountCredentialJSON(
-	d *schema.ResourceData,
-	propagate bool,
-	propagateAdd bool,
-) jsonCredential {
-	var jsonData jsonCredential
-
-	if propagate {
-		// Only include the password key
+func prepareDomainAccountCredentialJSON(d *schema.ResourceData) jsonCredential {
+	jsonData := jsonCredential{Type: d.Get(skType).(string)}
+	switch jsonData.Type {
+	case skPassword:
 		jsonData.Password = d.Get(skPassword).(string)
-		if propagateAdd {
-			jsonData.Type = d.Get(skType).(string)
-		}
-	} else {
-		// Include the type and other fields based on the type
-		jsonData.Type = d.Get(skType).(string)
-
-		switch jsonData.Type {
-		case skPassword:
-			jsonData.Password = d.Get(skPassword).(string)
-		case "ssh_key":
-			jsonData.PrivateKey = d.Get(skPrivateKey).(string)
-			jsonData.Passphrase = d.Get(skPassphrase).(string)
-		}
+	case "ssh_key":
+		jsonData.PrivateKey = d.Get(skPrivateKey).(string)
+		jsonData.Passphrase = d.Get(skPassphrase).(string)
 	}
 
 	return jsonData
+}
+
+const (
+	errPropagateWithoutPassword = "propagate_credential_change requires password: without it, the Bastion " +
+		"generates a new password and changes it on the target host"
+	errPropagateWithoutPrivateKey = "propagate_credential_change requires an explicit private_key, not a " +
+		"generate: one: without it, the Bastion generates a new SSH key and changes it on the target host"
+)
+
+// validateDomainAccountCredentialPropagate refuses at plan time a propagation without the value to
+// propagate, which the Bastion would replace with a generated one on the target host. A value not
+// known yet (another resource's result) is checked again at apply time.
+func validateDomainAccountCredentialPropagate(
+	_ context.Context, diff *schema.ResourceDiff, _ interface{},
+) error {
+	if !diff.Get(skPropagateCredentialChange).(bool) {
+		return nil
+	}
+	switch diff.Get(skType).(string) {
+	case skPassword:
+		if diff.NewValueKnown(skPassword) && diff.Get(skPassword).(string) == "" {
+			return errors.New(errPropagateWithoutPassword)
+		}
+	default: // ssh_key, the only other type the schema accepts
+		if !diff.NewValueKnown(skPrivateKey) {
+			return nil
+		}
+		if key := diff.Get(skPrivateKey).(string); key == "" || strings.HasPrefix(key, "generate:") {
+			return errors.New(errPropagateWithoutPrivateKey)
+		}
+	}
+
+	return nil
 }
 
 func readDomainAccountCredentialOptions(
