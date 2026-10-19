@@ -380,7 +380,9 @@ func deleteApplication(
 	if err != nil {
 		return err
 	}
-	if code == http.StatusConflict {
+	// Only the conflict caused by an attached account is solved by detaching it: for any other one,
+	// detaching would change the accounts and the deletion would still fail.
+	if code == http.StatusConflict && strings.Contains(body, "still associated") {
 		detached, err := detachApplicationFromDomainAccounts(ctx, d.Id(), m)
 		if err != nil {
 			return fmt.Errorf("detaching the application from global domain accounts: %w", err)
@@ -389,6 +391,11 @@ func deleteApplication(
 			body, code, err = c.newRequest(ctx, "/applications/"+d.Id(), http.MethodDelete, nil)
 			if err != nil {
 				return err
+			}
+			if code != http.StatusOK && code != http.StatusNoContent {
+				return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s\n"+
+					"(the application was detached from %d global domain account(s) before this retry)",
+					code, body, detached)
 			}
 		}
 	}
@@ -417,7 +424,10 @@ func detachApplicationFromDomainAccounts(
 	}
 	// An account lists the application as "<name>:APP" or "<name>:WEBAPP", but the detach request
 	// only takes "<name>:APP": "<name>:WEBAPP" is read as the service WEBAPP of a device <name>.
-	prefix := app.ApplicationName + ":"
+	// The match is exact: "<name>:<service>" is a service of a device with the same name.
+	isApplication := func(r string) bool {
+		return r == app.ApplicationName+":APP" || r == app.ApplicationName+":WEBAPP"
+	}
 	detachResource := url.PathEscape(app.ApplicationName + ":APP")
 	detached := 0
 	for _, domainName := range *app.GlobalDomains {
@@ -444,13 +454,17 @@ func detachApplicationFromDomainAccounts(
 			return detached, fmt.Errorf("unmarshaling json: %w", err)
 		}
 		for _, account := range accounts {
-			if !slices.ContainsFunc(account.Resources, func(r string) bool { return strings.HasPrefix(r, prefix) }) {
+			if !slices.ContainsFunc(account.Resources, isApplication) {
 				continue
 			}
 			body, code, err := c.newRequest(ctx,
 				"/domains/"+domainID+"/accounts/"+account.ID+"/resource/"+detachResource, http.MethodDelete, nil)
 			if err != nil {
 				return detached, err
+			}
+			if code == http.StatusNotFound {
+				// Already detached, for example by a concurrent deletion.
+				continue
 			}
 			if code != http.StatusOK && code != http.StatusNoContent {
 				return detached, fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)

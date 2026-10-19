@@ -381,3 +381,85 @@ resource "wallix-bastion_targetgroup" "testacc_AppAttachedAccount" {
 
 	return config
 }
+
+// A device with the same name as the application has resources "<name>:<service>" in the accounts
+// of the domain: they are not the application, and the destroy used to fail trying to detach it
+// from them (404).
+func TestAccResourceApplication_deleteWithSameNameDevice(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceApplicationSameNameDevice(true),
+			},
+			{
+				Config: testAccResourceApplicationSameNameDevice(false),
+			},
+		},
+	})
+}
+
+func testAccResourceApplicationSameNameDevice(withApplication bool) string {
+	config := `
+resource "wallix-bastion_domain" "testacc_AppSameNameDevice" {
+  domain_name = "testacc_AppSameNameDevice"
+}
+
+resource "wallix-bastion_device" "testacc_AppSameNameDevice" {
+  device_name = "testacc_AppSameNameDevice_app"
+  host        = "192.168.100.9"
+}
+
+resource "wallix-bastion_device_service" "testacc_AppSameNameDevice" {
+  device_id         = wallix-bastion_device.testacc_AppSameNameDevice.id
+  service_name      = "ssh"
+  connection_policy = "SSH"
+  port              = 22
+  protocol          = "SSH"
+  subprotocols      = ["SSH_SHELL_SESSION"]
+  global_domains    = [wallix-bastion_domain.testacc_AppSameNameDevice.domain_name]
+}
+
+resource "wallix-bastion_domain_account" "testacc_AppSameNameDevice_dev" {
+  domain_id     = wallix-bastion_domain.testacc_AppSameNameDevice.id
+  account_name  = "testacc_AppSameNameDevice_dev"
+  account_login = "testacc_AppSameNameDevice_dev"
+  resources     = ["testacc_AppSameNameDevice_app:ssh"]
+  depends_on    = [wallix-bastion_device_service.testacc_AppSameNameDevice]
+}
+
+resource "wallix-bastion_domain_account" "testacc_AppSameNameDevice_app" {
+  domain_id     = wallix-bastion_domain.testacc_AppSameNameDevice.id
+  account_name  = "testacc_AppSameNameDevice_app"
+  account_login = "testacc_AppSameNameDevice_app"
+}
+`
+	if withApplication {
+		config += `
+resource "wallix-bastion_application" "testacc_AppSameNameDevice" {
+  application_name  = "testacc_AppSameNameDevice_app"
+  category          = "web_application"
+  connection_policy = "WEBAPP"
+  application_url   = "https://example.com/login"
+  global_domains    = [wallix-bastion_domain.testacc_AppSameNameDevice.domain_name]
+  depends_on = [
+    wallix-bastion_domain_account.testacc_AppSameNameDevice_app,
+    wallix-bastion_domain_account.testacc_AppSameNameDevice_dev,
+  ]
+}
+
+resource "wallix-bastion_targetgroup" "testacc_AppSameNameDevice" {
+  group_name = "testacc_AppSameNameDevice"
+  session_accounts {
+    account     = wallix-bastion_domain_account.testacc_AppSameNameDevice_app.account_name
+    domain      = wallix-bastion_domain.testacc_AppSameNameDevice.domain_name
+    domain_type = "global"
+    application = wallix-bastion_application.testacc_AppSameNameDevice.application_name
+  }
+}
+`
+	}
+
+	return config
+}
