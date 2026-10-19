@@ -2,6 +2,8 @@ module github.com/wallix/terraform-provider-wallix-bastion
 
 go 1.26.0
 
+toolchain go1.26.9
+
 require (
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/hashicorp/go-cty v1.5.0

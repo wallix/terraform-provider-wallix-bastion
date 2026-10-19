@@ -18,6 +18,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+- **provider**: build with Go 1.26.9 (`toolchain` directive in `go.mod`); the release binaries were built with Go 1.26.0, whose standard library has 26 known vulnerabilities reachable from the provider, mostly in `net/http` and `crypto/tls` (govulncheck)
 - **provider**: reuse the HTTP connections to the Bastion instead of opening a new one for every API request and leaving it open (one client per provider instance, at most 10 connections, idle ones closed after 4 seconds); with a few dozen API calls within seconds, a Bastion 12.4 stopped accepting new connections and requests failed at random with `context deadline exceeded`
 - **resource/wallix-bastion_application_localdomain_account**: fixed every update wiping the password of the account; the update replaces the credentials of the account (`force=true`) and always sent them, empty when `password` isn't set (the documented setup with a `wallix-bastion_application_localdomain_account_credential` resource); they are now only sent on creation and when `password` changes
 - **resource/wallix-bastion_user**, **resource/wallix-bastion_timeframe** (and their data sources): escape the name in the request path; a name with `#` or `?` was cut there, so that destroying the user `a#b` deleted the user `a` (checked on a Bastion 12.4), and updating it updated `a`
