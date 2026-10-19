@@ -18,7 +18,7 @@ const (
 
 // crl_auto_fetch is always sent: uploading a crl_file doesn't clear the URL on the Bastion, an
 // empty crl_auto_fetch does (also in the same PUT as crl_file). crl_file is write-only, so it is
-// only sent when set.
+// only sent on creation and when it changes.
 type jsonConfigX509CRL struct {
 	CRLAutoFetch string `json:"crl_auto_fetch"`
 	CRLCheck     bool   `json:"crl_check"`
@@ -68,7 +68,7 @@ func resourceConfigX509CRLCreate(
 	if err := resourceConfigX509CRLVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := updateConfigX509CRL(ctx, d, m); err != nil {
+	if err := updateConfigX509CRL(ctx, d, m, true); err != nil {
 		return diag.FromErr(err)
 	}
 	// Since the resource does not have a unique ID, use a static one.
@@ -103,7 +103,7 @@ func resourceConfigX509CRLUpdate(
 	// Keep the previous state if the update fails: crl_file is never read back, so a new file
 	// saved in state after a failed upload would hide the failure from the next plan.
 	d.Partial(true)
-	if err := updateConfigX509CRL(ctx, d, m); err != nil {
+	if err := updateConfigX509CRL(ctx, d, m, false); err != nil {
 		return diag.FromErr(err)
 	}
 	d.Partial(false)
@@ -151,10 +151,10 @@ func readConfigX509CRLOptions(
 }
 
 func updateConfigX509CRL(
-	ctx context.Context, d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{}, newResource bool,
 ) error {
 	c := m.(*Client)
-	jsonData := prepareConfigX509CRLJSON(d)
+	jsonData := prepareConfigX509CRLJSON(d, newResource)
 	body, code, err := c.newRequest(ctx, configX509CRLPath, http.MethodPut, jsonData)
 	if err != nil {
 		return err
@@ -166,12 +166,19 @@ func updateConfigX509CRL(
 	return nil
 }
 
-func prepareConfigX509CRLJSON(d *schema.ResourceData) jsonConfigX509CRL {
-	return jsonConfigX509CRL{
+// crl_file is only sent on creation and when it changes: the state keeps the last file sent, and
+// sending it again on an unrelated update would replace a newer CRL uploaded on the Bastion, such
+// as an emergency revocation, without the plan showing it.
+func prepareConfigX509CRLJSON(d *schema.ResourceData, newResource bool) jsonConfigX509CRL {
+	jsonData := jsonConfigX509CRL{
 		CRLAutoFetch: d.Get(skCRLAutoFetch).(string),
 		CRLCheck:     d.Get(skCRLCheck).(bool),
-		CRLFile:      d.Get(skCRLFile).(string),
 	}
+	if newResource || d.HasChange(skCRLFile) {
+		jsonData.CRLFile = d.Get(skCRLFile).(string)
+	}
+
+	return jsonData
 }
 
 // crl_file is write-only: the API doesn't return it, so it is kept as configured in state.

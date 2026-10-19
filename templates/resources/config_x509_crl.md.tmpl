@@ -64,10 +64,9 @@ The API never returns the CRL file. Terraform can't detect a change made to it o
 Terraform, and an imported resource has no `crl_file` in state: if it is set in the configuration,
 the next apply uploads it again.
 
-The file is also sent again with every update of the resource, even when only `crl_check`
-changes. A CRL uploaded outside of Terraform, for example an emergency revocation from the GUI, is
-then replaced without the plan showing it: when the CRL is managed with Terraform, apply
-revocations through Terraform too.
+The file is only uploaded on creation and when `crl_file` changes in the configuration. A CRL
+uploaded outside of Terraform, for example an emergency revocation from the GUI, is kept by updates
+that don't change `crl_file`, and replaced the next time it changes.
 
 Removing `crl_file` from the configuration doesn't remove the uploaded CRL from the Bastion: the
 provider then sends nothing for the file, and the API has no endpoint to delete it.

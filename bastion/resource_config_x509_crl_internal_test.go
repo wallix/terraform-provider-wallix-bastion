@@ -125,6 +125,25 @@ func TestConfigX509CRLFailedUpdateKeepsPreviousFile(t *testing.T) {
 	}
 }
 
+// crl_file is only sent when it changes: sending the file in state again on an unrelated update
+// would replace a newer CRL uploaded outside of Terraform, such as an emergency revocation.
+func TestConfigX509CRLUpdateWithoutFileChangeKeepsFile(t *testing.T) {
+	mock := newMockSingletonConfig(t, configX509CRLPath,
+		map[string]interface{}{skCRLAutoFetch: "", skCRLCheck: false}, skCRLFile)
+
+	_, diags := applyConfigX509CRL(t, mock,
+		map[string]string{skCRLAutoFetch: "", skCRLCheck: "false", skCRLFile: testCRLPEM},
+		map[string]interface{}{skCRLCheck: true, skCRLFile: testCRLPEM})
+	if diags.HasError() {
+		t.Fatalf("apply: %v", diags)
+	}
+
+	want := []map[string]interface{}{{skCRLAutoFetch: "", skCRLCheck: true}}
+	if got := mock.putBodies(); !reflect.DeepEqual(got, want) {
+		t.Errorf("PUT bodies = %v, want %v (no crl_file)", got, want)
+	}
+}
+
 func TestConfigX509CRLCreateFailureReturnsError(t *testing.T) {
 	mock := newMockSingletonConfig(t, configX509CRLPath,
 		map[string]interface{}{skCRLAutoFetch: "", skCRLCheck: false}, skCRLFile)
