@@ -393,14 +393,14 @@ func deleteApplication(
 			if err != nil {
 				return err
 			}
-			if code != http.StatusOK && code != http.StatusNoContent {
+			if !deleteDone(code, body) {
 				return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s\n"+
 					"(the application was detached from %d global domain account(s) before this retry)",
 					code, body, detached)
 			}
 		}
 	}
-	if code != http.StatusOK && code != http.StatusNoContent {
+	if !deleteDone(code, body) {
 		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
