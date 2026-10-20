@@ -92,6 +92,11 @@ resource "wallix-bastion_device_service" "vnc" {
 
 ## Usage Notes
 
+### Required subprotocols
+
+An SSH service requires at least one of `subprotocols`, at creation and on update. An RDP service
+accepts none, and removing them clears them on the Bastion.
+
 ### Service Naming
 
 - `service_name`: Must follow naming conventions (alphanumeric and limited special characters)

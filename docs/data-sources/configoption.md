@@ -23,7 +23,8 @@ data "wallix-bastion_configoption" "global" {
 }
 
 output "session_timeout" {
-  value = jsondecode(data.wallix-bastion_configoption.global.values).am.session_timeout
+  value     = jsondecode(data.wallix-bastion_configoption.global.values).am.session_timeout
+  sensitive = true
 }
 ```
 
@@ -44,8 +45,8 @@ output "session_timeout" {
 - `date` (String)
 - `id` (String) The ID of this resource.
 - `name` (String)
-- `options` (List of String)
-- `values` (String)
+- `options` (List of String, Sensitive)
+- `values` (String, Sensitive)
 
 ## Usage Notes
 

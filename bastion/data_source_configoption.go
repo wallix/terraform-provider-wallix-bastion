@@ -47,13 +47,15 @@ func dataSourceConfigoption() *schema.Resource {
 				Computed: true,
 			},
 			"options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:      schema.TypeList,
+				Sensitive: true,
+				Computed:  true,
+				Elem:      &schema.Schema{Type: schema.TypeString},
 			},
 			skValues: {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:      schema.TypeString,
+				Sensitive: true,
+				Computed:  true,
 			},
 		},
 	}

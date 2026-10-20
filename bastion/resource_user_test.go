@@ -90,11 +90,12 @@ resource "wallix-bastion_user" "testacc_User" {
   groups = [
     wallix-bastion_usergroup.testacc_User.group_name,
   ]
-  display_name    = "testacc User"
-  expiration_date = "2032-01-03 00:01"
-  ip_source       = "127.0.0.1"
-  is_disabled     = true
-  ssh_public_key  = tls_private_key.testacc_User.public_key_openssh
+  display_name       = "testacc User"
+  expiration_date    = "2032-01-03 00:01"
+  ip_source          = "127.0.0.1"
+  is_disabled        = true
+  preferred_language = "en"
+  ssh_public_key     = tls_private_key.testacc_User.public_key_openssh
 }
 `
 }

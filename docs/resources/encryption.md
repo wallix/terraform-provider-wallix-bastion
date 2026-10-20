@@ -91,6 +91,22 @@ The Bastion encryption can be in one of the following states (visible via API GE
 - **passphrase**: The Bastion is protected with a passphrase
 - **[hidden]**: The user does not have permissions to read the security level
 
+## Behavior
+
+- **Creation** sets up the encryption of a Bastion in the `need_setup` state only. On a Bastion
+  already set up, it fails without sending any request: import the resource
+  (`terraform import wallix-bastion_encryption.main encryption`), then set `current_passphrase`
+  and `new_passphrase` to change the passphrase.
+- **Changing `new_passphrase`** sends the change with `current_passphrase`. If the Bastion
+  refuses it, the previous passphrase stays in state. Changing only `current_passphrase`, for
+  example after a change, sends nothing.
+- **Refresh** fails while the Bastion is `sealed`: unseal it with its passphrase first. The
+  resource is kept in state, so that no setup request is sent to a sealed Bastion.
+- **On a Bastion set up without a passphrase** (`encryption_mode` is `unprotected`), a
+  passphrase can only be set at setup: any non-empty `new_passphrase` fails at every apply with
+  `400 Cannot change passphrase in security level 0` (checked on a Bastion 12.4.3). Keep
+  `new_passphrase = ""` for such a Bastion.
+
 ## Usage Scenarios
 
 ### Fresh Installation
@@ -309,4 +325,7 @@ Encryption configuration can be imported using the static ID "encryption":
 terraform import wallix-bastion_encryption.main encryption
 ```
 
-**Note**: After import, you must manually set the `new_passphrase` in your Terraform configuration to match the current passphrase to avoid unintended changes.
+**Note**: The API never returns the passphrase, so after an import the state has none: the
+first apply sends a change from `current_passphrase` to `new_passphrase`. Set both to the
+current passphrase. On a Bastion set up without a passphrase, keep `new_passphrase = ""`: there
+is then nothing to send.

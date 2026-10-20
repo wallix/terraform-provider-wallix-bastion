@@ -488,10 +488,8 @@ func prepareApplicationJSON(
 		ConnectionPolicy: d.Get(skConnectionPolicy).(string),
 		Description:      d.Get(skDescription).(string),
 	}
-	if v, ok := d.GetOk("parameters"); ok {
-		parameters := v.(string)
-		jsonData.Parameters = &parameters
-	}
+	// The Bastion keeps parameters when it is omitted, so an emptied one is sent on update to clear it.
+	jsonData.Parameters = applicationStringToSend(d, "parameters", newResource)
 	if v, ok := d.GetOk("tags"); ok {
 		tagsSet := v.(*schema.Set)
 		tagsList := tagsSet.List()
@@ -507,6 +505,9 @@ func prepareApplicationJSON(
 			}
 		}
 		jsonData.Tags = &tags
+	} else if d.HasChange("tags") {
+		// The last tags were removed: an empty list clears them, an omitted one keeps them.
+		jsonData.Tags = &[]map[string]string{}
 	}
 
 	// The category drives validation and the payload on every call, but it is only sent at
