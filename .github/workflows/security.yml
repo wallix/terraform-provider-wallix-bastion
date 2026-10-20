@@ -3,7 +3,7 @@ name: Security Scanning
 
 on:
   push:
-    branches: [main]
+    branches: [main, fix/go-toolchain-security-scan]
   pull_request:
     branches: [main]
   schedule:
