@@ -178,8 +178,11 @@ Optional:
 
 Required:
 
-- `default_target_group` (String)
 - `target_groups` (Set of String)
+
+Optional:
+
+- `default_target_group` (String)
 
 <a id="nestedblock--user_groups_limitation"></a>
 

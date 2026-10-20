@@ -44,6 +44,10 @@ func TestAccResourceApplication_basic(t *testing.T) {
 				),
 			},
 			{
+				// Removing parameters must clear them: the Bastion keeps an omitted value.
+				Config: testAccResourceApplicationCreate(),
+			},
+			{
 				ResourceName:  "wallix-bastion_application.testacc_Appli",
 				ImportState:   true,
 				ImportStateId: "testacc_Appli",

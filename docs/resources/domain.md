@@ -99,6 +99,7 @@ When `enable_password_change = true`:
 - `password_change_policy`: Reference to password policy
 - `password_change_plugin`: Plugin for password changes
 - `password_change_plugin_parameters`: JSON configuration for plugin
+- `admin_account`: Account of the domain the plugin uses to change the passwords. The Bastion only accepts an existing account, and a `wallix-bastion_domain_account` can only be created once the domain exists, so `admin_account` is set by a second apply: the first one creates the domain and the account
 
 ### SSH Certificate Authority
 
@@ -109,6 +110,8 @@ Configure SSH CA for certificate-based authentication:
   - Supported types: RSA_1024, RSA_2048, RSA_4096, RSA_8192, DSA_1024, ECDSA_256, ECDSA_384, ECDSA_521, ED25519
 - `passphrase`: Protect private key with passphrase (4-1024 characters)
 - `ca_public_key`: Read-only, automatically generated from private key
+- Removing `ca_private_key` is refused at plan, since the Bastion keeps the CA key: remove the domain from the configuration to destroy it, then add it back without the key
+- `ca_private_key` isn't read back: after an import, a `generate:` value makes the next apply generate a new CA key, which changes `ca_public_key`; leave it out of the configuration to keep the current key
 
 ### Vault Integration
 
