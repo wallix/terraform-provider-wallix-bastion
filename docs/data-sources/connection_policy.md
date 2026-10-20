@@ -25,6 +25,7 @@ resource "wallix-bastion_device_service" "ssh_service" {
   protocol          = data.wallix-bastion_connection_policy.ssh_policy.protocol
   connection_policy = data.wallix-bastion_connection_policy.ssh_policy.connection_policy_name
   port              = 22
+  subprotocols      = ["SSH_SHELL_SESSION"] # an SSH service requires at least one
 }
 
 # Inspect the policy's protocol and allowed authentication methods
