@@ -180,6 +180,42 @@ func TestUpdateSendsEmptiedLists(t *testing.T) {
 	}
 }
 
+// A value omitted from the update keeps its value on the Bastion (checked on a Bastion 12.4.3):
+// the emptied parameters of an application were never applied.
+func TestUpdateSendsChangedValues(t *testing.T) {
+	stdApplication := func(parameters string) map[string]interface{} {
+		return map[string]interface{}{
+			skConnectionPolicy: skProtoRDP, skTarget: "params-cluster",
+			"paths": []interface{}{map[string]interface{}{
+				skTarget: "Interactive@params-dev:RDP", "program": "params-prog", "working_dir": "",
+			}},
+			"parameters": parameters,
+		}
+	}
+	for name, tc := range map[string]struct {
+		resource      *schema.Resource
+		prior, config map[string]interface{}
+		read, want    string
+	}{
+		"application parameters emptied": {
+			resource: resourceApplication(),
+			prior:    stdApplication("params-value"),
+			config:   stdApplication(""),
+			read: `{"id":"obj-id","application_name":"params-app","category":"standard",` +
+				`"connection_policy":"RDP","target":"params-cluster","parameters":""}`,
+			want: `"parameters":""`,
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			rec := &updateRecorder{}
+			planAndApplyUpdate(t, tc.resource, tc.prior, tc.config, rec.client(t, tc.read))
+			if got := rec.put(t); !strings.Contains(got, tc.want) {
+				t.Errorf("PUT = %s, want %s in the body", got, tc.want)
+			}
+		})
+	}
+}
+
 // The Bastion can't clear the subprotocols of an authorization (400 "At least one subprotocol is
 // required"), even with authorize_sessions = false: removing the last ones replaces it, and adding
 // or changing some is still an update.
