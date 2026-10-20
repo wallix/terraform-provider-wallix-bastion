@@ -267,6 +267,7 @@ resource "wallix-bastion_targetgroup" "testacc_Authorization_sharing" {
 
 // Disabling session sharing was never sent: the authorization kept it enabled on the Bastion.
 func TestAccResourceAuthorization_disableSessionSharing(t *testing.T) {
+	skipBeforeAPI312(t, "Session sharing")
 	resourceName := "wallix-bastion_authorization.testacc_AuthSharing"
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },

@@ -334,6 +334,7 @@ resource "wallix-bastion_application" "testacc_Appli_web" {
 // application from being deleted (409 "still associated with one target"), even after the
 // target group was deleted.
 func TestAccResourceApplication_deleteWithAttachedGlobalAccount(t *testing.T) {
+	skipBeforeAPI312(t, "category = web_application")
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
@@ -390,6 +391,7 @@ resource "wallix-bastion_targetgroup" "testacc_AppAttachedAccount" {
 // of the domain: they are not the application, and the destroy used to fail trying to detach it
 // from them (404).
 func TestAccResourceApplication_deleteWithSameNameDevice(t *testing.T) {
+	skipBeforeAPI312(t, "category = web_application")
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
@@ -466,4 +468,13 @@ resource "wallix-bastion_targetgroup" "testacc_AppSameNameDevice" {
 	}
 
 	return config
+}
+
+// skipBeforeAPI312 skips an acceptance test that needs API v3.12. WALLIX_BASTION_API_VERSION
+// defaults to v3.12 when unset (see provider.go's EnvDefaultFunc).
+func skipBeforeAPI312(t *testing.T, feature string) {
+	t.Helper()
+	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); v != "" && semver.Compare(v, bastion.VersionWallixAPI312) < 0 {
+		t.Skipf("%s requires API %s+, not %s", feature, bastion.VersionWallixAPI312, v)
+	}
 }
