@@ -308,6 +308,14 @@ func prepareUserJSON(d *schema.ResourceData, newResource bool) jsonUser {
 			jsonData.Password = v
 		}
 	}
+	// On update, an omitted field keeps its value on the Bastion: send the changed ones.
+	if !newResource && d.HasChange("preferred_language") {
+		jsonData.PreferredLanguage = d.Get("preferred_language").(string)
+	}
+	if !newResource && d.HasChange("force_change_pwd") {
+		forceChangePwd := d.Get("force_change_pwd").(bool)
+		jsonData.ForceChangePwd = &forceChangePwd
+	}
 
 	if d.HasChanges("groups") {
 		listGroups := d.Get("groups").(*schema.Set).List()
