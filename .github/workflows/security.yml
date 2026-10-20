@@ -41,10 +41,11 @@ jobs:
       # osv-scanner v2: the v1 command left an empty osv-results.sarif in CI, so the upload failed
       # and the following scans were skipped, hidden by continue-on-error. It exits 1 when it finds
       # vulnerabilities, which the upload below reports; any other non-zero exit is a scanner
-      # failure, which now fails the job.
+      # failure, which now fails the job. osv-scanner v2.7.0 requires Go 1.27, newer than the Go
+      # installed above with GOTOOLCHAIN=local: Go downloads that toolchain for this install only.
       - name: Run OSV Scanner (dependency vulnerability scanner)
         run: |
-          go install github.com/google/osv-scanner/v2/cmd/osv-scanner@v2.7.0
+          GOTOOLCHAIN=go1.27.0 go install github.com/google/osv-scanner/v2/cmd/osv-scanner@v2.7.0
           osv-scanner scan source -r --format sarif --output-file osv-results.sarif ./ || [ $? -eq 1 ]
 
       - name: Upload OSV scan results to GitHub Security tab
