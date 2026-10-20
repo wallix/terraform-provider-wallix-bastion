@@ -61,3 +61,26 @@ func TestPrepareDomainJSONSendsChangedGeneratedCAKey(t *testing.T) {
 		}
 	}
 }
+
+// Removing ca_private_key left the CA key active on the Bastion while the state recorded the
+// removal: it is refused at plan, and replacing the key is still planned.
+func TestDomainCAPrivateKeyRemovalRefused(t *testing.T) {
+	for name, r := range map[string]*schema.Resource{
+		"domain": resourceDomain(), "device local domain": resourceDeviceLocalDomain(),
+	} {
+		for newKey, wantErr := range map[string]bool{"": true, "generate:ECDSA_384": false} {
+			t.Run(name+" to "+newKey, func(t *testing.T) {
+				state := &terraform.InstanceState{ID: "ca-id", Attributes: map[string]string{
+					"id": "ca-id", skDeviceID: "ca-device", skDomainName: "ca-domain", skCAPrivateKey: "ca-pem-key",
+				}}
+				config := map[string]interface{}{skDeviceID: "ca-device", skDomainName: "ca-domain"}
+				if newKey != "" {
+					config[skCAPrivateKey] = newKey
+				}
+				if _, err := r.Diff(t.Context(), state, terraform.NewResourceConfigRaw(config), nil); (err != nil) != wantErr {
+					t.Errorf("plan error = %v, want an error: %t", err, wantErr)
+				}
+			})
+		}
+	}
+}

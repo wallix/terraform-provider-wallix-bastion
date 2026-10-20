@@ -3,6 +3,7 @@ package bastion
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"slices"
@@ -39,6 +40,7 @@ func resourceDomain() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceDomainImport,
 		},
+		CustomizeDiff: domainCAPrivateKeyCustomizeDiff,
 		Schema: map[string]*schema.Schema{
 			skDomainName: {
 				Type:     schema.TypeString,
@@ -120,6 +122,20 @@ func resourceDomainVersionCheck(version string) error {
 	}
 
 	return fmt.Errorf("resource wallix-bastion_domain not available with api version %s", version)
+}
+
+// The Bastion can't remove the CA key of a domain or a device local domain (an empty value is
+// ignored, null is refused): a removal would only be recorded in the state, the key staying active.
+func domainCAPrivateKeyCustomizeDiff(
+	_ context.Context, d *schema.ResourceDiff, _ interface{},
+) error {
+	oldKey, newKey := d.GetChange(skCAPrivateKey)
+	if d.NewValueKnown(skCAPrivateKey) && oldKey.(string) != "" && newKey.(string) == "" {
+		return errors.New("ca_private_key can't be removed: the Bastion keeps the CA key; set it back, or " +
+			"remove the domain from the configuration to destroy it, then add it back without ca_private_key")
+	}
+
+	return nil
 }
 
 func resourceDomainCreate(

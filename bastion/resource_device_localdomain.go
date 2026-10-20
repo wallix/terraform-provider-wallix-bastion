@@ -37,6 +37,7 @@ func resourceDeviceLocalDomain() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceDeviceLocalDomainImport,
 		},
+		CustomizeDiff: domainCAPrivateKeyCustomizeDiff,
 		Schema: map[string]*schema.Schema{
 			skDeviceID: {
 				Type:     schema.TypeString,

@@ -83,6 +83,7 @@ Configure SSH CA for certificate-based authentication:
   - Supported types: RSA_1024, RSA_2048, RSA_4096, RSA_8192, DSA_1024, ECDSA_256, ECDSA_384, ECDSA_521, ED25519
 - `passphrase`: Protect private key with passphrase (4-1024 characters)
 - `ca_public_key`: Read-only, automatically generated from private key
+- Removing `ca_private_key` is refused at plan, since the Bastion keeps the CA key: remove the domain from the configuration to destroy it, then add it back without the key
 
 ### Vault Integration
 

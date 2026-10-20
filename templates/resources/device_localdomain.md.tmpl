@@ -82,6 +82,7 @@ Configure SSH CA for certificate-based authentication:
 - Use strong key types (RSA_4096 or ED25519 recommended)
 - Always use a passphrase to protect the private key
 - Store passphrases securely (use variables, not hardcoded)
+- Removing `ca_private_key` is refused at plan, since the Bastion keeps the CA key: remove the local domain from the configuration to destroy it, then add it back without the key
 
 ### Account Management
 
