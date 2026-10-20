@@ -63,22 +63,41 @@ func TestPrepareDomainJSONSendsChangedGeneratedCAKey(t *testing.T) {
 }
 
 // Removing ca_private_key left the CA key active on the Bastion while the state recorded the
-// removal: it is refused at plan, and replacing the key is still planned.
-func TestDomainCAPrivateKeyRemovalRefused(t *testing.T) {
+// removal: it is refused at plan. A changed key planned ca_public_key unchanged, so the resources
+// using it got the previous key: it is now known after apply.
+func TestDomainCAPrivateKeyPlan(t *testing.T) {
 	for name, r := range map[string]*schema.Resource{
 		"domain": resourceDomain(), "device local domain": resourceDeviceLocalDomain(),
 	} {
-		for newKey, wantErr := range map[string]bool{"": true, "generate:ECDSA_384": false} {
-			t.Run(name+" to "+newKey, func(t *testing.T) {
+		for change, tc := range map[string]struct {
+			key, description          string
+			wantErr, wantNewPublicKey bool
+		}{
+			"key removed":         {wantErr: true},
+			"key changed":         {key: "generate:ECDSA_384", wantNewPublicKey: true},
+			"description changed": {key: "ca-pem-key", description: "ca-description"},
+		} {
+			t.Run(name+" "+change, func(t *testing.T) {
 				state := &terraform.InstanceState{ID: "ca-id", Attributes: map[string]string{
 					"id": "ca-id", skDeviceID: "ca-device", skDomainName: "ca-domain", skCAPrivateKey: "ca-pem-key",
+					skCAPublicKey: "ssh-rsa ca-public-key",
 				}}
-				config := map[string]interface{}{skDeviceID: "ca-device", skDomainName: "ca-domain"}
-				if newKey != "" {
-					config[skCAPrivateKey] = newKey
+				config := map[string]interface{}{
+					skDeviceID: "ca-device", skDomainName: "ca-domain", skDescription: tc.description,
 				}
-				if _, err := r.Diff(t.Context(), state, terraform.NewResourceConfigRaw(config), nil); (err != nil) != wantErr {
-					t.Errorf("plan error = %v, want an error: %t", err, wantErr)
+				if tc.key != "" {
+					config[skCAPrivateKey] = tc.key
+				}
+				diff, err := r.Diff(t.Context(), state, terraform.NewResourceConfigRaw(config), nil)
+				if (err != nil) != tc.wantErr {
+					t.Fatalf("plan error = %v, want an error: %t", err, tc.wantErr)
+				}
+				if err != nil {
+					return
+				}
+				publicKey, planned := diff.Attributes[skCAPublicKey]
+				if got := planned && publicKey.NewComputed; got != tc.wantNewPublicKey {
+					t.Errorf("ca_public_key known after apply = %t, want %t", got, tc.wantNewPublicKey)
 				}
 			})
 		}

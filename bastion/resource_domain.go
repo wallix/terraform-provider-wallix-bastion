@@ -126,6 +126,8 @@ func resourceDomainVersionCheck(version string) error {
 
 // The Bastion can't remove the CA key of a domain or a device local domain (an empty value is
 // ignored, null is refused): a removal would only be recorded in the state, the key staying active.
+// A changed key gives a new ca_public_key, known after apply, so that the resources using it get the
+// new key in the same apply.
 func domainCAPrivateKeyCustomizeDiff(
 	_ context.Context, d *schema.ResourceDiff, _ interface{},
 ) error {
@@ -133,6 +135,9 @@ func domainCAPrivateKeyCustomizeDiff(
 	if d.NewValueKnown(skCAPrivateKey) && oldKey.(string) != "" && newKey.(string) == "" {
 		return errors.New("ca_private_key can't be removed: the Bastion keeps the CA key; set it back, or " +
 			"remove the domain from the configuration to destroy it, then add it back without ca_private_key")
+	}
+	if d.Id() != "" && d.HasChange(skCAPrivateKey) {
+		return d.SetNewComputed(skCAPublicKey) //nolint:wrapcheck
 	}
 
 	return nil
