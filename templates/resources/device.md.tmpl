@@ -55,6 +55,12 @@ resource "wallix-bastion_device" "web_server" {
 
 ## Usage Notes
 
+### Tags
+
+The tags of the configuration replace those of the device: tags added outside of Terraform are
+removed by the next apply when the configuration doesn't list them. Use
+`lifecycle { ignore_changes = [tags] }` for tags managed elsewhere.
+
 ### Device Identification
 
 - **device_name**: Unique identifier within Bastion (required)

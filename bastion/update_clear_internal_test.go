@@ -3,6 +3,7 @@ package bastion
 import (
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"strings"
 	"sync"
@@ -125,9 +126,9 @@ func TestDeviceUpdateReplacesTags(t *testing.T) {
 }
 
 // An emptied list was omitted from the update, so the Bastion kept its values and the plan showed
-// the same change after every apply (checked on a Bastion 12.4). It is now sent empty: the profile
-// dashboards and the application tags are cleared, and for the subprotocols of an authorization
-// or a device service, which the API requires, the apply fails with the API error.
+// the same change after every apply (checked on a Bastion 12.4). It is now sent empty, which
+// clears the profile dashboards, the application tags and the subprotocols of an RDP service
+// (checked on a Bastion 12.4.1).
 func TestUpdateSendsEmptiedLists(t *testing.T) {
 	gui := []interface{}{map[string]interface{}{"wab_audit": "view"}}
 	for name, tc := range map[string]struct {
@@ -154,32 +155,18 @@ func TestUpdateSendsEmptiedLists(t *testing.T) {
 				`"connection_policy":"WEBAPP","application_url":"https://example.com","tags":[]}`,
 			want: `"tags":[]`,
 		},
-		"authorization subprotocols": {
-			resource: resourceAuthorization(),
-			prior: map[string]interface{}{
-				"authorization_name": "a", "user_group": "ug", "target_group": "tg",
-				"authorize_password_retrieval": true, skSubprotocols: []interface{}{"SSH_SHELL_SESSION"},
-			},
-			config: map[string]interface{}{
-				"authorization_name": "a", "user_group": "ug", "target_group": "tg",
-				"authorize_password_retrieval": true,
-			},
-			read: `{"id":"obj-id","authorization_name":"a","user_group":"ug","target_group":"tg",` +
-				`"authorize_password_retrieval":true,"subprotocols":[]}`,
-			want: `"subprotocols":[]`,
-		},
-		"device service subprotocols": {
+		"RDP device service subprotocols": {
 			resource: resourceDeviceService(),
 			prior: map[string]interface{}{
-				skDeviceID: "svc-dev", skServiceName: "SSH", skConnectionPolicy: skProtoSSH, skPort: 22,
-				skProtocol: skProtoSSH, skSubprotocols: []interface{}{"SSH_SHELL_SESSION"},
+				skDeviceID: "svc-dev", skServiceName: "RDP", skConnectionPolicy: skProtoRDP, skPort: 3389,
+				skProtocol: skProtoRDP, skSubprotocols: []interface{}{"RDP_CLIPBOARD_UP"},
 			},
 			config: map[string]interface{}{
-				skDeviceID: "svc-dev", skServiceName: "SSH", skConnectionPolicy: skProtoSSH, skPort: 22,
-				skProtocol: skProtoSSH,
+				skDeviceID: "svc-dev", skServiceName: "RDP", skConnectionPolicy: skProtoRDP, skPort: 3389,
+				skProtocol: skProtoRDP,
 			},
-			read: `{"id":"obj-id","service_name":"SSH","protocol":"SSH","port":22,` +
-				`"connection_policy":"SSH","subprotocols":[]}`,
+			read: `{"id":"obj-id","service_name":"RDP","protocol":"RDP","port":3389,` +
+				`"connection_policy":"RDP","subprotocols":[]}`,
 			want: `"subprotocols":[]`,
 		},
 	} {
@@ -190,5 +177,100 @@ func TestUpdateSendsEmptiedLists(t *testing.T) {
 				t.Errorf("PUT = %s, want %s in the body", got, tc.want)
 			}
 		})
+	}
+}
+
+// The Bastion can't clear the subprotocols of an authorization (400 "At least one subprotocol is
+// required"), even with authorize_sessions = false: removing the last ones replaces it, and adding
+// or changing some is still an update.
+func TestAuthorizationEmptiedSubprotocolsReplaceIt(t *testing.T) {
+	base := map[string]interface{}{
+		"authorization_name": "a", "user_group": "ug", "target_group": "tg", "authorize_password_retrieval": true,
+	}
+	withSubprotocols := func(subprotocols ...interface{}) map[string]interface{} {
+		raw := maps.Clone(base)
+		if len(subprotocols) > 0 {
+			raw[skSubprotocols] = subprotocols
+		}
+
+		return raw
+	}
+	for name, tc := range map[string]struct {
+		prior, config map[string]interface{}
+		replace       bool
+	}{
+		"last removed": {withSubprotocols("SSH_SHELL_SESSION"), withSubprotocols(), true},
+		"one removed":  {withSubprotocols("SSH_SHELL_SESSION", "SSH_SCP_UP"), withSubprotocols("SSH_SCP_UP"), false},
+		"first added":  {withSubprotocols(), withSubprotocols("SSH_SHELL_SESSION"), false},
+	} {
+		t.Run(name, func(t *testing.T) {
+			r := resourceAuthorization()
+			d := schema.TestResourceDataRaw(t, r.Schema, tc.prior)
+			d.SetId("obj-id")
+			diff, err := r.Diff(t.Context(), d.State(), terraform.NewResourceConfigRaw(tc.config), nil)
+			if err != nil {
+				t.Fatalf("plan: %v", err)
+			}
+			if diff == nil || diff.Empty() {
+				t.Fatal("the plan has no change")
+			}
+			if got := diff.RequiresNew(); got != tc.replace {
+				t.Errorf("replacement = %v, want %v", got, tc.replace)
+			}
+		})
+	}
+}
+
+// The Bastion refuses an SSH service without subprotocols, at creation and on update (checked on
+// a Bastion 12.4.1): refused at plan. RDP accepts none.
+func TestDeviceServiceSSHRequiresSubprotocols(t *testing.T) {
+	for name, tc := range map[string]struct {
+		protocol string
+		wantErr  bool
+	}{
+		"SSH": {skProtoSSH, true},
+		"RDP": {skProtoRDP, false},
+	} {
+		t.Run(name, func(t *testing.T) {
+			r := resourceDeviceService()
+			config := map[string]interface{}{
+				skDeviceID: "svc-dev", skServiceName: "svc", skConnectionPolicy: tc.protocol, skPort: 22,
+				skProtocol: tc.protocol,
+			}
+			_, err := r.Diff(t.Context(), nil, terraform.NewResourceConfigRaw(config), nil)
+			if gotErr := err != nil; gotErr != tc.wantErr {
+				t.Errorf("plan error = %v, want an error: %v", err, tc.wantErr)
+			}
+		})
+	}
+}
+
+// A creation without these lists sends none of them: an empty list would clear what the Bastion
+// sets by default.
+func TestCreateSendsNoEmptiedLists(t *testing.T) {
+	gui := []interface{}{map[string]interface{}{"wab_audit": "view"}}
+	device := schema.TestResourceDataRaw(t, resourceDevice().Schema,
+		map[string]interface{}{"device_name": "dev", skHost: "192.0.2.10"})
+	if tags := prepareDeviceJSON(device).Tags; tags != nil {
+		t.Errorf("device tags = %v, want none sent", *tags)
+	}
+	profile := schema.TestResourceDataRaw(t, resourceProfile().Schema,
+		map[string]interface{}{"profile_name": "p", "gui_features": gui, "gui_transmission": gui})
+	if dashboards := prepareProfileJSON(profile, true).Dashboards; dashboards != nil {
+		t.Errorf("profile dashboards = %v, want none sent", *dashboards)
+	}
+	application, err := prepareApplicationJSON(
+		schema.TestResourceDataRaw(t, resourceApplication().Schema, webApplicationRaw(nil)), true, VersionWallixAPI312)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if application.Tags != nil {
+		t.Errorf("application tags = %v, want none sent", *application.Tags)
+	}
+	authorization := schema.TestResourceDataRaw(t, resourceAuthorization().Schema, map[string]interface{}{
+		"authorization_name": "a", "user_group": "ug", "target_group": "tg", "authorize_password_retrieval": true,
+	})
+	if subprotocols := prepareAuthorizationJSON(authorization, true).SubProtocols; subprotocols != nil {
+		t.Errorf("authorization subprotocols = %v, want none sent", *subprotocols)
 	}
 }

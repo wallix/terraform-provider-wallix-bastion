@@ -42,6 +42,7 @@ func resourceAuthorization() *schema.Resource {
 		ReadContext:   resourceAuthorizationRead,
 		UpdateContext: resourceAuthorizationUpdate,
 		DeleteContext: resourceAuthorizationDelete,
+		CustomizeDiff: resourceAuthorizationCustomizeDiff,
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceAuthorizationImport,
 		},
@@ -162,6 +163,23 @@ func resourceAuthorization() *schema.Resource {
 			},
 		},
 	}
+}
+
+// The Bastion can't clear the subprotocols of an authorization, even with authorize_sessions =
+// false (400 "At least one subprotocol is required in the authorization", checked on a Bastion
+// 12.4.1); it only creates one without them. Removing the last subprotocols replaces it.
+func resourceAuthorizationCustomizeDiff(
+	_ context.Context, d *schema.ResourceDiff, _ interface{},
+) error {
+	if d.Id() == "" || !d.HasChange(skSubprotocols) || !d.NewValueKnown(skSubprotocols) {
+		return nil
+	}
+	oldSubprotocols, newSubprotocols := d.GetChange(skSubprotocols)
+	if oldSubprotocols.(*schema.Set).Len() > 0 && newSubprotocols.(*schema.Set).Len() == 0 {
+		return d.ForceNew(skSubprotocols) //nolint:wrapcheck
+	}
+
+	return nil
 }
 
 func resourceAuthorizationVersionCheck(version string) error {
@@ -419,9 +437,6 @@ func prepareAuthorizationJSON(d *schema.ResourceData, newResource bool) jsonAuth
 			subProtocols[i] = v.(string)
 		}
 		jsonData.SubProtocols = &subProtocols
-	} else if d.HasChange(skSubprotocols) {
-		// The last subprotocols were removed: an empty list clears them, an omitted one keeps them.
-		jsonData.SubProtocols = &[]string{}
 	}
 
 	return jsonData
