@@ -507,6 +507,9 @@ func prepareApplicationJSON(
 			}
 		}
 		jsonData.Tags = &tags
+	} else if d.HasChange("tags") {
+		// The last tags were removed: an empty list clears them, an omitted one keeps them.
+		jsonData.Tags = &[]map[string]string{}
 	}
 
 	// The category drives validation and the payload on every call, but it is only sent at

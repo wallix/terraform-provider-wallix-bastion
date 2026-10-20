@@ -572,6 +572,9 @@ func prepareProfileJSON( //nolint:gocognit
 			dashboards[i] = v.(string)
 		}
 		jsonData.Dashboards = &dashboards
+	} else if d.HasChange("dashboards") {
+		// The last dashboards were removed: an empty list clears them, an omitted one keeps them.
+		jsonData.Dashboards = &[]string{}
 	}
 
 	for _, v := range d.Get("target_groups_limitation").([]interface{}) {

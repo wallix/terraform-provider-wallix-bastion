@@ -325,7 +325,10 @@ func updateDevice(
 ) error {
 	c := m.(*Client)
 	jsonData := prepareDeviceJSON(d)
-	body, code, err := c.newRequest(ctx, "/devices/"+d.Id(), http.MethodPut, jsonData)
+	// Without force=true, the API adds the tags sent to the existing ones, so a tag removed from
+	// the configuration stayed on the device. With it, the tags sent replace them, and a request
+	// without tags leaves them as they are (checked on a Bastion 12.4).
+	body, code, err := c.newRequest(ctx, "/devices/"+d.Id()+"?force=true", http.MethodPut, jsonData)
 	if err != nil {
 		return err
 	}
@@ -374,6 +377,9 @@ func prepareDeviceJSON(d *schema.ResourceData) jsonDevice {
 			}
 		}
 		jsonData.Tags = &tags
+	} else if d.HasChange("tags") {
+		// The last tags were removed: an empty list clears them, an omitted one keeps them.
+		jsonData.Tags = &[]map[string]string{}
 	}
 
 	return jsonData
