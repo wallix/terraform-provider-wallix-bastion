@@ -313,13 +313,10 @@ func prepareDomainJSON(d *schema.ResourceData, newResource bool) jsonDomain {
 		Passphrase:     d.Get(skPassphrase).(string),
 	}
 
-	if !strings.HasPrefix(d.Get(skCAPrivateKey).(string), "generate:") {
+	// The Bastion generates a new key each time it receives a generate: value: only send it when
+	// it changes, also when replacing an existing key.
+	if !strings.HasPrefix(d.Get(skCAPrivateKey).(string), "generate:") || d.HasChange(skCAPrivateKey) {
 		jsonData.CAPrivateKey = d.Get(skCAPrivateKey).(string)
-	} else if d.HasChange(skCAPrivateKey) {
-		oldKey, newKey := d.GetChange(skCAPrivateKey)
-		if oldKey.(string) == "" {
-			jsonData.CAPrivateKey = newKey.(string)
-		}
 	}
 
 	if d.Get(skEnablePasswordChange).(bool) {
