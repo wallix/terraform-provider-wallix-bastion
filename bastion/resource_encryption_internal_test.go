@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 // encryptionMock is a Bastion whose GET /encryption returns sealState, and which records the PUT
@@ -17,6 +18,7 @@ import (
 type encryptionMock struct {
 	mu        sync.Mutex
 	sealState string
+	putCode   int
 	puts      []string
 }
 
@@ -35,6 +37,12 @@ func (mock *encryptionMock) client(t *testing.T) *Client {
 		if r.Method == http.MethodPut {
 			body, _ := io.ReadAll(r.Body)
 			mock.puts = append(mock.puts, string(body))
+			if mock.putCode != 0 {
+				w.WriteHeader(mock.putCode)
+				fmt.Fprint(w, `{"error":"Bad Request","description":"Invalid passphrase"}`)
+
+				return
+			}
 			w.WriteHeader(http.StatusNoContent)
 
 			return
@@ -133,5 +141,41 @@ func TestPrepareEncryptionJSONForAChange(t *testing.T) {
 	}
 	if want := `{"passphrase":"old-passphrase","new_passphrase":"new-passphrase"}`; string(body) != want {
 		t.Errorf("body = %s, want %s", body, want)
+	}
+}
+
+// A refused change must leave the previous passphrase in state: recorded, the new one would look
+// applied while the Bastion keeps the old one, and the next plan would be empty.
+func TestEncryptionFailedChangeKeepsThePreviousPassphrase(t *testing.T) {
+	mock := &encryptionMock{sealState: encryptionUnsealed, putCode: http.StatusBadRequest}
+	client := mock.client(t)
+	r := resourceEncryption()
+	state := &terraform.InstanceState{ID: "encryption", Attributes: map[string]string{
+		"id": "encryption", "current_passphrase": "old-passphrase", "new_passphrase": "old-passphrase",
+	}}
+	config := terraform.NewResourceConfigRaw(map[string]interface{}{
+		"current_passphrase": "old-passphrase", "new_passphrase": "next-passphrase",
+	})
+	instanceDiff, err := r.Diff(t.Context(), state, config, client)
+	if err != nil {
+		t.Fatalf("diff: %v", err)
+	}
+	newState, diags := r.Apply(t.Context(), state, instanceDiff, client)
+	if !diags.HasError() {
+		t.Fatal("expected the refused change to be returned")
+	}
+	if got := newState.Attributes["new_passphrase"]; got != "old-passphrase" {
+		t.Errorf("new_passphrase in state = %q, want the previous one kept", got)
+	}
+}
+
+// A seal_state this provider doesn't know is an error, not a Bastion set up.
+func TestEncryptionReadOfAnUnknownSealState(t *testing.T) {
+	mock := &encryptionMock{sealState: "upgrading"}
+	r := resourceEncryption()
+	d := schema.TestResourceDataRaw(t, r.Schema, map[string]interface{}{"new_passphrase": "p"})
+	d.SetId("encryption")
+	if diags := r.ReadContext(t.Context(), d, mock.client(t)); !diags.HasError() {
+		t.Error("read of an unknown seal_state returned no error")
 	}
 }

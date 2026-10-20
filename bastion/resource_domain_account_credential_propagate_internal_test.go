@@ -159,18 +159,20 @@ func TestDomainAccountCredentialPropagatesTheSecret(t *testing.T) {
 	}
 }
 
-// Without the secret, the propagation would rotate the credential on the target: refused at plan.
+// Without the secret, the propagation would rotate the credential on the target, and a generated
+// key can't be propagated: refused at plan.
 func TestDomainAccountCredentialPropagateRequiresTheSecret(t *testing.T) {
 	for name, config := range map[string]map[string]interface{}{
-		skPassword: {skType: skPassword},
-		"ssh_key":  {skType: skSSHKey},
+		skPassword:  {skType: skPassword},
+		"ssh_key":   {skType: skSSHKey},
+		"generated": {skType: skSSHKey, skPrivateKey: "generate:RSA_4096"},
 	} {
 		t.Run(name, func(t *testing.T) {
 			mock := &credentialPropagateMock{credType: config[skType].(string), propagateCode: http.StatusNoContent}
 			config[skPropagateCredentialChange] = true
 			_, _, err := applyDomainAccountCredential(t, mock, nil, config)
-			if err == nil || !strings.Contains(err.Error(), "propagate_credential_change = true requires") {
-				t.Fatalf("plan error = %v, want the missing secret", err)
+			if err == nil || !strings.Contains(err.Error(), "propagate_credential_change = true") {
+				t.Fatalf("plan error = %v, want the propagation refused", err)
 			}
 			if writes := mock.recordedWrites(); len(writes) != 0 {
 				t.Errorf("writes = %v, want none", writes)

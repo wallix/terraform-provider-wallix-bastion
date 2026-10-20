@@ -114,6 +114,9 @@ func resourceEncryptionRead(
 		// Bastion: it must be unsealed with its passphrase first.
 		return diag.Errorf("the Bastion encryption is sealed: unseal it with its passphrase before " +
 			"Terraform can manage wallix-bastion_encryption")
+	case encryptionUnsealed:
+	default:
+		return diag.Errorf("unknown seal_state %q of the Bastion encryption", state.SealState)
 	}
 	d.SetId("encryption")
 
@@ -130,9 +133,13 @@ func resourceEncryptionUpdate(
 	// Only a new passphrase changes something on the Bastion: updating current_passphrase alone,
 	// for example after a change, must not send another change request.
 	if d.HasChange("new_passphrase") {
+		// Keep the previous state if the change fails: recorded, the new passphrase would look
+		// applied while the Bastion keeps the old one, and the next plan would be empty.
+		d.Partial(true)
 		if err := updateEncryption(ctx, d, m); err != nil {
 			return diag.FromErr(err)
 		}
+		d.Partial(false)
 	}
 
 	return resourceEncryptionRead(ctx, d, m)

@@ -97,8 +97,9 @@ The Bastion encryption can be in one of the following states (visible via API GE
   already set up, it fails without sending any request: import the resource
   (`terraform import wallix-bastion_encryption.main encryption`), then set `current_passphrase`
   and `new_passphrase` to change the passphrase.
-- **Changing `new_passphrase`** sends the change with `current_passphrase`. Changing only
-  `current_passphrase`, for example after a change, sends nothing.
+- **Changing `new_passphrase`** sends the change with `current_passphrase`. If the Bastion
+  refuses it, the previous passphrase stays in state. Changing only `current_passphrase`, for
+  example after a change, sends nothing.
 - **Refresh** fails while the Bastion is `sealed`: unseal it with its passphrase first. The
   resource is kept in state, so that no setup request is sent to a sealed Bastion.
 

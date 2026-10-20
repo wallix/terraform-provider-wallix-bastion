@@ -45,8 +45,9 @@ NOTES:
 - **resource/wallix-bastion_encryption**, **resource/wallix-bastion_config_x509**, **data-source/wallix-bastion_config_x509**: an `output` that references `current_passphrase`, `new_passphrase` or `server_private_key` must now set `sensitive = true`, or the plan fails with `Output refers to sensitive values`
 - **resource/wallix-bastion_profile**: `profile_name` is now read on every refresh, so a profile renamed outside Terraform shows as a change, which replaces the profile
 - **resource/wallix-bastion_application_localdomain_account**: removing `password` from the configuration no longer clears the password on the Bastion
-- **resource/wallix-bastion_domain_account_credential**: `propagate_credential_change = true` now requires `password` (or `private_key` for an `ssh_key`), checked at plan
-- **resource/wallix-bastion_encryption**: the creation now fails on a Bastion already set up, without sending any request (import the resource instead), the refresh fails while the Bastion is sealed, and changing only `current_passphrase` no longer sends a passphrase change
+- **resource/wallix-bastion_domain_account_credential**: `propagate_credential_change = true` now requires `password` (or `private_key` for an `ssh_key`, which can't be a `generate:` value), checked at plan
+- **data-source/wallix-bastion_encryption**: `enabled` now means that the encryption is ready for use (`seal_state` is `unsealed`): a configuration gating on it gets `false` on a sealed Bastion, which it reported as `true` before
+- **resource/wallix-bastion_encryption**: the creation now fails on a Bastion already set up, without sending any request (import the resource instead), the refresh fails while the Bastion is sealed or in an unknown state, and changing only `current_passphrase` no longer sends a passphrase change
 
 ## 0.15.2 (October 01, 2026)
 
