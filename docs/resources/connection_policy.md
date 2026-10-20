@@ -87,7 +87,7 @@ resource "wallix-bastion_connection_policy" "webapp_custom" {
 
 - `authentication_methods` (Set of String)
 - `description` (String)
-- `options` (String)
+- `options` (String, Sensitive)
 - `type` (String)
 
 ### Read-Only

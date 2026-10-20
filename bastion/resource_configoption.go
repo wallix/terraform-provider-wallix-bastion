@@ -57,6 +57,7 @@ func resourceConfigoption() *schema.Resource {
 			},
 			skValues: {
 				Type:             schema.TypeString,
+				Sensitive:        true,
 				Required:         true,
 				ValidateDiagFunc: validateConfigoptionValues,
 				DiffSuppressFunc: suppressEquivalentJSON,

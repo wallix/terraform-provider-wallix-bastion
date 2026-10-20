@@ -32,7 +32,7 @@ resource "wallix-bastion_configoption" "global" {
 ### Required
 
 - `config_id` (String)
-- `values` (String)
+- `values` (String, Sensitive)
 
 ### Read-Only
 

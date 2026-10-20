@@ -70,6 +70,7 @@ func resourceConnectionPolicy() *schema.Resource {
 			},
 			"options": {
 				Type:         schema.TypeString,
+				Sensitive:    true,
 				Optional:     true,
 				ValidateFunc: validation.StringIsJSON,
 			},
