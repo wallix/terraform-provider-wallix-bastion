@@ -67,6 +67,7 @@ When `enable_password_change = true`, configure:
 - **password_change_policy**: Reference to password policy
 - **password_change_plugin**: Plugin for password operations
 - **password_change_plugin_parameters**: JSON configuration for the plugin
+- **admin_account**: Account of the local domain the plugin uses to change the passwords. The Bastion only accepts an existing account, and a `wallix-bastion_device_localdomain_account` can only be created once the local domain exists, so `admin_account` is set by a second apply: the first one creates the local domain and the account
 
 ### SSH Certificate Authority
 
@@ -82,6 +83,8 @@ Configure SSH CA for certificate-based authentication:
 - Use strong key types (RSA_4096 or ED25519 recommended)
 - Always use a passphrase to protect the private key
 - Store passphrases securely (use variables, not hardcoded)
+- Removing `ca_private_key` is refused at plan, since the Bastion keeps the CA key: remove the local domain from the configuration to destroy it, then add it back without the key
+- `ca_private_key` isn't read back: after an import, a `generate:` value makes the next apply generate a new CA key, which changes `ca_public_key`; leave it out of the configuration to keep the current key
 
 ### Account Management
 

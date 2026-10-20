@@ -121,6 +121,8 @@ password_change_policy = "policy_name"
 password_change_plugin = "plugin_name"
 ```
 
+`admin_account` is the account of the local domain the plugin uses to change the passwords. The Bastion only accepts an existing account, and a `wallix-bastion_application_localdomain_account` can only be created once the local domain exists, so `admin_account` is set by a second apply: the first one creates the local domain and the account.
+
 **Plugin Configuration:**
 ```terraform
 password_change_plugin_parameters = jsonencode({
