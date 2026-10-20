@@ -90,6 +90,7 @@ When `enable_password_change = true`, configure:
 - **password_change_policy**: Reference to password policy
 - **password_change_plugin**: Plugin for password operations
 - **password_change_plugin_parameters**: JSON configuration for the plugin
+- **admin_account**: Account of the local domain the plugin uses to change the passwords. The Bastion only accepts an existing account, and a `wallix-bastion_device_localdomain_account` can only be created once the local domain exists, so `admin_account` is set by a second apply: the first one creates the local domain and the account
 
 ### SSH Certificate Authority
 
