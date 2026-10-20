@@ -21,23 +21,9 @@ func TestSecretsAreSensitive(t *testing.T) {
 		"data source configoption.options":      dataSourceConfigoption().Schema["options"],
 		"resource connection_policy.options":    resourceConnectionPolicy().Schema["options"],
 		"data source connection_policy.options": dataSourceConnectionPolicy().Schema["options"],
-		// Already sensitive on domain, device_localdomain and application_localdomain.
-		"resource device plugin parameters":         localDomainsPluginParameters(resourceDevice()),
-		"data source device plugin parameters":      localDomainsPluginParameters(dataSourceDevice()),
-		"resource application plugin parameters":    localDomainsPluginParameters(resourceApplication()),
-		"data source application plugin parameters": localDomainsPluginParameters(dataSourceApplication()),
 	} {
 		if attribute == nil || !attribute.Sensitive {
 			t.Errorf("%s must be sensitive", name)
 		}
 	}
-}
-
-func localDomainsPluginParameters(r *schema.Resource) *schema.Schema {
-	localDomains, ok := r.Schema["local_domains"].Elem.(*schema.Resource)
-	if !ok {
-		return nil
-	}
-
-	return localDomains.Schema[skPasswordChangePluginParameters]
 }

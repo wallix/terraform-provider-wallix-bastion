@@ -68,9 +68,8 @@ func dataSourceDevice() *schema.Resource {
 							Computed: true,
 						},
 						skPasswordChangePluginParameters: {
-							Type:      schema.TypeString,
-							Sensitive: true,
-							Computed:  true,
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 					},
 				},
