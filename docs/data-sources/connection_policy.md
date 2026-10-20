@@ -35,6 +35,7 @@ output "ssh_policy_info" {
     authentication_methods = data.wallix-bastion_connection_policy.ssh_policy.authentication_methods
     options                = jsondecode(data.wallix-bastion_connection_policy.ssh_policy.options)
   }
+  sensitive = true
 }
 ```
 

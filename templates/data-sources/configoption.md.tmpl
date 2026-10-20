@@ -23,7 +23,8 @@ data "wallix-bastion_configoption" "global" {
 }
 
 output "session_timeout" {
-  value = jsondecode(data.wallix-bastion_configoption.global.values).am.session_timeout
+  value     = jsondecode(data.wallix-bastion_configoption.global.values).am.session_timeout
+  sensitive = true
 }
 ```
 
