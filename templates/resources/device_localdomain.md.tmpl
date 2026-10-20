@@ -83,6 +83,7 @@ Configure SSH CA for certificate-based authentication:
 - Always use a passphrase to protect the private key
 - Store passphrases securely (use variables, not hardcoded)
 - Removing `ca_private_key` is refused at plan, since the Bastion keeps the CA key: remove the local domain from the configuration to destroy it, then add it back without the key
+- `ca_private_key` isn't read back: after an import, a `generate:` value makes the next apply generate a new CA key, which changes `ca_public_key`; leave it out of the configuration to keep the current key
 
 ### Account Management
 

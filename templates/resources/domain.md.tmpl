@@ -84,6 +84,7 @@ Configure SSH CA for certificate-based authentication:
 - `passphrase`: Protect private key with passphrase (4-1024 characters)
 - `ca_public_key`: Read-only, automatically generated from private key
 - Removing `ca_private_key` is refused at plan, since the Bastion keeps the CA key: remove the domain from the configuration to destroy it, then add it back without the key
+- `ca_private_key` isn't read back: after an import, a `generate:` value makes the next apply generate a new CA key, which changes `ca_public_key`; leave it out of the configuration to keep the current key
 
 ### Vault Integration
 
