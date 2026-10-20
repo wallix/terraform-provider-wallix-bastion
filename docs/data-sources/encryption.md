@@ -27,7 +27,9 @@ output "encryption_enabled" {
 ### Read-Only
 
 - `enabled` (Boolean)
+- `encryption_mode` (String)
 - `id` (String) The ID of this resource.
+- `seal_state` (String)
 
 ## Usage Notes
 
@@ -46,11 +48,15 @@ is no way - via this data source, the resource, or the underlying API - to retri
 configured passphrase. Attempting to "read back" the passphrase from Terraform is not possible;
 you must keep the passphrase in your own secret management system if you need to know its value.
 
-### The `enabled` Attribute
+### Attributes
 
-The only attribute this data source exposes is:
+This data source exposes the state returned by the API (`GET /encryption`):
 
-- **enabled** (Boolean): whether disk encryption is currently enabled/configured on the Bastion.
+- **enabled** (Boolean): `true` when the encryption is ready for use (`seal_state` is `unsealed`).
+- **seal_state** (String): `need_setup` (fresh install), `sealed` (the passphrase must be entered,
+  for example after a reboot) or `unsealed`.
+- **encryption_mode** (String): `need_setup`, `unprotected` (no passphrase), `passphrase`, or
+  `[hidden]` when the user can't read it.
 
 Use this to gate other resources or checks on whether encryption has already been set up, without
 needing to know or manage the passphrase itself:

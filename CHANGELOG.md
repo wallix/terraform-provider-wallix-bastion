@@ -15,6 +15,8 @@ ENHANCEMENTS:
 - **data-source/wallix-bastion_connection_policy**: fix the documentation example (`wallix-bastion_device_service` requires `protocol`) and the listed authentication methods
 - **data-source/wallix-bastion_configoption**: add `values` attribute, the option values as a JSON object in the format of the resource `values` argument
 - **data-source/wallix-bastion_configoption**: rewrite the documentation, which described arguments and attributes that don't exist (`option_name`, `value`)
+- **data-source/wallix-bastion_encryption**: add `seal_state` and `encryption_mode` attributes
+- **resource/wallix-bastion_profile**: `target_groups_limitation.default_target_group` is now optional; without it, the Bastion takes the first of `target_groups`
 
 BUG FIXES:
 
@@ -40,6 +42,9 @@ BUG FIXES:
 - **resource/wallix-bastion_device_localdomain_account_credential**, **resource/wallix-bastion_application_localdomain_account_credential**: fixed every plan failing with `api doesn't return OK: 404` once the account, local domain, device or application of the credential was deleted outside of Terraform; the credential is now dropped from state, as the domain variant does
 - **provider**: escape the name in the API searches by name (`?q=<field>=<name>`) that the resources run before a creation and on import, and that the data sources use; a name with `&`, `+`, `#` or a space was cut or altered (`a+b` was searched as `a b` on a Bastion 12.4), so the creation of `a&b` failed with `already exists` when `a` existed, and its import imported `a`; the name is also escaped for the Bastion search expression, where a name with `&&` or `||` failed with `Invalid expression` and one with `\` was not found
 - **provider**: a destroy no longer fails with `404` on an object already deleted outside of Terraform, which happened when the state wasn't refreshed first (`-refresh=false`, a saved plan applied later, or a child deleted by the Bastion with its parent) and left the objects depending on it; every resource now treats a `404` on delete as done, except a `404` for an unknown API version or route, which stays an error as the object may still exist, and the credential resources first delete a credential rotated under a new id since the last refresh, so that it doesn't stay on the Bastion
+- **resource/wallix-bastion_domain_account_credential**: fixed `propagate_credential_change = true` sending an empty body, or the password route for an SSH key, to `/accountchangepassword`: the Bastion then generated a new random credential and set it on the target host (checked on a Bastion 12.4.1); the `password`, or the `private_key` and `passphrase`, of the configuration is now sent on the route of the credential type, only when it changes, and a credential whose propagation fails stays in state (tainted) instead of being left on the Bastion out of state
+- **resource/wallix-bastion_encryption**, **data-source/wallix-bastion_encryption**: fixed the encryption state never being read (a switch on API versions without their `v` prefix, and fields that don't exist): `enabled` was always `true`, even on a sealed Bastion; `seal_state` is now read, and setting up without a passphrase (`new_passphrase = ""`) now sends it instead of an empty body
+- **resource/wallix-bastion_profile**, **data-source/wallix-bastion_profile**: fixed the provider crashing when reading a profile whose target groups limitation has no default target group (`null` in the API), for example an enabled limitation without target groups
 
 NOTES:
 
@@ -48,6 +53,9 @@ NOTES:
 - **resource/wallix-bastion_encryption**, **resource/wallix-bastion_config_x509**, **data-source/wallix-bastion_config_x509**: an `output` that references `current_passphrase`, `new_passphrase` or `server_private_key` must now set `sensitive = true`, or the plan fails with `Output refers to sensitive values`
 - **resource/wallix-bastion_profile**: `profile_name` is now read on every refresh, so a profile renamed outside Terraform shows as a change, which replaces the profile
 - **resource/wallix-bastion_application_localdomain_account**: removing `password` from the configuration no longer clears the password on the Bastion
+- **resource/wallix-bastion_domain_account_credential**: `propagate_credential_change = true` now requires `password` (or `private_key` for an `ssh_key`, which can't be a `generate:` value), checked at plan
+- **data-source/wallix-bastion_encryption**: `enabled` now means that the encryption is ready for use (`seal_state` is `unsealed`): a configuration gating on it gets `false` on a sealed Bastion, which it reported as `true` before
+- **resource/wallix-bastion_encryption**: the creation now fails on a Bastion already set up, without sending any request (import the resource instead), the refresh fails while the Bastion is sealed or in an unknown state, and changing only `current_passphrase` no longer sends a passphrase change
 - **resource/wallix-bastion_device**: tags are now replaced by those of the configuration, so tags added outside of Terraform are removed by the next apply when the configuration doesn't list them; use `lifecycle { ignore_changes = [tags] }` for tags managed elsewhere
 
 ## 0.15.2 (October 01, 2026)

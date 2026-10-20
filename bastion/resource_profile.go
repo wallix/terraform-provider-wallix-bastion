@@ -240,9 +240,11 @@ func resourceProfile() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						// Without one, the Bastion takes the first of target_groups.
 						"default_target_group": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
+							Computed: true,
 						},
 						skTargetGroups: {
 							Type:     schema.TypeSet,
@@ -630,6 +632,26 @@ func readProfileOptions(
 	return result, nil
 }
 
+// profileDefaultTargetGroup returns the default target group of a limitation, which the API
+// returns as null when there is none.
+func profileDefaultTargetGroup(v *interface{}) string {
+	if v == nil {
+		return ""
+	}
+	s, _ := (*v).(string)
+
+	return s
+}
+
+// stringsOrEmpty returns the list, which the API can return as null, or an empty one.
+func stringsOrEmpty(v *[]string) []string {
+	if v == nil {
+		return []string{}
+	}
+
+	return *v
+}
+
 func fillProfile(d *schema.ResourceData, jsonData jsonProfile) {
 	// The import used to set profile_name to the API id, which forced a replacement on the next
 	// plan.
@@ -687,8 +709,8 @@ func fillProfile(d *schema.ResourceData, jsonData jsonProfile) {
 	}
 	if jsonData.TargetGroupsLimitation.Enabled {
 		targetGroupsLimitation := []map[string]interface{}{{
-			"default_target_group": *jsonData.TargetGroupsLimitation.DefaultTargetGroup,
-			skTargetGroups:         *jsonData.TargetGroupsLimitation.TargetGroups,
+			"default_target_group": profileDefaultTargetGroup(jsonData.TargetGroupsLimitation.DefaultTargetGroup),
+			skTargetGroups:         stringsOrEmpty(jsonData.TargetGroupsLimitation.TargetGroups),
 		}}
 		if tfErr := d.Set("target_groups_limitation", targetGroupsLimitation); tfErr != nil {
 			panic(tfErr)
@@ -701,7 +723,7 @@ func fillProfile(d *schema.ResourceData, jsonData jsonProfile) {
 	}
 	if jsonData.UserGroupsLimitation.Enabled {
 		userGroupsLimitation := []map[string]interface{}{{
-			skUserGroups: *jsonData.UserGroupsLimitation.UserGroups,
+			skUserGroups: stringsOrEmpty(jsonData.UserGroupsLimitation.UserGroups),
 		}}
 		if tfErr := d.Set("user_groups_limitation", userGroupsLimitation); tfErr != nil {
 			panic(tfErr)

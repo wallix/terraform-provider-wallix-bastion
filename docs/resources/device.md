@@ -112,7 +112,7 @@ Read-Only:
 
 ## Usage Notes
 
-### Tags
+### Tags of the configuration
 
 The tags of the configuration replace those of the device: tags added outside of Terraform are
 removed by the next apply when the configuration doesn't list them. Use
