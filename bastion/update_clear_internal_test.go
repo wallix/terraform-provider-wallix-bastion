@@ -181,7 +181,8 @@ func TestUpdateSendsEmptiedLists(t *testing.T) {
 }
 
 // A value omitted from the update keeps its value on the Bastion (checked on a Bastion 12.4.3):
-// the emptied parameters of an application were never applied.
+// the emptied parameters of an application and a changed preferred_language or force_change_pwd
+// of a user, only sent at creation, were never applied.
 func TestUpdateSendsChangedValues(t *testing.T) {
 	stdApplication := func(parameters string) map[string]interface{} {
 		return map[string]interface{}{
@@ -192,6 +193,15 @@ func TestUpdateSendsChangedValues(t *testing.T) {
 			"parameters": parameters,
 		}
 	}
+	user := func(language string, forceChangePwd bool) map[string]interface{} {
+		return map[string]interface{}{
+			"user_name": "lang-user", skEmail: "lang-user@example.com", skProfile: "lang-profile",
+			"user_auths": []interface{}{"local_password"}, "preferred_language": language,
+			"force_change_pwd": forceChangePwd,
+		}
+	}
+	const userRead = `{"user_name":"lang-user","email":"lang-user@example.com","profile":"lang-profile",` +
+		`"user_auths":["local_password"],"preferred_language":"fr"}`
 	for name, tc := range map[string]struct {
 		resource      *schema.Resource
 		prior, config map[string]interface{}
@@ -204,6 +214,27 @@ func TestUpdateSendsChangedValues(t *testing.T) {
 			read: `{"id":"obj-id","application_name":"params-app","category":"standard",` +
 				`"connection_policy":"RDP","target":"params-cluster","parameters":""}`,
 			want: `"parameters":""`,
+		},
+		"user preferred_language changed": {
+			resource: resourceUser(),
+			prior:    user("en", false),
+			config:   user("fr", false),
+			read:     userRead,
+			want:     `"preferred_language":"fr"`,
+		},
+		"user force_change_pwd enabled": {
+			resource: resourceUser(),
+			prior:    user("fr", false),
+			config:   user("fr", true),
+			read:     userRead,
+			want:     `"force_change_pwd":true`,
+		},
+		"user force_change_pwd disabled": {
+			resource: resourceUser(),
+			prior:    user("fr", true),
+			config:   user("fr", false),
+			read:     userRead,
+			want:     `"force_change_pwd":false`,
 		},
 	} {
 		t.Run(name, func(t *testing.T) {

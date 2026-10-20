@@ -91,7 +91,7 @@ Assign appropriate profiles:
 ### Password Management
 
 - `password`: Set initial password (only used during creation or when changed)
-- `force_change_pwd`: Force password change on first login
+- `force_change_pwd`: Force a password change at the next login, at creation or when the value changes (the flag is not read back from the Bastion)
 - Password updates only occur when the value changes and `force_change_pwd` is not true
 
 ### Security Settings
