@@ -70,6 +70,11 @@ resource "wallix-bastion_authorization" "password_only" {
 
 ## Usage Notes
 
+### Subprotocols
+
+The Bastion can't remove all the `subprotocols` of an existing authorization, even with
+`authorize_sessions = false`: removing the last ones replaces the authorization.
+
 ### Required Configuration
 
 At least one of the following must be enabled:

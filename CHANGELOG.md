@@ -25,6 +25,11 @@ BUG FIXES:
 - **resource/wallix-bastion_profile**: fixed the import setting `profile_name` to the API id, which forced the replacement of the profile on the next plan; `profile_name` is now read from the API
 - **resource/wallix-bastion_authorization**: fixed `authorize_session_sharing = false` never being applied, which left session sharing enabled on the Bastion; disabling it is now sent on update (without the mode, and enabling or untouched sharing send the same requests as before); while sharing is disabled, the mode the Bastion keeps is no longer reported as a change
 - **resource/wallix-bastion_domain_account**: fixed `resources = []` never being applied, which left the account attached to its resources on the Bastion; an emptied list is now sent on update (when `resources` isn't set, the resources in state are still sent unchanged)
+- **resource/wallix-bastion_device**: fixed removing or changing a tag: without `force=true`, the API adds the tags sent to the existing ones, so a removed tag stayed on the device and a changed value failed with `409 cannot have multiple Tags with the same keys`; the update now replaces the tags with those of the configuration (checked on a Bastion 12.4.1)
+- **resource/wallix-bastion_profile**, **resource/wallix-bastion_application**: fixed `dashboards = []` (profile) and removing the last tag (application) being ignored, with the same change planned after every apply; the emptied list is now sent
+- **resource/wallix-bastion_device_service**: the emptied `subprotocols` of an RDP service is now sent, which clears them
+- **resource/wallix-bastion_authorization**: removing the last `subprotocols` was ignored, with the same change planned after every apply; the Bastion can't clear them, even with `authorize_sessions = false` (`400 At least one subprotocol is required`), so it now replaces the authorization
+- **resource/wallix-bastion_device_service**: an SSH service without `subprotocols` is now refused at plan; the Bastion refuses it at creation and on update (checked on a Bastion 12.4.1)
 - **resource/wallix-bastion_timeframe**: fixed renaming a timeframe failing with `Root object was present, but now absent` and leaving it on the Bastion out of state; the API renames it, and the resource id (the name) now follows the new name
 - **resource/wallix-bastion_connection_policy**: changing `protocol` now replaces the policy, like `type`; `protocol` is only sent on creation, so the change was never applied and the plan showed it again after every apply
 - **resource/wallix-bastion_encryption**: mark `current_passphrase` and `new_passphrase` as sensitive; they were shown in plans
@@ -40,6 +45,7 @@ NOTES:
 - **resource/wallix-bastion_encryption**, **resource/wallix-bastion_config_x509**, **data-source/wallix-bastion_config_x509**: an `output` that references `current_passphrase`, `new_passphrase` or `server_private_key` must now set `sensitive = true`, or the plan fails with `Output refers to sensitive values`
 - **resource/wallix-bastion_profile**: `profile_name` is now read on every refresh, so a profile renamed outside Terraform shows as a change, which replaces the profile
 - **resource/wallix-bastion_application_localdomain_account**: removing `password` from the configuration no longer clears the password on the Bastion
+- **resource/wallix-bastion_device**: tags are now replaced by those of the configuration, so tags added outside of Terraform are removed by the next apply when the configuration doesn't list them; use `lifecycle { ignore_changes = [tags] }` for tags managed elsewhere
 
 ## 0.15.2 (October 01, 2026)
 
