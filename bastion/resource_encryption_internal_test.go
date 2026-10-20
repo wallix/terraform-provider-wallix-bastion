@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
+const testOldPassphrase = "old-passphrase"
+
 // encryptionMock is a Bastion whose GET /encryption returns sealState, and which records the PUT
 // bodies.
 type encryptionMock struct {
@@ -82,7 +84,7 @@ func TestDataSourceEncryptionReadsTheSealState(t *testing.T) {
 func TestEncryptionReadOfASealedBastionFails(t *testing.T) {
 	mock := &encryptionMock{sealState: encryptionSealed}
 	r := resourceEncryption()
-	d := schema.TestResourceDataRaw(t, r.Schema, map[string]interface{}{"new_passphrase": "p"})
+	d := schema.TestResourceDataRaw(t, r.Schema, map[string]interface{}{skNewPassphrase: "p"})
 	d.SetId("encryption")
 	diags := r.ReadContext(t.Context(), d, mock.client(t))
 	if !diags.HasError() || !strings.Contains(fmt.Sprint(diags), "sealed") {
@@ -103,7 +105,7 @@ func TestEncryptionReadOfASealedBastionFails(t *testing.T) {
 func TestEncryptionCreate(t *testing.T) {
 	mock := &encryptionMock{sealState: encryptionNeedSetup}
 	r := resourceEncryption()
-	d := schema.TestResourceDataRaw(t, r.Schema, map[string]interface{}{"new_passphrase": ""})
+	d := schema.TestResourceDataRaw(t, r.Schema, map[string]interface{}{skNewPassphrase: ""})
 	if diags := r.CreateContext(t.Context(), d, mock.client(t)); diags.HasError() {
 		t.Fatalf("create: %v", diags)
 	}
@@ -114,12 +116,12 @@ func TestEncryptionCreate(t *testing.T) {
 	if err := json.Unmarshal([]byte(mock.puts[0]), &body); err != nil {
 		t.Fatal(err)
 	}
-	if v, ok := body["new_passphrase"]; !ok || v != "" || len(body) != 1 {
+	if v, ok := body[skNewPassphrase]; !ok || v != "" || len(body) != 1 {
 		t.Errorf("setup body = %s, want {\"new_passphrase\":\"\"}", mock.puts[0])
 	}
 
 	mock = &encryptionMock{sealState: encryptionUnsealed}
-	d = schema.TestResourceDataRaw(t, r.Schema, map[string]interface{}{"new_passphrase": "p"})
+	d = schema.TestResourceDataRaw(t, r.Schema, map[string]interface{}{skNewPassphrase: "p"})
 	diags := r.CreateContext(t.Context(), d, mock.client(t))
 	if !diags.HasError() || !strings.Contains(fmt.Sprint(diags), "already set up") {
 		t.Fatalf("diags = %v, want the already set up error", diags)
@@ -133,7 +135,7 @@ func TestEncryptionCreate(t *testing.T) {
 func TestPrepareEncryptionJSONForAChange(t *testing.T) {
 	r := resourceEncryption()
 	d := schema.TestResourceDataRaw(t, r.Schema, map[string]interface{}{
-		"current_passphrase": "old-passphrase", "new_passphrase": "new-passphrase",
+		"current_passphrase": testOldPassphrase, skNewPassphrase: "new-passphrase",
 	})
 	body, err := json.Marshal(prepareEncryptionJSON(d, true))
 	if err != nil {
@@ -151,10 +153,10 @@ func TestEncryptionFailedChangeKeepsThePreviousPassphrase(t *testing.T) {
 	client := mock.client(t)
 	r := resourceEncryption()
 	state := &terraform.InstanceState{ID: "encryption", Attributes: map[string]string{
-		"id": "encryption", "current_passphrase": "old-passphrase", "new_passphrase": "old-passphrase",
+		"id": "encryption", "current_passphrase": testOldPassphrase, skNewPassphrase: testOldPassphrase,
 	}}
 	config := terraform.NewResourceConfigRaw(map[string]interface{}{
-		"current_passphrase": "old-passphrase", "new_passphrase": "next-passphrase",
+		"current_passphrase": testOldPassphrase, skNewPassphrase: "next-passphrase",
 	})
 	instanceDiff, err := r.Diff(t.Context(), state, config, client)
 	if err != nil {
@@ -164,7 +166,7 @@ func TestEncryptionFailedChangeKeepsThePreviousPassphrase(t *testing.T) {
 	if !diags.HasError() {
 		t.Fatal("expected the refused change to be returned")
 	}
-	if got := newState.Attributes["new_passphrase"]; got != "old-passphrase" {
+	if got := newState.Attributes[skNewPassphrase]; got != testOldPassphrase {
 		t.Errorf("new_passphrase in state = %q, want the previous one kept", got)
 	}
 }
@@ -173,7 +175,7 @@ func TestEncryptionFailedChangeKeepsThePreviousPassphrase(t *testing.T) {
 func TestEncryptionReadOfAnUnknownSealState(t *testing.T) {
 	mock := &encryptionMock{sealState: "upgrading"}
 	r := resourceEncryption()
-	d := schema.TestResourceDataRaw(t, r.Schema, map[string]interface{}{"new_passphrase": "p"})
+	d := schema.TestResourceDataRaw(t, r.Schema, map[string]interface{}{skNewPassphrase: "p"})
 	d.SetId("encryption")
 	if diags := r.ReadContext(t.Context(), d, mock.client(t)); !diags.HasError() {
 		t.Error("read of an unknown seal_state returned no error")

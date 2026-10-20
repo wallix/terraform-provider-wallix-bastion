@@ -45,7 +45,7 @@ func resourceEncryption() *schema.Resource {
 				Optional:  true,
 				Sensitive: true,
 			},
-			"new_passphrase": {
+			skNewPassphrase: {
 				Type:      schema.TypeString,
 				Required:  true,
 				Sensitive: true,
@@ -132,7 +132,7 @@ func resourceEncryptionUpdate(
 	}
 	// Only a new passphrase changes something on the Bastion: updating current_passphrase alone,
 	// for example after a change, must not send another change request.
-	if d.HasChange("new_passphrase") {
+	if d.HasChange(skNewPassphrase) {
 		// Keep the previous state if the change fails: recorded, the new passphrase would look
 		// applied while the Bastion keeps the old one, and the next plan would be empty.
 		d.Partial(true)
@@ -206,7 +206,7 @@ func readEncryptionState(
 }
 
 func prepareEncryptionJSON(d *schema.ResourceData, update bool) jsonEncryption {
-	jsonData := jsonEncryption{NewPassphrase: d.Get("new_passphrase").(string)}
+	jsonData := jsonEncryption{NewPassphrase: d.Get(skNewPassphrase).(string)}
 	if update {
 		current := d.Get("current_passphrase").(string)
 		jsonData.Passphrase = &current

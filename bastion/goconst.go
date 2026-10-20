@@ -56,6 +56,7 @@ const (
 	skLoginButtonSelector            = "login_button_selector"
 	skLoginFormURL                   = "login_form_url"
 	skModify                         = "modify"
+	skNewPassphrase                  = "new_passphrase"
 	skOCSPCheck                      = "ocsp_check"
 	skOCSPProxy                      = "ocsp_proxy"
 	skOverrideOCSPResponder          = "override_ocsp_responder"
