@@ -208,16 +208,17 @@ check_changelog() {
     fi
 }
 
-check_toolchain() {
-    local wanted current
+# use_release_toolchain runs the checks with the toolchain the release is built with: the toolchain
+# directive of go.mod, as the CI and GoReleaser do. A distribution Go that sets GOTOOLCHAIN=local
+# (Fedora's go1.26.9-X:nodwarf5, for example) would ignore the directive, and govulncheck would then
+# miss the vulnerabilities of the release's standard library (GO-2026-6809 with go1.26.9).
+use_release_toolchain() {
+    local wanted
     wanted=$(awk '$1 == "toolchain" {print $2}' go.mod)
-    current=$(go env GOVERSION)
-    current=${current%%-X:*} # drop the GOEXPERIMENT suffix, e.g. go1.26.9-X:nodwarf5
-    if [[ -n "$wanted" && "$current" != "$wanted" ]]; then
-        log_warning "The checks run with ${current}, go.mod asks for ${wanted} (check GOTOOLCHAIN)."
-    else
-        log_info "Go: ${current}"
+    if [[ -n "$wanted" ]]; then
+        export GOTOOLCHAIN="$wanted"
     fi
+    log_info "Go: $(go env GOVERSION) (GOTOOLCHAIN=${GOTOOLCHAIN:-auto})"
 }
 
 check_docs() {
@@ -242,7 +243,7 @@ check_docs() {
 
 run_checks() {
     log_info "Running the linters, tests and build on $(git rev-parse --short HEAD)..."
-    check_toolchain
+    use_release_toolchain
 
     if command -v golangci-lint &>/dev/null; then
         # .golangci.yml uses the v2 config schema (required by golangci-lint-action@v9);

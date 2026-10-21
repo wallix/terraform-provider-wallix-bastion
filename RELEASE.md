@@ -41,8 +41,10 @@ Don't create the GitHub release by hand: the release workflow publishes it.
 - Dependencies are up to date on `develop`, through Dependabot or pull requests (`make update-deps`).
   The script doesn't update them, so that a release only ships what went through the CI of
   `develop`.
-- Go as required by `go.mod` (`toolchain` directive, Go 1.26.9 today). With the default
-  `GOTOOLCHAIN=auto`, Go downloads it.
+- Go 1.26 or later. The script runs the checks with the `toolchain` directive of `go.mod`
+  (`GOTOOLCHAIN=<toolchain>`), the Go the CI and GoReleaser build with, downloaded if needed. A
+  distribution Go that sets `GOTOOLCHAIN=local` would otherwise ignore the directive, and
+  govulncheck would miss the vulnerabilities of the release's standard library.
 - golangci-lint v2, and for the docs check, `tfplugindocs` and `npx` (markdownlint-cli2). The script
   warns and skips the lint or the docs check if they are missing, as the CI runs them on pull
   requests.
@@ -102,7 +104,8 @@ For a release candidate, it may also be `## Unreleased` (with a warning) or
 3. **CHANGELOG:** checks that it is finalized for the version.
 4. **Quality checks** on the commit to tag:
    - golangci-lint, `go vet`, unit tests, `make build`;
-   - govulncheck, with the Go of `go.mod` and the same govulncheck version as the CI;
+   - govulncheck, with the same govulncheck version as the CI;
+   - all of them with the `toolchain` of `go.mod`;
    - a docs check: `docs/` must match a fresh `tfplugindocs generate` and markdownlint-cli2;
    - the working directory must still be clean afterwards.
 5. **Publish:** pushes `main` first, then creates and pushes the annotated tag. It asks before each
