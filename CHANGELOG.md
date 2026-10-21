@@ -1,6 +1,15 @@
 # changelog
 
-## Unreleased
+## 0.16.0 (October 21, 2026)
+
+BREAKING CHANGES:
+
+- **provider**: these attributes are now sensitive: `current_passphrase` and `new_passphrase` (resource `wallix-bastion_encryption`), `server_private_key` (resource and data source `wallix-bastion_config_x509`), `options` (resource and data source `wallix-bastion_connection_policy`), `options` and `values` (data source `wallix-bastion_configoption`); a configuration that references them in an `output` without `sensitive = true` fails at plan with `Output refers to sensitive values`, and one that builds a `for_each` from them fails with `Invalid for_each argument`; plans show them as `(sensitive value)` (checked when upgrading from 0.15.2 on a Bastion 12.4.3)
+- **resource/wallix-bastion_device**: tags are now replaced by those of the configuration, so tags added outside of Terraform are removed by the next apply when the configuration doesn't list them; use `lifecycle { ignore_changes = [tags] }` for tags managed elsewhere
+- **resource/wallix-bastion_domain_account_credential**: `propagate_credential_change = true` now requires `password` (or `private_key` for an `ssh_key`, which can't be a `generate:` value), checked at plan
+- **resource/wallix-bastion_encryption**: the creation now fails on a Bastion already set up, without sending any request (import the resource instead), the refresh fails while the Bastion is sealed or in an unknown state, and changing only `current_passphrase` no longer sends a passphrase change
+- **data-source/wallix-bastion_encryption**: `enabled` now means that the encryption is ready for use (`seal_state` is `unsealed`): a configuration gating on it gets `false` on a sealed Bastion, which it reported as `true` before
+- **resource/wallix-bastion_domain**, **resource/wallix-bastion_device_localdomain**: removing `ca_private_key` now fails at plan, `terraform destroy` included; set the key back, or remove the domain from the configuration to destroy it. A key removed with an earlier version is still on the Bastion, and `ca_public_key` shows it
 
 FEATURES:
 
@@ -57,16 +66,9 @@ NOTES:
 
 - **resource/wallix-bastion_connection_policy**: if your plan showed the same `protocol` change after every apply, the next plan replaces the policy (destroy, then create, under the same name); the destroy fails while devices or applications still use the policy
 - **resource/wallix-bastion_user**: `force_change_pwd` isn't read from the Bastion, so a change of `force_change_pwd` applied with an earlier version is in the state but not on the Bastion, and the next plan doesn't show it; to apply it, set the opposite value and apply, then set it back and apply again
-- **resource/wallix-bastion_encryption**, **resource/wallix-bastion_config_x509**, **data-source/wallix-bastion_config_x509**: an `output` that references `current_passphrase`, `new_passphrase` or `server_private_key` must now set `sensitive = true`, or the plan fails with `Output refers to sensitive values`
-- **resource/wallix-bastion_configoption**, **resource/wallix-bastion_connection_policy** and their data sources: an `output` that references `values` or `options` (configoption) or `options` (connection policy) must now set `sensitive = true`, or the plan fails with `Output refers to sensitive values`; plans show these attributes as `(sensitive value)` instead of their content
 - **resource/wallix-bastion_profile**: `profile_name` is now read on every refresh, so a profile renamed outside Terraform shows as a change, which replaces the profile
 - **resource/wallix-bastion_domain**, **resource/wallix-bastion_device_localdomain**: changing `ca_private_key` to a `generate:` value now replaces the CA key of the domain, so `ca_public_key` changes and the targets that trust the previous key must be updated; a change made before this fix shows no difference while the Bastion still has the previous key, so change the value again to get a new key
-- **resource/wallix-bastion_domain**, **resource/wallix-bastion_device_localdomain**: removing `ca_private_key` now fails at plan, `terraform destroy` included; set the key back, or remove the domain from the configuration to destroy it. A key removed with an earlier version is still on the Bastion, and `ca_public_key` shows it
 - **resource/wallix-bastion_application_localdomain_account**: removing `password` from the configuration no longer clears the password on the Bastion
-- **resource/wallix-bastion_domain_account_credential**: `propagate_credential_change = true` now requires `password` (or `private_key` for an `ssh_key`, which can't be a `generate:` value), checked at plan
-- **data-source/wallix-bastion_encryption**: `enabled` now means that the encryption is ready for use (`seal_state` is `unsealed`): a configuration gating on it gets `false` on a sealed Bastion, which it reported as `true` before
-- **resource/wallix-bastion_encryption**: the creation now fails on a Bastion already set up, without sending any request (import the resource instead), the refresh fails while the Bastion is sealed or in an unknown state, and changing only `current_passphrase` no longer sends a passphrase change
-- **resource/wallix-bastion_device**: tags are now replaced by those of the configuration, so tags added outside of Terraform are removed by the next apply when the configuration doesn't list them; use `lifecycle { ignore_changes = [tags] }` for tags managed elsewhere
 
 ## 0.15.2 (October 01, 2026)
 
