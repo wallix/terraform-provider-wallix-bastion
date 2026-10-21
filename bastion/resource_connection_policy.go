@@ -40,8 +40,10 @@ func resourceConnectionPolicy() *schema.Resource {
 			skProtocol: {
 				Type:     schema.TypeString,
 				Required: true,
+				// Only sent on creation: changing it replaces the policy, as for type.
+				ForceNew: true,
 				ValidateFunc: validation.StringInSlice(
-					[]string{skProtoSSH, "RAWTCPIP", skProtoRDP, skProtoRLOGIN, skProtoTELNET, "VNC"},
+					[]string{skProtoSSH, "RAWTCPIP", skProtoRDP, skProtoRLOGIN, skProtoTELNET, "VNC", skProtoWEBAPP},
 					false,
 				),
 			},
@@ -51,7 +53,9 @@ func resourceConnectionPolicy() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice(
-					[]string{skProtoSSH, "RAWTCPIP", skProtoRDP, "RDP-JUMPHOST", skProtoRLOGIN, skProtoTELNET, "VNC"},
+					[]string{
+						skProtoSSH, "RAWTCPIP", skProtoRDP, "RDP-JUMPHOST", skProtoRLOGIN, skProtoTELNET, "VNC", skProtoWEBAPP,
+					},
 					false,
 				),
 			},
@@ -66,6 +70,7 @@ func resourceConnectionPolicy() *schema.Resource {
 			},
 			"options": {
 				Type:         schema.TypeString,
+				Sensitive:    true,
 				Optional:     true,
 				ValidateFunc: validation.StringIsJSON,
 			},
@@ -200,7 +205,7 @@ func searchResourceConnectionPolicy(
 ) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
-		"/connectionpolicies/?q=connection_policy_name="+connectionPolicyName, http.MethodGet, nil)
+		"/connectionpolicies/?"+searchQuery("connection_policy_name", connectionPolicyName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
@@ -265,7 +270,7 @@ func deleteConnectionPolicy(
 	if err != nil {
 		return err
 	}
-	if code != http.StatusOK && code != http.StatusNoContent {
+	if !deleteDone(code, body) {
 		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
@@ -283,6 +288,11 @@ func prepareConnectionPolicyJSON(
 	}
 	if newResource {
 		jsonData.Protocol = d.Get(skProtocol).(string)
+		// WEBAPP connection policies don't exist before API v3.12.
+		if semver.Compare(apiVersion, VersionWallixAPI312) < 0 &&
+			(jsonData.Protocol == skProtoWEBAPP || d.Get(skType).(string) == skProtoWEBAPP) {
+			return jsonData, fmt.Errorf("%s connection policy not available with api version %s", skProtoWEBAPP, apiVersion)
+		}
 		if semver.Compare(apiVersion, VersionWallixAPI312) >= 0 {
 			if v := d.Get(skType).(string); v != "" {
 				jsonData.Type = v

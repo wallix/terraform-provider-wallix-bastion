@@ -52,13 +52,13 @@ resource "wallix-bastion_externalauth_saml" "signed_saml" {
 ### Required
 
 - `authentication_name` (String)
-- `claim_customization` (Block List, Min: 1, Max: 1) (see [below for nested schema](#nestedblock--claim_customization))
 - `idp_metadata` (String)
 - `timeout` (Number)
 
 ### Optional
 
 - `certificate` (String, Sensitive)
+- `claim_customization` (Block List, Max: 1) (see [below for nested schema](#nestedblock--claim_customization))
 - `description` (String)
 - `passphrase` (String, Sensitive)
 - `private_key` (String, Sensitive)
@@ -91,15 +91,17 @@ Optional:
 
 ## Usage Notes
 
-### claim_customization Is Required
+### claim_customization and the API version
 
 `claim_customization` maps SAML assertion attributes from the identity provider to Bastion user
 fields. Only `username` is required within the block; `displayname`, `email`, `language`, and
 `group` are optional and should match the attribute names your identity provider sends in its
 SAML assertions.
 
-This block, and the whole resource, requires Bastion API v3.12+ - it is not available on API
-v3.8.
+The block depends on the API version, and is checked at plan:
+
+- API v3.12 and later: `claim_customization` is required.
+- API v3.8: `claim_customization` isn't part of the API and must not be set.
 
 ### Service Provider Metadata
 

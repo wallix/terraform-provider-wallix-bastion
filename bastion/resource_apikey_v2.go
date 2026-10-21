@@ -182,7 +182,7 @@ func searchResourceAPIKeyV2(
 	string, bool, error,
 ) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/apikeys-v2/?q=apikey_name="+apikeyName, http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/apikeys-v2/?"+searchQuery("apikey_name", apikeyName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
@@ -241,7 +241,7 @@ func deleteAPIKeyV2(
 	if err != nil {
 		return err
 	}
-	if code != http.StatusOK && code != http.StatusNoContent {
+	if !deleteDone(code, body) {
 		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 

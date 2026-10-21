@@ -30,6 +30,7 @@ func resourceDeviceService() *schema.Resource {
 		ReadContext:   resourceDeviceServiceRead,
 		UpdateContext: resourceDeviceServiceUpdate,
 		DeleteContext: resourceDeviceServiceDelete,
+		CustomizeDiff: resourceDeviceServiceCustomizeDiff,
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceDeviceServiceImport,
 		},
@@ -75,6 +76,22 @@ func resourceDeviceService() *schema.Resource {
 			},
 		},
 	}
+}
+
+// An SSH service requires at least one subprotocol: the Bastion refuses to create one without
+// ("'subprotocols' is a required property") and to clear them ("[] is too short"), checked on a
+// Bastion 12.4.1. RDP accepts an empty list.
+func resourceDeviceServiceCustomizeDiff(
+	_ context.Context, d *schema.ResourceDiff, _ interface{},
+) error {
+	if d.Get(skProtocol).(string) != skProtoSSH || !d.NewValueKnown(skSubprotocols) {
+		return nil
+	}
+	if d.Get(skSubprotocols).(*schema.Set).Len() == 0 {
+		return errors.New("an SSH service requires at least one of subprotocols")
+	}
+
+	return nil
 }
 
 func resourceDeviceServiceVersionCheck(version string) error {
@@ -219,7 +236,7 @@ func searchResourceDeviceService(
 ) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/devices/"+deviceID+
-		"/services/?q=service_name="+serviceName, http.MethodGet, nil)
+		"/services/?"+searchQuery("service_name", serviceName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
@@ -287,7 +304,7 @@ func deleteDeviceService(
 	if err != nil {
 		return err
 	}
-	if code != http.StatusOK && code != http.StatusNoContent {
+	if !deleteDone(code, body) {
 		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
@@ -367,6 +384,9 @@ func prepareDeviceServiceJSON(
 			}
 		}
 		jsonData.SubProtocols = &subProtocols
+	} else if d.HasChange(skSubprotocols) {
+		// The last subprotocols were removed: an empty list clears them, an omitted one keeps them.
+		jsonData.SubProtocols = &[]string{}
 	}
 
 	return jsonData, nil

@@ -87,3 +87,40 @@ resource "wallix-bastion_timeframe" "testacc_Timeframe2" {
 }
 `
 }
+
+// Renaming a timeframe dropped it from state ("Root object was present, but now absent") and
+// left it on the Bastion under its new name.
+func TestAccResourceTimeframe_rename(t *testing.T) {
+	resourceName := "wallix-bastion_timeframe.testacc_TimeframeRename"
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceTimeframeRename("testacc_TimeframeRename_a"),
+			},
+			{
+				Config: testAccResourceTimeframeRename("testacc_TimeframeRename_b"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", "testacc_TimeframeRename_b"),
+					resource.TestCheckResourceAttr(resourceName, "timeframe_name", "testacc_TimeframeRename_b"),
+				),
+			},
+		},
+	})
+}
+
+func testAccResourceTimeframeRename(name string) string {
+	return `
+resource "wallix-bastion_timeframe" "testacc_TimeframeRename" {
+  timeframe_name = "` + name + `"
+  periods {
+    start_date = "2020-01-01"
+    end_date   = "2020-02-02"
+    start_time = "08:00"
+    end_time   = "12:00"
+    week_days  = ["monday"]
+  }
+}
+`
+}

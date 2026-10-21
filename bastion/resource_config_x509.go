@@ -46,8 +46,9 @@ func resourceConfigX509() *schema.Resource {
 				Required: true,
 			},
 			"server_private_key": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:      schema.TypeString,
+				Required:  true,
+				Sensitive: true,
 			},
 			"enable": {
 				Type:     schema.TypeBool,
@@ -213,7 +214,7 @@ func deleteConfigX509(ctx context.Context, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	if code != http.StatusOK && code != http.StatusNoContent {
+	if !deleteDone(code, body) {
 		return fmt.Errorf("API returned error: %d with body:\n%s", code, body)
 	}
 

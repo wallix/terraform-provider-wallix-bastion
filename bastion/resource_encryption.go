@@ -11,10 +11,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// NewPassphrase is always sent: an empty one sets up the Bastion without a passphrase. Passphrase,
+// the current one, is only sent to change it.
 type jsonEncryption struct {
-	Passphrase    string `json:"passphrase,omitempty"`
-	NewpassPhrase string `json:"new_passphrase,omitempty"`
+	Passphrase    *string `json:"passphrase,omitempty"`
+	NewPassphrase string  `json:"new_passphrase"`
 }
+
+// jsonEncryptionState is the GET response, with the field names of API 3.8 and later.
+type jsonEncryptionState struct {
+	SealState      string `json:"seal_state"`
+	EncryptionMode string `json:"encryption_mode"`
+}
+
+const (
+	encryptionNeedSetup = "need_setup"
+	encryptionSealed    = "sealed"
+	encryptionUnsealed  = "unsealed"
+)
 
 func resourceEncryption() *schema.Resource {
 	return &schema.Resource{
@@ -27,12 +41,14 @@ func resourceEncryption() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"current_passphrase": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
-			"new_passphrase": {
-				Type:     schema.TypeString,
-				Required: true,
+			skNewPassphrase: {
+				Type:      schema.TypeString,
+				Required:  true,
+				Sensitive: true,
 			},
 		},
 	}
@@ -54,20 +70,24 @@ func resourceEncryptionCreate(
 		return diag.FromErr(err)
 	}
 
+	// A setup request is only for a Bastion that isn't set up: on one that is, changing the
+	// passphrase requires the current one, through an import and an update.
+	state, err := readEncryptionState(ctx, m)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if state.SealState != encryptionNeedSetup {
+		return diag.Errorf("the Bastion encryption is already set up (seal_state %q): import it with "+
+			"`terraform import wallix-bastion_encryption.<name> encryption`", state.SealState)
+	}
 	// Add encryption
-	err := addEncryption(ctx, d, m)
+	err = addEncryption(ctx, d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	// Set a static ID since the API doesn't return one
 	d.SetId("encryption")
-
-	// Set persistent attributes
-	err = d.Set("new_passphrase", d.Get("new_passphrase").(string))
-	if err != nil {
-		return diag.FromErr(err)
-	}
 
 	return resourceEncryptionRead(ctx, d, m)
 }
@@ -79,22 +99,26 @@ func resourceEncryptionRead(
 	if err := resourceEncryptionVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	// Verify existence
-	exists, err := verifyEncryption(ctx, m)
+	state, err := readEncryptionState(ctx, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	if !exists {
-		// Clear the resource ID if it no longer exists
+	switch state.SealState {
+	case encryptionNeedSetup:
+		// Not set up (fresh install): the next apply sets it up.
 		d.SetId("")
 
 		return nil
+	case encryptionSealed:
+		// Dropping it from state would make the next apply send a setup request to a sealed
+		// Bastion: it must be unsealed with its passphrase first.
+		return diag.Errorf("the Bastion encryption is sealed: unseal it with its passphrase before " +
+			"Terraform can manage wallix-bastion_encryption")
+	case encryptionUnsealed:
+	default:
+		return diag.Errorf("unknown seal_state %q of the Bastion encryption", state.SealState)
 	}
 	d.SetId("encryption")
-	err = d.Set("new_passphrase", d.Get("new_passphrase").(string))
-	if err != nil {
-		return diag.FromErr(err)
-	}
 
 	return nil
 }
@@ -102,28 +126,21 @@ func resourceEncryptionRead(
 func resourceEncryptionUpdate(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) diag.Diagnostics {
-	d.Partial(true)
 	c := m.(*Client)
 	if err := resourceEncryptionVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-
-	d.Partial(true)
-
-	// Update encryption
-	if d.HasChange("current_passphrase") || d.HasChange("new_passphrase") {
+	// Only a new passphrase changes something on the Bastion: updating current_passphrase alone,
+	// for example after a change, must not send another change request.
+	if d.HasChange(skNewPassphrase) {
+		// Keep the previous state if the change fails: recorded, the new passphrase would look
+		// applied while the Bastion keeps the old one, and the next plan would be empty.
+		d.Partial(true)
 		if err := updateEncryption(ctx, d, m); err != nil {
 			return diag.FromErr(err)
 		}
-		if d.HasChange("new_passphrase") {
-			err := d.Set("new_passphrase", d.Get("new_passphrase"))
-			if err != nil {
-				return diag.FromErr(err)
-			}
-		}
+		d.Partial(false)
 	}
-
-	d.Partial(false)
 
 	return resourceEncryptionRead(ctx, d, m)
 }
@@ -133,7 +150,7 @@ func addEncryption(
 ) error {
 	c := m.(*Client)
 	jsonData := prepareEncryptionJSON(d, false)
-	body, code, err := c.newRequest(ctx, "/encryption/", http.MethodPut, jsonData)
+	body, code, err := c.newRequest(ctx, "/encryption", http.MethodPut, jsonData)
 	if err != nil {
 		return err
 	}
@@ -169,52 +186,31 @@ func resourceEncryptionDelete(
 	return nil
 }
 
-func verifyEncryption(
+func readEncryptionState(
 	ctx context.Context, m interface{},
-) (bool, error) {
+) (jsonEncryptionState, error) {
 	c := m.(*Client)
+	var state jsonEncryptionState
 	body, code, err := c.newRequest(ctx, "/encryption", http.MethodGet, nil)
 	if err != nil {
-		return false, err
+		return state, err
 	}
-
 	if code != http.StatusOK {
-		return false, fmt.Errorf("API didn't return OK: %d with body:\n%s", code, body)
+		return state, fmt.Errorf("API didn't return OK: %d with body:\n%s", code, body)
+	}
+	if err := json.Unmarshal([]byte(body), &state); err != nil {
+		return state, fmt.Errorf("unmarshaling JSON: %w", err)
 	}
 
-	// Check if encryption exists
-	var result map[string]interface{}
-	err = json.Unmarshal([]byte(body), &result)
-	if err != nil {
-		return false, fmt.Errorf("unmarshaling JSON: %w", err)
-	}
-
-	// Check if encryption status exists
-	var encryptionStatus string
-	switch c.bastionAPIVersion {
-	case "3.8":
-		encryptionStatus, _ = result["encryption"].(string)
-		if encryptionStatus != "ready" {
-			return false, nil // Return false if encryption is not "ready"
-		}
-	case "3.12":
-		encryptionStatus, _ = result["sealed_state"].(string)
-		if encryptionStatus != "unsealed" {
-			return false, nil // Return false if encryption is not "unsealed"
-		}
-	}
-
-	// If encryption is ready (or unsealed for 3.12), return true
-	return true, nil
+	return state, nil
 }
 
 func prepareEncryptionJSON(d *schema.ResourceData, update bool) jsonEncryption {
-	var jsonData jsonEncryption
-
+	jsonData := jsonEncryption{NewPassphrase: d.Get(skNewPassphrase).(string)}
 	if update {
-		jsonData.Passphrase = d.Get("current_passphrase").(string)
+		current := d.Get("current_passphrase").(string)
+		jsonData.Passphrase = &current
 	}
-	jsonData.NewpassPhrase = d.Get("new_passphrase").(string)
 
 	return jsonData
 }

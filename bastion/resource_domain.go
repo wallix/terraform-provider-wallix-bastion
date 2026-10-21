@@ -3,6 +3,7 @@ package bastion
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"slices"
@@ -39,6 +40,7 @@ func resourceDomain() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceDomainImport,
 		},
+		CustomizeDiff: domainCAPrivateKeyCustomizeDiff,
 		Schema: map[string]*schema.Schema{
 			skDomainName: {
 				Type:     schema.TypeString,
@@ -120,6 +122,25 @@ func resourceDomainVersionCheck(version string) error {
 	}
 
 	return fmt.Errorf("resource wallix-bastion_domain not available with api version %s", version)
+}
+
+// The Bastion can't remove the CA key of a domain or a device local domain (an empty value is
+// ignored, null is refused): a removal would only be recorded in the state, the key staying active.
+// A changed key gives a new ca_public_key, known after apply, so that the resources using it get the
+// new key in the same apply.
+func domainCAPrivateKeyCustomizeDiff(
+	_ context.Context, d *schema.ResourceDiff, _ interface{},
+) error {
+	oldKey, newKey := d.GetChange(skCAPrivateKey)
+	if d.NewValueKnown(skCAPrivateKey) && oldKey.(string) != "" && newKey.(string) == "" {
+		return errors.New("ca_private_key can't be removed: the Bastion keeps the CA key; set it back, or " +
+			"remove the domain from the configuration to destroy it, then add it back without ca_private_key")
+	}
+	if d.Id() != "" && d.HasChange(skCAPrivateKey) {
+		return d.SetNewComputed(skCAPublicKey) //nolint:wrapcheck
+	}
+
+	return nil
 }
 
 func resourceDomainCreate(
@@ -239,7 +260,7 @@ func searchResourceDomain(
 	string, bool, error,
 ) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/domains/?q=domain_name="+domainName, http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/domains/?"+searchQuery("domain_name", domainName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
@@ -298,7 +319,7 @@ func deleteDomain(
 	if err != nil {
 		return err
 	}
-	if code != http.StatusOK && code != http.StatusNoContent {
+	if !deleteDone(code, body) {
 		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
@@ -313,13 +334,10 @@ func prepareDomainJSON(d *schema.ResourceData, newResource bool) jsonDomain {
 		Passphrase:     d.Get(skPassphrase).(string),
 	}
 
-	if !strings.HasPrefix(d.Get(skCAPrivateKey).(string), "generate:") {
+	// The Bastion generates a new key each time it receives a generate: value: only send it when
+	// it changes, also when replacing an existing key.
+	if !strings.HasPrefix(d.Get(skCAPrivateKey).(string), "generate:") || d.HasChange(skCAPrivateKey) {
 		jsonData.CAPrivateKey = d.Get(skCAPrivateKey).(string)
-	} else if d.HasChange(skCAPrivateKey) {
-		oldKey, newKey := d.GetChange(skCAPrivateKey)
-		if oldKey.(string) == "" {
-			jsonData.CAPrivateKey = newKey.(string)
-		}
 	}
 
 	if d.Get(skEnablePasswordChange).(bool) {

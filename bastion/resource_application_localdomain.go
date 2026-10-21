@@ -223,7 +223,7 @@ func searchResourceApplicationLocalDomain(
 ) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/applications/"+applicationID+
-		"/localdomains/?q=domain_name="+domainName, http.MethodGet, nil)
+		"/localdomains/?"+searchQuery("domain_name", domainName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
@@ -285,7 +285,7 @@ func deleteApplicationLocalDomain(
 	if err != nil {
 		return err
 	}
-	if code != http.StatusOK && code != http.StatusNoContent {
+	if !deleteDone(code, body) {
 		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 

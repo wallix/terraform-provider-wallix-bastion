@@ -220,7 +220,7 @@ func searchResourceNotification(
 ) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
-		"/notifications/?q=notification_name="+notificationName, http.MethodGet, nil)
+		"/notifications/?"+searchQuery("notification_name", notificationName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
@@ -282,7 +282,7 @@ func deleteNotification(
 	if err != nil {
 		return err
 	}
-	if code != http.StatusOK && code != http.StatusNoContent {
+	if !deleteDone(code, body) {
 		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 

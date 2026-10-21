@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"slices"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -48,9 +47,15 @@ func dataSourceConfigoption() *schema.Resource {
 				Computed: true,
 			},
 			"options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:      schema.TypeList,
+				Sensitive: true,
+				Computed:  true,
+				Elem:      &schema.Schema{Type: schema.TypeString},
+			},
+			skValues: {
+				Type:      schema.TypeString,
+				Sensitive: true,
+				Computed:  true,
 			},
 		},
 	}
@@ -86,26 +91,18 @@ func readConfigoption(
 ) (
 	jsonConfigOptions, error,
 ) {
-	c := m.(*Client)
-	var result jsonConfigOptions
-	var params string
-	if optionsList := d.Get("options_list").(*schema.Set).List(); len(optionsList) > 0 {
-		options := make([]string, len(optionsList))
-		for i, v := range optionsList {
-			options[i] = v.(string)
-		}
-		params = "?options=" + strings.Join(options, ",")
+	optionsList := d.Get("options_list").(*schema.Set).List()
+	options := make([]string, len(optionsList))
+	for i, v := range optionsList {
+		options[i] = v.(string)
 	}
-	body, code, err := c.newRequest(ctx, "/configoptions/"+d.Get("config_id").(string)+params, http.MethodGet, nil)
+	configID := d.Get("config_id").(string)
+	result, code, err := getConfigoption(ctx, m, configID, options, false)
 	if err != nil {
 		return result, err
 	}
-	if code != http.StatusOK {
-		return result, fmt.Errorf("api doesn't return OK: %d with body:\n%s", code, body)
-	}
-	err = json.Unmarshal([]byte(body), &result)
-	if err != nil {
-		return result, fmt.Errorf("unmarshaling json: %w", err)
+	if code == http.StatusNotFound {
+		return result, fmt.Errorf("configuration %s doesn't exist", configID)
 	}
 
 	return result, nil
@@ -130,6 +127,13 @@ func fillConfigoption(d *schema.ResourceData, jsonData jsonConfigOptions) {
 		options[i] = string(b)
 	}
 	if tfErr := d.Set("options", options); tfErr != nil {
+		panic(tfErr)
+	}
+	values, err := json.Marshal(configOptionsToValues(jsonData.Options))
+	if err != nil {
+		panic(err)
+	}
+	if tfErr := d.Set(skValues, string(values)); tfErr != nil {
 		panic(tfErr)
 	}
 }

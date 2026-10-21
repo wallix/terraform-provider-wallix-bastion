@@ -185,7 +185,7 @@ func searchResourceCluster(
 	string, bool, error,
 ) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/clusters/?q=cluster_name="+clusterName, http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/clusters/?"+searchQuery("cluster_name", clusterName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
@@ -244,7 +244,7 @@ func deleteCluster(
 	if err != nil {
 		return err
 	}
-	if code != http.StatusOK && code != http.StatusNoContent {
+	if !deleteDone(code, body) {
 		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 

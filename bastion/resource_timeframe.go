@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"regexp"
 	"slices"
 
@@ -160,6 +161,11 @@ func resourceTimeframeUpdate(
 	if err := updateTimeframe(ctx, d, m); err != nil {
 		return diag.FromErr(err)
 	}
+	// The timeframe is identified by its name, and the API renames it: follow the new name, or
+	// the read after the update doesn't find it and drops it from state.
+	if d.HasChange("timeframe_name") {
+		d.SetId(d.Get("timeframe_name").(string))
+	}
 	d.Partial(false)
 
 	return resourceTimeframeRead(ctx, d, m)
@@ -213,7 +219,7 @@ func checkResourceTimeframeExits(
 	bool, error,
 ) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/timeframes/"+timeframeName, http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/timeframes/"+url.PathEscape(timeframeName), http.MethodGet, nil)
 	if err != nil {
 		return false, err
 	}
@@ -254,7 +260,7 @@ func updateTimeframe(
 	if err != nil {
 		return err
 	}
-	body, code, err := c.newRequest(ctx, "/timeframes/"+d.Id()+"?force=true", http.MethodPut, jsonData)
+	body, code, err := c.newRequest(ctx, "/timeframes/"+url.PathEscape(d.Id())+"?force=true", http.MethodPut, jsonData)
 	if err != nil {
 		return err
 	}
@@ -269,11 +275,11 @@ func deleteTimeframe(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) error {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/timeframes/"+d.Id(), http.MethodDelete, nil)
+	body, code, err := c.newRequest(ctx, "/timeframes/"+url.PathEscape(d.Id()), http.MethodDelete, nil)
 	if err != nil {
 		return err
 	}
-	if code != http.StatusOK && code != http.StatusNoContent {
+	if !deleteDone(code, body) {
 		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
@@ -326,7 +332,7 @@ func readTimeframeOptions(
 ) {
 	c := m.(*Client)
 	var result jsonTimeframe
-	body, code, err := c.newRequest(ctx, "/timeframes/"+timeframeID, http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/timeframes/"+url.PathEscape(timeframeID), http.MethodGet, nil)
 	if err != nil {
 		return result, err
 	}

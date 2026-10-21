@@ -36,8 +36,9 @@ func dataSourceConnectionPolicy() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"options": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:      schema.TypeString,
+				Sensitive: true,
+				Computed:  true,
 			},
 		},
 	}

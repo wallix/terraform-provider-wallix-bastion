@@ -31,20 +31,25 @@ jobs:
           go-version-file: 'go.mod'
           cache: true
       
+      # Run with the Go installed above from go.mod (its toolchain directive), the one the release is
+      # built with. golang/govulncheck-action sets go-version to "stable" by default, which wins over
+      # go-version-file: it scanned the standard library of the latest Go and missed the
+      # vulnerabilities of the release toolchain.
       - name: Run govulncheck
-        uses: golang/govulncheck-action@v1
-        with:
-          go-version-file: go.mod
-          check-latest: false
-      
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+
+      # osv-scanner v2: the v1 command left an empty osv-results.sarif in CI, so the upload failed
+      # and the following scans were skipped, hidden by continue-on-error. It exits 1 when it finds
+      # vulnerabilities, which the upload below reports; any other non-zero exit is a scanner
+      # failure, which now fails the job. osv-scanner v2.7.0 requires Go 1.27, newer than the Go
+      # installed above with GOTOOLCHAIN=local: Go downloads that toolchain for this install only.
       - name: Run OSV Scanner (dependency vulnerability scanner)
         run: |
-          go install github.com/google/osv-scanner/cmd/osv-scanner@latest
-          osv-scanner --recursive --skip-git --format=sarif --output=osv-results.sarif ./
-        continue-on-error: true  # Don't fail the job on vulnerabilities, just report them
-      
+          GOTOOLCHAIN=go1.27.0 go install github.com/google/osv-scanner/v2/cmd/osv-scanner@v2.7.0
+          osv-scanner scan source -r --format sarif --output-file osv-results.sarif ./ || [ $? -eq 1 ]
+
       - name: Upload OSV scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: 'osv-results.sarif'
@@ -60,7 +65,7 @@ jobs:
         continue-on-error: true  # Don't fail the job on vulnerabilities, just report them
       
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: 'trivy-fs-results.sarif'
@@ -106,7 +111,7 @@ jobs:
         continue-on-error: true
       
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: 'trivy-container-results.sarif'

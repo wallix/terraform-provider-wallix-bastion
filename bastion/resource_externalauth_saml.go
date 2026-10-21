@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"golang.org/x/mod/semver"
 )
 
 type jsonExternalAuthSaml struct {
@@ -46,6 +47,7 @@ func resourceExternalAuthSaml() *schema.Resource {
 		ReadContext:   resourceExternalAuthSamlRead,
 		UpdateContext: resourceExternalAuthSamlUpdate,
 		DeleteContext: resourceExternalAuthSamlDelete,
+		CustomizeDiff: resourceExternalAuthSamlCustomizeDiff,
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceExternalAuthSamlImport,
 		},
@@ -68,9 +70,11 @@ func resourceExternalAuthSaml() *schema.Resource {
 				Optional:  true,
 				Sensitive: true,
 			},
+			// Required on API v3.12 and later, refused on earlier versions: checked at plan, see
+			// resourceExternalAuthSamlCustomizeDiff.
 			"claim_customization": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -142,6 +146,33 @@ func resourceExternalAuthSaml() *schema.Resource {
 			},
 		},
 	}
+}
+
+// samlClaimCustomizationAvailable reports whether the API version has claim_customization: API
+// v3.12 requires it ("'claim_customization' is a required property"), and v3.8 refuses it
+// ("Additional properties are not allowed ('claim_customization' was unexpected)"), checked on a
+// Bastion 12.4.1.
+func samlClaimCustomizationAvailable(apiVersion string) bool {
+	return semver.Compare(apiVersion, VersionWallixAPI312) >= 0
+}
+
+func resourceExternalAuthSamlCustomizeDiff(
+	_ context.Context, d *schema.ResourceDiff, m interface{},
+) error {
+	c, ok := m.(*Client)
+	if !ok || c == nil {
+		return nil
+	}
+	set := len(d.Get("claim_customization").([]interface{})) > 0
+	switch {
+	case samlClaimCustomizationAvailable(c.bastionAPIVersion) && !set:
+		return fmt.Errorf("claim_customization is required with API version %s", c.bastionAPIVersion)
+	case !samlClaimCustomizationAvailable(c.bastionAPIVersion) && set:
+		return fmt.Errorf("claim_customization is not available with API version %s (requires %s+)",
+			c.bastionAPIVersion, VersionWallixAPI312)
+	}
+
+	return nil
 }
 
 func resourceExternalAuthSamlVersionCheck(version string) error {
@@ -269,7 +300,8 @@ func searchResourceExternalAuthSaml(
 	string, bool, error,
 ) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/externalauths/?q=authentication_name="+authenticationName, http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx,
+		"/externalauths/?"+searchQuery("authentication_name", authenticationName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
@@ -292,7 +324,7 @@ func addExternalAuthSaml(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (string, error) {
 	c := m.(*Client)
-	jsonData := prepareExternalAuthSamlJSON(d)
+	jsonData := prepareExternalAuthSamlJSON(d, c.bastionAPIVersion)
 	body, headers, code, err := c.newRequestWithHeaders(ctx, "/externalauths/", http.MethodPost, jsonData)
 	if err != nil {
 		return "", err
@@ -308,7 +340,7 @@ func updateExternalAuthSaml(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) error {
 	c := m.(*Client)
-	jsonData := prepareExternalAuthSamlJSON(d)
+	jsonData := prepareExternalAuthSamlJSON(d, c.bastionAPIVersion)
 	body, code, err := c.newRequest(ctx, "/externalauths/"+d.Id(), http.MethodPut, jsonData)
 	if err != nil {
 		return err
@@ -328,14 +360,14 @@ func deleteExternalAuthSaml(
 	if err != nil {
 		return err
 	}
-	if code != http.StatusOK && code != http.StatusNoContent {
+	if !deleteDone(code, body) {
 		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
 	return nil
 }
 
-func prepareExternalAuthSamlJSON(d *schema.ResourceData) jsonExternalAuthSaml {
+func prepareExternalAuthSamlJSON(d *schema.ResourceData, apiVersion string) jsonExternalAuthSaml {
 	jsonData := jsonExternalAuthSaml{
 		AuthenticationName: d.Get(skAuthenticationName).(string),
 		Type:               "SAML",
@@ -345,6 +377,9 @@ func prepareExternalAuthSamlJSON(d *schema.ResourceData) jsonExternalAuthSaml {
 		Description:        d.Get(skDescription).(string),
 		Passphrase:         d.Get(skPassphrase).(string),
 		PrivateKey:         d.Get(skPrivateKey).(string),
+	}
+	if !samlClaimCustomizationAvailable(apiVersion) {
+		return jsonData
 	}
 	for _, v := range d.Get("claim_customization").([]interface{}) {
 		if v == nil {

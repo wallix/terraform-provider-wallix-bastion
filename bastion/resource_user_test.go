@@ -90,11 +90,56 @@ resource "wallix-bastion_user" "testacc_User" {
   groups = [
     wallix-bastion_usergroup.testacc_User.group_name,
   ]
-  display_name    = "testacc User"
-  expiration_date = "2032-01-03 00:01"
-  ip_source       = "127.0.0.1"
-  is_disabled     = true
-  ssh_public_key  = tls_private_key.testacc_User.public_key_openssh
+  display_name       = "testacc User"
+  expiration_date    = "2032-01-03 00:01"
+  ip_source          = "127.0.0.1"
+  is_disabled        = true
+  preferred_language = "en"
+  ssh_public_key     = tls_private_key.testacc_User.public_key_openssh
 }
 `
+}
+
+// A "#" in a user name was not escaped: destroying "testacc_UserHash#1" sent DELETE
+// /users/testacc_UserHash and deleted the other user.
+func TestAccResourceUser_nameWithHash(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceUserHash(true),
+			},
+			{
+				// The post-apply plan would recreate testacc_UserHash if the destroy of
+				// testacc_UserHash#1 deleted it.
+				Config: testAccResourceUserHash(false),
+			},
+		},
+	})
+}
+
+func testAccResourceUserHash(withHash bool) string {
+	config := `
+resource "wallix-bastion_user" "testacc_UserHash" {
+  user_name  = "testacc_UserHash"
+  email      = "testacc-user@none.none"
+  profile    = "user"
+  user_auths = ["local_password"]
+  password   = "Testacc-Passw0rd-1x"
+}
+`
+	if withHash {
+		config += `
+resource "wallix-bastion_user" "testacc_UserHash1" {
+  user_name  = "testacc_UserHash#1"
+  email      = "testacc-user@none.none"
+  profile    = "user"
+  user_auths = ["local_password"]
+  password   = "Testacc-Passw0rd-1x"
+}
+`
+	}
+
+	return config
 }

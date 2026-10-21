@@ -395,7 +395,7 @@ func searchResourceTargetGroup(
 	string, bool, error,
 ) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/targetgroups/?q=group_name="+groupName, http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/targetgroups/?"+searchQuery("group_name", groupName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
@@ -460,7 +460,7 @@ func deleteTargetGroup(
 	if err != nil {
 		return err
 	}
-	if code != http.StatusOK && code != http.StatusNoContent {
+	if !deleteDone(code, body) {
 		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 

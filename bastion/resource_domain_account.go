@@ -248,7 +248,7 @@ func searchResourceDomainAccount(
 ) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx,
-		"/domains/"+domainID+"/accounts/?q=account_name="+accountName, http.MethodGet, nil)
+		"/domains/"+domainID+"/accounts/?"+searchQuery("account_name", accountName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
@@ -316,7 +316,7 @@ func deleteDomainAccount(
 	if err != nil {
 		return err
 	}
-	if code != http.StatusOK && code != http.StatusNoContent {
+	if !deleteDone(code, body) {
 		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
@@ -345,6 +345,10 @@ func prepareDomainAccountJSON(d *schema.ResourceData) (jsonDomainAccount, error)
 			resources[i] = v.(string)
 		}
 		jsonData.Resources = &resources
+	} else if d.HasChange("resources") {
+		// Removing every resource must be sent as an empty list: an omitted field keeps them. When
+		// resources isn't set (computed), it doesn't change and the resources in state are sent as is.
+		jsonData.Resources = &[]string{}
 	}
 
 	return jsonData, nil

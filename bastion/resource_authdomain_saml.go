@@ -215,7 +215,7 @@ func searchResourceAuthDomainSAML(
 	string, bool, error,
 ) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/authdomains/?q=domain_name="+domainName, http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/authdomains/?"+searchQuery("domain_name", domainName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
@@ -274,7 +274,7 @@ func deleteAuthDomainSAML(
 	if err != nil {
 		return err
 	}
-	if code != http.StatusOK && code != http.StatusNoContent {
+	if !deleteDone(code, body) {
 		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 

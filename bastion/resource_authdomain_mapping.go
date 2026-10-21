@@ -224,7 +224,7 @@ func searchResourceAuthDomainMapping(
 	c := m.(*Client)
 	body, code, err := c.newRequest(
 		ctx,
-		"/authdomains/"+domainID+"/mappings/?q=user_group="+userGroup,
+		"/authdomains/"+domainID+"/mappings/?"+searchQuery("user_group", userGroup),
 		http.MethodGet,
 		nil,
 	)
@@ -301,7 +301,7 @@ func deleteAuthDomainMapping(
 	if err != nil {
 		return err
 	}
-	if code != http.StatusOK && code != http.StatusNoContent {
+	if !deleteDone(code, body) {
 		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 

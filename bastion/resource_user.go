@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"slices"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -220,7 +221,7 @@ func checkResourceUserExists(
 	bool, error,
 ) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/users/"+userName, http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/users/"+url.PathEscape(userName), http.MethodGet, nil)
 	if err != nil {
 		return false, err
 	}
@@ -255,7 +256,8 @@ func updateUser(
 ) error {
 	c := m.(*Client)
 	jsonData := prepareUserJSON(d, false)
-	body, code, err := c.newRequest(ctx, "/users/"+d.Get("user_name").(string)+"?force=true", http.MethodPut, jsonData)
+	body, code, err := c.newRequest(ctx,
+		"/users/"+url.PathEscape(d.Get("user_name").(string))+"?force=true", http.MethodPut, jsonData)
 	if err != nil {
 		return err
 	}
@@ -270,11 +272,11 @@ func deleteUser(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) error {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/users/"+d.Get("user_name").(string), http.MethodDelete, nil)
+	body, code, err := c.newRequest(ctx, "/users/"+url.PathEscape(d.Get("user_name").(string)), http.MethodDelete, nil)
 	if err != nil {
 		return err
 	}
-	if code != http.StatusOK && code != http.StatusNoContent {
+	if !deleteDone(code, body) {
 		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
@@ -306,6 +308,14 @@ func prepareUserJSON(d *schema.ResourceData, newResource bool) jsonUser {
 			jsonData.Password = v
 		}
 	}
+	// On update, an omitted field keeps its value on the Bastion: send the changed ones.
+	if !newResource && d.HasChange("preferred_language") {
+		jsonData.PreferredLanguage = d.Get("preferred_language").(string)
+	}
+	if !newResource && d.HasChange("force_change_pwd") {
+		forceChangePwd := d.Get("force_change_pwd").(bool)
+		jsonData.ForceChangePwd = &forceChangePwd
+	}
 
 	if d.HasChanges("groups") {
 		listGroups := d.Get("groups").(*schema.Set).List()
@@ -332,7 +342,7 @@ func readUserOptions(
 ) {
 	c := m.(*Client)
 	var result jsonUser
-	body, code, err := c.newRequest(ctx, "/users/"+userName, http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx, "/users/"+url.PathEscape(userName), http.MethodGet, nil)
 	if err != nil {
 		return result, err
 	}

@@ -264,3 +264,46 @@ resource "wallix-bastion_targetgroup" "testacc_Authorization_sharing" {
 }
 `
 }
+
+// Disabling session sharing was never sent: the authorization kept it enabled on the Bastion.
+func TestAccResourceAuthorization_disableSessionSharing(t *testing.T) {
+	skipBeforeAPI312(t, "Session sharing")
+	resourceName := "wallix-bastion_authorization.testacc_AuthSharing"
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceAuthorizationSharing(
+					"  authorize_session_sharing = true\n  session_sharing_mode      = \"view_only\""),
+				Check: resource.TestCheckResourceAttr(resourceName, "authorize_session_sharing", "true"),
+			},
+			{
+				Config: testAccResourceAuthorizationSharing(""),
+				Check:  resource.TestCheckResourceAttr(resourceName, "authorize_session_sharing", "false"),
+			},
+		},
+	})
+}
+
+func testAccResourceAuthorizationSharing(sharing string) string {
+	return `
+resource "wallix-bastion_usergroup" "testacc_AuthSharing" {
+  group_name = "testacc_AuthSharing"
+  timeframes = ["allthetime"]
+}
+
+resource "wallix-bastion_targetgroup" "testacc_AuthSharing" {
+  group_name = "testacc_AuthSharing"
+}
+
+resource "wallix-bastion_authorization" "testacc_AuthSharing" {
+  authorization_name = "testacc_AuthSharing"
+  user_group         = wallix-bastion_usergroup.testacc_AuthSharing.group_name
+  target_group       = wallix-bastion_targetgroup.testacc_AuthSharing.group_name
+  authorize_sessions = true
+  subprotocols       = ["SSH_SHELL_SESSION"]
+` + sharing + `
+}
+`
+}

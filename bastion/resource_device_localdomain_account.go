@@ -266,7 +266,7 @@ func searchResourceDeviceLocalDomainAccount(
 ) {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/devices/"+deviceID+"/localdomains/"+domainID+
-		"/accounts/?q=account_name="+accountName, http.MethodGet, nil)
+		"/accounts/?"+searchQuery("account_name", accountName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
@@ -331,7 +331,7 @@ func deleteDeviceLocalDomainAccount(
 	if err != nil {
 		return err
 	}
-	if code != http.StatusOK && code != http.StatusNoContent {
+	if !deleteDone(code, body) {
 		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 

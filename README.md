@@ -19,12 +19,15 @@ The Terraform WALLIX Bastion provider allows you to manage WALLIX Bastion resour
 
 ### From Terraform Registry
 
+Until 1.0, a minor version may contain breaking changes (see `BREAKING CHANGES` in the
+[changelog](CHANGELOG.md)): pin the minor version, as below, to only get its patch releases.
+
 ```hcl
 terraform {
   required_providers {
     wallix-bastion = {
       source  = "wallix/wallix-bastion"
-      version = "~> 0.14.0"
+      version = "~> 0.16.0"
     }
   }
 }

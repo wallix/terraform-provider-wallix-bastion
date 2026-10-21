@@ -204,7 +204,8 @@ func searchResourceExternalAuthKerberos(
 	string, bool, error,
 ) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/externalauths/?q=authentication_name="+authenticationName, http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx,
+		"/externalauths/?"+searchQuery("authentication_name", authenticationName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
@@ -263,7 +264,7 @@ func deleteExternalAuthKerberos(
 	if err != nil {
 		return err
 	}
-	if code != http.StatusOK && code != http.StatusNoContent {
+	if !deleteDone(code, body) {
 		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 

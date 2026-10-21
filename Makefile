@@ -26,7 +26,7 @@ BINARY_NAME := terraform-provider-$(PROVIDER_NAME)
 
 LDFLAGS_STRING := "-X main.version=$(VERSION)"
 
-.PHONY: build install test testacc test-coverage fmt lint lint-fix lint-markdown lint-security vet clean setup-dev setup-check docs docs-verify build-all test-all maintenance prepare-release release-patch release-minor release-major release ci-check dev-check
+.PHONY: build install test testacc test-coverage fmt lint lint-fix lint-markdown lint-security vet clean setup-dev setup-check docs docs-verify build-all test-all maintenance prepare-release release-patch release-minor release-major release test-release-script ci-check dev-check
 
 # Default target
 
@@ -225,8 +225,10 @@ setup-coverage:
 maintenance:
 	@./scripts/maintenance.sh
 
-# Release preparation scripts
+# Release preparation scripts (see RELEASE.md). Run them on main, with develop merged in and
+# CHANGELOG.md finalized.
 
+# Checks only: shows the version CHANGELOG.md calls for and lists every problem, pushes nothing.
 prepare-release:
 	@./scripts/prepare-release.sh --dry-run
 
@@ -239,12 +241,17 @@ release-minor:
 release-major:
 	@./scripts/prepare-release.sh --major
 
-# For a specific version, e.g. `make release ARGS="--version v0.15.0"`.
+# For a specific version, e.g. `make release ARGS="--version v0.15.0"`, a release candidate,
+# e.g. `make release ARGS="--major --rc"`, or the bump CHANGELOG.md calls for: `make release`.
 # Note: `make release-minor --version vX` does NOT work - `--version` is parsed
 # by make itself (it prints make's own version and exits), never reaching the
 # script. Flags must be passed through the ARGS variable instead.
 release:
 	@./scripts/prepare-release.sh $(ARGS)
+
+# Tests the release script on a throwaway repository (no network, nothing pushed).
+test-release-script:
+	@./scripts/test-prepare-release.sh
 
 # Quick development checks
 

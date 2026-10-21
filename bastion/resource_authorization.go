@@ -15,7 +15,7 @@ type jsonAuthorization struct {
 	ApprovalRequired           bool      `json:"approval_required"`
 	AuthorizePasswordRetrieval bool      `json:"authorize_password_retrieval"`
 	AuthorizeSessions          bool      `json:"authorize_sessions"`
-	AuthorizeSessionSharing    bool      `json:"authorize_session_sharing,omitempty"`
+	AuthorizeSessionSharing    *bool     `json:"authorize_session_sharing,omitempty"`
 	IsCritical                 bool      `json:"is_critical"`
 	IsRecorded                 bool      `json:"is_recorded"`
 	ID                         string    `json:"id,omitempty"`
@@ -42,6 +42,7 @@ func resourceAuthorization() *schema.Resource {
 		ReadContext:   resourceAuthorizationRead,
 		UpdateContext: resourceAuthorizationUpdate,
 		DeleteContext: resourceAuthorizationDelete,
+		CustomizeDiff: resourceAuthorizationCustomizeDiff,
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceAuthorizationImport,
 		},
@@ -162,6 +163,23 @@ func resourceAuthorization() *schema.Resource {
 			},
 		},
 	}
+}
+
+// The Bastion can't clear the subprotocols of an authorization, even with authorize_sessions =
+// false (400 "At least one subprotocol is required in the authorization", checked on a Bastion
+// 12.4.1); it only creates one without them. Removing the last subprotocols replaces it.
+func resourceAuthorizationCustomizeDiff(
+	_ context.Context, d *schema.ResourceDiff, _ interface{},
+) error {
+	if d.Id() == "" || !d.HasChange(skSubprotocols) || !d.NewValueKnown(skSubprotocols) {
+		return nil
+	}
+	oldSubprotocols, newSubprotocols := d.GetChange(skSubprotocols)
+	if oldSubprotocols.(*schema.Set).Len() > 0 && newSubprotocols.(*schema.Set).Len() == 0 {
+		return d.ForceNew(skSubprotocols) //nolint:wrapcheck
+	}
+
+	return nil
 }
 
 func resourceAuthorizationVersionCheck(version string) error {
@@ -289,7 +307,8 @@ func searchResourceAuthorization(
 	string, bool, error,
 ) {
 	c := m.(*Client)
-	body, code, err := c.newRequest(ctx, "/authorizations/?q=authorization_name="+authorizationName, http.MethodGet, nil)
+	body, code, err := c.newRequest(ctx,
+		"/authorizations/?"+searchQuery("authorization_name", authorizationName), http.MethodGet, nil)
 	if err != nil {
 		return "", false, err
 	}
@@ -348,7 +367,7 @@ func deleteAuthorization(
 	if err != nil {
 		return err
 	}
-	if code != http.StatusOK && code != http.StatusNoContent {
+	if !deleteDone(code, body) {
 		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
@@ -371,10 +390,16 @@ func prepareAuthorizationJSON(d *schema.ResourceData, newResource bool) jsonAuth
 		jsonData.TargetGroup = d.Get("target_group").(string)
 	}
 
-	// Only include authorize_session_sharing if it is enabled
+	// authorize_session_sharing and session_sharing_mode are only sent when sharing is enabled, so
+	// that a state without them sends the same request as before (034a630). Disabling sharing must
+	// still be sent, without the mode: an omitted field keeps its value on the Bastion.
 	if d.Get("authorize_session_sharing").(bool) {
-		jsonData.AuthorizeSessionSharing = true
+		enabled := true
+		jsonData.AuthorizeSessionSharing = &enabled
 		jsonData.SessionSharingMode = d.Get("session_sharing_mode").(string)
+	} else if !newResource && d.HasChange("authorize_session_sharing") {
+		disabled := false
+		jsonData.AuthorizeSessionSharing = &disabled
 	}
 
 	// Only include approval fields if approval_required is true
@@ -461,10 +486,17 @@ func fillAuthorization(d *schema.ResourceData, jsonData jsonAuthorization) {
 	if tfErr := d.Set("authorize_sessions", jsonData.AuthorizeSessions); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("authorize_session_sharing", jsonData.AuthorizeSessionSharing); tfErr != nil {
+	sessionSharing := jsonData.AuthorizeSessionSharing != nil && *jsonData.AuthorizeSessionSharing
+	if tfErr := d.Set("authorize_session_sharing", sessionSharing); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("session_sharing_mode", jsonData.SessionSharingMode); tfErr != nil {
+	// The Bastion keeps the mode after sharing is disabled, and the mode has no effect then: keep
+	// the value in state instead of reporting the stale one as a change.
+	sessionSharingMode := d.Get("session_sharing_mode").(string)
+	if sessionSharing {
+		sessionSharingMode = jsonData.SessionSharingMode
+	}
+	if tfErr := d.Set("session_sharing_mode", sessionSharingMode); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set(skSubprotocols, jsonData.SubProtocols); tfErr != nil {

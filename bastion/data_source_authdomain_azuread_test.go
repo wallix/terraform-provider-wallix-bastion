@@ -1,9 +1,12 @@
 package bastion_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+
+	"github.com/wallix/terraform-provider-wallix-bastion/bastion"
 )
 
 func TestAccDataSourceAuthDomainAzureAD_basic(t *testing.T) {
@@ -47,10 +50,7 @@ resource "wallix-bastion_externalauth_saml" "testacc_dataAuthDomainAzureAD_ds" {
   authentication_name = "testacc_dataAuthDomainAzureAD_ds"
   idp_metadata         = local.idp_metadata_azuread_ds
   timeout              = 120
-  claim_customization {
-    username = "email"
-  }
-}
+` + testAccSamlClaimCustomization() + `}
 
 resource "wallix-bastion_authdomain_azuread" "testacc_dataAuthDomainAzureAD_ds" {
   domain_name          = "testacc-domain-azuread-ds"
@@ -72,10 +72,7 @@ resource "wallix-bastion_externalauth_saml" "testacc_dataAuthDomainAzureAD_ds" {
   authentication_name = "testacc_dataAuthDomainAzureAD_ds"
   idp_metadata         = local.idp_metadata_azuread_ds
   timeout              = 120
-  claim_customization {
-    username = "email"
-  }
-}
+` + testAccSamlClaimCustomization() + `}
 
 resource "wallix-bastion_authdomain_azuread" "testacc_dataAuthDomainAzureAD_ds" {
   domain_name          = "testacc-domain-azuread-ds"
@@ -143,4 +140,14 @@ locals {
 EOF
 }
 `
+}
+
+// testAccSamlClaimCustomization returns the claim_customization block of a SAML external auth:
+// required on API v3.12 and later, refused on v3.8.
+func testAccSamlClaimCustomization() string {
+	if os.Getenv("WALLIX_BASTION_API_VERSION") == bastion.VersionWallixAPI38 {
+		return ""
+	}
+
+	return "  claim_customization {\n    username = \"email\"\n  }\n"
 }
