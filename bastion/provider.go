@@ -55,10 +55,14 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.EnvDefaultFunc("WALLIX_BASTION_API_VERSION", VersionWallixAPI312),
 			},
 			"session_timeout": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("WALLIX_SESSION_TIMEOUT", 120),
-				Description: "Session timeout in seconds (default: 120)",
+				Type:     schema.TypeInt,
+				Optional: true,
+				// No default: Terraform warns about a deprecated argument as soon as it has a value.
+				DefaultFunc: schema.EnvDefaultFunc("WALLIX_SESSION_TIMEOUT", nil),
+				Description: "Has no effect: the session is renewed when the Bastion returns 401. " +
+					"Will be removed in 1.0.",
+				Deprecated: "session_timeout has no effect and will be removed in 1.0: " +
+					"remove it from the provider configuration and unset WALLIX_SESSION_TIMEOUT.",
 			},
 			"csrf_enabled": {
 				Type:        schema.TypeBool,

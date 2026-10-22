@@ -117,8 +117,8 @@ resource "wallix-bastion_domain_account" "complete" {
 
 ### Optional
 
-- `auto_change_password` (Boolean)
-- `auto_change_ssh_key` (Boolean)
+- `auto_change_password` (Boolean) Include the account in the password change of its domain; `false` by default with this provider, while the Bastion enables it on an account created without it (GUI or API). Only has an effect when the domain has a password change configured (plugin and policy), scheduled by the `change_period` of the policy.
+- `auto_change_ssh_key` (Boolean) Include the SSH key of the account in the password change of its domain; `false` by default with this provider, while the Bastion enables it on an account created without it (GUI or API). Only has an effect when the domain has a password change configured (plugin and policy), scheduled by the `change_period` of the policy.
 - `certificate_validity` (String)
 - `checkout_policy` (String)
 - `description` (String)
@@ -200,3 +200,11 @@ When creating multiple accounts programmatically, use `for_each` or `count` and 
 ### Monitoring and compliance
 
 Track certificate issuance, password/key rotations and checkout events using your monitoring and audit tooling.
+
+## Import
+
+Domain account can be imported using an id made up of `<domain_id>/<account_name>`, e.g.
+
+```shell
+terraform import wallix-bastion_domain_account.admin xxxxxxxx/administrator
+```

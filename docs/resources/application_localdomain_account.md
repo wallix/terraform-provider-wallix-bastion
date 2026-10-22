@@ -59,7 +59,6 @@ resource "wallix-bastion_application_localdomain_account" "secure_app" {
   description    = "Secure application administrator"
   
   # Certificate-based authentication
-  auto_change_ssh_key           = true
   can_edit_certificate_validity = true
   certificate_validity          = "4h"
   
@@ -80,7 +79,6 @@ resource "wallix-bastion_application_localdomain_account" "webapp_complete" {
   
   # Security settings
   auto_change_password          = true
-  auto_change_ssh_key           = true
   can_edit_certificate_validity = true
   certificate_validity          = "8h"
   checkout_policy               = "webapp_operator_policy"
@@ -99,7 +97,6 @@ resource "wallix-bastion_application_localdomain_account" "legacy_app" {
   
   # Manual credential management for legacy systems
   auto_change_password = false
-  auto_change_ssh_key  = false
 }
 
 # Microservice application account
@@ -115,7 +112,6 @@ resource "wallix-bastion_application_localdomain_account" "microservice" {
   
   # Short-lived credentials for microservices
   auto_change_password = true
-  auto_change_ssh_key  = true
   certificate_validity = "1h"
 }
 
@@ -165,7 +161,6 @@ resource "wallix-bastion_application_localdomain_account" "prod_account" {
   
   # Strict production security
   auto_change_password          = true
-  auto_change_ssh_key           = true
   can_edit_certificate_validity = false
   certificate_validity          = "2h"
   checkout_policy               = "production_access_policy"
@@ -184,7 +179,7 @@ resource "wallix-bastion_application_localdomain_account" "prod_account" {
 
 ### Optional
 
-- `auto_change_password` (Boolean)
+- `auto_change_password` (Boolean) Include the account in the password change of its domain; `false` by default with this provider, while the Bastion enables it on an account created without it (GUI or API). Only has an effect when the domain has a password change configured (plugin and policy), scheduled by the `change_period` of the policy.
 - `checkout_policy` (String)
 - `description` (String)
 - `password` (String, Sensitive)
@@ -232,12 +227,6 @@ Before creating an application local domain account:
 
 ```terraform
 auto_change_password = true   # Enable automatic password rotation
-```
-
-**SSH Key Management:**
-
-```terraform
-auto_change_ssh_key = true    # Enable automatic SSH key rotation
 ```
 
 **Certificate Management:**
@@ -370,7 +359,6 @@ resource "wallix-bastion_application_localdomain_account" "prod" {
   
   # Strict security for production
   auto_change_password = true
-  auto_change_ssh_key  = true
   certificate_validity = "2h"
   checkout_policy      = "production_approval"
 }
