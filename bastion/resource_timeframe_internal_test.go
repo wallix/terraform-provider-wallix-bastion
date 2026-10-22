@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"path"
 	"slices"
+	"strings"
 	"sync"
 	"testing"
 
@@ -57,5 +58,37 @@ func TestTimeframeRenameFollowsTheNewName(t *testing.T) {
 		if !slices.Contains(requests, want) {
 			t.Errorf("requests = %v, want %q", requests, want)
 		}
+	}
+}
+
+// A period without week_days, or with a day the API doesn't know, failed only at apply (400 from the API).
+func TestTimeframeWeekDaysValidation(t *testing.T) {
+	r := resourceTimeframe()
+	for name, tc := range map[string]struct {
+		weekDays []interface{}
+		wantErr  string
+	}{
+		"no week_days":    {wantErr: "is required"},
+		"empty week_days": {weekDays: []interface{}{}, wantErr: "1 item minimum"},
+		"capitalized day": {weekDays: []interface{}{"Monday"}, wantErr: "to be one of"},
+		"lower case days": {weekDays: []interface{}{"monday", "sunday"}},
+	} {
+		t.Run(name, func(t *testing.T) {
+			period := map[string]interface{}{
+				"start_date": "2020-01-01", "end_date": "2020-02-02", "start_time": "08:00", "end_time": "12:00",
+			}
+			if tc.weekDays != nil {
+				period["week_days"] = tc.weekDays
+			}
+			diags := r.Validate(terraform.NewResourceConfigRaw(map[string]interface{}{
+				"timeframe_name": "tf-plan", "periods": []interface{}{period},
+			}))
+			if diags.HasError() != (tc.wantErr != "") {
+				t.Fatalf("validate = %v, want an error: %t", diags, tc.wantErr != "")
+			}
+			if diags.HasError() && !strings.Contains(fmt.Sprint(diags), tc.wantErr) {
+				t.Errorf("validate = %v, want %q", diags, tc.wantErr)
+			}
+		})
 	}
 }

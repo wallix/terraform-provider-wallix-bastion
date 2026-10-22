@@ -126,9 +126,6 @@ Required:
 - `end_time` (String)
 - `start_date` (String)
 - `start_time` (String)
-
-Optional:
-
 - `week_days` (Set of String)
 
 ## Usage Notes
@@ -139,7 +136,7 @@ Each period defines when access is allowed:
 
 - **start_date/end_date**: Date range in "yyyy-mm-dd" format
 - **start_time/end_time**: Time range in "hh:mm" format (24-hour)
-- **week_days**: Days when this period applies
+- **week_days**: Days when this period applies (at least one)
 
 ### Week Days
 
