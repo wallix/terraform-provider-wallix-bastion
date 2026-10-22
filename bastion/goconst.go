@@ -99,3 +99,13 @@ const (
 	skView                           = "view"
 	skWabSettings                    = "wab_settings"
 )
+
+// Descriptions shared by the domain, device local domain and application local domain account resources.
+const (
+	descAutoChangeNote = "`false` by default with this provider, while the Bastion enables it on an account " +
+		"created without it (GUI or API). Only has an effect when the domain has a password change configured " +
+		"(plugin and policy), scheduled by the `change_period` of the policy."
+	descAutoChangePassword = "Include the account in the password change of its domain; " + descAutoChangeNote
+	descAutoChangeSSHKey   = "Include the SSH key of the account in the password change of its domain; " +
+		descAutoChangeNote
+)

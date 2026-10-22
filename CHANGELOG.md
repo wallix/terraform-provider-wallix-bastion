@@ -1,5 +1,11 @@
 # changelog
 
+## Unreleased
+
+ENHANCEMENTS:
+
+- **resource/wallix-bastion_domain_account**, **resource/wallix-bastion_device_localdomain_account**, **resource/wallix-bastion_application_localdomain_account**: document that `auto_change_password` and `auto_change_ssh_key` (domain and device accounts only) default to `false` (the Bastion enables them on an account created without them), and that they only matter when the domain has a password change configured
+
 ## 0.16.0 (October 21, 2026)
 
 BREAKING CHANGES:
