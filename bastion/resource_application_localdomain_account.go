@@ -53,8 +53,9 @@ func resourceApplicationLocalDomainAccount() *schema.Resource {
 				Required: true,
 			},
 			skAutoChangePassword: {
-				Type:     schema.TypeBool,
-				Optional: true,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: descAutoChangePassword,
 			},
 			skCheckoutPolicy: {
 				Type:     schema.TypeString,
