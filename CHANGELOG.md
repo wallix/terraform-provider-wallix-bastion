@@ -6,6 +6,10 @@ ENHANCEMENTS:
 
 - **resource/wallix-bastion_domain_account**, **resource/wallix-bastion_device_localdomain_account**, **resource/wallix-bastion_application_localdomain_account**: document that `auto_change_password` and `auto_change_ssh_key` (domain and device accounts only) default to `false` (the Bastion enables them on an account created without them), and that they only matter when the domain has a password change configured
 
+BUG FIXES:
+
+- **resource/wallix-bastion_externalauth_kerberos**: fixed a keytab change keeping the keys of the previous keytab valid: the update merged the new keytab into the existing one, so a changed SPN or a removed encryption type kept the old keys, with no difference in the next plan; the update now replaces the keytab (`force=true`, checked on a Bastion 12.4.3). A keytab merged by an earlier version stays merged until the next update of the resource
+
 ## 0.16.0 (October 21, 2026)
 
 BREAKING CHANGES:
