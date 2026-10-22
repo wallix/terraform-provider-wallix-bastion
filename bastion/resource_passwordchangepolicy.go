@@ -3,6 +3,7 @@ package bastion
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"slices"
@@ -35,6 +36,7 @@ func resourcePasswordChangePolicy() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: resourcePasswordChangePolicyImport,
 		},
+		CustomizeDiff: resourcePasswordChangePolicyCustomizeDiff,
 		Schema: map[string]*schema.Schema{
 			"password_change_policy_name": {
 				Type:     schema.TypeString,
@@ -91,6 +93,29 @@ func resourcePasswordChangePolicy() *schema.Resource {
 			},
 		},
 	}
+}
+
+// The API refuses a password_length with no character class; unset classes read as 0, hence the raw config.
+// Create only: a PUT keeps the classes it omits, and the state can't tell null from 0.
+func resourcePasswordChangePolicyCustomizeDiff(
+	_ context.Context, d *schema.ResourceDiff, _ interface{},
+) error {
+	raw := d.GetRawConfig()
+	if d.Id() != "" || raw.IsNull() {
+		return nil
+	}
+	if length := raw.GetAttr("password_length"); length.IsNull() || !length.IsKnown() {
+		return nil
+	}
+	for _, key := range []string{"special_chars", "lower_chars", "upper_chars", "digit_chars"} {
+		if !raw.GetAttr(key).IsNull() {
+			return nil
+		}
+	}
+
+	return errors.New("password_length requires at least one of special_chars, lower_chars, upper_chars or " +
+		"digit_chars (0 allows the class with no minimum): the Bastion rejects \"At least one number of chars " +
+		"(special, lower case, upper case, digit) must be set to an integer value\"")
 }
 
 func resourcePasswordChangePolicyVersionCheck(version string) error {

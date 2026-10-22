@@ -56,12 +56,14 @@ func resourceDeviceLocalDomainAccount() *schema.Resource {
 				Required: true,
 			},
 			skAutoChangePassword: {
-				Type:     schema.TypeBool,
-				Optional: true,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: descAutoChangePassword,
 			},
 			"auto_change_ssh_key": {
-				Type:     schema.TypeBool,
-				Optional: true,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: descAutoChangeSSHKey,
 			},
 			"certificate_validity": {
 				Type:     schema.TypeString,

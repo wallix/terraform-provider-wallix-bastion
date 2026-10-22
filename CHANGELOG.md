@@ -1,5 +1,14 @@
 # changelog
 
+## Unreleased
+
+ENHANCEMENTS:
+
+- **resource/wallix-bastion_passwordchangepolicy**: a new policy with `password_length` and none of `special_chars`, `lower_chars`, `upper_chars` or `digit_chars` is now refused at plan; the Bastion refused it at apply (`400 At least one number of chars (special, lower case, upper case, digit) must be set to an integer value`, checked on a Bastion 12.4.3)
+- **resource/wallix-bastion_checkout_policy**: `enable_lock = true` with `max_duration` different from `duration` and no `extension` is now refused at plan; the Bastion refused it at apply (`400 The maximum checkout duration must be the same as duration when extension is not set`)
+- **resource/wallix-bastion_timeframe**: `week_days` is now required in `periods`, with days from `monday` to `sunday` in lower case, checked at plan; a period without days failed at apply (`400 week_days: [] is too short`)
+- **resource/wallix-bastion_domain_account**, **resource/wallix-bastion_device_localdomain_account**, **resource/wallix-bastion_application_localdomain_account**: document that `auto_change_password` and `auto_change_ssh_key` (domain and device accounts only) default to `false` (the Bastion enables them on an account created without them), and that they only matter when the domain has a password change configured
+
 ## 0.16.0 (October 21, 2026)
 
 BREAKING CHANGES:
