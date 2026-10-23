@@ -30,7 +30,7 @@ resource "wallix-bastion_device_localdomain_account" "service" {
   account_login        = "svcuser"
   description          = "Service account with managed password"
   auto_change_password = true
-  certificate_validity = "30d"
+  certificate_validity = "+30d"
 }
 
 # Account with SSH key authentication
@@ -66,7 +66,7 @@ resource "wallix-bastion_device_localdomain_account" "complete" {
   description          = "Complete account configuration"
   auto_change_password = true
   auto_change_ssh_key  = true
-  certificate_validity = "7d"
+  certificate_validity = "+7d"
   checkout_policy      = "strict_checkout"
   services             = [wallix-bastion_device_service.ssh.service_name]
 }
@@ -97,7 +97,7 @@ Before creating a device local domain account:
 - Requires password change capability on the domain
 
 **Certificate Authentication:**
-- Configure `certificate_validity` (e.g., "30d", "7d", "1h"), the validity of the SSH key signed by
+- Configure `certificate_validity` (with a leading `+`, e.g., "+30d", "+7d", "+1h"), the validity of the SSH key signed by
   the signing authority of the domain (`ca_private_key` of `wallix-bastion_device_localdomain`)
 
 ### Service Configuration
@@ -149,7 +149,7 @@ resource "wallix-bastion_device_localdomain_account" "service" {
   account_name         = "service_account"
   account_login        = "svc_app"
   services             = [wallix-bastion_device_service.ssh.service_name]
-  certificate_validity = "1h"
+  certificate_validity = "+1h"
 }
 ```
 
