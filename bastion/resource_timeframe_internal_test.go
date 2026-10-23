@@ -110,6 +110,11 @@ func timeframeValues(name string, extra map[string]interface{}) map[string]inter
 	return values
 }
 
+// timeframeZeroValues returns the Optional arguments of a timeframe at their zero value.
+func timeframeZeroValues() map[string]interface{} {
+	return map[string]interface{}{skDescription: "", "is_overtimable": false}
+}
+
 // SDKv2 (0.16) stored "" and false for unset description and is_overtimable: read back as null,
 // the plan of a configuration without them is empty. In a Framework state they come from the
 // configuration and stay.
@@ -120,15 +125,16 @@ func TestTimeframeReadBackOfZeroValues(t *testing.T) {
 			path.Base(r.URL.Path))
 	}))
 	typ := schemaType(t, server, timeframeType)
-	zero := map[string]interface{}{skDescription: "", "is_overtimable": false}
+	zero := timeframeZeroValues()
 	frameworkPrivate := []byte(`{"` + privateKeyFrameworkState + `":"dHJ1ZQ=="}`) // base64 of true
+	sdkPrivate := []byte(`{"schema_version":"0"}`)                                // written by 0.16.0
 
 	for name, tc := range map[string]struct {
 		prior    map[string]interface{}
 		private  []byte
 		wantNull bool
 	}{
-		"SDKv2 state":                  {prior: zero, private: []byte("null"), wantNull: true},
+		"SDKv2 state":                  {prior: zero, private: sdkPrivate, wantNull: true},
 		"imported state":               {wantNull: true},
 		"Framework state, zero values": {prior: zero, private: frameworkPrivate},
 		"Framework state, null values": {private: frameworkPrivate, wantNull: true},
@@ -143,7 +149,7 @@ func TestTimeframeReadBackOfZeroValues(t *testing.T) {
 				t.Fatalf("read: %v %v", err, resp.Diagnostics)
 			}
 			attrs := stateAttributes(t, resp.NewState, typ)
-			for _, attr := range []string{skDescription, "is_overtimable"} {
+			for attr := range zero {
 				if attrs[attr].IsNull() != tc.wantNull {
 					t.Errorf("%s = %v, want null: %t", attr, attrs[attr], tc.wantNull)
 				}
@@ -192,6 +198,58 @@ func TestTimeframeRenameFollowsTheNewName(t *testing.T) {
 		if !slices.Contains(requests, want) {
 			t.Errorf("requests = %v, want %q", requests, want)
 		}
+	}
+}
+
+// Create and Update set the private key, so that zero values from the configuration survive the next read.
+func TestTimeframeWritesMarkFrameworkState(t *testing.T) {
+	zero := timeframeZeroValues()
+	for name, prior := range map[string]map[string]interface{}{"create": nil, "update": {}} {
+		t.Run(name, func(t *testing.T) {
+			var mu sync.Mutex
+			exists := prior != nil
+			server := newTestProviderServer(t, newTestAPIClient(t, func(w http.ResponseWriter, r *http.Request) {
+				mu.Lock()
+				defer mu.Unlock()
+				switch {
+				case r.Method != http.MethodGet:
+					exists = true
+					w.WriteHeader(http.StatusNoContent)
+				case !exists:
+					w.WriteHeader(http.StatusNotFound)
+				default:
+					w.Header().Set(contentTypeHeader, contentTypeJSON)
+					fmt.Fprintf(w, `{"timeframe_name":%q,"description":"","is_overtimable":false,"periods":[]}`,
+						path.Base(r.URL.Path))
+				}
+			}))
+			typ := schemaType(t, server, timeframeType)
+			priorState := nullValue(t, typ)
+			if prior != nil {
+				priorState = dynamicValue(t, typ, timeframeValues("tf", prior))
+			}
+			config := timeframeValues("tf", zero)
+			config["id"] = nil
+
+			resp, err := server.ApplyResourceChange(t.Context(), &tfprotov5.ApplyResourceChangeRequest{
+				TypeName:     timeframeType,
+				PriorState:   priorState,
+				PlannedState: dynamicValue(t, typ, timeframeValues("tf", zero)),
+				Config:       dynamicValue(t, typ, config),
+			})
+			if err != nil || hasError(resp.Diagnostics) {
+				t.Fatalf("apply: %v %v", err, resp.Diagnostics)
+			}
+			if !strings.Contains(string(resp.Private), privateKeyFrameworkState) {
+				t.Errorf("private = %s, want the %s key", resp.Private, privateKeyFrameworkState)
+			}
+			attrs := stateAttributes(t, resp.NewState, typ)
+			for attr := range zero {
+				if attrs[attr].IsNull() {
+					t.Errorf("%s = null, want the zero value of the configuration", attr)
+				}
+			}
+		})
 	}
 }
 
