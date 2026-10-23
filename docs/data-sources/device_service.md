@@ -19,16 +19,6 @@ data "wallix-bastion_device_service" "ssh" {
   service_name = "SSH"
 }
 
-# Reuse the service's connection policy when creating an authorization
-resource "wallix-bastion_authorization" "ssh_access" {
-  authorization_name = "ssh-access"
-  target_group       = wallix-bastion_targetgroup.servers.group_name
-  user_group         = wallix-bastion_usergroup.admins.group_name
-  authorized_targets = [
-    data.wallix-bastion_device_service.ssh.connection_policy,
-  ]
-}
-
 # Output service configuration
 output "ssh_service_info" {
   value = {

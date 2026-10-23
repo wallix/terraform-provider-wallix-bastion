@@ -18,12 +18,6 @@ data "wallix-bastion_externalauth_tacacs" "corporate" {
   authentication_name = "corporate_tacacs"
 }
 
-# Reference it from an authentication domain mapping
-resource "wallix-bastion_authdomain_mapping" "tacacs_mapping" {
-  domain_name = "corporate.local"
-  auth_domain = data.wallix-bastion_externalauth_tacacs.corporate.authentication_name
-}
-
 # Output non-sensitive connection details
 output "tacacs_server" {
   value = {

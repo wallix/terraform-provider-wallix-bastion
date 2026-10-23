@@ -18,12 +18,6 @@ data "wallix-bastion_externalauth_kerberos" "corporate" {
   authentication_name = "corporate_kerberos"
 }
 
-# Reference it from another resource, e.g. an authentication domain
-resource "wallix-bastion_authdomain_mapping" "kerberos_mapping" {
-  domain_name = "corporate.local"
-  auth_domain = data.wallix-bastion_externalauth_kerberos.corporate.authentication_name
-}
-
 # Output non-sensitive connection details
 output "kerberos_kdc" {
   value = {
