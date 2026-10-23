@@ -82,8 +82,8 @@ resource "wallix-bastion_device_localdomain_account" "complete" {
 
 ### Optional
 
-- `auto_change_password` (Boolean)
-- `auto_change_ssh_key` (Boolean)
+- `auto_change_password` (Boolean) Include the account in the password change of its domain; `false` by default with this provider, while the Bastion enables it on an account created without it (GUI or API). Only has an effect when the domain has a password change configured (plugin and policy), scheduled by the `change_period` of the policy.
+- `auto_change_ssh_key` (Boolean) Include the SSH key of the account in the password change of its domain; `false` by default with this provider, while the Bastion enables it on an account created without it (GUI or API). Only has an effect when the domain has a password change configured (plugin and policy), scheduled by the `change_period` of the policy.
 - `certificate_validity` (String)
 - `checkout_policy` (String)
 - `description` (String)

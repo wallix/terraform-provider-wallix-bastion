@@ -12,8 +12,8 @@ func TestAccResourceConfigX509OCSP_basic(t *testing.T) {
 	resourceName := "wallix-bastion_config_x509_ocsp.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceConfigX509OCSPCreate(),

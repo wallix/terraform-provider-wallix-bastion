@@ -3,6 +3,7 @@ package bastion
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"slices"
@@ -31,6 +32,7 @@ func resourceCheckoutPolicy() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceCheckoutPolicyImport,
 		},
+		CustomizeDiff: resourceCheckoutPolicyCustomizeDiff,
 		Schema: map[string]*schema.Schema{
 			"checkout_policy_name": {
 				Type:     schema.TypeString,
@@ -67,6 +69,25 @@ func resourceCheckoutPolicy() *schema.Resource {
 			},
 		},
 	}
+}
+
+// The API refuses, on create and update, a lock whose max_duration differs from duration with extension 0.
+func resourceCheckoutPolicyCustomizeDiff(
+	_ context.Context, d *schema.ResourceDiff, _ interface{},
+) error {
+	for _, key := range []string{skEnableLock, "duration", "extension", "max_duration"} {
+		if !d.NewValueKnown(key) {
+			return nil
+		}
+	}
+	if d.Get(skEnableLock).(bool) && d.Get("extension").(int) == 0 &&
+		d.Get("max_duration").(int) != d.Get("duration").(int) {
+		return errors.New("with enable_lock, max_duration must equal duration unless extension is set (not 0): " +
+			"the Bastion rejects \"The maximum checkout duration must be the same as duration when extension is " +
+			"not set\"")
+	}
+
+	return nil
 }
 
 func resourceCheckoutPolicyVersionCheck(version string) error {

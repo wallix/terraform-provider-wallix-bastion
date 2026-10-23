@@ -8,8 +8,8 @@ import (
 
 func TestAccResourceUser_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
 			tvRandomProviderName: {
 				Source: tvRandomProviderSource,
@@ -104,8 +104,8 @@ resource "wallix-bastion_user" "testacc_User" {
 // /users/testacc_UserHash and deleted the other user.
 func TestAccResourceUser_nameWithHash(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceUserHash(true),
