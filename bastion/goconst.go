@@ -92,6 +92,7 @@ const (
 	skTimeout                        = "timeout"
 	skType                           = "type"
 	skUsePrimaryAuthDomain           = "use_primary_auth_domain"
+	skUser                           = "user"
 	skUserGroups                     = "user_groups"
 	skUsers                          = "users"
 	skValue                          = "value"

@@ -2,7 +2,6 @@ package bastion
 
 import (
 	"context"
-	"math"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -11,6 +10,33 @@ import (
 const (
 	VersionWallixAPI38  = "v3.8"
 	VersionWallixAPI312 = "v3.12"
+)
+
+// Environment variables of the provider arguments, read by the SDKv2 and Framework servers.
+const (
+	envBastionHost        = "WALLIX_BASTION_HOST"
+	envBastionUser        = "WALLIX_BASTION_USER"
+	envBastionPort        = "WALLIX_BASTION_PORT"
+	envBastionToken       = "WALLIX_BASTION_TOKEN"
+	envBastionPassword    = "WALLIX_BASTION_PASSWORD"
+	envBastionAPIVersion  = "WALLIX_BASTION_API_VERSION"
+	envSessionTimeout     = "WALLIX_SESSION_TIMEOUT"
+	envCSRFEnabled        = "WALLIX_CSRF_ENABLED"
+	envInsecureSkipVerify = "WALLIX_INSECURE_SKIP_VERIFY"
+
+	defaultBastionPort = 443
+)
+
+// Texts of the provider schema, shared by the SDKv2 and Framework schemas that tf5muxserver
+// requires identical.
+const (
+	descSessionTimeout = "Has no effect: the session is renewed when the Bastion returns 401. " +
+		"Will be removed in 1.0."
+	deprecationSessionTimeout = "session_timeout has no effect and will be removed in 1.0: " +
+		"remove it from the provider configuration and unset WALLIX_SESSION_TIMEOUT."
+	descCSRFEnabled        = "Enable CSRF token protection (default: true)"
+	descInsecureSkipVerify = "Skip TLS certificate verification (default: false). " +
+		"Only for development with self-signed certificates."
 )
 
 func defaultVersionsValid() []string {
@@ -27,55 +53,52 @@ func Provider() *schema.Provider {
 			"ip": {
 				Type:        schema.TypeString,
 				Required:    true,
-				DefaultFunc: schema.EnvDefaultFunc("WALLIX_BASTION_HOST", nil),
+				DefaultFunc: schema.EnvDefaultFunc(envBastionHost, nil),
 			},
-			"user": {
+			skUser: {
 				Type:        schema.TypeString,
 				Required:    true,
-				DefaultFunc: schema.EnvDefaultFunc("WALLIX_BASTION_USER", nil),
+				DefaultFunc: schema.EnvDefaultFunc(envBastionUser, nil),
 			},
 			skPort: {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("WALLIX_BASTION_PORT", 443),
+				DefaultFunc: schema.EnvDefaultFunc(envBastionPort, defaultBastionPort),
 			},
 			"token": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("WALLIX_BASTION_TOKEN", nil),
+				DefaultFunc: schema.EnvDefaultFunc(envBastionToken, nil),
 			},
 			skPassword: {
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("WALLIX_BASTION_PASSWORD", nil),
+				DefaultFunc: schema.EnvDefaultFunc(envBastionPassword, nil),
 			},
 			"api_version": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("WALLIX_BASTION_API_VERSION", VersionWallixAPI312),
+				DefaultFunc: schema.EnvDefaultFunc(envBastionAPIVersion, VersionWallixAPI312),
 			},
 			"session_timeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				// No default: Terraform warns about a deprecated argument as soon as it has a value.
-				DefaultFunc: schema.EnvDefaultFunc("WALLIX_SESSION_TIMEOUT", nil),
-				Description: "Has no effect: the session is renewed when the Bastion returns 401. " +
-					"Will be removed in 1.0.",
-				Deprecated: "session_timeout has no effect and will be removed in 1.0: " +
-					"remove it from the provider configuration and unset WALLIX_SESSION_TIMEOUT.",
+				DefaultFunc: schema.EnvDefaultFunc(envSessionTimeout, nil),
+				Description: descSessionTimeout,
+				Deprecated:  deprecationSessionTimeout,
 			},
 			"csrf_enabled": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("WALLIX_CSRF_ENABLED", true),
-				Description: "Enable CSRF token protection (default: true)",
+				DefaultFunc: schema.EnvDefaultFunc(envCSRFEnabled, true),
+				Description: descCSRFEnabled,
 			},
 			"insecure_skip_verify": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("WALLIX_INSECURE_SKIP_VERIFY", false),
-				Description: "Skip TLS certificate verification (default: false). " +
-					"Only for development with self-signed certificates.",
+				DefaultFunc: schema.EnvDefaultFunc(envInsecureSkipVerify, false),
+				Description: descInsecureSkipVerify,
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
@@ -186,22 +209,17 @@ func configureProvider(
 		BastionIP:          d.Get("ip").(string),
 		BastionPort:        d.Get(skPort).(int),
 		BastionToken:       d.Get("token").(string),
-		BastionUser:        d.Get("user").(string),
+		BastionUser:        d.Get(skUser).(string),
 		BastionPwd:         d.Get(skPassword).(string),
 		SessionTimeout:     d.Get("session_timeout").(int),
 		CSRFEnabled:        d.Get("csrf_enabled").(bool),
 		InsecureSkipVerify: d.Get("insecure_skip_verify").(bool),
 	}
 
-	if config.BastionIP == "" {
-		return nil, diag.Errorf("missing 'ip' configuration to configure provider")
-	}
-	if config.BastionUser == "" {
-		return nil, diag.Errorf("missing 'user' configuration to configure provider")
-	}
-	if config.BastionPort < 0 || config.BastionPort > math.MaxUint16 {
-		return nil, diag.Errorf("invalid value %d for 'port' configuration to configure provider", config.BastionPort)
+	client, diags := sharedClient(config)
+	if diags.HasError() {
+		return nil, diags
 	}
 
-	return config.Client()
+	return client, diags
 }
