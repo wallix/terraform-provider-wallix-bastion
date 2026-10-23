@@ -8,8 +8,8 @@ import (
 
 func TestAccResourceTimeframe_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceTimeframeCreate(),
@@ -93,8 +93,8 @@ resource "wallix-bastion_timeframe" "testacc_Timeframe2" {
 func TestAccResourceTimeframe_rename(t *testing.T) {
 	resourceName := "wallix-bastion_timeframe.testacc_TimeframeRename"
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceTimeframeRename("testacc_TimeframeRename_a"),

@@ -164,8 +164,8 @@ func TestAccResourceConfigoption_basic(t *testing.T) {
 		resourceName := "wallix-bastion_configoption.test"
 
 		resource.Test(t, resource.TestCase{
-			PreCheck:          func() { testAccPreCheck(t) },
-			ProviderFactories: testAccProviderFactories,
+			PreCheck:                 func() { testAccPreCheck(t) },
+			ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 			Steps: []resource.TestStep{
 				{
 					Config: testAccResourceConfigoptionConfig(45, 1500),

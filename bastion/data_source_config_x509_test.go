@@ -15,8 +15,8 @@ func TestAccDataSourceConfigX509_basic(t *testing.T) {
 	dataSourceName := "data.wallix-bastion_config_x509.current"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
 			tvTLSProviderName: {
 				Source: tvTLSProviderSource,

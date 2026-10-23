@@ -15,8 +15,8 @@ import (
 func TestAccResourceAuthorization_basic(t *testing.T) {
 	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); v == "" || semver.Compare(v, bastion.VersionWallixAPI312) >= 0 {
 		resource.Test(t, resource.TestCase{
-			PreCheck:          func() { testAccPreCheck(t) },
-			ProviderFactories: testAccProviderFactories,
+			PreCheck:                 func() { testAccPreCheck(t) },
+			ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 			Steps: []resource.TestStep{
 				{
 					Config: testAccResourceAuthorizationCreate(),
@@ -62,8 +62,8 @@ func TestAccResourceAuthorization_basic(t *testing.T) {
 func TestAccResourceAuthorization_sessionSharing(t *testing.T) {
 	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); v == "" || semver.Compare(v, bastion.VersionWallixAPI312) >= 0 {
 		resource.Test(t, resource.TestCase{
-			PreCheck:          func() { testAccPreCheck(t) },
-			ProviderFactories: testAccProviderFactories,
+			PreCheck:                 func() { testAccPreCheck(t) },
+			ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 			Steps: []resource.TestStep{
 				{
 					Config: testAccResourceAuthorizationSessionSharingViewOnly(),
@@ -270,8 +270,8 @@ func TestAccResourceAuthorization_disableSessionSharing(t *testing.T) {
 	skipBeforeAPI312(t, "Session sharing")
 	resourceName := "wallix-bastion_authorization.testacc_AuthSharing"
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceAuthorizationSharing(

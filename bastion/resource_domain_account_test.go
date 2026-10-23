@@ -11,8 +11,8 @@ import (
 func TestAccResourceDomainAccount_basic(t *testing.T) {
 	resourceName := "wallix-bastion_domain_account.testacc_DomainAccount"
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceDomainAccountCreate(),
@@ -80,8 +80,8 @@ resource "wallix-bastion_domain_account" "testacc_DomainAccount" {
 func TestAccResourceDomainAccount_clearResources(t *testing.T) {
 	resourceName := "wallix-bastion_domain_account.testacc_DomAccClearRes"
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceDomainAccountClearResources(`["testacc_DomAccClearRes:SSH"]`),
