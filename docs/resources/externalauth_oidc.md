@@ -137,10 +137,11 @@ To rotate the secret, change both:
   client_secret_wo_version = 2
 ```
 
-The Bastion never returns the secret, only whether one is set. When it no longer holds one (removed
-outside Terraform), the next plan shows `client_secret_wo_version` added back and the apply sends
-the secret again. Removing both arguments from the configuration removes the secret from the
-Bastion; removing only `client_secret_wo` leaves it unchanged.
+The Bastion never returns the secret, only whether one is set. With `client_secret_wo_version`
+set, a secret removed outside Terraform shows in the next plan as the version added back, and the
+apply sends it again; without a version, Terraform does not notice. Removing both arguments from
+the configuration removes the secret from the Bastion. `client_secret_wo_version` cannot be set
+without `client_secret_wo`.
 
 Write-only arguments need Terraform 1.11 or later. An older Terraform rejects the configuration
 before any change.
@@ -164,10 +165,16 @@ The Bastion computes `redirect_uri` (`https://<bastion>/api/oidc`) when it is no
 it as a redirection URI of the client on the identity provider. It can only be set at creation:
 changing it replaces the external authentication.
 
-### Deletion
+### Deletion and Replacement
 
 The Bastion refuses to delete an external authentication still used by an authentication domain.
 A `wallix-bastion_authdomain_oidc` that references `authentication_name` is destroyed first.
+
+The same refusal stops a replacement (change of `redirect_uri`, removal of
+`oidc_advanced_attributes`) while a domain uses the external authentication: the apply fails with
+a 409 before anything is deleted, and `create_before_destroy` cannot help since the name must be
+unique. Remove it from the `external_auths` of its domains and apply, then make the change and add
+it back.
 
 ## Import
 

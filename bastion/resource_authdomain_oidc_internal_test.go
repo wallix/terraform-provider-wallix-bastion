@@ -1,6 +1,7 @@
 package bastion
 
 import (
+	"maps"
 	"net/http"
 	"strings"
 	"testing"
@@ -35,7 +36,8 @@ func fakeAuthDomains(typ string) http.HandlerFunc {
 	}
 }
 
-// An unset description, is_default or secondary_auth reads back as null; import refuses another type.
+// An unset description, is_default or secondary_auth reads back as null, their zero value set by
+// the configuration stays; import refuses another type.
 func TestAuthDomainOIDC(t *testing.T) {
 	server := newTestProviderServer(t, newTestAPIClient(t, fakeAuthDomains(typeOIDC)))
 	typ := schemaType(t, server, authDomainOIDCType)
@@ -54,6 +56,22 @@ func TestAuthDomainOIDC(t *testing.T) {
 	for _, attr := range []string{skDescription, skIsDefault, skSecondaryAuth} {
 		if !state[attr].IsNull() {
 			t.Errorf("%s = %v, want null", attr, state[attr])
+		}
+	}
+
+	planned := maps.Clone(values)
+	planned[skDescription], planned[skIsDefault], planned[skSecondaryAuth] = "", false, []tftypes.Value{}
+	update, err := server.ApplyResourceChange(t.Context(), &tfprotov5.ApplyResourceChangeRequest{
+		TypeName: authDomainOIDCType, PriorState: dynamicValue(t, typ, values),
+		PlannedState: dynamicValue(t, typ, planned), Config: dynamicValue(t, typ, planned),
+	})
+	if err != nil || hasError(update.Diagnostics) {
+		t.Fatalf("update: %v %v", err, update.Diagnostics)
+	}
+	state = stateAttributes(t, update.NewState, typ)
+	for _, attr := range []string{skDescription, skIsDefault, skSecondaryAuth} {
+		if want := stateAttributes(t, dynamicValue(t, typ, planned), typ)[attr]; !state[attr].Equal(want) {
+			t.Errorf("%s = %v after the update, want the planned %v", attr, state[attr], want)
 		}
 	}
 

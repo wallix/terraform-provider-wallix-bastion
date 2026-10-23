@@ -197,7 +197,8 @@ func (r *externalAuthOIDCResource) Schema(
 					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
-				Validators: maxLen(255),
+				// Not empty: "" is not sent, and the Bastion would compute another value than the plan.
+				Validators: []validator.String{stringvalidator.LengthBetween(1, 255)},
 			},
 		},
 		Blocks: map[string]schema.Block{

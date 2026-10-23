@@ -128,8 +128,8 @@ func applyOIDC(
 	return resp
 }
 
-// The secret goes from the configuration to the Bastion and never into the state; removing it and
-// its version removes it from the Bastion.
+// The secret goes from the configuration to the Bastion and never into the state, a new version
+// sends a new secret, and removing the secret and its version removes it from the Bastion.
 func TestExternalAuthOIDCWriteOnlySecret(t *testing.T) {
 	fake := newFakeOIDCBastion()
 	server := newTestProviderServer(t, newTestAPIClient(t, fake.handler))
@@ -151,10 +151,19 @@ func TestExternalAuthOIDCWriteOnlySecret(t *testing.T) {
 	prior := oidcValues(t, typ, "oidc", map[string]interface{}{
 		"id": oidcFirstID, oidcRedirect: oidcRedirectURI, oidcSecretVersion: 1,
 	})
+	rotated := oidcValues(t, typ, "oidc", map[string]interface{}{
+		"id": oidcFirstID, oidcRedirect: oidcRedirectURI, oidcSecretVersion: 2,
+	})
+	applyOIDC(t, server, typ, prior, rotated, oidcValues(t, typ, "oidc",
+		map[string]interface{}{"client_secret_wo": "s2", oidcSecretVersion: 2}))
+	if fake.secrets[oidcFirstID] != "s2" {
+		t.Errorf("secret on the Bastion = %q after the rotation, want s2", fake.secrets[oidcFirstID])
+	}
+
 	cleared := oidcValues(t, typ, "oidc", map[string]interface{}{
 		"id": oidcFirstID, oidcRedirect: oidcRedirectURI,
 	})
-	applyOIDC(t, server, typ, prior, cleared, oidcValues(t, typ, "oidc", nil))
+	applyOIDC(t, server, typ, rotated, cleared, oidcValues(t, typ, "oidc", nil))
 	if fake.secrets[oidcFirstID] != "" {
 		t.Errorf("secret on the Bastion = %q after removing it, want none", fake.secrets[oidcFirstID])
 	}
@@ -183,7 +192,8 @@ func TestExternalAuthOIDCSecretRemovedOutside(t *testing.T) {
 	}
 }
 
-// Optional values the API returns empty read back as null, and an update never sends redirect_uri.
+// Optional values the API returns empty read back as null, "" set by the configuration stays "",
+// and an update never sends redirect_uri.
 func TestExternalAuthOIDCReadBackAndUpdate(t *testing.T) {
 	fake := newFakeOIDCBastion()
 	server := newTestProviderServer(t, newTestAPIClient(t, fake.handler))
@@ -205,14 +215,24 @@ func TestExternalAuthOIDCReadBackAndUpdate(t *testing.T) {
 	prior := oidcValues(t, typ, "oidc", map[string]interface{}{
 		"id": oidcFirstID, oidcRedirect: oidcRedirectURI,
 	})
-	renamed := oidcValues(t, typ, "oidc2", map[string]interface{}{
-		"id": oidcFirstID, oidcRedirect: oidcRedirectURI, skDescription: "d",
-	})
-	config := oidcValues(t, typ, "oidc2", map[string]interface{}{skDescription: "d"})
+	claims, ok := typ.AttributeTypes["claim_customization"].(tftypes.Object)
+	if !ok {
+		t.Fatal("claim_customization is not an object")
+	}
+	zeros := map[string]interface{}{
+		skDescription: "", "discovery_url": "",
+		"claim_customization": objectValue(claims, map[string]interface{}{skUsername: "sub", skGroup: ""}),
+	}
+	config := oidcValues(t, typ, "oidc2", zeros)
+	zeros["id"], zeros[oidcRedirect] = oidcFirstID, oidcRedirectURI
+	renamed := oidcValues(t, typ, "oidc2", zeros)
 	resp = applyOIDC(t, server, typ, prior, renamed, config)
-	state = stateAttributes(t, resp.NewState, typ)
-	if !state[skAuthenticationName].Equal(tftypes.NewValue(tftypes.String, "oidc2")) {
-		t.Errorf("authentication_name = %v after the update, want oidc2", state[skAuthenticationName])
+	// Terraform rejects a result that differs from the plan; ApplyResourceChange doesn't check it.
+	want := stateAttributes(t, dynamicValue(t, typ, renamed), typ)
+	for name, got := range stateAttributes(t, resp.NewState, typ) {
+		if !got.Equal(want[name]) {
+			t.Errorf("%s = %v after the update, want the planned %v", name, got, want[name])
+		}
 	}
 }
 
@@ -305,6 +325,10 @@ func TestExternalAuthOIDCValidate(t *testing.T) {
 				"oidc_advanced_attributes": objectValue(advType, map[string]interface{}{"jwks_uri": "j"}),
 			},
 			wantErr: "issuer",
+		},
+		"empty redirect_uri": {
+			extra:   map[string]interface{}{oidcRedirect: ""},
+			wantErr: "redirect_uri",
 		},
 		"version without secret": {
 			extra:   map[string]interface{}{oidcSecretVersion: 1},
