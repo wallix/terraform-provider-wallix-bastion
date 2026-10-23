@@ -25,8 +25,9 @@ func NewProviderServer(ctx context.Context) (func() tfprotov5.ProviderServer, er
 	return mux.ProviderServer, nil
 }
 
-// frameworkServer drops the Framework's provider config warnings, which repeat the SDKv2 ones on
-// the identical schema. Embedding hides the optional ListResourceServer and ActionServer (unused).
+// frameworkServer drops the Framework's deprecation warnings on the provider config, which repeat
+// the SDKv2 ones on the identical schema. Embedding hides the optional ListResourceServer and
+// ActionServer (unused).
 type frameworkServer struct {
 	tfprotov5.ProviderServer
 }
@@ -39,7 +40,8 @@ func (s frameworkServer) PrepareProviderConfig(
 	resp, err := s.ProviderServer.PrepareProviderConfig(ctx, req)
 	if resp != nil {
 		resp.Diagnostics = slices.DeleteFunc(resp.Diagnostics, func(d *tfprotov5.Diagnostic) bool {
-			return d.Severity == tfprotov5.DiagnosticSeverityWarning
+			// Summary of the Framework's DeprecationMessage warning; SDKv2 reports the same text.
+			return d.Severity == tfprotov5.DiagnosticSeverityWarning && d.Summary == "Attribute Deprecated"
 		})
 	}
 

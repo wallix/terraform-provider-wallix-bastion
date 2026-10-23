@@ -187,7 +187,10 @@ variable names taken from the shared constants. SDKv2 exports a `Required` argum
 `DefaultFunc` as `Optional` when the variable is set, so `ip` and `user` follow
 `WALLIX_BASTION_HOST` and `WALLIX_BASTION_USER` in the Framework schema too. The Framework has no
 `DefaultFunc`: `frameworkProviderModel.config()` applies the env variables and defaults.
-`TestProviderServerSchemasMatch` and `TestProviderServersShareTheClient` catch a drift.
+`TestProviderServerSchemasMatch` and `TestProviderServersShareTheClient` catch a drift. Both
+servers validate the provider configuration, so `frameworkServer` (`provider_server.go`) drops the
+Framework's copy of the deprecation warnings. It only embeds `tfprotov5.ProviderServer`: the first
+list resource or action on the Framework needs it to forward `ListResourceServer` or `ActionServer`.
 
 **Client.** Terraform configures each muxed server separately. Both get their `*Client` from
 `sharedClient`, one per configuration, so they share one Bastion session and connection pool. A
