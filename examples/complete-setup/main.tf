@@ -10,6 +10,7 @@ terraform {
 
 provider "wallix-bastion" {
   ip          = var.bastion_ip
+  user        = var.bastion_user
   token       = var.bastion_token
   api_version = var.api_version
 }
@@ -93,7 +94,7 @@ resource "wallix-bastion_authorization" "sysadmin_to_production" {
   approvers         = [wallix-bastion_usergroup.security_team.group_name]
   active_quorum     = 1
   inactive_quorum   = 2
-  approval_timeout  = 1800 # 30 minutes
+  approval_timeout  = 30 # minutes
 
   has_comment       = true
   mandatory_comment = true
@@ -117,7 +118,7 @@ resource "wallix-bastion_authorization" "database_access" {
   approvers         = [wallix-bastion_usergroup.security_team.group_name]
   active_quorum     = 2
   inactive_quorum   = 3
-  approval_timeout  = 3600 # 1 hour
+  approval_timeout  = 60 # minutes
 
   has_comment       = true
   has_ticket        = true
@@ -146,10 +147,7 @@ resource "wallix-bastion_authorization" "security_emergency_access" {
     "SFTP_SESSION"
   ]
 
+  # No approval workflow (comments and tickets are part of it)
   is_critical = true
   is_recorded = true
-  # No approval required for security team emergency access
-
-  has_comment       = true
-  mandatory_comment = true
 }

@@ -8,167 +8,29 @@ description: |-
 
 # wallix-bastion_application_localdomain_account (Resource)
 
-Provides a localdomain account resource linked to application account.
+Provides an account in a local domain of an application (`wallix-bastion_application_localdomain`).
 
 ## Example Usage
 
 ```terraform
-# Basic application local domain account
 resource "wallix-bastion_application_localdomain_account" "web_admin" {
-  application_id = wallix-bastion_application.web_server.id
-  domain_id      = wallix-bastion_application_localdomain.web_local.id
+  application_id = wallix-bastion_application.webapp.id
+  domain_id      = wallix-bastion_application_localdomain.webapp.id
   account_name   = "web_administrator"
   account_login  = "webadmin"
   description    = "Web application administrator account"
 }
 
-# Service account with multiple protocols
-resource "wallix-bastion_application_localdomain_account" "api_service" {
-  application_id = wallix-bastion_application.api_server.id
-  domain_id      = wallix-bastion_application_localdomain.api_local.id
-  account_name   = "api_service"
-  account_login  = "apisvc"
-  description    = "API service account"
-  
-  # API-specific services
-  services = ["https", "http", "ssh"]
-}
-
-# Database application account
+# Account with its password, a checkout policy and the password change of its domain
 resource "wallix-bastion_application_localdomain_account" "db_admin" {
-  application_id = wallix-bastion_application.database.id
-  domain_id      = wallix-bastion_application_localdomain.db_local.id
-  account_name   = "database_admin"
-  account_login  = "dbadmin"
-  description    = "Database administrator account"
-  
-  # Database-specific services
-  services = ["ssh", "database", "https"]
-  
-  # Enhanced security for database access
+  application_id       = wallix-bastion_application.database.id
+  domain_id            = wallix-bastion_application_localdomain.database.id
+  account_name         = "database_admin"
+  account_login        = "dbadmin"
+  description          = "Database administrator account"
+  password             = var.db_admin_password
+  checkout_policy      = wallix-bastion_checkout_policy.app_access.checkout_policy_name
   auto_change_password = true
-  checkout_policy      = "database_access_policy"
-}
-
-# Application account with certificate management
-resource "wallix-bastion_application_localdomain_account" "secure_app" {
-  application_id = wallix-bastion_application.secure_app.id
-  domain_id      = wallix-bastion_application_localdomain.secure_local.id
-  account_name   = "secure_administrator"
-  account_login  = "secadmin"
-  description    = "Secure application administrator"
-  
-  # Certificate-based authentication
-  auto_change_ssh_key           = true
-  can_edit_certificate_validity = true
-  certificate_validity          = "4h"
-  
-  # Secure protocols only
-  services = ["ssh", "https"]
-}
-
-# Web application with comprehensive configuration
-resource "wallix-bastion_application_localdomain_account" "webapp_complete" {
-  application_id = wallix-bastion_application.webapp.id
-  domain_id      = wallix-bastion_application_localdomain.webapp_local.id
-  account_name   = "webapp_operator"
-  account_login  = "webapp_op"
-  description    = "Web application operator with full configuration"
-  
-  # Web application services
-  services = ["ssh", "sftp", "http", "https", "rdp"]
-  
-  # Security settings
-  auto_change_password          = true
-  auto_change_ssh_key           = true
-  can_edit_certificate_validity = true
-  certificate_validity          = "8h"
-  checkout_policy               = "webapp_operator_policy"
-}
-
-# Legacy application account
-resource "wallix-bastion_application_localdomain_account" "legacy_app" {
-  application_id = wallix-bastion_application.legacy_system.id
-  domain_id      = wallix-bastion_application_localdomain.legacy_local.id
-  account_name   = "legacy_admin"
-  account_login  = "legacyadmin"
-  description    = "Legacy application administrator"
-  
-  # Legacy protocols support
-  services = ["telnet", "ssh", "http"]
-  
-  # Manual credential management for legacy systems
-  auto_change_password = false
-  auto_change_ssh_key  = false
-}
-
-# Microservice application account
-resource "wallix-bastion_application_localdomain_account" "microservice" {
-  application_id = wallix-bastion_application.microservice.id
-  domain_id      = wallix-bastion_application_localdomain.micro_local.id
-  account_name   = "microservice_operator"
-  account_login  = "micro_op"
-  description    = "Microservice operator account"
-  
-  # Cloud-native protocols
-  services = ["https", "ssh"]
-  
-  # Short-lived credentials for microservices
-  auto_change_password = true
-  auto_change_ssh_key  = true
-  certificate_validity = "1h"
-}
-
-# Multi-tenant application account
-resource "wallix-bastion_application_localdomain_account" "tenant_admin" {
-  application_id = wallix-bastion_application.saas_platform.id
-  domain_id      = wallix-bastion_application_localdomain.tenant_local.id
-  account_name   = "tenant_administrator"
-  account_login  = "tenant_admin"
-  description    = "Multi-tenant application administrator"
-  
-  # SaaS platform services
-  services = ["https", "ssh", "database"]
-  
-  # Tenant-specific security
-  auto_change_password = true
-  checkout_policy      = "tenant_admin_policy"
-  certificate_validity = "6h"
-}
-
-# Development application account
-resource "wallix-bastion_application_localdomain_account" "dev_account" {
-  application_id = wallix-bastion_application.dev_app.id
-  domain_id      = wallix-bastion_application_localdomain.dev_local.id
-  account_name   = "developer"
-  account_login  = "dev"
-  description    = "Development application account"
-  
-  # Development services
-  services = ["ssh", "http", "https", "sftp"]
-  
-  # Relaxed settings for development
-  auto_change_password = false
-  certificate_validity = "24h"
-}
-
-# Production application account with strict security
-resource "wallix-bastion_application_localdomain_account" "prod_account" {
-  application_id = wallix-bastion_application.prod_app.id
-  domain_id      = wallix-bastion_application_localdomain.prod_local.id
-  account_name   = "production_operator"
-  account_login  = "prod_op"
-  description    = "Production application operator"
-  
-  # Production services
-  services = ["ssh", "https"]
-  
-  # Strict production security
-  auto_change_password          = true
-  auto_change_ssh_key           = true
-  can_edit_certificate_validity = false
-  certificate_validity          = "2h"
-  checkout_policy               = "production_access_policy"
 }
 ```
 
@@ -184,7 +46,7 @@ resource "wallix-bastion_application_localdomain_account" "prod_account" {
 
 ### Optional
 
-- `auto_change_password` (Boolean)
+- `auto_change_password` (Boolean) Include the account in the password change of its domain; `false` by default with this provider, while the Bastion enables it on an account created without it (GUI or API). Only has an effect when the domain has a password change configured (plugin and policy), scheduled by the `change_period` of the policy.
 - `checkout_policy` (String)
 - `description` (String)
 - `password` (String, Sensitive)
@@ -196,227 +58,34 @@ resource "wallix-bastion_application_localdomain_account" "prod_account" {
 
 ## Usage Notes
 
-### Prerequisites
+### Password
 
-Before creating an application local domain account:
+`password` sets the password of the account when it is created, and replaces it when its value
+changes. The provider doesn't read it back: a password changed outside of Terraform (GUI, API,
+password change of the domain) isn't detected, and removing `password` from the configuration
+leaves the current password on the Bastion.
 
-1. Create the application: `wallix-bastion_application`
-2. Create the application local domain: `wallix-bastion_application_localdomain`
-3. Configure the domain with appropriate settings
-
-### Service Configuration
-
-**Web Application Services:**
-
-- **http**: HTTP protocol (port 80)
-- **https**: HTTPS protocol (port 443)
-- **ssh**: Secure Shell for server management
-- **sftp**: SSH File Transfer Protocol
-- **rdp**: Remote Desktop (if Windows-based)
-
-**Database Application Services:**
-
-- **ssh**: Server access for administration
-- **database**: Database-specific protocols (MySQL, PostgreSQL, etc.)
-- **https**: Web-based database management interfaces
-
-**API Application Services:**
-
-- **https**: Primary API protocol
-- **http**: Non-secure API endpoints (not recommended for production)
-- **ssh**: Server management access
-
-### Security Settings
-
-**Password Management:**
+The password can be managed by a `wallix-bastion_application_localdomain_account_credential`
+resource instead, with `password` left unset on the account: the credential resource can't be
+created for an account that already has a password.
 
 ```terraform
-auto_change_password = true   # Enable automatic password rotation
-```
-
-**SSH Key Management:**
-
-```terraform
-auto_change_ssh_key = true    # Enable automatic SSH key rotation
-```
-
-**Certificate Management:**
-
-```terraform
-can_edit_certificate_validity = true  # Allow certificate validity editing
-certificate_validity          = "4h"  # Set certificate validity period
-```
-
-### Application-Specific Patterns
-
-**Web Application Account:**
-
-```terraform
-resource "wallix-bastion_application_localdomain_account" "web_admin" {
-  account_name = "web_administrator"
-  services     = ["ssh", "https", "sftp"]
-  
-  auto_change_password = true
-  certificate_validity = "8h"
-}
-```
-
-**Database Application Account:**
-
-```terraform
-resource "wallix-bastion_application_localdomain_account" "db_admin" {
-  account_name = "database_admin"
-  services     = ["ssh", "database", "https"]
-  
-  auto_change_password = true
-  checkout_policy      = "database_access"
-}
-```
-
-**API Service Account:**
-
-```terraform
-resource "wallix-bastion_application_localdomain_account" "api_service" {
-  account_name = "api_service"
-  services     = ["https", "ssh"]
-  
-  auto_change_password = true
-  certificate_validity = "2h"
-}
-```
-
-**Microservice Account:**
-
-```terraform
-resource "wallix-bastion_application_localdomain_account" "microservice" {
-  account_name = "microservice_operator"
-  services     = ["https"]
-  
-  auto_change_password = true
-  certificate_validity = "1h"  # Short-lived for microservices
-}
-```
-
-### Certificate Validity Periods
-
-**High Security Applications:**
-
-- `1h`: Microservices and APIs
-- `2h`: Production critical applications
-- `4h`: Secure applications
-
-**Standard Applications:**
-
-- `8h`: Business day access
-- `12h`: Extended business access
-- `24h`: Development environments
-
-### Checkout Policies
-
-Assign checkout policies based on application criticality:
-
-```terraform
-checkout_policy = wallix-bastion_checkout_policy.app_access.policy_name
-```
-
-**Policy Examples:**
-
-- `production_access_policy`: Strict approval for production
-- `database_access_policy`: Database-specific approvals
-- `webapp_operator_policy`: Web application access
-- `dev_access_policy`: Relaxed development access
-
-### Integration with Credentials
-
-After creating the account, add credentials:
-
-```terraform
-resource "wallix-bastion_application_localdomain_account_credential" "web_admin_cred" {
+resource "wallix-bastion_application_localdomain_account_credential" "web_admin" {
   application_id = wallix-bastion_application_localdomain_account.web_admin.application_id
   domain_id      = wallix-bastion_application_localdomain_account.web_admin.domain_id
-  account_name   = wallix-bastion_application_localdomain_account.web_admin.account_name
+  account_id     = wallix-bastion_application_localdomain_account.web_admin.id
   type           = "password"
   password       = var.web_admin_password
 }
 ```
 
-### Account Hierarchy
+### Password change and checkout
 
-```ini
-Application → Application Local Domain → Application Local Domain Account
-     ↓               ↓                            ↓
-  WebApp → webapp.local → web_administrator
-```
+`domain_password_change` is `true` when the domain of the account has a password change
+configured (plugin and policy), the condition for `auto_change_password` to have an effect.
 
-### Environment-Specific Configuration
-
-**Development Environment:**
-
-```terraform
-resource "wallix-bastion_application_localdomain_account" "dev" {
-  services = ["ssh", "http", "https"]
-  
-  # Relaxed security for development
-  auto_change_password = false
-  certificate_validity = "24h"
-}
-```
-
-**Production Environment:**
-
-```terraform
-resource "wallix-bastion_application_localdomain_account" "prod" {
-  services = ["ssh", "https"]  # Limited services
-  
-  # Strict security for production
-  auto_change_password = true
-  auto_change_ssh_key  = true
-  certificate_validity = "2h"
-  checkout_policy      = "production_approval"
-}
-```
-
-### Best Practices
-
-1. **Principle of Least Privilege**: Only assign necessary services
-2. **Environment Separation**: Different accounts for dev/staging/prod
-3. **Certificate Validity**: Use shorter periods for higher security
-4. **Automated Rotation**: Enable auto-change for production accounts
-5. **Checkout Policies**: Implement approval workflows for sensitive apps
-6. **Service Limitation**: Restrict protocols to application requirements
-
-### Monitoring and Compliance
-
-**Account Usage Tracking:**
-
-- Monitor service access patterns
-- Track certificate issuance and renewal
-- Log password/key rotation events
-- Audit checkout policy compliance
-
-**Application Security:**
-
-- Regular access reviews per application
-- Service permission audits
-- Certificate validity monitoring
-- Credential rotation compliance
-
-### Troubleshooting
-
-**Common Issues:**
-
-1. **Service Access Denied**: Check service configuration and application support
-2. **Certificate Issues**: Verify validity periods and application CA trust
-3. **Checkout Failures**: Review policy requirements and approvals
-4. **Application Connectivity**: Validate application-specific credentials
-
-**Debugging Steps:**
-
-1. Verify application configuration
-2. Check service permissions and application support
-3. Validate checkout policies
-4. Test certificate configuration with application
-5. Review application-specific logs
+`checkout_policy` is the name of a checkout policy (`wallix-bastion_checkout_policy`); the provider
+sends `default` when it isn't set.
 
 ## Import
 

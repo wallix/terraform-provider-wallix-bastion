@@ -23,7 +23,9 @@ data "wallix-bastion_targetgroup" "web_servers" {
 resource "wallix-bastion_authorization" "web_access" {
   authorization_name = "web-access"
   user_group         = "developers"
-  target_group        = data.wallix-bastion_targetgroup.web_servers.group_name
+  target_group       = data.wallix-bastion_targetgroup.web_servers.group_name
+  authorize_sessions = true
+  subprotocols       = ["SSH_SHELL_SESSION"]
 }
 
 # Report how many session accounts are configured

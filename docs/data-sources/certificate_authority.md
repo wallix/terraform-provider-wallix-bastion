@@ -22,13 +22,6 @@ data "wallix-bastion_certificate_authority" "corp_x509" {
   certificate_authority_name = "corp-x509-ca"
 }
 
-# Use the CA certificate to configure a domain's trust anchor
-resource "wallix-bastion_domain" "corporate" {
-  domain_name      = "corp.local"
-  domain_real_name = "corp.local"
-  ca_public_key    = data.wallix-bastion_certificate_authority.corp_x509.ca_certificate
-}
-
 # Verify the CA type before use
 output "corp_ca_type" {
   value = data.wallix-bastion_certificate_authority.corp_x509.ca_type

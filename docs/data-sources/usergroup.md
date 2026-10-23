@@ -24,6 +24,8 @@ resource "wallix-bastion_authorization" "developer_access" {
   authorization_name = "developer-access"
   user_group         = data.wallix-bastion_usergroup.developers.group_name
   target_group       = "web-servers"
+  authorize_sessions = true
+  subprotocols       = ["SSH_SHELL_SESSION"]
 }
 
 # Report the number of members in the group

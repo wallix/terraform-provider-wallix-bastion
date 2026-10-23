@@ -10,6 +10,7 @@ terraform {
 
 provider "wallix-bastion" {
   ip          = var.bastion_ip
+  user        = var.bastion_user
   token       = var.bastion_token
   api_version = var.api_version
 }

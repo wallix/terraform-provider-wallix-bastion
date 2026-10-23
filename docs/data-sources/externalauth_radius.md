@@ -18,12 +18,6 @@ data "wallix-bastion_externalauth_radius" "corporate" {
   authentication_name = "corporate_radius"
 }
 
-# Reference it from an authentication domain mapping
-resource "wallix-bastion_authdomain_mapping" "radius_mapping" {
-  domain_name = "corporate.local"
-  auth_domain = data.wallix-bastion_externalauth_radius.corporate.authentication_name
-}
-
 # Output non-sensitive connection details
 output "radius_server" {
   value = {
