@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+FEATURES:
+
+- add `wallix-bastion_externalauth_oidc` resource and data source (OIDC external authentication, API v3.12); the client secret is the write-only `client_secret_wo` (Terraform 1.11 and later), never stored in the state, with `client_secret_wo_version` to send a new one
+- add `wallix-bastion_authdomain_oidc` resource and data source (OIDC authentication domain, API v3.12)
+
 ENHANCEMENTS:
 
 - **resource/wallix-bastion_passwordchangepolicy**: a new policy with `password_length` and none of `special_chars`, `lower_chars`, `upper_chars` or `digit_chars` is now refused at plan; the Bastion refused it at apply (`400 At least one number of chars (special, lower case, upper case, digit) must be set to an integer value`, checked on a Bastion 12.4.3)
