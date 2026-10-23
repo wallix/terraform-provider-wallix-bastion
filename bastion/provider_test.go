@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
@@ -47,6 +48,39 @@ func TestProvider_impl(t *testing.T) {
 
 	// Explicit type is the point of this compile-time assertion.
 	var _ *schema.Provider = bastion.Provider() //nolint:staticcheck
+}
+
+// A default value would make Terraform warn about the deprecated argument in every configuration.
+func TestProviderSessionTimeoutDeprecated(t *testing.T) {
+	tests := []struct {
+		name     string
+		config   map[string]interface{}
+		env      string
+		wantWarn bool
+	}{
+		{name: "unset", config: map[string]interface{}{}},
+		{name: "argument", config: map[string]interface{}{"session_timeout": 300}, wantWarn: true},
+		{name: "env", config: map[string]interface{}{}, env: "300", wantWarn: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv(envWallixHost, "192.0.2.1")
+			t.Setenv(envWallixUser, "tf")
+			t.Setenv("WALLIX_SESSION_TIMEOUT", tt.env)
+
+			diags := bastion.Provider().Validate(terraform.NewResourceConfigRaw(tt.config))
+			if diags.HasError() {
+				t.Fatalf("unexpected errors: %v", diags)
+			}
+			warned := false
+			for _, d := range diags {
+				warned = warned || (d.Severity == diag.Warning && d.Summary == "Argument is deprecated")
+			}
+			if warned != tt.wantWarn {
+				t.Errorf("deprecation warning: got %t, want %t", warned, tt.wantWarn)
+			}
+		})
+	}
 }
 
 func testAccPreCheck(t *testing.T) {
