@@ -95,7 +95,9 @@ func (p *frameworkProvider) Resources(_ context.Context) []func() resource.Resou
 }
 
 func (p *frameworkProvider) DataSources(_ context.Context) []func() datasource.DataSource {
-	return nil
+	return []func() datasource.DataSource{
+		func() datasource.DataSource { return &timeframeDataSource{} },
+	}
 }
 
 // config applies the env variables and defaults of the SDKv2 schema to the arguments left null.

@@ -144,7 +144,6 @@ func Provider() *schema.Provider {
 			"wallix-bastion_passwordchangepolicy":                       dataSourcePasswordChangePolicy(),
 			"wallix-bastion_profile":                                    dataSourceProfile(),
 			"wallix-bastion_targetgroup":                                dataSourceTargetGroup(),
-			"wallix-bastion_timeframe":                                  dataSourceTimeframe(),
 			"wallix-bastion_user":                                       dataSourceUser(),
 			"wallix-bastion_usergroup":                                  dataSourceUserGroup(),
 			"wallix-bastion_version":                                    dataSourceVersion(),

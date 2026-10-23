@@ -47,7 +47,7 @@ func TestUserAndTimeframeNamesAreEscapedInPaths(t *testing.T) {
 	})
 	t.Run("timeframe", func(t *testing.T) {
 		handler, requests := recordRequests()
-		server := newTestProviderServer(t, handler)
+		server := newTestProviderServer(t, newTestAPIClient(t, handler))
 		typ := schemaType(t, server, timeframeType)
 
 		resp, err := server.ApplyResourceChange(t.Context(), &tfprotov5.ApplyResourceChangeRequest{

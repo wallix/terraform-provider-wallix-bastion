@@ -16,11 +16,10 @@ import (
 
 const timeframeType = "wallix-bastion_timeframe"
 
-// newTestProviderServer returns the muxed provider server, configured for a test Bastion API.
-func newTestProviderServer(t *testing.T, handler http.HandlerFunc) tfprotov5.ProviderServer {
+// newTestProviderServer returns the muxed provider server, configured for the test API of api.
+func newTestProviderServer(t *testing.T, api *Client) tfprotov5.ProviderServer { //nolint:ireturn // unexported mux type
 	t.Helper()
 	clearProviderEnv(t)
-	api := newTestAPIClient(t, handler)
 	factory, err := NewProviderServer(t.Context())
 	if err != nil {
 		t.Fatal(err)
@@ -39,7 +38,7 @@ func newTestProviderServer(t *testing.T, handler http.HandlerFunc) tfprotov5.Pro
 	return server
 }
 
-// schemaType returns the type of the provider schema, or of a resource schema.
+// schemaType returns the type of the provider schema, or of a resource or "data." data source schema.
 func schemaType(t *testing.T, server tfprotov5.ProviderServer, resourceType string) tftypes.Object {
 	t.Helper()
 	resp, err := server.GetProviderSchema(t.Context(), &tfprotov5.GetProviderSchemaRequest{})
@@ -47,7 +46,10 @@ func schemaType(t *testing.T, server tfprotov5.ProviderServer, resourceType stri
 		t.Fatal(err)
 	}
 	s := resp.Provider
-	if resourceType != "" {
+	switch dataSource, ok := strings.CutPrefix(resourceType, "data."); {
+	case ok:
+		s = resp.DataSourceSchemas[dataSource]
+	case resourceType != "":
 		s = resp.ResourceSchemas[resourceType]
 	}
 	typ, ok := s.ValueType().(tftypes.Object)
@@ -112,11 +114,11 @@ func timeframeValues(name string, extra map[string]interface{}) map[string]inter
 // the plan of a configuration without them is empty. In a Framework state they come from the
 // configuration and stay.
 func TestTimeframeReadBackOfZeroValues(t *testing.T) {
-	server := newTestProviderServer(t, func(w http.ResponseWriter, r *http.Request) {
+	server := newTestProviderServer(t, newTestAPIClient(t, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set(contentTypeHeader, contentTypeJSON)
 		fmt.Fprintf(w, `{"timeframe_name":%q,"description":"","is_overtimable":false,"periods":[]}`,
 			path.Base(r.URL.Path))
-	})
+	}))
 	typ := schemaType(t, server, timeframeType)
 	zero := map[string]interface{}{skDescription: "", "is_overtimable": false}
 	frameworkPrivate := []byte(`{"` + privateKeyFrameworkState + `":"dHJ1ZQ=="}`) // base64 of true
@@ -158,7 +160,7 @@ func TestTimeframeReadBackOfZeroValues(t *testing.T) {
 func TestTimeframeRenameFollowsTheNewName(t *testing.T) {
 	var mu sync.Mutex
 	var requests []string
-	server := newTestProviderServer(t, func(w http.ResponseWriter, r *http.Request) {
+	server := newTestProviderServer(t, newTestAPIClient(t, func(w http.ResponseWriter, r *http.Request) {
 		mu.Lock()
 		requests = append(requests, r.Method+" "+r.URL.Path)
 		mu.Unlock()
@@ -170,7 +172,7 @@ func TestTimeframeRenameFollowsTheNewName(t *testing.T) {
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
-	})
+	}))
 	typ := schemaType(t, server, timeframeType)
 
 	resp, err := server.ApplyResourceChange(t.Context(), &tfprotov5.ApplyResourceChangeRequest{
@@ -195,9 +197,9 @@ func TestTimeframeRenameFollowsTheNewName(t *testing.T) {
 
 // A period without week_days, or with a day the API doesn't know, failed only at apply (400 from the API).
 func TestTimeframeWeekDaysValidation(t *testing.T) {
-	server := newTestProviderServer(t, func(w http.ResponseWriter, _ *http.Request) {
+	server := newTestProviderServer(t, newTestAPIClient(t, func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
-	})
+	}))
 	typ := schemaType(t, server, timeframeType)
 	periodsType, ok := typ.AttributeTypes["periods"].(tftypes.Set)
 	if !ok {
@@ -242,7 +244,7 @@ func TestTimeframeWeekDaysValidation(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			var got []string
+			got := make([]string, 0, len(resp.Diagnostics))
 			for _, d := range resp.Diagnostics {
 				got = append(got, d.Summary+": "+d.Detail)
 			}
