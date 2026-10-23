@@ -77,6 +77,7 @@ func TestProviderServersShareTheClient(t *testing.T) {
 		"env": {env: map[string]string{
 			envBastionHost: "192.0.2.11", envBastionUser: "tf", envBastionToken: "secret-b",
 			envBastionPort: "8443", envCSRFEnabled: "false", envSessionTimeout: "300",
+			envBastionAPIVersion: VersionWallixAPI38, envInsecureSkipVerify: "1", envBastionPassword: "secret-d",
 		}},
 	} {
 		t.Run(name, func(t *testing.T) {

@@ -34,9 +34,10 @@ func TestAccResourceTimeframe_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:  "wallix-bastion_timeframe.testacc_Timeframe",
-				ImportState:   true,
-				ImportStateId: "testacc_Timeframe",
+				ResourceName:      "wallix-bastion_timeframe.testacc_Timeframe",
+				ImportState:       true,
+				ImportStateId:     "testacc_Timeframe",
+				ImportStateVerify: true,
 			},
 		},
 		PreventPostDestroyRefresh: true,
@@ -121,6 +122,66 @@ resource "wallix-bastion_timeframe" "testacc_TimeframeRename" {
     end_time   = "12:00"
     week_days  = ["monday"]
   }
+}
+`
+}
+
+// A state written by 0.16.0, the last release on SDKv2, gives an empty plan once the resource
+// runs on the Framework: SDKv2 stored "" and false for the arguments left unset.
+func TestAccResourceTimeframe_upgradeFromSDKv2(t *testing.T) {
+	// The muxed provider is served as wallix/wallix-bastion, the address the state of 0.16.0 holds.
+	t.Setenv(resource.EnvTfAccProviderNamespace, "wallix")
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { testAccPreCheck(t) },
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"wallix-bastion": {Source: "wallix/wallix-bastion", VersionConstraint: "0.16.0"},
+				},
+				Config: testAccResourceTimeframeUpgrade(),
+			},
+			{
+				ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
+				Config:                   testAccResourceTimeframeUpgradeSource + testAccResourceTimeframeUpgrade(),
+				PlanOnly:                 true,
+			},
+			{
+				ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
+				Config:                   testAccResourceTimeframeUpgradeSource + testAccResourceTimeframeUpgrade(),
+			},
+		},
+	})
+}
+
+const testAccResourceTimeframeUpgradeSource = `
+terraform {
+  required_providers {
+    wallix-bastion = {
+      source = "wallix/wallix-bastion"
+    }
+  }
+}
+`
+
+func testAccResourceTimeframeUpgrade() string {
+	return `
+resource "wallix-bastion_timeframe" "testacc_TimeframeUpgrade" {
+  timeframe_name = "testacc_TimeframeUpgrade"
+  periods {
+    start_date = "2020-01-01"
+    end_date   = "2020-02-02"
+    start_time = "08:00"
+    end_time   = "12:00"
+    week_days  = ["monday", "friday"]
+  }
+}
+resource "wallix-bastion_timeframe" "testacc_TimeframeUpgrade2" {
+  timeframe_name = "testacc_TimeframeUpgrade2"
+  description    = "testacc Timeframe"
+  is_overtimable = true
+}
+data "wallix-bastion_timeframe" "testacc_TimeframeUpgrade" {
+  timeframe_name = wallix-bastion_timeframe.testacc_TimeframeUpgrade.timeframe_name
 }
 `
 }
