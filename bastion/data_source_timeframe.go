@@ -5,57 +5,61 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func dataSourceTimeframe() *schema.Resource {
-	return &schema.Resource{
-		ReadContext: dataSourceTimeframeRead,
-		Schema: map[string]*schema.Schema{
-			"timeframe_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			skDescription: {
-				Type:     schema.TypeString,
+var _ datasource.DataSourceWithConfigure = (*timeframeDataSource)(nil)
+
+type timeframeDataSource struct {
+	client *Client
+}
+
+type timeframeDataSourceModel struct {
+	ID            types.String           `tfsdk:"id"`
+	TimeframeName types.String           `tfsdk:"timeframe_name"`
+	Description   types.String           `tfsdk:"description"`
+	IsOvertimable types.Bool             `tfsdk:"is_overtimable"`
+	Periods       []timeframePeriodModel `tfsdk:"periods"`
+}
+
+func (d *timeframeDataSource) Metadata(
+	_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse,
+) {
+	resp.TypeName = req.ProviderTypeName + "_timeframe"
+}
+
+// Schema is the SDKv2 one as Terraform sees it: SDKv2 exports a Computed-only set of
+// *schema.Resource as an attribute (set of objects), not as a block.
+func (d *timeframeDataSource) Schema(
+	_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse,
+) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id":             schema.StringAttribute{Optional: true, Computed: true},
+			"timeframe_name": schema.StringAttribute{Required: true},
+			skDescription:    schema.StringAttribute{Computed: true},
+			"is_overtimable": schema.BoolAttribute{Computed: true},
+			"periods": schema.SetAttribute{
 				Computed: true,
-			},
-			"is_overtimable": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"periods": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"start_date": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"end_date": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"start_time": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"end_time": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"week_days": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
+				ElementType: types.ObjectType{AttrTypes: map[string]attr.Type{
+					"start_date": types.StringType,
+					"end_date":   types.StringType,
+					"start_time": types.StringType,
+					"end_time":   types.StringType,
+					"week_days":  types.SetType{ElemType: types.StringType},
+				}},
 			},
 		},
 	}
+}
+
+func (d *timeframeDataSource) Configure(
+	_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse,
+) {
+	d.client = providerClient(req.ProviderData, &resp.Diagnostics)
 }
 
 func dataSourceTimeframeVersionCheck(version string) error {
@@ -66,52 +70,39 @@ func dataSourceTimeframeVersionCheck(version string) error {
 	return fmt.Errorf("data source wallix-bastion_timeframe not available with api version %s", version)
 }
 
-func dataSourceTimeframeRead(
-	ctx context.Context, d *schema.ResourceData, m interface{},
-) diag.Diagnostics {
-	c := m.(*Client)
-	if err := dataSourceTimeframeVersionCheck(c.bastionAPIVersion); err != nil {
-		return diag.FromErr(err)
+func (d *timeframeDataSource) Read(
+	ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse,
+) {
+	var data timeframeDataSourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
-	timeframeName := d.Get("timeframe_name").(string)
-	ex, err := checkResourceTimeframeExits(ctx, timeframeName, m)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if !ex {
-		return diag.FromErr(fmt.Errorf("timeframe_name %s doesn't exists", timeframeName))
-	}
-	cfg, err := readTimeframeOptions(ctx, timeframeName, m)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	fillSourceTimeframe(d, cfg)
-	d.SetId(timeframeName)
+	if err := dataSourceTimeframeVersionCheck(d.client.bastionAPIVersion); err != nil {
+		resp.Diagnostics.AddError(err.Error(), "")
 
-	return nil
-}
+		return
+	}
+	timeframeName := data.TimeframeName.ValueString()
+	cfg, err := readTimeframeOptions(ctx, timeframeName, d.client)
+	if err != nil {
+		resp.Diagnostics.AddError(err.Error(), "")
 
-func fillSourceTimeframe(d *schema.ResourceData, jsonData jsonTimeframe) {
-	if tfErr := d.Set("timeframe_name", jsonData.TimeframeName); tfErr != nil {
-		panic(tfErr)
+		return
 	}
-	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {
-		panic(tfErr)
+	if cfg.TimeframeName == "" {
+		resp.Diagnostics.AddError(fmt.Sprintf("timeframe_name %s doesn't exists", timeframeName), "")
+
+		return
 	}
-	if tfErr := d.Set("is_overtimable", jsonData.IsOvertimable); tfErr != nil {
-		panic(tfErr)
+	// Computed values: "" and false are stored as SDKv2 did.
+	data.ID = types.StringValue(timeframeName)
+	data.TimeframeName = types.StringValue(cfg.TimeframeName)
+	data.Description = types.StringValue(cfg.Description)
+	data.IsOvertimable = types.BoolValue(cfg.IsOvertimable)
+	data.Periods = make([]timeframePeriodModel, len(cfg.Periods))
+	for i, p := range cfg.Periods {
+		data.Periods[i] = timeframePeriodModel(p)
 	}
-	periods := make([]map[string]interface{}, len(jsonData.Periods))
-	for i, v := range jsonData.Periods {
-		periods[i] = map[string]interface{}{
-			"start_date": v.StartDate,
-			"end_date":   v.EndDate,
-			"start_time": v.StartTime,
-			"end_time":   v.EndTime,
-			"week_days":  v.WeekDays,
-		}
-	}
-	if tfErr := d.Set("periods", periods); tfErr != nil {
-		panic(tfErr)
-	}
+	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
 }

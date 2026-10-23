@@ -272,8 +272,8 @@ resource "wallix-bastion_domain_account_credential" "automated" {
 
 ## Import
 
-Domain account credential can be imported using an id made up of `<device_id>/<domain_id>/<account_name>`, e.g.
+Domain account credential can be imported using an id made up of `<domain_id>/<account_id>/<type>`, where `<account_id>` is the id of the domain account and `<type>` is `password` or `ssh_key`, e.g.
 
 ```shell
-terraform import wallix-bastion_domain_account_credential.db_password xxxxxxxx/yyyyyyyy/db_admin
+terraform import wallix-bastion_domain_account_credential.db_password xxxxxxxx/yyyyyyyy/password
 ```

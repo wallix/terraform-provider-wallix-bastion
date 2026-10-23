@@ -15,7 +15,7 @@ func TestAccDataSourceConfigSMTP_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                  func() { testAccPreCheck(t) },
-		ProviderFactories:         testAccProviderFactories,
+		ProtoV5ProviderFactories:  testAccProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{

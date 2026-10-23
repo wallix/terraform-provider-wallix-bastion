@@ -13,8 +13,8 @@ import (
 func TestAccResourceExternalAuthSaml_basic38(t *testing.T) {
 	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); v == bastion.VersionWallixAPI38 {
 		resource.Test(t, resource.TestCase{
-			PreCheck:          func() { testAccPreCheck(t) },
-			ProviderFactories: testAccProviderFactories,
+			PreCheck:                 func() { testAccPreCheck(t) },
+			ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 			ExternalProviders: map[string]resource.ExternalProvider{
 				tvTLSProviderName: {
 					Source:            tvTLSProviderSource,
@@ -70,8 +70,8 @@ func TestAccResourceExternalAuthSaml_basic38(t *testing.T) {
 func TestAccResourceExternalAuthSaml_basic(t *testing.T) {
 	if v := os.Getenv("WALLIX_BASTION_API_VERSION"); v == "" || v == bastion.VersionWallixAPI312 {
 		resource.Test(t, resource.TestCase{
-			PreCheck:          func() { testAccPreCheck(t) },
-			ProviderFactories: testAccProviderFactories,
+			PreCheck:                 func() { testAccPreCheck(t) },
+			ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 			ExternalProviders: map[string]resource.ExternalProvider{
 				tvTLSProviderName: {
 					Source:            tvTLSProviderSource,

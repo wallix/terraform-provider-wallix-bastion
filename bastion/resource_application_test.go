@@ -12,8 +12,8 @@ import (
 
 func TestAccResourceApplication_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceApplicationCreate(),
@@ -61,8 +61,8 @@ func TestAccResourceApplication_web(t *testing.T) {
 	if os.Getenv("TESTACC_WEB_APP") != "" {
 		if v := os.Getenv("WALLIX_BASTION_API_VERSION"); v == "" || semver.Compare(v, bastion.VersionWallixAPI312) >= 0 {
 			resource.Test(t, resource.TestCase{
-				PreCheck:          func() { testAccPreCheck(t) },
-				ProviderFactories: testAccProviderFactories,
+				PreCheck:                 func() { testAccPreCheck(t) },
+				ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 				Steps: []resource.TestStep{
 					{
 						Config: testAccResourceApplicationCreateWeb(),
@@ -140,8 +140,8 @@ func TestAccResourceApplication_jumphost_deprecated(t *testing.T) {
 		// Only run this test for API versions < 3.12 where jumphost is still supported
 		if v != "" && semver.Compare(v, bastion.VersionWallixAPI312) < 0 {
 			resource.Test(t, resource.TestCase{
-				PreCheck:          func() { testAccPreCheck(t) },
-				ProviderFactories: testAccProviderFactories,
+				PreCheck:                 func() { testAccPreCheck(t) },
+				ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 				Steps: []resource.TestStep{
 					{
 						Config: testAccResourceApplicationCreateJumphost(),
@@ -336,8 +336,8 @@ resource "wallix-bastion_application" "testacc_Appli_web" {
 func TestAccResourceApplication_deleteWithAttachedGlobalAccount(t *testing.T) {
 	skipBeforeAPI312(t, "category = web_application")
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceApplicationAttachedAccount(true),
@@ -393,8 +393,8 @@ resource "wallix-bastion_targetgroup" "testacc_AppAttachedAccount" {
 func TestAccResourceApplication_deleteWithSameNameDevice(t *testing.T) {
 	skipBeforeAPI312(t, "category = web_application")
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceApplicationSameNameDevice(true),

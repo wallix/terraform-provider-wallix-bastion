@@ -8,8 +8,8 @@ import (
 
 func TestAccResourceDomain_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
 			tvRandomProviderName: {
 				Source: tvRandomProviderSource,

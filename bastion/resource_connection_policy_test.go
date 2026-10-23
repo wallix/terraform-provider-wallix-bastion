@@ -8,8 +8,8 @@ import (
 
 func TestAccResourceConnectionPolicy_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceConnectionPolicyCreate(),
@@ -519,8 +519,8 @@ resource "wallix-bastion_connection_policy" "testacc_ConnectionPolicy" {
 func TestAccResourceConnectionPolicy_protocolChange(t *testing.T) {
 	resourceName := "wallix-bastion_connection_policy.testacc_ConnPolicyProtocol"
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceConnectionPolicyProtocol("SSH"),
