@@ -12,6 +12,7 @@ ENHANCEMENTS:
 - **resource/wallix-bastion_domain_account**: document the import, with an id made up of `<domain_id>/<account_name>`
 - **resource/wallix-bastion_application_localdomain_account**: remove `auto_change_ssh_key` from the documentation examples; the resource doesn't have it
 - **provider**: deprecate `session_timeout` (and `WALLIX_SESSION_TIMEOUT`), which has no effect and will be removed in 1.0; it no longer has a default, so the warning only shows when it is set
+- **provider**: serve the resources through terraform-plugin-mux, with `wallix-bastion_timeframe` (resource and data source) as the first one on terraform-plugin-framework; no configuration change: same schemas, import ids and protocol (5), and a state written by 0.16.0 gives an empty plan (a timeframe that sets `description = ""` or `is_overtimable = false` explicitly gets one in-place update, without effect on the Bastion)
 
 ## 0.16.0 (October 21, 2026)
 
