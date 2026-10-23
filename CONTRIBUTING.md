@@ -165,6 +165,79 @@ We welcome several types of contributions:
    - Handle partial state updates gracefully
    - Use `d.Partial(true)` for complex updates
 
+### Migrating a Resource to terraform-plugin-framework
+
+The provider is moving from terraform-plugin-sdk/v2 to terraform-plugin-framework one resource at a
+time (#164). `bastion/provider_server.go` serves both with terraform-plugin-mux, on protocol 5 so
+that every Terraform version that ran 0.16 still runs the provider. `wallix-bastion_timeframe`
+(resource and data source) is the first one on the Framework and serves as the reference.
+
+A migration is not a breaking change: users keep their configuration, their import IDs and their
+state, and a state written by the previous release plans empty. The rules below follow from that.
+
+**One server per resource.** Remove the resource from `ResourcesMap` or `DataSourcesMap` in
+`provider.go` and add it to `Resources()` or `DataSources()` in `provider_framework.go`. If both
+servers declare it, the schema request fails ("Invalid Provider Server Combination") and so does
+every Terraform command; `TestProviderServerSchemasMatch` catches it.
+
+**Provider schema.** tf5muxserver fails the schema request the same way when the SDKv2 and
+Framework provider schemas differ, descriptions and deprecation included. A change to a provider
+argument goes into both `Provider()` and `frameworkProvider.Schema`, with the texts and env
+variable names taken from the shared constants. SDKv2 exports a `Required` argument with an env
+`DefaultFunc` as `Optional` when the variable is set, so `ip` and `user` follow
+`WALLIX_BASTION_HOST` and `WALLIX_BASTION_USER` in the Framework schema too. The Framework has no
+`DefaultFunc`: `frameworkProviderModel.config()` applies the env variables and defaults.
+`TestProviderServerSchemasMatch` and `TestProviderServersShareTheClient` catch a drift.
+
+**Client.** Terraform configures each muxed server separately. Both get their `*Client` from
+`sharedClient`, one per configuration, so they share one Bastion session and connection pool. A
+Framework resource takes it in `Configure` with `providerClient`.
+
+**Same schema as Terraform sees it.** Names, types and `Required`/`Optional`/`Computed`/`Sensitive`
+stay as they are; compare `terraform providers schema -json` of the previous and new binaries (with
+a `dev_overrides` CLI configuration), it must not change. What SDKv2 adds or converts:
+
+- the implicit `id` is a `StringAttribute` with `Optional` and `Computed`;
+- a `TypeList` or `TypeSet` of `*schema.Resource` that can be configured stays a block
+  (`ListNestedBlock`, `SetNestedBlock`): nested attributes need protocol 6 and would change the
+  configuration syntax;
+- a `Computed`-only `TypeList` or `TypeSet` of `*schema.Resource` is an attribute of objects
+  (`ListAttribute`, `SetAttribute` with an `ObjectType` element), not a block;
+- `TypeInt` is an `Int64Attribute`, `ValidateFunc` becomes `Validators`
+  (terraform-plugin-framework-validators).
+
+The Framework does not export `MinItems`/`MaxItems` of blocks: use list or set validators. It is the
+one accepted difference in the schema JSON; check that the generated documentation still reads
+right. A resource with a `Default`, timeouts or a `DiffSuppressFunc` needs its own analysis: the
+Framework only accepts a default on a `Computed` attribute, which changes the schema.
+
+**Reading back `""`, `0` and `false`.** SDKv2 cannot store null for a primitive: an `Optional`
+argument left unset is `""`, `0` or `false` in the state it writes. The Framework plans null for
+it, so keeping these values plans `"" -> null` on every resource that leaves the argument unset.
+`Read` does not see the configuration, so a private state key (`framework_state`, set by
+`markFrameworkState` in `Create`, `Read` and `Update`) marks the states written by the Framework.
+For an `Optional`, non-`Computed` argument whose API value is the zero value:
+
+| State | Prior value | Read back as |
+| ----- | ----------- | ------------ |
+| written by SDKv2, or imported (no key) | any | null |
+| written by the Framework (key) | null | null |
+| written by the Framework (key) | set (the configuration sets the argument) | the zero value |
+
+`optionalString` and `optionalBool` implement it; add the `Int64` variant the same way when a
+resource needs it. A configuration that writes the zero value explicitly (`is_overtimable = false`)
+gets one in-place update after the upgrade, a no-op on the Bastion, then empty plans: nothing in
+the state tells that zero apart from an SDKv2 one. `Computed` attributes, data sources included,
+keep the values SDKv2 stored. A block left out of the configuration is an empty list or set, never
+null: build the state with an empty slice, not a nil one.
+
+**Tests.** Unit tests go through the muxed server (`newTestProviderServer` against a mock Bastion),
+not the resource methods, so that private state, plan modifiers and validators run. The acceptance
+tests use `testAccProtoV5ProviderFactories`. Each migrated resource gets an upgrade test like
+`TestAccResourceTimeframe_upgradeFromSDKv2`: apply with the last SDKv2 release in
+`ExternalProviders`, then plan with the muxed provider (`PlanOnly`), served as
+`wallix/wallix-bastion` through `TF_ACC_PROVIDER_NAMESPACE`. Run them with API v3.12 and v3.8.
+
 ### Testing Guidelines
 
 #### Test Environment Setup

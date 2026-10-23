@@ -210,7 +210,7 @@ func markFrameworkState(ctx context.Context, private privateState) fwdiag.Diagno
 }
 
 // optionalString reads back an Optional, non-Computed argument: the API returns "" when it is
-// unset, which stays "" only if the configuration set it (Framework state with "" in it).
+// unset, kept as "" only when a Framework state shows that the configuration sets it.
 func optionalString(api string, prior types.String, fromFramework bool) types.String {
 	if api == "" && (!fromFramework || prior.IsNull()) {
 		return types.StringNull()
