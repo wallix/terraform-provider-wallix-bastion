@@ -8,6 +8,7 @@ ENHANCEMENTS:
 - **resource/wallix-bastion_domain_account_credential**, **resource/wallix-bastion_device_localdomain_account_credential**: fix the documented import id, which the import rejected; it is `<domain_id>/<account_id>/<type>` and `<device_id>/<domain_id>/<account_id>/<type>`, with `<type>` being `password` or `ssh_key`
 - **resource/wallix-bastion_domain_account**: document the import, with an id made up of `<domain_id>/<account_name>`
 - **resource/wallix-bastion_application_localdomain_account**: remove `auto_change_ssh_key` from the documentation examples; the resource doesn't have it
+- **docs**: fix the documentation examples that `terraform validate` rejects with the provider schema (arguments and attributes that don't exist, missing required arguments, `RequiredWith` conflicts), at least 375 errors over 20 pages; rewrite the pages of the `wallix-bastion_application_localdomain_account` and `wallix-bastion_connection_message` resources and of the `wallix-bastion_authdomain_ad` and `wallix-bastion_local_password_policy` data sources, which described arguments and attributes that don't exist; fix the `examples/` modules (`user` missing in the provider block, undeclared variables, comment settings without approval workflow, approval timeouts given in seconds instead of minutes)
 - **provider**: deprecate `session_timeout` (and `WALLIX_SESSION_TIMEOUT`), which has no effect and will be removed in 1.0; it no longer has a default, so the warning only shows when it is set
 
 ## 0.16.0 (October 21, 2026)
