@@ -74,14 +74,14 @@ func dataSourceTimeframeRead(
 		return diag.FromErr(err)
 	}
 	timeframeName := d.Get("timeframe_name").(string)
-	ex, err := checkResourceTimeframeExits(ctx, timeframeName, m)
+	ex, err := checkResourceTimeframeExits(ctx, timeframeName, c)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if !ex {
 		return diag.FromErr(fmt.Errorf("timeframe_name %s doesn't exists", timeframeName))
 	}
-	cfg, err := readTimeframeOptions(ctx, timeframeName, m)
+	cfg, err := readTimeframeOptions(ctx, timeframeName, c)
 	if err != nil {
 		return diag.FromErr(err)
 	}

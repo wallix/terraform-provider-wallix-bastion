@@ -89,7 +89,9 @@ func (p *frameworkProvider) Configure(
 }
 
 func (p *frameworkProvider) Resources(_ context.Context) []func() resource.Resource {
-	return nil
+	return []func() resource.Resource{
+		func() resource.Resource { return &timeframeResource{} },
+	}
 }
 
 func (p *frameworkProvider) DataSources(_ context.Context) []func() datasource.DataSource {
@@ -171,6 +173,57 @@ func boolOrEnv(v types.Bool, env string, def bool) (bool, error) {
 	}
 
 	return b, nil
+}
+
+// providerClient returns the client of a configured provider, nil before ConfigureProvider.
+func providerClient(data any, diags *fwdiag.Diagnostics) *Client {
+	if data == nil {
+		return nil
+	}
+	client, ok := data.(*Client)
+	if !ok {
+		diags.AddError("Unexpected provider data", fmt.Sprintf("expected *bastion.Client, got %T", data))
+	}
+
+	return client
+}
+
+// privateKeyFrameworkState marks a resource state written by the Framework: unlike SDKv2, which
+// stored "" and false for an unset Optional argument, its zero values come from the configuration.
+const privateKeyFrameworkState = "framework_state"
+
+type privateState interface {
+	GetKey(ctx context.Context, key string) ([]byte, fwdiag.Diagnostics)
+	SetKey(ctx context.Context, key string, value []byte) fwdiag.Diagnostics
+}
+
+func frameworkState(ctx context.Context, private privateState) (bool, fwdiag.Diagnostics) {
+	value, diags := private.GetKey(ctx, privateKeyFrameworkState)
+
+	return value != nil, diags
+}
+
+func markFrameworkState(ctx context.Context, private privateState) fwdiag.Diagnostics {
+	return private.SetKey(ctx, privateKeyFrameworkState, []byte("true"))
+}
+
+// optionalString reads back an Optional, non-Computed argument: the API returns "" when it is
+// unset, which stays "" only if the configuration set it (Framework state with "" in it).
+func optionalString(api string, prior types.String, fromFramework bool) types.String {
+	if api == "" && (!fromFramework || prior.IsNull()) {
+		return types.StringNull()
+	}
+
+	return types.StringValue(api)
+}
+
+// optionalBool applies the rule of optionalString to false.
+func optionalBool(api bool, prior types.Bool, fromFramework bool) types.Bool {
+	if !api && (!fromFramework || prior.IsNull()) {
+		return types.BoolNull()
+	}
+
+	return types.BoolValue(api)
 }
 
 // frameworkDiags converts the SDKv2 diagnostics of the code shared by both servers.
