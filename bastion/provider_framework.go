@@ -90,12 +90,16 @@ func (p *frameworkProvider) Configure(
 
 func (p *frameworkProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
+		func() resource.Resource { return &authDomainOIDCResource{} },
+		func() resource.Resource { return &externalAuthOIDCResource{} },
 		func() resource.Resource { return &timeframeResource{} },
 	}
 }
 
 func (p *frameworkProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
+		func() datasource.DataSource { return &authDomainOIDCDataSource{} },
+		func() datasource.DataSource { return &externalAuthOIDCDataSource{} },
 		func() datasource.DataSource { return &timeframeDataSource{} },
 	}
 }
