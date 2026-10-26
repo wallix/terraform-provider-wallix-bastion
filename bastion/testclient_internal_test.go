@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"strconv"
+	"sync/atomic"
 	"testing"
 )
 
@@ -13,8 +14,16 @@ import (
 // other request to handler, and returns a client of it.
 func newTestAPIClient(t *testing.T, handler http.HandlerFunc) *Client {
 	t.Helper()
+
+	return newCountingTestAPIClient(t, handler, new(atomic.Int32))
+}
+
+// newCountingTestAPIClient is newTestAPIClient that counts the logins.
+func newCountingTestAPIClient(t *testing.T, handler http.HandlerFunc, logins *atomic.Int32) *Client {
+	t.Helper()
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost && r.URL.Path == "/api" {
+			logins.Add(1)
 			http.SetCookie(w, &http.Cookie{Name: "wab_session_id", Value: "test-session", Path: "/"})
 			w.WriteHeader(http.StatusNoContent)
 

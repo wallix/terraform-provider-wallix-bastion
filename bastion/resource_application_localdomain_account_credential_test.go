@@ -11,8 +11,8 @@ import (
 func TestAccResourceApplicationLocalDomainAccountCred_basic(t *testing.T) {
 	resourceName := "wallix-bastion_application_localdomain_account_credential.testacc_AppLocalDomAccountCred"
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
 			tvRandomProviderName: {
 				Source: tvRandomProviderSource,
@@ -196,8 +196,8 @@ resource "random_password" "testacc_AppLocalDomAccountCred2" {
 // used to send an empty credential list with force=true, which wiped it.
 func TestAccResourceApplicationLocalDomainAccountCred_accountUpdateKeepsCredential(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceApplicationLocalDomainAccountCredKeep("first"),

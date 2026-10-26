@@ -2,9 +2,11 @@ package bastion_test
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -27,10 +29,16 @@ func init() { //nolint:gochecknoinits
 }
 
 var (
-	testAccProvider          = bastion.Provider()                           //nolint: gochecknoglobals
-	testAccProviderFactories = map[string]func() (*schema.Provider, error){ //nolint: gochecknoglobals
-		"wallix-bastion": func() (*schema.Provider, error) {
-			return testAccProvider, nil
+	testAccProvider = bastion.Provider() //nolint: gochecknoglobals
+	// Every acceptance test runs the muxed provider, as Terraform does.
+	testAccProtoV5ProviderFactories = map[string]func() (tfprotov5.ProviderServer, error){ //nolint: gochecknoglobals
+		"wallix-bastion": func() (tfprotov5.ProviderServer, error) {
+			server, err := bastion.NewProviderServer(context.Background())
+			if err != nil {
+				return nil, fmt.Errorf("creating the provider server: %w", err)
+			}
+
+			return server(), nil
 		},
 	}
 )
