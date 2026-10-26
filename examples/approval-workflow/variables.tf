@@ -3,6 +3,11 @@ variable "bastion_ip" {
   type        = string
 }
 
+variable "bastion_user" {
+  description = "Username for WALLIX Bastion authentication"
+  type        = string
+}
+
 variable "bastion_token" {
   description = "API token for WALLIX Bastion authentication"
   type        = string
@@ -28,9 +33,9 @@ variable "inactive_quorum" {
 }
 
 variable "approval_timeout" {
-  description = "Approval timeout in seconds"
+  description = "Approval timeout in minutes (0: no timeout)"
   type        = number
-  default     = 3600 # 1 hour
+  default     = 60
 }
 
 variable "mandatory_comment" {

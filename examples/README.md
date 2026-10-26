@@ -31,6 +31,7 @@ This directory contains examples that demonstrate how to use the WALLIX Bastion 
 
    ```hcl
    bastion_ip    = "192.168.1.100"
+   bastion_user  = "terraform_user"
    bastion_token = "your-api-token"
    ```
 
@@ -47,6 +48,7 @@ This directory contains examples that demonstrate how to use the WALLIX Bastion 
 Most examples use these common variables:
 
 - `bastion_ip` - IP address or hostname of your WALLIX Bastion
+- `bastion_user` - Username for authentication
 - `bastion_token` - API token for authentication
 - `api_version` - API version (default: "v3.12")
 
@@ -56,6 +58,7 @@ You can also set these environment variables instead of using `terraform.tfvars`
 
 ```bash
 export TF_VAR_bastion_ip="192.168.1.100"
+export TF_VAR_bastion_user="terraform_user"
 export TF_VAR_bastion_token="your-api-token"
 export TF_VAR_api_version="v3.12"
 ```

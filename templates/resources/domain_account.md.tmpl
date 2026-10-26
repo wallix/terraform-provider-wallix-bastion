@@ -55,7 +55,7 @@ resource "wallix-bastion_domain_account" "webapp" {
   resources = ["device:ssh", "device:sftp", "application:web_app"]
 
   auto_change_ssh_key  = true
-  certificate_validity = "30d"
+  certificate_validity = "+30d"
 }
 
 # Network administrator account
@@ -82,7 +82,7 @@ resource "wallix-bastion_domain_account" "contractor" {
   resources = ["device:ssh", "device:sftp"]
 
   auto_change_password = false
-  certificate_validity = "1d"
+  certificate_validity = "+1d"
   checkout_policy      = "contractor_limited"
 }
 
@@ -101,7 +101,7 @@ resource "wallix-bastion_domain_account" "complete" {
 
   auto_change_password = true
   auto_change_ssh_key  = true
-  certificate_validity = "12h"
+  certificate_validity = "+12h"
   checkout_policy      = "complete_access_policy"
 }
 ```
@@ -137,7 +137,7 @@ Password and SSH key management are supported by the resource via:
 ```terraform
 auto_change_password = true
 auto_change_ssh_key  = true
-certificate_validity = "24h"
+certificate_validity = "+24h"
 ```
 
 ### Checkout policies
@@ -145,7 +145,7 @@ certificate_validity = "24h"
 Assign checkout policies to control access:
 
 ```terraform
-checkout_policy = wallix-bastion_checkout_policy.restricted.policy_name
+checkout_policy = wallix-bastion_checkout_policy.restricted.checkout_policy_name
 ```
 
 ### Integration with credentials
