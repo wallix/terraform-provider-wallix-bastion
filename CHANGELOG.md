@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+BREAKING CHANGES:
+
+- **resource/wallix-bastion_externalauth_kerberos**: every update now replaces the keytab of the Bastion with `keytab`, whichever argument changes, so keys added to the keytab outside of Terraform are removed by the next update of the resource; the plan doesn't show it, as the keytab isn't read from the Bastion. For a keytab managed outside of Terraform, remove `keytab` from the configuration: an update without it leaves the keytab unchanged (checked on a Bastion 12.4.1 with API v3.8 and v3.12)
+
 ENHANCEMENTS:
 
 - **resource/wallix-bastion_passwordchangepolicy**: a new policy with `password_length` and none of `special_chars`, `lower_chars`, `upper_chars` or `digit_chars` is now refused at plan; the Bastion refused it at apply (`400 At least one number of chars (special, lower case, upper case, digit) must be set to an integer value`, checked on a Bastion 12.4.3)
@@ -11,8 +15,19 @@ ENHANCEMENTS:
 - **resource/wallix-bastion_domain_account_credential**, **resource/wallix-bastion_device_localdomain_account_credential**: fix the documented import id, which the import rejected; it is `<domain_id>/<account_id>/<type>` and `<device_id>/<domain_id>/<account_id>/<type>`, with `<type>` being `password` or `ssh_key`
 - **resource/wallix-bastion_domain_account**: document the import, with an id made up of `<domain_id>/<account_name>`
 - **resource/wallix-bastion_application_localdomain_account**: remove `auto_change_ssh_key` from the documentation examples; the resource doesn't have it
+- **docs**: fix the documentation examples that `terraform validate` rejects with the provider schema (arguments and attributes that don't exist, missing required arguments, `RequiredWith` conflicts), at least 375 errors over 20 pages; rewrite the pages of the `wallix-bastion_application_localdomain_account` and `wallix-bastion_connection_message` resources and of the `wallix-bastion_authdomain_ad` and `wallix-bastion_local_password_policy` data sources, which described arguments and attributes that don't exist; fix the `examples/` modules (`user` missing in the provider block, undeclared variables, comment settings without approval workflow, approval timeouts given in seconds instead of minutes)
+- **resource/wallix-bastion_domain_account**, **resource/wallix-bastion_device_localdomain_account**: fix the `certificate_validity` of the documentation examples, which lacked the leading `+` the Bastion requires (`"30d"` is refused with `A valid validity interval is required`, `"+30d"` is accepted, checked on a Bastion 12.4.3)
+- **resource/wallix-bastion_domain_account_credential**, **resource/wallix-bastion_device_localdomain_account_credential**: the documentation examples now pass the `private_key_openssh` of `tls_private_key`, not its `private_key_pem`, which is in the PKCS#8 format for an ED25519 key and refused by the Bastion (`The key is not in any of the supported formats (OpenSSH, putty)`, checked on a Bastion 12.4.1 with API v3.8 and v3.12), and spell the algorithm `ED25519`, the only spelling `tls_private_key` accepts
 - **provider**: deprecate `session_timeout` (and `WALLIX_SESSION_TIMEOUT`), which has no effect and will be removed in 1.0; it no longer has a default, so the warning only shows when it is set
 - **provider**: serve the resources through terraform-plugin-mux, with `wallix-bastion_timeframe` (resource and data source) as the first one on terraform-plugin-framework; no configuration change: same schemas, import ids and protocol (5), and a state written by 0.16.0 gives an empty plan. A timeframe that sets `description = ""` or `is_overtimable = false` explicitly gets one in-place update without effect on the Bastion, after the upgrade or an import; with `plan -refresh=false`, a 0.16.0 state also shows that update for the timeframes that leave them unset. The plan of a rename now shows the new `id`
+
+BUG FIXES:
+
+- **resource/wallix-bastion_externalauth_kerberos**: fixed a keytab change keeping the keys of the previous keytab valid: the update merged the new keytab into the existing one, so a changed SPN or a removed encryption type kept the old keys, with no difference in the next plan; the update now replaces the keytab (`force=true`, checked on a Bastion 12.4.3)
+
+NOTES:
+
+- **resource/wallix-bastion_externalauth_kerberos**: a keytab merged by an earlier version keeps the keys of the previous keytabs valid until the next update of the resource, which replaces it with `keytab`
 
 ## 0.16.0 (October 21, 2026)
 

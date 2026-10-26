@@ -18,10 +18,13 @@ data "wallix-bastion_externalauth_ldap" "corporate" {
   authentication_name = "corporate_ldap"
 }
 
-# Reference it from an authentication domain mapping
-resource "wallix-bastion_authdomain_mapping" "ldap_mapping" {
-  domain_name = "corporate.local"
-  auth_domain = data.wallix-bastion_externalauth_ldap.corporate.authentication_name
+# Use it in an LDAP authentication domain
+resource "wallix-bastion_authdomain_ldap" "corporate" {
+  domain_name          = "corporate.local"
+  auth_domain_name     = "corporate.com"
+  external_auths       = [data.wallix-bastion_externalauth_ldap.corporate.authentication_name]
+  default_language     = "en"
+  default_email_domain = "corporate.com"
 }
 
 # Output non-sensitive connection and directory information

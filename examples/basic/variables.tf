@@ -3,6 +3,11 @@ variable "bastion_ip" {
   type        = string
 }
 
+variable "bastion_user" {
+  description = "Username for WALLIX Bastion authentication"
+  type        = string
+}
+
 variable "bastion_token" {
   description = "API token for WALLIX Bastion authentication"
   type        = string

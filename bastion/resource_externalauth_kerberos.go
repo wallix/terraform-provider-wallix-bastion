@@ -245,7 +245,9 @@ func updateExternalAuthKerberos(
 ) error {
 	c := m.(*Client)
 	jsonData := prepareExternalAuthKerberosJSON(d)
-	body, code, err := c.newRequest(ctx, "/externalauths/"+d.Id(), http.MethodPut, jsonData)
+	// Without force=true, the API merges the keytab sent into the existing one: old keys stay valid.
+	// A PUT without keytab leaves it unchanged either way (Bastion 12.4.3).
+	body, code, err := c.newRequest(ctx, "/externalauths/"+d.Id()+"?force=true", http.MethodPut, jsonData)
 	if err != nil {
 		return err
 	}

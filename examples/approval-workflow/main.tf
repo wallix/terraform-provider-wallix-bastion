@@ -10,6 +10,7 @@ terraform {
 
 provider "wallix-bastion" {
   ip          = var.bastion_ip
+  user        = var.bastion_user
   token       = var.bastion_token
   api_version = var.api_version
 }
@@ -88,11 +89,7 @@ resource "wallix-bastion_authorization" "emergency_access" {
     "RDP"
   ]
 
-  is_critical       = true
-  is_recorded       = true
-  approval_required = false # No approval needed for emergency access
-
-  # Still require comments for audit trail
-  has_comment       = true
-  mandatory_comment = true
+  # No approval workflow (comments and tickets are part of it)
+  is_critical = true
+  is_recorded = true
 }
