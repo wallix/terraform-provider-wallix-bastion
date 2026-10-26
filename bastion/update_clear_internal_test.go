@@ -125,6 +125,24 @@ func TestDeviceUpdateReplacesTags(t *testing.T) {
 	}
 }
 
+// Without force=true, a PUT of keytab k2 over k1 left principal_list = [k2, k1] (Bastion 12.4.3).
+func TestExternalAuthKerberosUpdateReplacesKeytab(t *testing.T) {
+	const read = `{"id":"obj-id","authentication_name":"krb","host":"kdc.example.com",` +
+		`"ker_dom_controller":"kdc.example.com","port":88,"type":"KERBEROS"}`
+	kerberos := func(keytab string) map[string]interface{} {
+		return map[string]interface{}{
+			skAuthenticationName: "krb", skHost: "kdc.example.com", "ker_dom_controller": "kdc.example.com",
+			skPort: 88, "keytab": keytab,
+		}
+	}
+	rec := &updateRecorder{}
+	planAndApplyUpdate(t, resourceExternalAuthKerberos(), kerberos("k1"), kerberos("k2"), rec.client(t, read))
+	uri, body, _ := strings.Cut(rec.put(t), " ")
+	if want := "/externalauths/obj-id?force=true"; uri != want || !strings.Contains(body, `"keytab":"k2"`) {
+		t.Errorf("PUT = %s %s, want %s with keytab k2", uri, body, want)
+	}
+}
+
 // An emptied list was omitted from the update, so the Bastion kept its values and the plan showed
 // the same change after every apply (checked on a Bastion 12.4). It is now sent empty, which
 // clears the profile dashboards, the application tags and the subprotocols of an RDP service
