@@ -80,10 +80,17 @@ func resourceTimeframe() *schema.Resource {
 							ValidateFunc: validation.StringMatch(regexp.MustCompile(
 								`^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$`), "Must respect the format `hh:mm`"),
 						},
+						// The API requires at least one day, in lower case.
 						"week_days": {
 							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Required: true,
+							MinItems: 1,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+								ValidateFunc: validation.StringInSlice([]string{
+									"monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
+								}, false),
+							},
 						},
 					},
 				},
@@ -237,10 +244,7 @@ func addTimeframe(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) error {
 	c := m.(*Client)
-	jsonData, err := prepareTimeframeJSON(d)
-	if err != nil {
-		return err
-	}
+	jsonData := prepareTimeframeJSON(d)
 	body, code, err := c.newRequest(ctx, "/timeframes/", http.MethodPost, jsonData)
 	if err != nil {
 		return err
@@ -256,10 +260,7 @@ func updateTimeframe(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) error {
 	c := m.(*Client)
-	jsonData, err := prepareTimeframeJSON(d)
-	if err != nil {
-		return err
-	}
+	jsonData := prepareTimeframeJSON(d)
 	body, code, err := c.newRequest(ctx, "/timeframes/"+url.PathEscape(d.Id())+"?force=true", http.MethodPut, jsonData)
 	if err != nil {
 		return err
@@ -286,7 +287,7 @@ func deleteTimeframe(
 	return nil
 }
 
-func prepareTimeframeJSON(d *schema.ResourceData) (jsonTimeframe, error) {
+func prepareTimeframeJSON(d *schema.ResourceData) jsonTimeframe {
 	jsonData := jsonTimeframe{
 		Description:   d.Get(skDescription).(string),
 		IsOvertimable: d.Get("is_overtimable").(bool),
@@ -306,23 +307,12 @@ func prepareTimeframeJSON(d *schema.ResourceData) (jsonTimeframe, error) {
 		listWeekDays := period["week_days"].(*schema.Set).List()
 		jsonPeriod.WeekDays = make([]string, len(listWeekDays))
 		for ii, d := range listWeekDays {
-			if !slices.Contains([]string{
-				"monday",
-				"tuesday",
-				"wednesday",
-				"thursday",
-				"friday",
-				"saturday",
-				"sunday",
-			}, d.(string)) {
-				return jsonData, fmt.Errorf("`%s` isn't a valid week_day", d.(string))
-			}
 			jsonPeriod.WeekDays[ii] = d.(string)
 		}
 		jsonData.Periods[i] = jsonPeriod
 	}
 
-	return jsonData, nil
+	return jsonData
 }
 
 func readTimeframeOptions(
