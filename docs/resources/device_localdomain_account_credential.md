@@ -43,7 +43,7 @@ resource "wallix-bastion_device_localdomain_account_credential" "operator_key" {
   domain_id   = wallix-bastion_device_localdomain.managed.id
   account_id  = wallix-bastion_device_localdomain_account.operator.id
   type        = "ssh_key"
-  private_key = tls_private_key.operator.private_key_pem
+  private_key = tls_private_key.operator.private_key_openssh
 }
 
 # Database service account
@@ -118,6 +118,9 @@ Before creating device localdomain account credentials:
 `generate:ECDSA_521` or `generate:ED25519`, for the Bastion to generate the key.
 
 **Key Generation with Terraform:**
+The Bastion accepts private keys in the OpenSSH or PuTTY format: use `private_key_openssh` of
+`tls_private_key`. The `private_key_pem` of an ED25519 key is in the PKCS#8 format, which the Bastion
+refuses (`The key is not in any of the supported formats`).
 
 ```terraform
 # RSA 4096 key
@@ -128,7 +131,7 @@ resource "tls_private_key" "rsa" {
 
 # Ed25519 key (recommended)
 resource "tls_private_key" "ed25519" {
-  algorithm = "Ed25519"
+  algorithm = "ED25519"
 }
 
 # ECDSA key
@@ -195,7 +198,7 @@ resource "wallix-bastion_device_localdomain_account_credential" "admin" {
 
 ```terraform
 resource "tls_private_key" "service" {
-  algorithm = "Ed25519"
+  algorithm = "ED25519"
 }
 
 resource "wallix-bastion_device_localdomain_account_credential" "service" {
@@ -203,7 +206,7 @@ resource "wallix-bastion_device_localdomain_account_credential" "service" {
   domain_id   = wallix-bastion_device_localdomain.local.id
   account_id  = wallix-bastion_device_localdomain_account.service.id
   type        = "ssh_key"
-  private_key = tls_private_key.service.private_key_pem
+  private_key = tls_private_key.service.private_key_openssh
 }
 ```
 

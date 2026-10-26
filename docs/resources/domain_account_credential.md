@@ -48,7 +48,7 @@ resource "wallix-bastion_domain_account_credential" "complete_ssh" {
   domain_id   = wallix-bastion_domain.production.id
   account_id  = wallix-bastion_domain_account.production_user.id
   type        = "ssh_key"
-  private_key = tls_private_key.example.private_key_pem
+  private_key = tls_private_key.example.private_key_openssh
 }
 ```
 
@@ -119,6 +119,9 @@ Before creating domain account credentials:
 `generate:ECDSA_521` or `generate:ED25519`, for the Bastion to generate the key.
 
 **Key Generation with Terraform:**
+The Bastion accepts private keys in the OpenSSH or PuTTY format: use `private_key_openssh` of
+`tls_private_key`. The `private_key_pem` of an ED25519 key is in the PKCS#8 format, which the Bastion
+refuses (`The key is not in any of the supported formats`).
 
 ```terraform
 resource "tls_private_key" "example" {
@@ -128,7 +131,7 @@ resource "tls_private_key" "example" {
 
 resource "wallix-bastion_domain_account_credential" "ssh" {
   # ... other fields ...
-  private_key = tls_private_key.example.private_key_pem
+  private_key = tls_private_key.example.private_key_openssh
 }
 ```
 
@@ -210,14 +213,14 @@ resource "wallix-bastion_domain_account_credential" "shared" {
 
 ```terraform
 resource "tls_private_key" "automated" {
-  algorithm = "Ed25519"
+  algorithm = "ED25519"
 }
 
 resource "wallix-bastion_domain_account_credential" "automated" {
   domain_id   = wallix-bastion_domain.corporate.id
   account_id  = wallix-bastion_domain_account.automated.id
   type        = "ssh_key"
-  private_key = tls_private_key.automated.private_key_pem
+  private_key = tls_private_key.automated.private_key_openssh
 }
 ```
 
