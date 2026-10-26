@@ -15,54 +15,33 @@ Provides a localdomain resource linked to application.
 ```terraform
 # Basic application local domain
 resource "wallix-bastion_application_localdomain" "web_app" {
-  application_id  = wallix-bastion_application.web_server.id
-  domain_name     = "local"
-  description     = "Local domain for web application"
+  application_id = wallix-bastion_application.web_server.id
+  domain_name    = "local"
+  description    = "Local domain for web application"
 }
 
 # Application local domain with password management
 resource "wallix-bastion_application_localdomain" "managed_app" {
-  application_id                  = wallix-bastion_application.database.id
-  domain_name                     = "managed_local"
-  description                     = "Managed local domain with password change"
-  enable_password_change          = true
-  password_change_policy          = "app_password_policy"
-  password_change_plugin          = "database_plugin"
+  application_id         = wallix-bastion_application.database.id
+  domain_name            = "managed_local"
+  description            = "Managed local domain with password change"
+  enable_password_change = true
+  password_change_policy = "app_password_policy"
+  password_change_plugin = "database_plugin"
   password_change_plugin_parameters = jsonencode({
     db_type = "postgresql"
     method  = "stored_procedure"
   })
 }
 
-# Application domain with SSH Certificate Authority
-resource "wallix-bastion_application_localdomain" "ssh_ca_app" {
-  application_id = wallix-bastion_application.ssh_service.id
-  domain_name    = "ssh_ca_local"
-  description    = "Application with SSH CA"
-  ca_private_key = "generate:RSA_4096"
-  passphrase     = var.ca_passphrase
-}
-
-# Web application with custom domain
-resource "wallix-bastion_application_localdomain" "custom_web" {
-  application_id = wallix-bastion_application.custom_app.id
-  domain_name    = "custom.local"
-  description    = "Custom web application domain"
-  
-  # Custom configuration for web apps
-  enable_password_change = false
-  admin_account         = "webadmin"
-  service_account       = "webservice"
-}
-
 # Database application with rotation
 resource "wallix-bastion_application_localdomain" "db_rotation" {
-  application_id                  = wallix-bastion_application.mysql_db.id
-  domain_name                     = "db_rotation"
-  description                     = "Database with credential rotation"
-  enable_password_change          = true
-  password_change_policy          = "database_policy"
-  password_change_plugin          = "mysql_plugin"
+  application_id         = wallix-bastion_application.mysql_db.id
+  domain_name            = "db_rotation"
+  description            = "Database with credential rotation"
+  enable_password_change = true
+  password_change_policy = "database_policy"
+  password_change_plugin = "mysql_plugin"
   password_change_plugin_parameters = jsonencode({
     host     = "localhost"
     port     = 3306
@@ -73,28 +52,23 @@ resource "wallix-bastion_application_localdomain" "db_rotation" {
 
 # Complete application domain configuration
 resource "wallix-bastion_application_localdomain" "complete" {
-  application_id                  = wallix-bastion_application.enterprise_app.id
-  domain_name                     = "enterprise.local"
-  description                     = "Complete enterprise application domain"
-  
+  application_id = wallix-bastion_application.enterprise_app.id
+  domain_name    = "enterprise.local"
+  description    = "Complete enterprise application domain"
+
   # Password management
-  enable_password_change          = true
-  password_change_policy          = "enterprise_policy"
-  password_change_plugin          = "enterprise_plugin"
+  enable_password_change = true
+  password_change_policy = "enterprise_policy"
+  password_change_plugin = "enterprise_plugin"
   password_change_plugin_parameters = jsonencode({
-    method      = "api"
-    endpoint    = "https://api.enterprise.local/users"
-    auth_type   = "bearer"
-    complexity  = "high"
+    method     = "api"
+    endpoint   = "https://api.enterprise.local/users"
+    auth_type  = "bearer"
+    complexity = "high"
   })
-  
-  # SSH CA configuration
-  ca_private_key = file("/secure/keys/enterprise_ca")
-  passphrase     = var.enterprise_ca_passphrase
-  
+
   # Account configuration
-  admin_account   = "enterprise_admin"
-  service_account = "enterprise_service"
+  admin_account = "enterprise_admin"
 }
 ```
 
@@ -130,20 +104,6 @@ password_change_plugin_parameters = jsonencode({
   endpoint = "https://app.example.com/api/users"
   timeout  = 30
 })
-```
-
-### SSH Certificate Authority
-
-**Auto-generation Options:**
-- `generate:RSA_1024`, `generate:RSA_2048`, `generate:RSA_4096`, `generate:RSA_8192`
-- `generate:DSA_1024`
-- `generate:ECDSA_256`, `generate:ECDSA_384`, `generate:ECDSA_521`
-- `generate:ED25519`
-
-**Using Existing Keys:**
-```terraform
-ca_private_key = file("/path/to/ca_private_key")
-passphrase     = var.ca_passphrase
 ```
 
 ### Application-Specific Plugins
@@ -198,11 +158,14 @@ resource "wallix-bastion_application_localdomain" "web" {
   application_id = wallix-bastion_application.webapp.id
   domain_name    = "web.local"
   description    = "Web application local accounts"
-  
+
   # Simple password management
   enable_password_change = true
   password_change_policy = "web_policy"
   password_change_plugin = "web_api"
+  password_change_plugin_parameters = jsonencode({
+    endpoint = "https://app.example.com/api/password"
+  })
 }
 ```
 
@@ -225,26 +188,12 @@ resource "wallix-bastion_application_localdomain" "database" {
 }
 ```
 
-**SSH Application Domain:**
-```terraform
-resource "wallix-bastion_application_localdomain" "ssh_app" {
-  application_id = wallix-bastion_application.ssh_server.id
-  domain_name    = "ssh.local"
-  description    = "SSH application with CA"
-  
-  # SSH CA for certificate-based auth
-  ca_private_key = "generate:ED25519"
-  passphrase     = var.ssh_ca_passphrase
-}
-```
-
 ### Security Considerations
 
 1. **Plugin Security**: Ensure plugins are properly configured and tested
 2. **Credential Isolation**: Use separate domains for different applications
-3. **CA Protection**: Secure SSH CA private keys with strong passphrases
-4. **Access Control**: Limit who can manage application domains
-5. **Audit Logging**: Monitor password changes and account access
+3. **Access Control**: Limit who can manage application domains
+4. **Audit Logging**: Monitor password changes and account access
 
 ### Integration with Applications
 
@@ -271,19 +220,12 @@ For custom password change plugins:
 - Alert on failed password rotations
 - Regular plugin health checks
 
-**CA Certificate Management:**
-- Monitor certificate validity periods
-- Plan for CA key rotation
-- Backup CA private keys securely
-- Track certificate issuance
-
 ### Troubleshooting
 
 **Common Issues:**
 1. **Plugin Failures**: Check plugin configuration and target application connectivity
-2. **CA Issues**: Verify private key format and passphrase
-3. **Permission Errors**: Ensure proper access rights to applications
-4. **Network Connectivity**: Test connectivity to target applications
+2. **Permission Errors**: Ensure proper access rights to applications
+3. **Network Connectivity**: Test connectivity to target applications
 
 **Debugging Steps:**
 1. Verify application configuration

@@ -24,14 +24,13 @@ resource "wallix-bastion_device_localdomain_account" "admin" {
 
 # Account with password management
 resource "wallix-bastion_device_localdomain_account" "service" {
-  device_id         = wallix-bastion_device.server2.id
-  domain_id         = wallix-bastion_device_localdomain.managed.id
-  account_name      = "service_account"
-  account_login     = "svcuser"
-  description       = "Service account with managed password"
+  device_id            = wallix-bastion_device.server2.id
+  domain_id            = wallix-bastion_device_localdomain.managed.id
+  account_name         = "service_account"
+  account_login        = "svcuser"
+  description          = "Service account with managed password"
   auto_change_password = true
-  can_edit_certificate_validity = true
-  certificate_validity = "30d"
+  certificate_validity = "+30d"
 }
 
 # Account with SSH key authentication
@@ -41,7 +40,7 @@ resource "wallix-bastion_device_localdomain_account" "ssh_user" {
   account_name  = "ssh_operator"
   account_login = "operator"
   description   = "SSH key-based authentication"
-  services      = ["ssh", "sftp"]
+  services      = [wallix-bastion_device_service.ssh.service_name]
 }
 
 # Account with multiple services
@@ -51,22 +50,25 @@ resource "wallix-bastion_device_localdomain_account" "multi_service" {
   account_name  = "db_admin"
   account_login = "dbadmin"
   description   = "Database administrator with multiple protocols"
-  services      = ["ssh", "telnet", "rlogin", "vnc", "rdp"]
+  services = [
+    wallix-bastion_device_service.ssh.service_name,
+    wallix-bastion_device_service.telnet.service_name,
+    wallix-bastion_device_service.vnc.service_name,
+  ]
 }
 
 # Complete account with all options
 resource "wallix-bastion_device_localdomain_account" "complete" {
-  device_id                       = wallix-bastion_device.server4.id
-  domain_id                       = wallix-bastion_device_localdomain.complete.id
-  account_name                    = "complete_user"
-  account_login                   = "cuser"
-  description                     = "Complete account configuration"
-  auto_change_password            = true
-  auto_change_ssh_key             = true
-  can_edit_certificate_validity   = true
-  certificate_validity            = "7d"
-  checkout_policy                 = "strict_checkout"
-  services                        = ["ssh", "rdp", "vnc"]
+  device_id            = wallix-bastion_device.server4.id
+  domain_id            = wallix-bastion_device_localdomain.complete.id
+  account_name         = "complete_user"
+  account_login        = "cuser"
+  description          = "Complete account configuration"
+  auto_change_password = true
+  auto_change_ssh_key  = true
+  certificate_validity = "+7d"
+  checkout_policy      = "strict_checkout"
+  services             = [wallix-bastion_device_service.ssh.service_name]
 }
 ```
 
@@ -92,27 +94,22 @@ Before creating a device local domain account:
 
 **SSH Key Authentication:**
 - Use `auto_change_ssh_key = true` for managed SSH keys
-- Requires SSH CA configuration on the domain
+- Requires password change capability on the domain
 
 **Certificate Authentication:**
-- Configure `certificate_validity` (e.g., "30d", "7d", "1h")
-- Use `can_edit_certificate_validity = true` for user control
+- Configure `certificate_validity` (with a leading `+`, e.g., "+30d", "+7d", "+1h"), the validity of the SSH key signed by
+  the signing authority of the domain (`ca_private_key` of `wallix-bastion_device_localdomain`)
 
 ### Service Configuration
 
-Specify supported protocols in the `services` array:
-- **ssh**: Secure Shell protocol
-- **telnet**: Telnet protocol
-- **rlogin**: Remote login
-- **vnc**: Virtual Network Computing
-- **rdp**: Remote Desktop Protocol
-- **sftp**: SSH File Transfer Protocol
+`services` holds names of services of the device (`service_name` of
+`wallix-bastion_device_service`), not protocols.
 
 ### Checkout Policies
 
 Reference checkout policies to control account access:
 ```terraform
-checkout_policy = wallix-bastion_checkout_policy.restricted.policy_name
+checkout_policy = wallix-bastion_checkout_policy.restricted.checkout_policy_name
 ```
 
 ### Security Best Practices
@@ -135,9 +132,11 @@ Server1 → local_domain → admin_account
 **Administrator Accounts:**
 ```terraform
 resource "wallix-bastion_device_localdomain_account" "admin" {
-  account_name = "Administrator"
-  account_login = "admin"
-  services = ["rdp", "ssh"]
+  device_id            = wallix-bastion_device.server.id
+  domain_id            = wallix-bastion_device_localdomain.local.id
+  account_name         = "Administrator"
+  account_login        = "admin"
+  services             = [wallix-bastion_device_service.rdp.service_name]
   auto_change_password = true
 }
 ```
@@ -145,19 +144,23 @@ resource "wallix-bastion_device_localdomain_account" "admin" {
 **Service Accounts:**
 ```terraform
 resource "wallix-bastion_device_localdomain_account" "service" {
-  account_name = "Service Account"
-  account_login = "svc_app"
-  services = ["ssh"]
-  certificate_validity = "1h"
+  device_id            = wallix-bastion_device.server.id
+  domain_id            = wallix-bastion_device_localdomain.local.id
+  account_name         = "service_account"
+  account_login        = "svc_app"
+  services             = [wallix-bastion_device_service.ssh.service_name]
+  certificate_validity = "+1h"
 }
 ```
 
 **Database Accounts:**
 ```terraform
 resource "wallix-bastion_device_localdomain_account" "dba" {
-  account_name = "Database Admin"
-  account_login = "dba"
-  services = ["ssh", "telnet"]
+  device_id       = wallix-bastion_device.server.id
+  domain_id       = wallix-bastion_device_localdomain.local.id
+  account_name    = "database_admin"
+  account_login   = "dba"
+  services        = [wallix-bastion_device_service.ssh.service_name]
   checkout_policy = "database_access"
 }
 ```
