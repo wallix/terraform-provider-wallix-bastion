@@ -200,3 +200,11 @@ When creating multiple accounts programmatically, use `for_each` or `count` and 
 ### Monitoring and compliance
 
 Track certificate issuance, password/key rotations and checkout events using your monitoring and audit tooling.
+
+## Import
+
+Domain account can be imported using an id made up of `<domain_id>/<account_name>`, e.g.
+
+```shell
+terraform import wallix-bastion_domain_account.admin xxxxxxxx/administrator
+```
