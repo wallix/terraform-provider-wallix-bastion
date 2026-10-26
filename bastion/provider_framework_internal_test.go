@@ -22,10 +22,16 @@ func clearProviderEnv(t *testing.T) {
 	}
 }
 
-// objectValue returns a value of typ with the given attributes, the others null.
+// objectValue returns a value of typ with the given attributes, the others null; an attribute may
+// be given as a tftypes.Value (nested object).
 func objectValue(typ tftypes.Object, values map[string]interface{}) tftypes.Value {
 	attrs := make(map[string]tftypes.Value, len(typ.AttributeTypes))
 	for name, attrType := range typ.AttributeTypes {
+		if v, ok := values[name].(tftypes.Value); ok {
+			attrs[name] = v
+
+			continue
+		}
 		attrs[name] = tftypes.NewValue(attrType, values[name])
 	}
 
