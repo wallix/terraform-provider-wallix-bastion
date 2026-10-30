@@ -21,9 +21,12 @@ data "wallix-bastion_passwordchangepolicy" "strong" {
 
 # Reference the policy when configuring a domain
 resource "wallix-bastion_domain" "corporate" {
-  domain_name             = "corp.local"
-  domain_real_name        = "corp.local"
-  password_change_policy  = data.wallix-bastion_passwordchangepolicy.strong.password_change_policy_name
+  domain_name                       = "corp.local"
+  domain_real_name                  = "corp.local"
+  enable_password_change            = true
+  password_change_policy            = data.wallix-bastion_passwordchangepolicy.strong.password_change_policy_name
+  password_change_plugin            = "Unix"
+  password_change_plugin_parameters = jsonencode({ host = "192.0.2.1" })
 }
 
 # Report the effective minimum password length

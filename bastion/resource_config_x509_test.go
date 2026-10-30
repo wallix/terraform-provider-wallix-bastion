@@ -13,8 +13,8 @@ func TestAccResourceConfigX509_basic(t *testing.T) {
 	resourceName := "wallix-bastion_config_x509.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
 			tvTLSProviderName: {
 				Source: tvTLSProviderSource,
@@ -59,8 +59,8 @@ func TestAccResourceConfigX509_enableToggle(t *testing.T) {
 	resourceName := "wallix-bastion_config_x509.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
 			tvTLSProviderName: {
 				Source: tvTLSProviderSource,

@@ -27,7 +27,7 @@ terraform {
   required_providers {
     wallix-bastion = {
       source  = "wallix/wallix-bastion"
-      version = "~> 0.16.0"
+      version = "~> 0.17.0"
     }
   }
 }
@@ -385,6 +385,9 @@ make setup-check
 |------------------|-------------------|------------|------------------- |
 | >= 0.15.0        | >= 1.0            | 1.25-1.26  | v3.8, v3.12        |
 | 0.14.x           | >= 1.0            | 1.22-1.24  | v3.8, v3.12        |
+
+The OIDC resources (`wallix-bastion_externalauth_oidc`, `wallix-bastion_authdomain_oidc`) need API
+v3.12, and Terraform 1.11 or later for the write-only client secret.
 
 ## License
 

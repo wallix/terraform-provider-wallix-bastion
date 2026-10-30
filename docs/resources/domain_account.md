@@ -55,7 +55,7 @@ resource "wallix-bastion_domain_account" "webapp" {
   resources = ["device:ssh", "device:sftp", "application:web_app"]
 
   auto_change_ssh_key  = true
-  certificate_validity = "30d"
+  certificate_validity = "+30d"
 }
 
 # Network administrator account
@@ -82,7 +82,7 @@ resource "wallix-bastion_domain_account" "contractor" {
   resources = ["device:ssh", "device:sftp"]
 
   auto_change_password = false
-  certificate_validity = "1d"
+  certificate_validity = "+1d"
   checkout_policy      = "contractor_limited"
 }
 
@@ -101,7 +101,7 @@ resource "wallix-bastion_domain_account" "complete" {
 
   auto_change_password = true
   auto_change_ssh_key  = true
-  certificate_validity = "12h"
+  certificate_validity = "+12h"
   checkout_policy      = "complete_access_policy"
 }
 ```
@@ -117,8 +117,8 @@ resource "wallix-bastion_domain_account" "complete" {
 
 ### Optional
 
-- `auto_change_password` (Boolean)
-- `auto_change_ssh_key` (Boolean)
+- `auto_change_password` (Boolean) Include the account in the password change of its domain; `false` by default with this provider, while the Bastion enables it on an account created without it (GUI or API). Only has an effect when the domain has a password change configured (plugin and policy), scheduled by the `change_period` of the policy.
+- `auto_change_ssh_key` (Boolean) Include the SSH key of the account in the password change of its domain; `false` by default with this provider, while the Bastion enables it on an account created without it (GUI or API). Only has an effect when the domain has a password change configured (plugin and policy), scheduled by the `change_period` of the policy.
 - `certificate_validity` (String)
 - `checkout_policy` (String)
 - `description` (String)
@@ -170,7 +170,7 @@ Password and SSH key management are supported by the resource via:
 ```terraform
 auto_change_password = true
 auto_change_ssh_key  = true
-certificate_validity = "24h"
+certificate_validity = "+24h"
 ```
 
 ### Checkout policies
@@ -178,7 +178,7 @@ certificate_validity = "24h"
 Assign checkout policies to control access:
 
 ```terraform
-checkout_policy = wallix-bastion_checkout_policy.restricted.policy_name
+checkout_policy = wallix-bastion_checkout_policy.restricted.checkout_policy_name
 ```
 
 ### Integration with credentials
@@ -200,3 +200,11 @@ When creating multiple accounts programmatically, use `for_each` or `count` and 
 ### Monitoring and compliance
 
 Track certificate issuance, password/key rotations and checkout events using your monitoring and audit tooling.
+
+## Import
+
+Domain account can be imported using an id made up of `<domain_id>/<account_name>`, e.g.
+
+```shell
+terraform import wallix-bastion_domain_account.admin xxxxxxxx/administrator
+```

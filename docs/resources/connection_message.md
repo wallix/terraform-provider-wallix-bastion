@@ -8,148 +8,37 @@ description: |-
 
 # wallix-bastion_connection_message (Resource)
 
-Provides a connection message resource.
+Provides a connection message resource, to set the content of a login banner or of a message of
+the day of the Bastion.
 
 ## Example Usage
 
 ```terraform
-# Basic connection message
-resource "wallix-bastion_connection_message" "welcome" {
-  message_name = "welcome_message"
-  message_text = "Welcome to the corporate bastion. Please follow security policies."
-  language     = "en"
-  description  = "Default welcome message for all users"
+# English login banner
+resource "wallix-bastion_connection_message" "login_en" {
+  message_name = "login_en"
+  message      = "WARNING: Unauthorized access to this system is forbidden. All activities are logged and monitored."
 }
 
-# Warning message for privileged access
-resource "wallix-bastion_connection_message" "privileged_warning" {
-  message_name = "privileged_warning"
-  message_text = "WARNING: You are accessing privileged systems. All activities are logged and monitored."
-  language     = "en"
-  description  = "Warning message for privileged user access"
-  message_type = "warning"
-  display_time = 10
+# French message of the day, on two lines
+resource "wallix-bastion_connection_message" "motd_fr" {
+  message_name = "motd_fr"
+  message      = "Bienvenue sur le bastion d'entreprise.\nVos actions sont susceptibles d'être enregistrées."
 }
 
-# Multi-language welcome messages
-resource "wallix-bastion_connection_message" "welcome_en" {
-  message_name = "welcome_en"
-  message_text = "Welcome to the corporate bastion. Please follow security policies and best practices."
-  language     = "en"
-  description  = "English welcome message"
+# Message of the day in several languages
+locals {
+  motd = {
+    en = "Welcome to the corporate bastion. Please follow the security policies."
+    de = "Willkommen auf dem Unternehmens-Bastion. Bitte beachten Sie die Sicherheitsrichtlinien."
+  }
 }
 
-resource "wallix-bastion_connection_message" "welcome_fr" {
-  message_name = "welcome_fr"
-  message_text = "Bienvenue sur le bastion d'entreprise. Veuillez respecter les politiques de sécurité et les bonnes pratiques."
-  language     = "fr"
-  description  = "French welcome message"
-}
+resource "wallix-bastion_connection_message" "motd" {
+  for_each = local.motd
 
-resource "wallix-bastion_connection_message" "welcome_es" {
-  message_name = "welcome_es"
-  message_text = "Bienvenido al bastión corporativo. Por favor, siga las políticas de seguridad y las mejores prácticas."
-  language     = "es"
-  description  = "Spanish welcome message"
-}
-
-# Maintenance notification
-resource "wallix-bastion_connection_message" "maintenance" {
-  message_name = "maintenance_notice"
-  message_text = "NOTICE: Scheduled maintenance window on Saturday 02:00-06:00 UTC. Some systems may be unavailable."
-  language     = "en"
-  description  = "Maintenance notification message"
-  message_type = "notice"
-  display_time = 15
-  enabled      = true
-}
-
-# Security policy reminder
-resource "wallix-bastion_connection_message" "security_policy" {
-  message_name = "security_reminder"
-  message_text = <<-EOT
-    SECURITY REMINDER:
-    - Use strong, unique passwords
-    - Enable MFA when available
-    - Report suspicious activities
-    - Follow the principle of least privilege
-    - Log out when finished
-  EOT
-  language     = "en"
-  description  = "Security policy reminder"
-  message_type = "info"
-  display_time = 8
-}
-
-# Emergency contact information
-resource "wallix-bastion_connection_message" "emergency_contact" {
-  message_name = "emergency_contact"
-  message_text = "Emergency Contact: Security Team - security@company.com - +1-555-0199"
-  language     = "en"
-  description  = "Emergency contact information"
-  message_type = "info"
-  display_time = 5
-}
-
-# Compliance notification
-resource "wallix-bastion_connection_message" "compliance" {
-  message_name = "compliance_notice"
-  message_text = "This system is subject to monitoring for security and compliance purposes. Usage constitutes consent to monitoring."
-  language     = "en"
-  description  = "Compliance and monitoring notification"
-  message_type = "legal"
-  display_time = 12
-  mandatory    = true
-}
-
-# Time-based message (business hours)
-resource "wallix-bastion_connection_message" "business_hours" {
-  message_name = "business_hours"
-  message_text = "You are accessing systems outside of business hours (9 AM - 5 PM UTC). Additional approval may be required."
-  language     = "en"
-  description  = "Business hours notification"
-  message_type = "warning"
-  display_time = 8
-  
-  # Schedule settings (if supported)
-  schedule_enabled = true
-  schedule_start   = "17:00"
-  schedule_end     = "09:00"
-  schedule_days    = ["monday", "tuesday", "wednesday", "thursday", "friday"]
-}
-
-# Role-specific message
-resource "wallix-bastion_connection_message" "admin_message" {
-  message_name = "admin_notice"
-  message_text = "Administrator Access: You have elevated privileges. Use responsibly and follow change management procedures."
-  language     = "en"
-  description  = "Message specific to administrators"
-  message_type = "warning"
-  display_time = 10
-  
-  # Target specific user groups (if supported)
-  target_groups = ["administrators", "security_team"]
-}
-
-# Formatted message with rich text
-resource "wallix-bastion_connection_message" "formatted" {
-  message_name = "formatted_welcome"
-  message_text = <<-EOT
-    ╔══════════════════════════════════════╗
-    ║        CORPORATE BASTION             ║
-    ║                                      ║
-    ║  Welcome, authorized user!           ║
-    ║                                      ║
-    ║  Security Level: CONFIDENTIAL        ║
-    ║  Session ID: Will be assigned        ║
-    ║                                      ║
-    ║  Support: help@company.com           ║
-    ╚══════════════════════════════════════╝
-  EOT
-  language     = "en"
-  description  = "Formatted welcome message with ASCII art"
-  message_type = "info"
-  display_time = 6
+  message_name = "motd_${each.key}"
+  message      = each.value
 }
 ```
 
@@ -167,252 +56,22 @@ resource "wallix-bastion_connection_message" "formatted" {
 
 ## Usage Notes
 
-### Message Types
+### Message Names
 
-**Message Type Categories:**
+`message_name` is one of `login_en`, `login_fr`, `login_de`, `login_es`, `login_ru` (login banner)
+or `motd_en`, `motd_fr`, `motd_de`, `motd_es`, `motd_ru` (message of the day), one per language.
+These messages always exist on the Bastion, whose API can only change their content: the
+resource sets the content of one of them, and changing `message_name` replaces the resource.
 
-- **info**: Informational messages (default)
-- **warning**: Warning messages with attention-grabbing styling
-- **notice**: Important notices and announcements
-- **legal**: Legal notices and compliance requirements
-- **error**: Error messages and alerts
+### Destroy
 
-### Language Support
-
-**Supported Languages:**
-
-- `en`: English
-- `fr`: French (Français)
-- `es`: Spanish (Español)
-- `de`: German (Deutsch)
-- `it`: Italian (Italiano)
-- `pt`: Portuguese (Português)
-- `ru`: Russian (Русский)
-- `zh`: Chinese (中文)
-- `ja`: Japanese (日本語)
-- `ko`: Korean (한국어)
-
-### Display Configuration
-
-**Display Time:**
-
-- Measured in seconds
-- Range: 1-60 seconds
-- Default: 5 seconds
-- Set to 0 for no auto-dismiss
-
-**Message Properties:**
-
-```terraform
-display_time = 10        # Show for 10 seconds
-mandatory    = true      # User must acknowledge
-enabled      = true      # Message is active
-```
-
-### Message Formatting
-
-**Plain Text:**
-
-```terraform
-message_text = "Simple welcome message"
-```
-
-**Multi-line Text:**
-
-```terraform
-message_text = <<-EOT
-  Line 1: Welcome
-  Line 2: Please follow security policies
-  Line 3: Contact support if needed
-EOT
-```
-
-**Formatted Text:**
-
-```terraform
-message_text = <<-EOT
-  ===== SECURITY NOTICE =====
-  
-  This is a secure system.
-  Unauthorized access is prohibited.
-  
-  Contact: security@company.com
-  ===========================
-EOT
-```
-
-### Multi-Language Strategy
-
-**Language-Specific Messages:**
-
-```terraform
-locals {
-  welcome_messages = {
-    en = "Welcome to the corporate bastion"
-    fr = "Bienvenue sur le bastion d'entreprise"
-    es = "Bienvenido al bastión corporativo"
-    de = "Willkommen zum Unternehmens-Bastion"
-  }
-}
-
-resource "wallix-bastion_connection_message" "welcome" {
-  for_each = local.welcome_messages
-  
-  message_name = "welcome_${each.key}"
-  message_text = each.value
-  language     = each.key
-  description  = "Welcome message in ${each.key}"
-}
-```
-
-### Use Cases
-
-**Compliance and Legal:**
-
-```terraform
-resource "wallix-bastion_connection_message" "legal_notice" {
-  message_name = "legal_compliance"
-  message_text = "This system is monitored for security and compliance. Usage implies consent to monitoring and logging."
-  message_type = "legal"
-  mandatory    = true
-  display_time = 15
-}
-```
-
-**Security Awareness:**
-
-```terraform
-resource "wallix-bastion_connection_message" "security_tips" {
-  message_name = "security_awareness"
-  message_text = "Security Tip: Always verify the identity of systems you connect to. Report suspicious activities immediately."
-  message_type = "info"
-  display_time = 8
-}
-```
-
-**Operational Notices:**
-
-```terraform
-resource "wallix-bastion_connection_message" "maintenance" {
-  message_name = "maintenance_window"
-  message_text = "Scheduled maintenance: Systems may be unavailable Saturday 2:00-6:00 AM UTC"
-  message_type = "notice"
-  display_time = 10
-}
-```
-
-**Emergency Information:**
-
-```terraform
-resource "wallix-bastion_connection_message" "emergency" {
-  message_name = "emergency_contact"
-  message_text = "EMERGENCY: Contact Security Operations Center at +1-555-SECURITY"
-  message_type = "warning"
-  display_time = 15
-  mandatory    = true
-}
-```
-
-### Message Management
-
-**Enabling/Disabling Messages:**
-
-```terraform
-# Temporarily disable a message
-resource "wallix-bastion_connection_message" "temporary" {
-  message_name = "temp_notice"
-  message_text = "Temporary notice"
-  enabled      = false  # Disabled
-}
-
-# Enable for specific periods
-resource "wallix-bastion_connection_message" "scheduled" {
-  message_name = "scheduled_notice"
-  message_text = "Scheduled maintenance notice"
-  enabled      = var.maintenance_period_active
-}
-```
-
-### Variable-Based Messages
-
-```terraform
-variable "company_name" {
-  description = "Company name for messages"
-  type        = string
-  default     = "ACME Corporation"
-}
-
-variable "support_email" {
-  description = "Support contact email"
-  type        = string
-  default     = "support@company.com"
-}
-
-resource "wallix-bastion_connection_message" "dynamic" {
-  message_name = "company_welcome"
-  message_text = "Welcome to ${var.company_name} secure access system. For support, contact ${var.support_email}"
-  language     = "en"
-  description  = "Dynamic welcome message with variables"
-}
-```
-
-### Best Practices
-
-1. **Keep Messages Concise**: Users should read them quickly
-2. **Use Appropriate Types**: Match message type to content severity
-3. **Multi-Language Support**: Provide messages in user languages
-4. **Regular Updates**: Keep content current and relevant
-5. **Test Display Times**: Ensure users have enough time to read
-6. **Legal Review**: Have legal team review compliance messages
-7. **Accessibility**: Use clear, simple language
-
-### Security Considerations
-
-**Information Disclosure:**
-
-- Avoid revealing sensitive system information
-- Don't include internal hostnames or IP addresses
-- Keep security warnings generic but clear
-
-**Message Integrity:**
-
-- Store message content securely
-- Implement proper access controls
-- Log message modifications
-
-### Integration with User Experience
-
-**Message Sequencing:**
-
-```terraform
-# Primary welcome message
-resource "wallix-bastion_connection_message" "welcome_primary" {
-  message_name = "welcome_1"
-  message_text = "Welcome to the secure access system"
-  display_time = 5
-}
-
-# Secondary security reminder
-resource "wallix-bastion_connection_message" "security_secondary" {
-  message_name = "security_2"
-  message_text = "Remember: All activities are logged and monitored"
-  display_time = 8
-}
-```
-
-### Monitoring and Analytics
-
-Track message effectiveness:
-
-- Monitor user acknowledgment rates
-- Measure time to acknowledge
-- Track message view statistics
-- Analyze user feedback
+Destroying the resource doesn't change the message on the Bastion, which keeps the last content
+applied.
 
 ## Import
 
 Connection message can be imported using the message name, e.g.
 
 ```shell
-terraform import wallix-bastion_connection_message.welcome "welcome_message"
+terraform import wallix-bastion_connection_message.login_en login_en
 ```

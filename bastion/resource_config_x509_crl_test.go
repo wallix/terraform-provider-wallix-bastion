@@ -123,7 +123,7 @@ func TestAccResourceConfigX509CRL_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                  func() { testAccPreCheck(t) },
-		ProviderFactories:         testAccProviderFactories,
+		ProtoV5ProviderFactories:  testAccProtoV5ProviderFactories,
 		Steps:                     steps,
 		PreventPostDestroyRefresh: true, // Config always exists on the Bastion; nothing to destroy.
 	})

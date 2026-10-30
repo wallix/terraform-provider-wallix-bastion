@@ -3,13 +3,14 @@ terraform {
   required_providers {
     wallix-bastion = {
       source  = "wallix/wallix-bastion"
-      version = "~> 0.16.0"
+      version = "~> 0.17.0"
     }
   }
 }
 
 provider "wallix-bastion" {
   ip          = var.bastion_ip
+  user        = var.bastion_user
   token       = var.bastion_token
   api_version = var.api_version
 }

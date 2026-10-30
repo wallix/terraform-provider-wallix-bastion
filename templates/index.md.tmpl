@@ -17,7 +17,7 @@ terraform {
   required_providers {
     wallix-bastion = {
       source  = "wallix/wallix-bastion"
-      version = "~> 0.16.0"
+      version = "~> 0.17.0"
     }
   }
 }
@@ -46,7 +46,6 @@ provider "wallix-bastion" {
   # port                 = set via WALLIX_BASTION_PORT
   # insecure_skip_verify = set via WALLIX_INSECURE_SKIP_VERIFY
   # csrf_enabled         = set via WALLIX_CSRF_ENABLED
-  # session_timeout      = set via WALLIX_SESSION_TIMEOUT
 }
 
 # Provider configuration with TLS and CSRF options (for development)
@@ -56,7 +55,6 @@ provider "wallix-bastion" {
   token                = "your-api-token"
   insecure_skip_verify = true  # Skip TLS verification for self-signed certificates
   csrf_enabled         = true  # Enable CSRF token protection (default: true)
-  session_timeout      = 120   # Session timeout in seconds (default: 120)
 }
 ```
 
@@ -103,7 +101,6 @@ export WALLIX_BASTION_API_VERSION="v3.12"
 # Optional: TLS and security settings
 export WALLIX_INSECURE_SKIP_VERIFY="false"  # Enable TLS verification (default: false)
 export WALLIX_CSRF_ENABLED="true"           # Enable CSRF protection (default: true)
-export WALLIX_SESSION_TIMEOUT="120"         # Session timeout in seconds (default: 120)
 ```
 
 ## Configuration Reference
@@ -126,7 +123,7 @@ Choose one authentication method:
 - **api_version**: API version to use (default: "v3.12", also supports "v3.8")
 - **insecure_skip_verify**: Skip TLS certificate verification (default: false). Only use for development with self-signed certificates
 - **csrf_enabled**: Enable CSRF token protection (default: true). Recommended to keep enabled for security
-- **session_timeout**: Session timeout duration in seconds (default: 120). Sessions are automatically refreshed on 401 responses
+- **session_timeout**: Deprecated, has no effect (the session is renewed when the Bastion returns 401). Will be removed in 1.0
 
 ## API Version Support
 
@@ -193,20 +190,8 @@ The provider automatically:
 
 Sessions are automatically managed with cookie-based authentication:
 
-```terraform
-provider "wallix-bastion" {
-  ip              = "bastion.company.com"
-  user            = "admin"
-  token           = "your-token"
-  session_timeout = 1800  # 30 minutes (extend for long operations)
-}
-```
-
-Features:
-
 - Automatic session cookie handling
 - Re-authentication on 401 responses
-- Configurable session timeout (default: 120 seconds)
 
 ### Use API Tokens
 
@@ -259,20 +244,6 @@ provider "wallix-bastion" {
 }
 ```
 
-### Performance Tuning
-
-Optimize session and timeout settings for your environment:
-
-```terraform
-provider "wallix-bastion" {
-  ip              = "bastion.company.com"
-  user            = "admin"
-  token           = "your-token"
-  session_timeout = 1800  # Longer timeout for large operations (default: 120)
-  csrf_enabled    = true  # Keep CSRF protection enabled
-}
-```
-
 ### CI/CD Pipeline Configuration
 
 Recommended configuration for automated deployments:
@@ -287,7 +258,6 @@ provider "wallix-bastion" {
   # Security settings
   insecure_skip_verify = false  # Always verify in production
   csrf_enabled         = true   # Enable CSRF protection
-  session_timeout      = 120    # Standard timeout (2 minutes)
 }
 ```
 
@@ -364,3 +334,6 @@ If upgrading from v0.13.x or earlier:
 
 From version 0.14.0, support for API versions v3.3 and v3.6 has been removed.
 If you need these versions, use provider version 0.13.0 and consider upgrading your Bastion.
+
+The provider argument `session_timeout` (and `WALLIX_SESSION_TIMEOUT`) is deprecated and will be removed in 1.0.
+It has no effect: the session is renewed when the Bastion returns 401.

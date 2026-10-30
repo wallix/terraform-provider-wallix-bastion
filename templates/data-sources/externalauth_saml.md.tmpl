@@ -18,10 +18,14 @@ data "wallix-bastion_externalauth_saml" "corporate" {
   authentication_name = "corporate_saml"
 }
 
-# Reference it from an authentication domain mapping
-resource "wallix-bastion_authdomain_mapping" "saml_mapping" {
-  domain_name = "corporate.local"
-  auth_domain = data.wallix-bastion_externalauth_saml.corporate.authentication_name
+# Use it in a SAML authentication domain
+resource "wallix-bastion_authdomain_saml" "corporate" {
+  domain_name          = "corporate.saml"
+  auth_domain_name     = "corporate.com"
+  external_auths       = [data.wallix-bastion_externalauth_saml.corporate.authentication_name]
+  default_email_domain = "corporate.com"
+  default_language     = "en"
+  label                = "Corporate SAML"
 }
 
 # Output the service provider metadata/URLs needed to configure the identity provider

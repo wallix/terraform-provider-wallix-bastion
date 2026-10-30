@@ -8,8 +8,8 @@ import (
 
 func TestAccResourceUserGroup_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
 			tvRandomProviderName: {
 				Source: tvRandomProviderSource,
@@ -103,8 +103,8 @@ resource "wallix-bastion_usergroup" "testacc_Usergroup" {
 // "\" were read as part of the search expression.
 func TestAccResourceUserGroup_nameWithSpecialCharacters(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: `

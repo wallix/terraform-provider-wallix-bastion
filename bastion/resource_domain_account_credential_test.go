@@ -11,8 +11,8 @@ import (
 func TestAccResourceDomainAccountCred_basic(t *testing.T) {
 	resourceName := "wallix-bastion_domain_account_credential.testacc_DomainAccountCred"
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
 			tvRandomProviderName: {
 				Source: tvRandomProviderSource,

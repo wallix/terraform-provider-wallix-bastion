@@ -17,7 +17,8 @@ or SAML).
 ```terraform
 # Look up an existing authentication domain
 data "wallix-bastion_authdomain_ad" "corporate" {
-  domain_name = "corporate.local"
+  domain_name      = "corporate.local"
+  auth_domain_name = "corporate.com"
 }
 
 # Get information about the mapping of a specific user group on that domain
