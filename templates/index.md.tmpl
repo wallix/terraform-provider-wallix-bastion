@@ -17,7 +17,7 @@ terraform {
   required_providers {
     wallix-bastion = {
       source  = "wallix/wallix-bastion"
-      version = "~> 0.16.0"
+      version = "~> 0.17.0"
     }
   }
 }
