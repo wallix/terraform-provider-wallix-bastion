@@ -237,6 +237,10 @@ func (c *Client) newRequestWithHeaders(
 		}
 	}
 
+	c.authMu.Lock()
+	session := c.cookie.Value
+	c.authMu.Unlock()
+
 	c.initJar()
 
 	urlStr := c.buildURL("/api/" + c.bastionAPIVersion)
@@ -278,8 +282,12 @@ func (c *Client) newRequestWithHeaders(
 
 	if resp.StatusCode == http.StatusUnauthorized {
 		c.authMu.Lock()
-		c.isAuthenticated = false
-		c.cookie = http.Cookie{}
+		// Skip the login if another request already logged in again: the Bastion ends the session
+		// a login presents, which the other requests are using.
+		if c.cookie.Value == session {
+			c.isAuthenticated = false
+			c.cookie = http.Cookie{}
+		}
 		c.authMu.Unlock()
 
 		if err := c.authenticate(ctx); err != nil {
