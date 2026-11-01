@@ -414,7 +414,9 @@ func fillExternalAuthLdap(d *schema.ResourceData, jsonData jsonExternalAuthLdap)
 	if tfErr := d.Set(skTimeout, jsonData.Timeout); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set(skCACertificate, jsonData.CACertificate); tfErr != nil {
+	// The API returns the subject of the CA, not the PEM.
+	caCertificate := certificateStateValue(d.Get(skCACertificate).(string), jsonData.CACertificate)
+	if tfErr := d.Set(skCACertificate, caCertificate); tfErr != nil {
 		panic(tfErr)
 	}
 	if tfErr := d.Set(skDescription, jsonData.Description); tfErr != nil {

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+BUG FIXES:
+
+- **resource/wallix-bastion_externalauth_ldap**: fixed `ca_certificate` showing a change on every plan: the Bastion returns the subject of the CA (`/O=Corp/CN=Corp CA`), not the PEM, and the read stored that subject in the state. The read now keeps the configured PEM while its subject matches the one the Bastion returns, and stores the subject otherwise, so a CA replaced outside of Terraform by one with another subject still shows in the plan; a CA replaced by one with the same subject can't be detected. A state written by 0.17.0, or an import, holds the subject: the next apply sends the PEM again (one in-place update), then plans are empty (checked on a Bastion 12.4.3 with API v3.12 and v3.8)
+- **data-source/wallix-bastion_externalauth_ldap**: document that `ca_certificate` is the subject of the CA, not the PEM
+
 ## 0.17.0 (October 30, 2026)
 
 BREAKING CHANGES:
