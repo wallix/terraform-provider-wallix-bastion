@@ -51,7 +51,7 @@ resource "wallix-bastion_usergroup" "administrators" {
   group_name = "administrators"
   description = "System administrators"
   timeframes = ["allthetime"]
-  profile = "admin"
+  profile = "product_administrator"
 }
 ```
 
@@ -96,11 +96,13 @@ User groups must be associated with timeframes that define when access is allowe
 
 ### Profiles
 
-Assign appropriate profiles to control GUI and API access:
+Assign appropriate profiles to control GUI and API access. `profile` is the name of an existing
+profile, refused at apply otherwise (`Profile '<name>' not found`):
 
-- **user**: Standard user profile with limited administrative access
-- **admin**: Administrative profile with full system access
-- Custom profiles created with `wallix-bastion_profile` resource
+- the built-in profiles: `user`, `approver`, `auditor`, `operation_administrator`,
+  `system_administrator`, `product_administrator`, `wallix_access_manager_audit`,
+  `wallix_access_manager_session` and `wallix_access_manager_session_audit`
+- custom profiles created with `wallix-bastion_profile` resource
 
 ### User Management
 

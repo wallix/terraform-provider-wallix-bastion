@@ -31,10 +31,15 @@ resource "wallix-bastion_externalauth_kerberos" "corporate" {
 `keytab` is the base64-encoded keytab file content used to authenticate the Bastion against the
 KDC. `kerberos_password` forces creation of a new resource if changed (`ForceNew`).
 
+`keytab` is required to create the resource, although the schema marks it optional: the Bastion
+refuses a creation without it (`'keytab' is a required property`), or with a keytab that has no
+entry for the realm of `ker_dom_controller`.
+
 Every update of the resource replaces the keytab of the Bastion with `keytab`, whichever argument
 changes: keys added to the keytab outside of Terraform are removed. The keytab isn't read from the
 Bastion, so such changes don't show in the plan. Without `keytab` in the configuration, an update
-leaves the keytab of the Bastion unchanged.
+leaves the keytab of the Bastion unchanged: to manage the keytab outside of Terraform, create the
+resource with `keytab`, then remove it from the configuration.
 
 `login_attribute` is deprecated and no longer used - remove it from existing configurations.
 

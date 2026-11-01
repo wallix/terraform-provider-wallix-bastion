@@ -18,16 +18,16 @@ data "wallix-bastion_cluster" "web_cluster" {
   cluster_name = "web-servers"
 }
 
-# Reference the cluster as a target in an authorization
-resource "wallix-bastion_targetgroup" "web_targets" {
-  group_name = "web-targets"
+# Use the cluster as the target of an application
+resource "wallix-bastion_application" "web_app" {
+  application_name  = "web-application"
+  connection_policy = "RDP"
+  target            = data.wallix-bastion_cluster.web_cluster.cluster_name
 
-  session_accounts {
-    account     = "admin"
-    domain      = "corp.local"
-    domain_type = "global"
-    device      = data.wallix-bastion_cluster.web_cluster.cluster_name
-    service     = "SSH"
+  paths {
+    target      = "Interactive@web01:RDP"
+    program     = "application_path"
+    working_dir = "directory"
   }
 }
 
@@ -53,7 +53,7 @@ output "web_cluster_info" {
 ### Returned Attributes
 
 - **description**: Description of the cluster
-- **accounts**: Set of `account@domain:device:service` entries granting direct account access to cluster members
+- **accounts**: Set of `account@domain@device:service` entries granting direct account access to cluster members
 - **account_mappings**: Set of `device:service` entries granting mapped account access to cluster members
 - **interactive_logins**: Set of `device:service` entries granting direct interactive access to cluster members
 
@@ -61,4 +61,4 @@ A cluster typically populates at least one of `accounts`, `account_mappings`, or
 
 ### Usage in Resources
 
-The cluster name can be used as the `target`/`device` value in resources such as `wallix-bastion_application` and `wallix-bastion_targetgroup`, since the Bastion load-balances sessions across the cluster's members and automatically bypasses failed targets.
+The cluster name can be used as the `target` of a `wallix-bastion_application`, since the Bastion load-balances sessions across the cluster's members and automatically bypasses failed targets. A cluster isn't a device: `wallix-bastion_targetgroup` can't reference it in `device` (`Device '<cluster_name>' not found`); target groups reach it through the application.
