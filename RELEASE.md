@@ -168,5 +168,21 @@ make dev-check       # linting, tests and build
    publishes the GitHub release with notes generated from the commits. It does **not** re-run
    lint, tests or build: those only run locally through the script before the tag is pushed (see
    [Emergency Releases](#5-emergency-releases) for what `--skip-tests` bypasses).
-3. **Documentation**: the Terraform Registry reads `docs/` from the tagged commit when it indexes the
+3. **Release validation**: the "Validate Release Artifacts" job then checks the published assets:
+   the `SHA256SUMS` signature by the release key, whose fingerprint the script pins and which must
+   be one of the signing keys the Terraform Registry holds for the `wallix` namespace, every
+   checksum, and the provider binary in each archive. `scripts/validate-release.sh vX.Y.Z` runs the
+   same check locally (needs curl, jq, GnuPG, GNU `sha256sum` and unzip).
+4. **Documentation**: the Terraform Registry reads `docs/` from the tagged commit when it indexes the
    new release.
+
+The validation runs after GoReleaser has published the release, so it blocks nothing: the Terraform
+Registry may already have indexed the version. When it fails:
+
+- `cannot download ...`: a network error, re-run the job.
+- `not signed by the release key`, `not a valid signature` or `checksum mismatch`: handle the
+  release as compromised until proven otherwise. Delete the GitHub release: the Registry serves the
+  archives from it, so installing that version then fails. Tell the security team, then find which
+  key signed (`gpg --verify` against the Registry keys) and who pushed the tag.
+- `lists no ... archive`, `does not contain ...`: the build is broken. Release a new patch version;
+  the version itself can't be reused (see [Rollback](#6-rollback)).

@@ -103,3 +103,21 @@ You can set these environment variables to customize behavior:
 #### "Tag already exists"
 
 - Use `--version` to specify a different version or increment the existing tag manually
+
+## validate-release.sh
+
+Checks the published assets of a release: the `SHA256SUMS` signature by the release key (its
+fingerprint is pinned in the script), which must be one of the signing keys the Terraform Registry
+holds for the `wallix` namespace, every checksum, and the provider binary in each archive. The
+release workflow runs it after publishing; see the CI/CD Integration section of `RELEASE.md` for
+what to do when it fails.
+
+```bash
+# Downloads to a temporary directory
+./scripts/validate-release.sh v0.17.0
+
+# Keeps the downloads in ./release-check and reuses them on the next run
+./scripts/validate-release.sh v0.17.0 ./release-check
+```
+
+Needs curl, jq, GnuPG, GNU `sha256sum` and unzip.
