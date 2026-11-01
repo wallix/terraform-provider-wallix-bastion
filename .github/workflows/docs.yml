@@ -1,27 +1,37 @@
 ---
 name: Documentation
 
+# The Go sources too: the documentation is generated from the schemas, and the examples are
+# validated against the provider built from the commit.
 "on":
   push:
-    branches: [main]
+    branches: [main, develop]
     paths:
       - 'docs/**'
       - 'examples/**'
+      - 'templates/**'
       - '*.md'
+      - '**.go'
+      - 'go.mod'
+      - 'go.sum'
       - '.github/workflows/docs.yml'
   pull_request:
-    branches: [main]
+    branches: [main, develop]
     paths:
       - 'docs/**'
       - 'examples/**'
+      - 'templates/**'
       - '*.md'
+      - '**.go'
+      - 'go.mod'
+      - 'go.sum'
       - '.github/workflows/docs.yml'
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
+# The documentation is published by the Terraform Registry, which reads docs/ from the tagged
+# commit of each release: there is no site to build or deploy here.
 jobs:
   # Generate and validate provider documentation
   generate-docs:
@@ -30,10 +40,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Go
-        uses: actions/setup-go@v7
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: 'go.mod'
           cache: true
@@ -41,13 +53,13 @@ jobs:
       - name: Install tfplugindocs
         run: >
           go install
-          github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@latest
+          github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@v0.25.0
 
       - name: Generate documentation
         run: tfplugindocs generate
 
       - name: Normalize markdown formatting
-        run: npx --yes markdownlint-cli2 --fix "docs/**/*.md"
+        run: npx --yes markdownlint-cli2@0.24.0 --fix "docs/**/*.md"
 
       - name: Check for documentation changes
         run: |
@@ -58,70 +70,63 @@ jobs:
             exit 1
           fi
 
-  # Validate examples
+  # Validate the examples against the provider built from this commit: dev_overrides, so that
+  # init doesn't fetch it from the Registry, where the version they pin may not be published yet.
   validate-examples:
     name: Validate Examples
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: 'go.mod'
+          cache: true
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v4
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
         with:
-          terraform_version: latest
+          terraform_version: 1.17.1
+          terraform_wrapper: false
+
+      - name: Build the provider
+        run: go build -o "$RUNNER_TEMP/provider/terraform-provider-wallix-bastion" .
 
       - name: Validate example configurations
-        run: >
-          find examples -name "*.tf"
-          -execdir terraform init -backend=false \;
-          -execdir terraform validate \;
+        run: |
+          cat >"$RUNNER_TEMP/dev.tfrc" <<EOF
+          provider_installation {
+            dev_overrides {
+              "wallix/wallix-bastion" = "$RUNNER_TEMP/provider"
+            }
+            direct {}
+          }
+          EOF
+          export TF_CLI_CONFIG_FILE="$RUNNER_TEMP/dev.tfrc"
+          mapfile -t dirs < <(find examples -name '*.tf' -printf '%h\n' | sort -u)
+          if [ "${#dirs[@]}" -eq 0 ]; then
+            echo "::error::no example found under examples/"
+            exit 1
+          fi
+          status=0
+          for dir in "${dirs[@]}"; do
+            echo "::group::$dir"
+            if ! terraform -chdir="$dir" init -backend=false -input=false -no-color ||
+              ! terraform -chdir="$dir" validate -no-color; then
+              echo "::error::$dir: terraform init or validate failed"
+              status=1
+            fi
+            echo "::endgroup::"
+          done
+          exit "$status"
 
       - name: Check Terraform formatting
-        run: >
-          find examples -name "*.tf"
-          -exec terraform fmt -check=true -diff=true {} \;
-
-  # Documentation site deployment (GitHub Pages)
-  deploy-docs:
-    name: Deploy Documentation Site
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    needs: [generate-docs, validate-examples]
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v7
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: docs/package-lock.json
-
-      - name: Install documentation dependencies
-        run: |
-          cd docs
-          npm ci
-
-      - name: Build documentation site
-        run: |
-          cd docs
-          npm run build
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v6
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v5
-        with:
-          path: docs/build
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v5
+        run: terraform fmt -check -diff -recursive examples
 
   # Check documentation links
   link-check:
@@ -130,10 +135,14 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
+      # Archived upstream (successor: tcort/github-action-markdown-link-check); v1 has no
+      # X.Y.Z tag on this commit.
       - name: Check markdown links
-        uses: gaurav-nelson/github-action-markdown-link-check@v1
+        uses: gaurav-nelson/github-action-markdown-link-check@5c5dfc0ac2e225883c0e5f03a85311ec2830d368 # v1
         with:
           use-quiet-mode: 'yes'
           config-file: '.github/mlc_config.json'

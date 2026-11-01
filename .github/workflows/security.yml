@@ -23,10 +23,12 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       
       - name: Set up Go
-        uses: actions/setup-go@v7
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: 'go.mod'
           cache: true
@@ -49,13 +51,13 @@ jobs:
           osv-scanner scan source -r --format sarif --output-file osv-results.sarif ./ || [ $? -eq 1 ]
 
       - name: Upload OSV scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         if: always()
         with:
           sarif_file: 'osv-results.sarif'
       
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@v0.36.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -65,7 +67,7 @@ jobs:
         continue-on-error: true  # Don't fail the job on vulnerabilities, just report them
       
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         if: always()
         with:
           sarif_file: 'trivy-fs-results.sarif'
@@ -79,19 +81,21 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       
       - name: Build test container
         run: |
           cat > Dockerfile.test << 'EOF'
-          FROM golang:1.26-alpine AS builder
+          FROM golang:1.26.10-alpine3.24 AS builder
           WORKDIR /app
           COPY go.mod go.sum ./
           RUN go mod download
           COPY . .
           RUN CGO_ENABLED=0 go build -o terraform-provider-wallix-bastion
           
-          FROM alpine:latest
+          FROM alpine:3.24
           RUN apk --no-cache add ca-certificates
           WORKDIR /root/
           COPY --from=builder /app/terraform-provider-wallix-bastion .
@@ -102,7 +106,7 @@ jobs:
         continue-on-error: false
       
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@v0.36.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: 'wallix-bastion-provider:test'
           format: 'sarif'
@@ -111,7 +115,7 @@ jobs:
         continue-on-error: true
       
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         if: always()
         with:
           sarif_file: 'trivy-container-results.sarif'
