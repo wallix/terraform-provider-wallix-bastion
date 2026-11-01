@@ -13,6 +13,8 @@ import (
 )
 
 type jsonAuthDomainAD struct {
+	jsonAuthDomainCA
+
 	CheckX509SanEmail    bool     `json:"check_x509_san_email"`
 	IsDefault            bool     `json:"is_default"`
 	ID                   string   `json:"id,omitempty"`
@@ -40,6 +42,7 @@ func resourceAuthDomainAD() *schema.Resource {
 		ReadContext:   resourceAuthDomainADRead,
 		UpdateContext: resourceAuthDomainADUpdate,
 		DeleteContext: resourceAuthDomainADDelete,
+		CustomizeDiff: resourceAuthDomainCACustomizeDiff,
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceAuthDomainADImport,
 		},
@@ -70,6 +73,10 @@ func resourceAuthDomainAD() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			skCertificateAuthority: {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"check_x509_san_email": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -80,6 +87,10 @@ func resourceAuthDomainAD() *schema.Resource {
 			},
 			"email_attribute": {
 				Type:     schema.TypeString,
+				Optional: true,
+			},
+			skEnableCA: {
+				Type:     schema.TypeBool,
 				Optional: true,
 			},
 			"group_attribute": {
@@ -267,7 +278,7 @@ func addAuthDomainAD(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (string, error) {
 	c := m.(*Client)
-	jsonData := prepareAuthDomainADJSON(d)
+	jsonData := prepareAuthDomainADJSON(d, c.bastionAPIVersion)
 	body, headers, code, err := c.newRequestWithHeaders(ctx, "/authdomains/", http.MethodPost, jsonData)
 	if err != nil {
 		return "", err
@@ -283,7 +294,7 @@ func updateAuthDomainAD(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) error {
 	c := m.(*Client)
-	jsonData := prepareAuthDomainADJSON(d)
+	jsonData := prepareAuthDomainADJSON(d, c.bastionAPIVersion)
 	body, code, err := c.newRequest(ctx, "/authdomains/"+d.Id()+"?force=true", http.MethodPut, jsonData)
 	if err != nil {
 		return err
@@ -310,8 +321,9 @@ func deleteAuthDomainAD(
 	return nil
 }
 
-func prepareAuthDomainADJSON(d *schema.ResourceData) jsonAuthDomainAD {
+func prepareAuthDomainADJSON(d *schema.ResourceData, apiVersion string) jsonAuthDomainAD {
 	jsonData := jsonAuthDomainAD{
+		jsonAuthDomainCA:     prepareAuthDomainCA(d, apiVersion),
 		Type:                 "AD",
 		DomainName:           d.Get(skDomainName).(string),
 		AuthDomainName:       d.Get(skAuthDomainName).(string),
@@ -422,4 +434,5 @@ func fillAuthDomainAD(d *schema.ResourceData, jsonData jsonAuthDomainAD) {
 	if tfErr := d.Set("x509_search_filter", jsonData.X509SearchFilter); tfErr != nil {
 		panic(tfErr)
 	}
+	jsonData.fill(d)
 }

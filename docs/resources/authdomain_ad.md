@@ -70,10 +70,12 @@ resource "wallix-bastion_authdomain_ad" "smartcard" {
 
 ### Optional
 
+- `certificate_authority` (String)
 - `check_x509_san_email` (Boolean)
 - `description` (String)
 - `display_name_attribute` (String)
 - `email_attribute` (String)
+- `enable_ca` (Boolean)
 - `group_attribute` (String)
 - `is_default` (Boolean)
 - `language_attribute` (String)
@@ -105,6 +107,23 @@ Must be one of `de`, `en`, `es`, `fr`, `ru`.
 `check_x509_san_email`, `pubkey_attribute`, `x509_condition`, and `x509_search_filter` only
 matter if you're using certificate/smart-card-based authentication against this domain; omit
 them for password-based AD authentication.
+
+### Certificate Authority
+
+`certificate_authority` is the `certificate_authority_name` of a
+`wallix-bastion_certificate_authority`, case-sensitive; the Bastion refuses a name that doesn't
+exist. `enable_ca = true` requires it, which is checked at plan. Removing `certificate_authority`
+from the configuration detaches the certificate authority, and removing `enable_ca` disables it.
+See the `wallix-bastion_authdomain_ldap` page for an example.
+
+Both arguments require API v3.12 or later and fail at plan with an older API version. API v3.8
+doesn't know them: an update of the domain made with API v3.8 detaches a certificate authority
+attached with API v3.12.
+
+The Bastion refuses to delete a certificate authority that a domain references, even with
+`enable_ca = false`, and Terraform doesn't update the domain before deleting the certificate
+authority when both change in one apply. Detach it from the domain and apply first, then remove
+the `wallix-bastion_certificate_authority`.
 
 ## Import
 

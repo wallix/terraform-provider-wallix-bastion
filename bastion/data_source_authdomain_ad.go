@@ -34,6 +34,14 @@ func dataSourceAuthDomainAD() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			skCertificateAuthority: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			skEnableCA: {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"language_attribute": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -98,4 +106,5 @@ func fillSourceAuthDomainAD(d *schema.ResourceData, jsonData jsonAuthDomainAD) {
 	if tfErr := d.Set(skSecondaryAuth, jsonData.SecondaryAuth); tfErr != nil {
 		panic(tfErr)
 	}
+	jsonData.fill(d)
 }

@@ -38,6 +38,10 @@ func dataSourceAuthDomainLdap() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			skCertificateAuthority: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"check_x509_san_email": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -48,6 +52,10 @@ func dataSourceAuthDomainLdap() *schema.Resource {
 			},
 			"email_attribute": {
 				Type:     schema.TypeString,
+				Computed: true,
+			},
+			skEnableCA: {
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			"group_attribute": {
@@ -171,4 +179,5 @@ func fillSourceAuthDomainLdap(d *schema.ResourceData, jsonData jsonAuthDomainLda
 	if tfErr := d.Set("x509_search_filter", jsonData.X509SearchFilter); tfErr != nil {
 		panic(tfErr)
 	}
+	jsonData.fill(d)
 }

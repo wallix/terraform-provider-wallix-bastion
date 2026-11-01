@@ -12,7 +12,8 @@ Provides a certificate authority resource. Requires API version `v3.12` or highe
 
 Certificate authorities are used by the Bastion to validate certificates presented by devices or
 users, depending on the `ca_type`: `SSH` for an SSH CA public key, or `X509` for an X.509 CA
-certificate.
+certificate. `wallix-bastion_authdomain_ldap` and `wallix-bastion_authdomain_ad` reference one by
+its name with their `certificate_authority` argument.
 
 ## Example Usage
 

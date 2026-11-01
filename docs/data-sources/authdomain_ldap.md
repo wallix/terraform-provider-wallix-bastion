@@ -46,12 +46,14 @@ output "ldap_x509_settings" {
 ### Read-Only
 
 - `auth_domain_name` (String)
+- `certificate_authority` (String)
 - `check_x509_san_email` (Boolean)
 - `default_email_domain` (String)
 - `default_language` (String)
 - `description` (String)
 - `display_name_attribute` (String)
 - `email_attribute` (String)
+- `enable_ca` (Boolean)
 - `external_auths` (List of String)
 - `group_attribute` (String)
 - `id` (String) The ID of this resource.
@@ -81,6 +83,9 @@ output "ldap_x509_settings" {
 - **check_x509_san_email**, **x509_condition**, **x509_search_filter**: Configuration governing
   how X.509 client certificates are matched to LDAP entries during certificate-based
   authentication.
+- **certificate_authority**, **enable_ca**: Name of the certificate authority
+  (`wallix-bastion_certificate_authority`) attached to the domain, and whether it is enabled;
+  `""` and `false` with an API version before v3.12, which doesn't return them.
 - **external_auths**, **secondary_auth**: Lists of related external/secondary authentication
   domain references.
 
