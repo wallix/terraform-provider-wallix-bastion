@@ -47,7 +47,14 @@ func newConnCountingServer(t *testing.T) *connCountingServer {
 
 func (ccs *connCountingServer) client(t *testing.T) *Client {
 	t.Helper()
-	u, err := url.Parse(ccs.server.URL)
+
+	return newTestClient(t, ccs.server.URL)
+}
+
+// newTestClient returns a client with password authentication to the test server at serverURL.
+func newTestClient(t *testing.T, serverURL string) *Client {
+	t.Helper()
+	u, err := url.Parse(serverURL)
 	if err != nil {
 		t.Fatalf("parsing server URL: %v", err)
 	}
@@ -148,5 +155,9 @@ func TestGetHTTPClientIsSharedAndConfigured(t *testing.T) {
 	if transport.MaxConnsPerHost != httpMaxConnsPerHost || transport.IdleConnTimeout != httpIdleConnTimeout {
 		t.Errorf("MaxConnsPerHost, IdleConnTimeout = %d, %s, want %d, %s",
 			transport.MaxConnsPerHost, transport.IdleConnTimeout, httpMaxConnsPerHost, httpIdleConnTimeout)
+	}
+	// Framework operations have no deadline: without it, a Bastion that never answers blocks them.
+	if transport.ResponseHeaderTimeout != httpResponseHeaderTimeout {
+		t.Errorf("ResponseHeaderTimeout = %s, want %s", transport.ResponseHeaderTimeout, httpResponseHeaderTimeout)
 	}
 }

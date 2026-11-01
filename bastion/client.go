@@ -68,6 +68,9 @@ const (
 	// Shorter than the keep-alive timeout of the Bastion web server (Apache, 5 s by default), so
 	// that a connection is never reused while the server is closing it.
 	httpIdleConnTimeout = 4 * time.Second
+	// Framework operations have no deadline: a Bastion that accepts a request and never answers
+	// would hold the operation and one of the connections forever.
+	httpResponseHeaderTimeout = 5 * time.Minute
 )
 
 // getHTTPClient returns the HTTP client shared by all the requests of the provider, so that its
@@ -80,6 +83,7 @@ func (c *Client) getHTTPClient() *http.Client {
 		transport.MaxConnsPerHost = httpMaxConnsPerHost
 		transport.MaxIdleConnsPerHost = httpMaxConnsPerHost
 		transport.IdleConnTimeout = httpIdleConnTimeout
+		transport.ResponseHeaderTimeout = httpResponseHeaderTimeout
 		c.httpClient = &http.Client{
 			Transport: transport,
 			Jar:       c.jar,
