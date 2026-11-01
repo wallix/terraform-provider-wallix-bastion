@@ -16,7 +16,7 @@ target/user group scope limitations.
 ```terraform
 # Get information about a specific profile
 data "wallix-bastion_profile" "administrator" {
-  profile_name = "administrator"
+  profile_name = "product_administrator"
 }
 
 # Assign the looked-up profile to a user
@@ -39,7 +39,8 @@ output "can_modify_target_groups" {
 
 ### `profile_name`
 
-The Required lookup key. It must match an existing profile exactly; the data source fails with an
+The Required lookup key. It must match an existing profile exactly, built-in (such as
+`product_administrator`) or created with `wallix-bastion_profile`; the data source fails with an
 error if no profile with that name exists.
 
 ### `gui_features` and `gui_transmission`

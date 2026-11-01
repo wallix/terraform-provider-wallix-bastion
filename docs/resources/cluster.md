@@ -14,63 +14,57 @@ Provides a global cluster resource.
 
 ```terraform
 # Basic cluster with interactive logins
-resource "wallix-bastion_cluster" "web_cluster" {
-  cluster_name = "web-servers"
-  description  = "Production web servers cluster"
-  
+resource "wallix-bastion_cluster" "rds_cluster" {
+  cluster_name = "rds-servers"
+  description  = "Remote Desktop Session Host servers"
+
   interactive_logins = [
-    "web01:RDP",
-    "web02:RDP",
-    "web03:SSH"
+    "rds01:RDP",
+    "rds02:RDP",
   ]
 }
 
-# Cluster with specific accounts
-resource "wallix-bastion_cluster" "db_cluster" {
-  cluster_name = "database-servers"
-  description  = "Database servers with specific accounts"
-  
+# Cluster with specific accounts, from a local domain of the device or from a global domain
+resource "wallix-bastion_cluster" "rds_admin_cluster" {
+  cluster_name = "rds-admin"
+  description  = "Remote Desktop servers with specific accounts"
+
   accounts = [
-    "admin@corp.local:db01:SSH",
-    "admin@corp.local:db02:SSH",
-    "oracle@corp.local:db01:ORACLE",
-    "oracle@corp.local:db02:ORACLE"
+    "administrator@local@rds01:RDP",
+    "administrator@local@rds02:RDP",
+    "svc_rds@corp.local@rds01:RDP",
   ]
 }
 
 # Cluster with account mappings
-resource "wallix-bastion_cluster" "app_cluster" {
-  cluster_name = "application-servers"
-  description  = "Application servers with mapped accounts"
-  
+resource "wallix-bastion_cluster" "rds_mapped_cluster" {
+  cluster_name = "rds-mapped"
+  description  = "Remote Desktop servers with mapped accounts"
+
   account_mappings = [
-    "app01:HTTP",
-    "app02:HTTP",
-    "app03:TOMCAT"
+    "rds01:RDP",
+    "rds02:RDP",
   ]
 }
 
-# Complex cluster with multiple target types
+# Cluster with the three target types
 resource "wallix-bastion_cluster" "mixed_cluster" {
   cluster_name = "mixed-environment"
   description  = "Mixed environment with various access methods"
-  
+
   # Direct account access
   accounts = [
-    "admin@local:server01:SSH",
-    "administrator@local:server02:RDP"
+    "administrator@local@rds01:RDP",
   ]
-  
+
   # Mapped account access
   account_mappings = [
-    "app-server01:HTTP",
-    "app-server02:HTTPS"
+    "rds02:RDP",
   ]
-  
+
   # Interactive login access
   interactive_logins = [
-    "jump-host:RDP",
-    "bastion-host:SSH"
+    "rds03:RDP",
   ]
 }
 ```
@@ -108,10 +102,12 @@ At least one of the following must be specified:
 **Accounts Format:**
 
 ```
-account@domain:device:service
+account@domain@device:service
 ```
 
-Example: `admin@corp.local:web01:SSH`
+Example: `administrator@local@rds01:RDP`. `domain` is a local domain of the device, or a global
+domain whose account has `device:service` in its `resources`. The Bastion refuses
+`account@domain:device:service` (`Account target '<target>' not found`).
 
 **Account Mappings Format:**
 
@@ -119,7 +115,7 @@ Example: `admin@corp.local:web01:SSH`
 device:service
 ```
 
-Example: `web01:HTTP`
+Example: `rds01:RDP`
 
 **Interactive Logins Format:**
 
@@ -127,51 +123,47 @@ Example: `web01:HTTP`
 device:service
 ```
 
-Example: `web01:RDP`
+Example: `rds01:RDP`
 
-### Service Types
+### Services
 
-Common service types:
-
-- **SSH**: Secure Shell access
-- **RDP**: Remote Desktop Protocol
-- **HTTP/HTTPS**: Web application access
-- **TELNET**: Telnet access
-- **VNC**: VNC remote desktop
-- **Custom**: Application-specific services
+The services of a cluster must be RDP services, in the three formats: the Bastion refuses any
+other protocol (`The target <target> is not an RDP target`).
 
 ### Usage in Applications
 
 Clusters can be referenced in applications:
 
 ```terraform
-resource "wallix-bastion_application" "web_app" {
-  application_name  = "web-application"
-  connection_policy = "HTTP"
-  target           = wallix-bastion_cluster.web_cluster.cluster_name
-  
+resource "wallix-bastion_application" "rds_app" {
+  application_name  = "rds-application"
+  connection_policy = "RDP"
+  global_domains    = ["corp.local"]
+  target            = wallix-bastion_cluster.rds_cluster.cluster_name
+
   paths {
-    target      = "Interactive@${wallix-bastion_cluster.web_cluster.cluster_name}:HTTP"
-    program     = "/opt/webapp/start.sh"
-    working_dir = "/opt/webapp"
+    target      = "Interactive@rds01:RDP"
+    program     = "application_path"
+    working_dir = "directory"
   }
 }
 ```
 
 ### Authorization Integration
 
-Use clusters in target groups and authorizations:
+A cluster isn't a device: a target group can't reference it in `device`
+(`Device '<cluster_name>' not found`). Target groups reach it through an application that uses it
+as `target`:
 
 ```terraform
-resource "wallix-bastion_targetgroup" "web_targets" {
-  group_name = "web-targets"
-  
+resource "wallix-bastion_targetgroup" "rds_targets" {
+  group_name = "rds-targets"
+
   session_accounts {
-    account     = "admin"
+    account     = "svc_rds"
     domain      = "corp.local"
     domain_type = "global"
-    device      = wallix-bastion_cluster.web_cluster.cluster_name
-    service     = "SSH"
+    application = wallix-bastion_application.rds_app.application_name
   }
 }
 ```
@@ -197,5 +189,5 @@ Clusters provide automatic load balancing:
 Cluster can be imported using an id made up of `<cluster_name>`, e.g.
 
 ```shell
-terraform import wallix-bastion_cluster.web_cluster web-servers
+terraform import wallix-bastion_cluster.rds_cluster rds-servers
 ```

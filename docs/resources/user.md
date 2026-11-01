@@ -29,8 +29,8 @@ resource "wallix-bastion_user" "john_doe" {
 resource "wallix-bastion_user" "admin_user" {
   user_name          = "admin.user"
   email              = "admin@company.com"
-  profile            = "admin"
-  user_auths         = ["local_password", "ssh_key"]
+  profile            = "product_administrator"
+  user_auths         = ["local_password", "local_sshkey"]
   display_name       = "Administrator"
   preferred_language = "en"
   ssh_public_key     = file("~/.ssh/id_rsa.pub")
@@ -42,7 +42,7 @@ resource "wallix-bastion_user" "cert_user" {
   user_name      = "cert.user"
   email          = "cert.user@company.com"
   profile        = "user"
-  user_auths     = ["x509_certificate"]
+  user_auths     = ["local_x509"]
   display_name   = "Certificate User"
   certificate_dn = "CN=cert.user,OU=IT,O=Company,C=US"
 }
@@ -91,23 +91,27 @@ resource "wallix-bastion_user" "temp_user" {
 
 ### Authentication Methods
 
-Configure authentication via `user_auths`:
+`user_auths` takes the built-in authentication methods and the names of external authentications:
 
 - **local_password**: Password stored in Bastion
-- **ssh_key**: SSH public key authentication
-- **x509_certificate**: X.509 certificate authentication
-- **ldap**: LDAP/AD authentication
-- **radius**: RADIUS authentication
-- **saml**: SAML authentication
+- **local_sshkey**: SSH public key authentication, with `ssh_public_key`
+- **local_x509**: X.509 certificate authentication, with `certificate_dn` (the Bastion refuses
+  `certificate_dn` without `local_x509`)
+- the `authentication_name` of an external authentication (for example
+  `wallix-bastion_externalauth_ldap.corp.authentication_name`), not its type: `"ldap"` or
+  `"kerberos"` are refused
+
+The Bastion refuses any other value at apply (`UserAuth '<name>' not found`).
 
 ### User Profiles
 
-Assign appropriate profiles:
+`profile` is the name of an existing profile, refused at apply otherwise
+(`Profile '<name>' not found`):
 
-- **user**: Standard user access
-- **admin**: Administrative privileges
-- **operator**: Operational access
-- Custom profiles created with `wallix-bastion_profile`
+- the built-in profiles: `user`, `approver`, `auditor`, `operation_administrator`,
+  `system_administrator`, `product_administrator`, `wallix_access_manager_audit`,
+  `wallix_access_manager_session` and `wallix_access_manager_session_audit`
+- custom profiles created with `wallix-bastion_profile`
 
 ### Group Membership
 

@@ -73,8 +73,8 @@ user's actual password; treat it as always empty and do not rely on it for any p
 
 ### Authentication and profile
 
-- **user_auths**: The set of authentication methods enabled for the user (e.g.
-  `local_password`, `ssh_key`, `x509_certificate`, `ldap`, `radius`, `saml`)
+- **user_auths**: The set of authentication methods enabled for the user: the built-in
+  `local_password`, `local_sshkey` and `local_x509`, and the names of external authentications
 - **profile**: The profile name assigned to the user, controlling GUI/API permissions
 - **certificate_dn**: The Distinguished Name used for X.509 certificate authentication, if
   configured

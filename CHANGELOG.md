@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+ENHANCEMENTS:
+
+- **resource/wallix-bastion_user**: fix the documented `user_auths` and `profile` values, which the Bastion refused at apply: the built-in authentication methods are `local_password`, `local_sshkey` and `local_x509` (`ssh_key` and `x509_certificate` are refused with `UserAuth '<name>' not found`), an external authentication is given by its `authentication_name`, not its type, and `admin` and `operator` aren't profiles (`Profile 'admin' not found`); the page now lists the built-in profiles. Same fix for the `profile` of `wallix-bastion_usergroup`, the `user_auths` of the `wallix-bastion_user` data source and the profile looked up in the `wallix-bastion_profile` data source example (checked on a Bastion 12.4.3 with API v3.12 and v3.8)
+- **resource/wallix-bastion_cluster**: fix the documented format of `accounts`, also on the data source page: it is `account@domain@device:service`, `account@domain:device:service` is refused (`Account target '<target>' not found`); document that a cluster only accepts RDP services (`The target <target> is not an RDP target`) and that a target group can't reference a cluster as a `device`, and rewrite the examples that did (checked on a Bastion 12.4.3 with API v3.12 and v3.8)
+- **resource/wallix-bastion_externalauth_kerberos**: document that `keytab` is required to create the resource, although the schema marks it optional (`'keytab' is a required property`), and that it can then be removed from the configuration to manage the keytab outside of Terraform: an update without it keeps the keytab of the Bastion (checked on a Bastion 12.4.3 with API v3.12 and v3.8)
+
 ## 0.17.0 (October 30, 2026)
 
 BREAKING CHANGES:
