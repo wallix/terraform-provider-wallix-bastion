@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+BREAKING CHANGES:
+
+- **resource/wallix-bastion_authdomain_ldap**, **resource/wallix-bastion_authdomain_ad**: a certificate authority attached to the domain outside of Terraform is now detached by the next apply when the configuration doesn't set `certificate_authority` and `enable_ca`; the plan shows it. Set them in the configuration to keep it, or use `lifecycle { ignore_changes = [certificate_authority, enable_ca] }` for a certificate authority managed elsewhere
+
+ENHANCEMENTS:
+
+- **resource/wallix-bastion_authdomain_ldap**, **resource/wallix-bastion_authdomain_ad**: add `certificate_authority` (the `certificate_authority_name` of a `wallix-bastion_certificate_authority`) and `enable_ca` (API v3.12); removing them from the configuration detaches and disables the certificate authority. `enable_ca = true` without `certificate_authority` is refused at plan, as is setting either argument with an API version before v3.12; the Bastion refused them at apply (`409 Enable_ca field cannot be true if no certificate authority is linked to this authentication domain`, and `400 Additional properties are not allowed` with API v3.8, checked on a Bastion 12.4.3 with API v3.12 and v3.8)
+- **data-source/wallix-bastion_authdomain_ldap**, **data-source/wallix-bastion_authdomain_ad**: add `certificate_authority` and `enable_ca`, `""` and `false` with API v3.8, which doesn't return them
+
+NOTES:
+
+- **resource/wallix-bastion_authdomain_ldap**, **resource/wallix-bastion_authdomain_ad**: with API v3.8, an update of the domain detaches a certificate authority attached with API v3.12, and the plan doesn't show it: the Bastion clears the fields that API v3.8 doesn't have (checked on a Bastion 12.4.3)
+
 ## 0.17.0 (October 30, 2026)
 
 BREAKING CHANGES:

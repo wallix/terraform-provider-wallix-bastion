@@ -49,8 +49,10 @@ output "corporate_ad_domain" {
 
 ### Read-Only
 
+- `certificate_authority` (String)
 - `default_email_domain` (String)
 - `default_language` (String)
+- `enable_ca` (Boolean)
 - `external_auths` (List of String)
 - `id` (String) The ID of this resource.
 - `language_attribute` (String)
@@ -63,3 +65,7 @@ domain (`wallix-bastion_authdomain_ad`).
 
 `external_auths` lists the external authentications of the domain
 (`wallix-bastion_externalauth_ldap`), and `secondary_auth` its secondary authentication methods.
+
+`certificate_authority` is the name of the certificate authority
+(`wallix-bastion_certificate_authority`) attached to the domain, and `enable_ca` whether it is
+enabled. With an API version before v3.12, which doesn't return them, they are `""` and `false`.

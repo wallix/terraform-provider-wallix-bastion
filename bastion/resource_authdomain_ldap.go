@@ -3,6 +3,7 @@ package bastion
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"slices"
@@ -10,9 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"golang.org/x/mod/semver"
 )
 
 type jsonAuthDomainLdap struct {
+	jsonAuthDomainCA
+
 	CheckX509SanEmail    bool     `json:"check_x509_san_email"`
 	IsDefault            bool     `json:"is_default"`
 	ID                   string   `json:"id,omitempty"`
@@ -34,12 +38,68 @@ type jsonAuthDomainLdap struct {
 	SecondaryAuth        []string `json:"secondary_auth"`
 }
 
+// jsonAuthDomainCA holds the certificate authority of an LDAP or AD domain. API v3.8 refuses these
+// fields, so they are nil there; on v3.12 they are always sent, as an omitted field keeps its value.
+type jsonAuthDomainCA struct {
+	CertificateAuthority *string `json:"certificate_authority,omitempty"`
+	EnableCA             *bool   `json:"enable_ca,omitempty"`
+}
+
+func authDomainCAAvailable(apiVersion string) bool {
+	return semver.Compare(apiVersion, VersionWallixAPI312) >= 0
+}
+
+func prepareAuthDomainCA(d *schema.ResourceData, apiVersion string) jsonAuthDomainCA {
+	if !authDomainCAAvailable(apiVersion) {
+		return jsonAuthDomainCA{}
+	}
+	certificateAuthority := d.Get(skCertificateAuthority).(string)
+	enableCA := d.Get(skEnableCA).(bool)
+
+	return jsonAuthDomainCA{CertificateAuthority: &certificateAuthority, EnableCA: &enableCA}
+}
+
+// fill sets "" and false when the API version doesn't return the fields.
+func (j jsonAuthDomainCA) fill(d *schema.ResourceData) {
+	var certificateAuthority string
+	if j.CertificateAuthority != nil {
+		certificateAuthority = *j.CertificateAuthority
+	}
+	if tfErr := d.Set(skCertificateAuthority, certificateAuthority); tfErr != nil {
+		panic(tfErr)
+	}
+	if tfErr := d.Set(skEnableCA, j.EnableCA != nil && *j.EnableCA); tfErr != nil {
+		panic(tfErr)
+	}
+}
+
+// API v3.8 refuses both fields, and the Bastion refuses enable_ca without a certificate authority
+// (409 at apply).
+func resourceAuthDomainCACustomizeDiff(
+	_ context.Context, d *schema.ResourceDiff, m interface{},
+) error {
+	certificateAuthorityKnown := d.NewValueKnown(skCertificateAuthority)
+	certificateAuthority := d.Get(skCertificateAuthority).(string)
+	enableCA := d.Get(skEnableCA).(bool)
+	if c, ok := m.(*Client); ok && c != nil && !authDomainCAAvailable(c.bastionAPIVersion) &&
+		(enableCA || certificateAuthority != "" || !certificateAuthorityKnown) {
+		return fmt.Errorf("certificate_authority and enable_ca are not available with API version %s (requires %s+)",
+			c.bastionAPIVersion, VersionWallixAPI312)
+	}
+	if enableCA && certificateAuthorityKnown && certificateAuthority == "" {
+		return errors.New("enable_ca = true requires certificate_authority")
+	}
+
+	return nil
+}
+
 func resourceAuthDomainLdap() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceAuthDomainLdapCreate,
 		ReadContext:   resourceAuthDomainLdapRead,
 		UpdateContext: resourceAuthDomainLdapUpdate,
 		DeleteContext: resourceAuthDomainLdapDelete,
+		CustomizeDiff: resourceAuthDomainCACustomizeDiff,
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceAuthDomainLdapImport,
 		},
@@ -70,6 +130,10 @@ func resourceAuthDomainLdap() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			skCertificateAuthority: {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"check_x509_san_email": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -80,6 +144,10 @@ func resourceAuthDomainLdap() *schema.Resource {
 			},
 			"email_attribute": {
 				Type:     schema.TypeString,
+				Optional: true,
+			},
+			skEnableCA: {
+				Type:     schema.TypeBool,
 				Optional: true,
 			},
 			"group_attribute": {
@@ -267,7 +335,7 @@ func addAuthDomainLdap(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) (string, error) {
 	c := m.(*Client)
-	jsonData := prepareAuthDomainLdapJSON(d)
+	jsonData := prepareAuthDomainLdapJSON(d, c.bastionAPIVersion)
 	body, headers, code, err := c.newRequestWithHeaders(ctx, "/authdomains/", http.MethodPost, jsonData)
 	if err != nil {
 		return "", err
@@ -283,7 +351,7 @@ func updateAuthDomainLdap(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) error {
 	c := m.(*Client)
-	jsonData := prepareAuthDomainLdapJSON(d)
+	jsonData := prepareAuthDomainLdapJSON(d, c.bastionAPIVersion)
 	body, code, err := c.newRequest(ctx, "/authdomains/"+d.Id()+"?force=true", http.MethodPut, jsonData)
 	if err != nil {
 		return err
@@ -310,8 +378,9 @@ func deleteAuthDomainLdap(
 	return nil
 }
 
-func prepareAuthDomainLdapJSON(d *schema.ResourceData) jsonAuthDomainLdap {
+func prepareAuthDomainLdapJSON(d *schema.ResourceData, apiVersion string) jsonAuthDomainLdap {
 	jsonData := jsonAuthDomainLdap{
+		jsonAuthDomainCA:     prepareAuthDomainCA(d, apiVersion),
 		Type:                 "LDAP",
 		DomainName:           d.Get(skDomainName).(string),
 		AuthDomainName:       d.Get(skAuthDomainName).(string),
@@ -422,4 +491,5 @@ func fillAuthDomainLdap(d *schema.ResourceData, jsonData jsonAuthDomainLdap) {
 	if tfErr := d.Set("x509_search_filter", jsonData.X509SearchFilter); tfErr != nil {
 		panic(tfErr)
 	}
+	jsonData.fill(d)
 }
