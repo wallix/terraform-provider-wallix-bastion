@@ -14,28 +14,14 @@ jobs:
     name: Cleanup Old Caches
     runs-on: ubuntu-latest
     
+    # gh cache is built into the GitHub CLI; the actions/gh-actions-cache extension it replaces is
+    # archived. No checkout: GH_REPO names the repository.
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v7
-      
       - name: Cleanup old caches
-        run: |
-          gh extension install actions/gh-actions-cache
-          
-          echo "Fetching list of cache keys"
-          cacheKeysForPR=$(gh actions-cache list -R $REPO -B $BRANCH | cut -f1 )
-          
-          ## Setting this to not fail the workflow while deleting cache keys. 
-          set +e
-          echo "Deleting caches..."
-          for cacheKey in $cacheKeysForPR
-          do
-              gh actions-cache delete $cacheKey -R $REPO -B $BRANCH --confirm
-          done
-          echo "Done"
+        run: gh cache delete --all --ref "$BRANCH" --succeed-on-no-caches
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO: ${{ github.repository }}
+          GH_REPO: ${{ github.repository }}
           BRANCH: ${{ github.ref }}
   
   # Clean up workflow runs older than 30 days
@@ -45,7 +31,7 @@ jobs:
     
     steps:
       - name: Delete workflow runs
-        uses: Mattraks/delete-workflow-runs@v2
+        uses: Mattraks/delete-workflow-runs@0cf693bc9909e5e867ee8f27b813224ba862939c # v2
         with:
           token: ${{ github.token }}
           repository: ${{ github.repository }}
