@@ -9,11 +9,19 @@ import (
 	"net/url"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"golang.org/x/mod/semver"
+)
+
+// A "still associated" 409 on delete is retried, after a wait growing by applicationDeleteRetryDelay
+// when there was nothing to detach (the attached account can be deleted at the same time).
+const (
+	applicationDeleteRetries    = 3
+	applicationDeleteRetryDelay = time.Second
 )
 
 type jsonApplication struct {
@@ -274,7 +282,7 @@ func resourceApplicationDelete(
 	if err := resourceApplicationVersionCheck(c.bastionAPIVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := deleteApplication(ctx, d, m); err != nil {
+	if err := deleteApplication(ctx, d, m, applicationDeleteRetryDelay); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -374,7 +382,7 @@ func updateApplication(
 }
 
 func deleteApplication(
-	ctx context.Context, d *schema.ResourceData, m interface{},
+	ctx context.Context, d *schema.ResourceData, m interface{}, retryDelay time.Duration,
 ) error {
 	c := m.(*Client)
 	body, code, err := c.newRequest(ctx, "/applications/"+d.Id(), http.MethodDelete, nil)
@@ -383,24 +391,38 @@ func deleteApplication(
 	}
 	// Only the conflict caused by an attached account is solved by detaching it: for any other one,
 	// detaching would change the accounts and the deletion would still fail.
-	if code == http.StatusConflict && strings.Contains(body, "still associated") {
-		detached, err := detachApplicationFromDomainAccounts(ctx, d.Id(), m)
+	detached, retries := 0, 0
+	for ; retries < applicationDeleteRetries &&
+		code == http.StatusConflict && strings.Contains(body, "still associated"); retries++ {
+		n, err := detachApplicationFromDomainAccounts(ctx, d.Id(), m)
 		if err != nil {
 			return fmt.Errorf("detaching the application from global domain accounts: %w", err)
 		}
-		if detached > 0 {
-			body, code, err = c.newRequest(ctx, "/applications/"+d.Id(), http.MethodDelete, nil)
-			if err != nil {
-				return err
-			}
-			if !deleteDone(code, body) {
+		detached += n
+		// Nothing to detach: the attached account may be under deletion, wait for it to finish.
+		if n == 0 {
+			timer := time.NewTimer(time.Duration(retries+1) * retryDelay)
+			select {
+			case <-ctx.Done():
+				timer.Stop()
+
 				return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s\n"+
-					"(the application was detached from %d global domain account(s) before this retry)",
-					code, body, detached)
+					"(interrupted before retrying: %w)", code, body, ctx.Err())
+			case <-timer.C:
 			}
+		}
+		body, code, err = c.newRequest(ctx, "/applications/"+d.Id(), http.MethodDelete, nil)
+		if err != nil {
+			return err
 		}
 	}
 	if !deleteDone(code, body) {
+		if retries > 0 {
+			return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s\n"+
+				"(after %d retries; the application was detached from %d global domain account(s))",
+				code, body, retries, detached)
+		}
+
 		return fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+BUG FIXES:
+
+- **resource/wallix-bastion_application**: fixed the destroy failing intermittently with `409 ... still associated with one target` when a global domain account attached to the application (by a target group session account) is deleted at the same time; the deletion only retried after detaching an account, and the account under deletion was no longer listed. A "still associated" 409 is now retried up to 3 times, after a wait of 1, 2 then 3 seconds when there is nothing to detach (8 failed destroys out of 16 before, none out of 45 after, checked on a Bastion 12.4.3 with API v3.12 and v3.8)
+
 ## 0.17.0 (October 30, 2026)
 
 BREAKING CHANGES:

@@ -340,16 +340,31 @@ func TestAccResourceApplication_deleteWithAttachedGlobalAccount(t *testing.T) {
 		ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceApplicationAttachedAccount(true),
+				Config: testAccResourceApplicationAttachedAccount(true, true),
 			},
 			{
-				Config: testAccResourceApplicationAttachedAccount(false),
+				Config: testAccResourceApplicationAttachedAccount(false, true),
 			},
 		},
 	})
 }
 
-func testAccResourceApplicationAttachedAccount(withApplication bool) string {
+// Without depends_on, the destroy deletes the application and the attached account at the same
+// time, and the account under deletion kept the application from being deleted (#194).
+func TestAccResourceApplication_deleteInParallelWithAttachedAccount(t *testing.T) {
+	skipBeforeAPI312(t, "category = web_application")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceApplicationAttachedAccount(true, false),
+			},
+		},
+	})
+}
+
+func testAccResourceApplicationAttachedAccount(withApplication, accountFirst bool) string {
 	config := `
 resource "wallix-bastion_domain" "testacc_AppAttachedAccount" {
   domain_name = "testacc_AppAttachedAccount"
@@ -361,6 +376,10 @@ resource "wallix-bastion_domain_account" "testacc_AppAttachedAccount" {
   account_login = "testacc_AppAttachedAccount"
 }
 `
+	dependsOn := ""
+	if accountFirst {
+		dependsOn = "  depends_on        = [wallix-bastion_domain_account.testacc_AppAttachedAccount]\n"
+	}
 	if withApplication {
 		config += `
 resource "wallix-bastion_application" "testacc_AppAttachedAccount" {
@@ -369,8 +388,7 @@ resource "wallix-bastion_application" "testacc_AppAttachedAccount" {
   connection_policy = "WEBAPP"
   application_url   = "https://example.com/login"
   global_domains    = [wallix-bastion_domain.testacc_AppAttachedAccount.domain_name]
-  depends_on        = [wallix-bastion_domain_account.testacc_AppAttachedAccount]
-}
+` + dependsOn + `}
 
 resource "wallix-bastion_targetgroup" "testacc_AppAttachedAccount" {
   group_name = "testacc_AppAttachedAccount"
