@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+BUG FIXES:
+
+- **provider**: log in again only once when the session expires while several requests are running; each request that got `401 Unauthorized` logged in again, and a login ends the session it presents (checked on a Bastion 12.4.3), so the requests ended each other's new session and failed at random with a second 401
+- **provider**: stop waiting for a response of the Bastion after 5 minutes; the resources and data sources on terraform-plugin-framework (`wallix-bastion_timeframe`, `wallix-bastion_externalauth_oidc` and `wallix-bastion_authdomain_oidc`) have no timeout, so a Bastion that accepted a request and never answered held the Terraform run forever
+
 ## 0.17.0 (October 30, 2026)
 
 BREAKING CHANGES:
