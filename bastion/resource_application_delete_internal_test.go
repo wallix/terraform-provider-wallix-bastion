@@ -1,12 +1,15 @@
 package bastion
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"slices"
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -14,14 +17,16 @@ import (
 // appDeleteMock is a Bastion API with an application "app" in the global domain "dom", whose
 // account "acc" has the resources "app:WEBAPP" (when attached) and "other:SSH". Like a Bastion 12.4,
 // it refuses to delete the application while an account is attached to it. With deviceAccount, the
-// account "dev-acc", listed first, has the service SSH of a device also named "app".
+// account "dev-acc", listed first, has the service SSH of a device also named "app". With
+// deletingAccount, the next deletions get that many 409, as if the attached account was being deleted.
 type appDeleteMock struct {
-	mu             sync.Mutex
-	attached       bool
-	alwaysConflict bool
-	otherConflict  bool
-	deviceAccount  bool
-	requests       []string
+	mu              sync.Mutex
+	attached        bool
+	alwaysConflict  bool
+	otherConflict   bool
+	deviceAccount   bool
+	deletingAccount int
+	requests        []string
 }
 
 func (mock *appDeleteMock) serveHTTP(w http.ResponseWriter, r *http.Request) {
@@ -38,7 +43,10 @@ func (mock *appDeleteMock) serveHTTP(w http.ResponseWriter, r *http.Request) {
 
 			return
 		}
-		if mock.attached || mock.alwaysConflict {
+		if mock.attached || mock.alwaysConflict || mock.deletingAccount > 0 {
+			if mock.deletingAccount > 0 {
+				mock.deletingAccount--
+			}
 			w.WriteHeader(http.StatusConflict)
 			fmt.Fprint(w, `{"error":"Constraint violation",`+
 				`"description":"The given application is still associated with one target. Unable to delete it."}`)
@@ -79,11 +87,31 @@ func (mock *appDeleteMock) client(t *testing.T) *Client {
 
 func deleteTestApplication(t *testing.T, mock *appDeleteMock) error {
 	t.Helper()
+
+	return deleteTestApplicationWithDelay(t.Context(), t, mock, time.Millisecond)
+}
+
+func deleteTestApplicationWithDelay(
+	ctx context.Context, t *testing.T, mock *appDeleteMock, retryDelay time.Duration,
+) error {
+	t.Helper()
 	r := resourceApplication()
 	d := schema.TestResourceDataRaw(t, r.Schema, map[string]interface{}{"application_name": "app"})
 	d.SetId("app-id")
 
-	return deleteApplication(t.Context(), d, mock.client(t))
+	return deleteApplication(ctx, d, mock.client(t), retryDelay)
+}
+
+// applicationDeletes counts the DELETE requests of the application.
+func (mock *appDeleteMock) applicationDeletes() int {
+	deletes := 0
+	for _, request := range mock.requests {
+		if request == "DELETE /api/"+VersionWallixAPI312+"/applications/app-id" {
+			deletes++
+		}
+	}
+
+	return deletes
 }
 
 func TestDeleteApplicationDetachesGlobalDomainAccounts(t *testing.T) {
@@ -143,20 +171,44 @@ func TestDeleteApplicationReportsDetachOnSecondConflict(t *testing.T) {
 	}
 }
 
-// Without any attached account, a "still associated" conflict is returned without retrying.
-func TestDeleteApplicationDoesNotRetryWithoutDetachedAccount(t *testing.T) {
-	mock := &appDeleteMock{alwaysConflict: true}
-	if err := deleteTestApplication(t, mock); err == nil {
-		t.Fatal("expected the 409 to be returned")
+// An account deleted at the same time is no longer listed but still blocks the deletion for a
+// while: the deletion is retried even though nothing was detached (#194).
+func TestDeleteApplicationRetriesWhileAccountIsDeleted(t *testing.T) {
+	mock := &appDeleteMock{deletingAccount: 2}
+	if err := deleteTestApplication(t, mock); err != nil {
+		t.Fatalf("delete: %v", err)
 	}
-
-	deletes := 0
+	if deletes := mock.applicationDeletes(); deletes != 3 {
+		t.Errorf("the application was deleted %d times, want 3", deletes)
+	}
 	for _, request := range mock.requests {
-		if request == "DELETE /api/"+VersionWallixAPI312+"/applications/app-id" {
-			deletes++
+		if strings.Contains(request, "/resource/") {
+			t.Errorf("request %q, want no detach without attached account", request)
 		}
 	}
-	if deletes != 1 {
-		t.Errorf("the application was deleted %d times, want 1 (no retry without detached account)", deletes)
+}
+
+// A "still associated" conflict that persists is retried a bounded number of times, then returned.
+func TestDeleteApplicationRetriesBoundedWithoutDetachedAccount(t *testing.T) {
+	mock := &appDeleteMock{alwaysConflict: true}
+	err := deleteTestApplication(t, mock)
+	if err == nil || !strings.Contains(err.Error(), "still associated") ||
+		!strings.Contains(err.Error(), "after 3 retries") {
+		t.Fatalf("delete error = %v, want the 409 after the retries", err)
+	}
+	if deletes := mock.applicationDeletes(); deletes != 1+applicationDeleteRetries {
+		t.Errorf("the application was deleted %d times, want %d", deletes, 1+applicationDeleteRetries)
+	}
+}
+
+// The wait before a retry stops with the context, and the error keeps the 409.
+func TestDeleteApplicationRetryWaitStopsWithContext(t *testing.T) {
+	mock := &appDeleteMock{alwaysConflict: true}
+	ctx, cancel := context.WithTimeout(t.Context(), 500*time.Millisecond)
+	defer cancel()
+
+	err := deleteTestApplicationWithDelay(ctx, t, mock, time.Hour)
+	if !errors.Is(err, context.DeadlineExceeded) || !strings.Contains(err.Error(), "still associated") {
+		t.Fatalf("delete error = %v, want the 409 and the context deadline", err)
 	}
 }
