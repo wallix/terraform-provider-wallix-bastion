@@ -67,8 +67,8 @@ system rather than from this data source.
 - **is_anonymous_access**: whether anonymous binds are allowed.
 - **is_protected_user**: whether the protected user mechanism is enabled.
 - **is_ssl** / **is_starttls**: whether LDAPS or STARTTLS is used for the connection.
-- **ca_certificate**: the CA certificate used to validate the LDAP server (this one is not
-  sensitive and is returned normally).
+- **ca_certificate**: the subject of the CA certificate used to validate the LDAP server
+  (`/O=Corp/CN=Corp CA`); the Bastion doesn't return the PEM.
 - **timeout**: connection timeout, in seconds.
 - **description**: free-form description configured on the resource.
 - **use_primary_auth_domain**: whether the primary authentication domain is used for this LDAP

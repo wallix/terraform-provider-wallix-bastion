@@ -61,6 +61,12 @@ which affects how the Bastion interprets certain LDAP attributes.
 configure client certificate authentication instead of a bind account; `passphrase` requires
 `private_key`.
 
+The Bastion returns the subject of the CA (`/O=Corp/CN=Corp CA`), not the PEM. The state keeps the
+configured PEM while its subject matches; when the CA is replaced outside of Terraform by one with
+another subject, the plan shows a change from that subject back to the PEM. A CA replaced by another
+one with the same subject can't be detected. After an import, the state holds the subject, so the
+first apply sends the configured PEM again.
+
 ## Import
 
 LDAP external authentication can be imported using the authentication name, e.g.
