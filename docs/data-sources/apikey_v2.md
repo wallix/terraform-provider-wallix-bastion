@@ -56,16 +56,17 @@ use `wallix-bastion_apikey` instead.
 
 ### The `apikey` attribute
 
-The Bastion API never returns the raw API key value — the `apikey` attribute always reads back
-as a masked placeholder (`********`), whether read through this data source or the corresponding
-`wallix-bastion_apikey_v2` resource. Use this data source to check metadata (name, profile,
-description, IP limitation) about an existing key, not to retrieve its usable secret value.
+The Bastion API only returns the key in the response to its creation request: the `apikey`
+attribute of this data source always reads back as a masked placeholder (`********`). Use this
+data source to check metadata (name, profile, description, IP limitation) about an existing key,
+not to retrieve its usable secret value; a key created by the `wallix-bastion_apikey_v2` resource
+is in its `apikey` attribute.
 
 ### Profile
 
 `profile` is the name of the profile associated with the key, determining what the key is
 authorized to do when used against the REST API (e.g. `user`, `auditor`,
-`system_administrator`).
+`system_administrator`). It is always a read-only profile (see `wallix-bastion_apikey_v2`).
 
 ### IP Limitation
 

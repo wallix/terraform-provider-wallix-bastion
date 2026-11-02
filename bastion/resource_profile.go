@@ -6,16 +6,19 @@ import (
 	"fmt"
 	"net/http"
 	"slices"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"golang.org/x/mod/semver"
 )
 
 type jsonProfile struct {
 	TargetAccess bool      `json:"target_access"`
 	ID           string    `json:"id,omitempty"`
 	ProfileName  string    `json:"profile_name,omitempty"`
+	Editable     *bool     `json:"editable,omitempty"`
 	Description  string    `json:"description"`
 	IPLimitation string    `json:"ip_limitation"`
 	Dashboards   *[]string `json:"dashboards,omitempty"`
@@ -68,11 +71,20 @@ func resourceProfile() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceProfileImport,
 		},
+		CustomizeDiff: resourceProfileCustomizeDiff,
 		Schema: map[string]*schema.Schema{
 			"profile_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			skEditable: {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+				Description: "Set to `false` to make the profile read-only, as the built-in ones: " +
+					"a `wallix-bastion_apikey_v2` only accepts a read-only profile, and the Bastion refuses " +
+					"any change to it, so a change replaces it. Requires API v3.12 or later.",
 			},
 			"gui_features": {
 				Type:     schema.TypeList,
@@ -280,6 +292,52 @@ func resourceProfileVersionCheck(version string) error {
 	return fmt.Errorf("resource wallix-bastion_profile not available with api version %s", version)
 }
 
+// The Bastion refuses any change to a read-only profile (409 "is a read-only profile, it can not be
+// edited"), editable back to true included: every change replaces it.
+func resourceProfileCustomizeDiff(
+	_ context.Context, d *schema.ResourceDiff, _ interface{},
+) error {
+	state := d.GetRawState()
+	if d.Id() == "" || state.IsNull() {
+		return nil
+	}
+	if editable := state.GetAttr(skEditable); editable.IsNull() || editable.True() {
+		return nil
+	}
+	// A forced block only replaces on a count change, not on a nested change: both are forced.
+	for _, key := range d.GetChangedKeysPrefix("") {
+		top, _, _ := strings.Cut(key, ".")
+		for _, k := range []string{top, key} {
+			if d.HasChange(k) {
+				if err := d.ForceNew(k); err != nil {
+					return err //nolint:wrapcheck
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+// profileEditable returns editable for the request body: on creation when set, on update when changed.
+// The API only has it from v3.12 and refuses it before.
+func profileEditable(d *schema.ResourceData, version string, newResource bool) (*bool, error) {
+	config := d.GetRawConfig()
+	if config.IsNull() || (!newResource && !d.HasChange(skEditable)) {
+		return nil, nil //nolint:nilnil
+	}
+	editable := config.GetAttr(skEditable)
+	if editable.IsNull() || !editable.IsKnown() {
+		return nil, nil //nolint:nilnil
+	}
+	if semver.Compare(version, VersionWallixAPI312) < 0 {
+		return nil, fmt.Errorf("editable requires API v3.12 or later, not %s", version)
+	}
+	v := editable.True()
+
+	return &v, nil
+}
+
 func resourceProfileCreate(
 	ctx context.Context, d *schema.ResourceData, m interface{},
 ) diag.Diagnostics {
@@ -421,6 +479,11 @@ func addProfile(
 ) (string, error) {
 	c := m.(*Client)
 	jsonData := prepareProfileJSON(d, true)
+	editable, err := profileEditable(d, c.bastionAPIVersion, true)
+	if err != nil {
+		return "", err
+	}
+	jsonData.Editable = editable
 	body, headers, code, err := c.newRequestWithHeaders(ctx, "/profiles/", http.MethodPost, jsonData)
 	if err != nil {
 		return "", err
@@ -437,6 +500,11 @@ func updateProfile(
 ) error {
 	c := m.(*Client)
 	jsonData := prepareProfileJSON(d, false)
+	editable, err := profileEditable(d, c.bastionAPIVersion, false)
+	if err != nil {
+		return err
+	}
+	jsonData.Editable = editable
 	body, code, err := c.newRequest(ctx, "/profiles/"+d.Id()+"?force=true", http.MethodPut, jsonData)
 	if err != nil {
 		return err
@@ -657,6 +725,12 @@ func fillProfile(d *schema.ResourceData, jsonData jsonProfile) {
 	// plan.
 	if jsonData.ProfileName != "" {
 		if tfErr := d.Set("profile_name", jsonData.ProfileName); tfErr != nil {
+			panic(tfErr)
+		}
+	}
+	// API v3.12 and later only.
+	if jsonData.Editable != nil {
+		if tfErr := d.Set(skEditable, *jsonData.Editable); tfErr != nil {
 			panic(tfErr)
 		}
 	}

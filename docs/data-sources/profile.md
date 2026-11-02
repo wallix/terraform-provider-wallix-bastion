@@ -44,6 +44,7 @@ output "can_modify_target_groups" {
 
 - `dashboards` (Set of String)
 - `description` (String)
+- `editable` (Boolean) `false` for a read-only profile (the built-in ones, or one created with `editable = false`), the only kind a `wallix-bastion_apikey_v2` accepts. Null before API v3.12.
 - `gui_features` (List of Object) (see [below for nested schema](#nestedatt--gui_features))
 - `gui_transmission` (List of Object) (see [below for nested schema](#nestedatt--gui_transmission))
 - `id` (String) The ID of this resource.

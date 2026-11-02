@@ -21,6 +21,9 @@ func TestSecretsAreSensitive(t *testing.T) {
 		"data source configoption.options":      dataSourceConfigoption().Schema["options"],
 		"resource connection_policy.options":    resourceConnectionPolicy().Schema["options"],
 		"data source connection_policy.options": dataSourceConnectionPolicy().Schema["options"],
+		// The key the Bastion returns at creation, stored in the state.
+		"resource apikey.apikey":    resourceAPIKey().Schema["apikey"],
+		"resource apikey_v2.apikey": resourceAPIKeyV2().Schema["apikey"],
 	} {
 		if attribute == nil || !attribute.Sensitive {
 			t.Errorf("%s must be sensitive", name)
