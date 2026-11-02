@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -49,8 +50,10 @@ func resourceAPIKeyV2() *schema.Resource {
 				ForceNew: true,
 			},
 			"apikey": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Sensitive:   true,
+				Description: descAPIKey,
 			},
 		},
 	}
@@ -79,7 +82,7 @@ func resourceAPIKeyV2Create(
 	if ex {
 		return diag.FromErr(fmt.Errorf("apikey_name %s already exists", d.Get("apikey_name").(string)))
 	}
-	id, err := addAPIKeyV2(ctx, d, m)
+	id, key, err := addAPIKeyV2(ctx, d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -94,8 +97,15 @@ func resourceAPIKeyV2Create(
 		}
 	}
 	d.SetId(id)
+	if tfErr := d.Set("apikey", key); tfErr != nil {
+		panic(tfErr)
+	}
+	diags := resourceAPIKeyV2Read(ctx, d, m)
+	if key == "" {
+		diags = append(diags, apiKeyNotReturned(d.Get("apikey_name").(string)))
+	}
 
-	return resourceAPIKeyV2Read(ctx, d, m)
+	return diags
 }
 
 func resourceAPIKeyV2Read(
@@ -201,20 +211,25 @@ func searchResourceAPIKeyV2(
 	return "", false, nil
 }
 
+// addAPIKeyV2 returns the id and the key, which the Bastion only returns here, in the X-Auth-Key header.
 func addAPIKeyV2(
 	ctx context.Context, d *schema.ResourceData, m interface{},
-) (string, error) {
+) (string, string, error) {
 	c := m.(*Client)
 	jsonData := prepareAPIKeyV2JSON(d, true)
 	body, headers, code, err := c.newRequestWithHeaders(ctx, "/apikeys-v2/", http.MethodPost, jsonData)
 	if err != nil {
-		return "", err
+		return "", "", err
+	}
+	if code == http.StatusConflict && strings.Contains(body, "read-only profile") {
+		return "", "", fmt.Errorf("api returns %d with body:\n%s\nthe profile must be a built-in one, "+
+			"or a wallix-bastion_profile with editable = false", code, body)
 	}
 	if code != http.StatusOK && code != http.StatusNoContent {
-		return "", fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
+		return "", "", fmt.Errorf("api doesn't return OK or NoContent: %d with body:\n%s", code, body)
 	}
 
-	return headers.Get("X-Object-Id"), nil
+	return headers.Get("X-Object-Id"), headers.Get("X-Auth-Key"), nil
 }
 
 func updateAPIKeyV2(
@@ -304,7 +319,5 @@ func fillAPIKeyV2(d *schema.ResourceData, jsonData jsonAPIKeyV2) {
 	if tfErr := d.Set(skIPLimitation, jsonData.IPLimitation); tfErr != nil {
 		panic(tfErr)
 	}
-	if tfErr := d.Set("apikey", jsonData.APIKey); tfErr != nil {
-		panic(tfErr)
-	}
+	// apikey keeps the value stored at creation: the API only returns ********.
 }

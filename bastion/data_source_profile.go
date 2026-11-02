@@ -17,6 +17,12 @@ func dataSourceProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			skEditable: {
+				Type:     schema.TypeBool,
+				Computed: true,
+				Description: "`false` for a read-only profile (the built-in ones, or one created with " +
+					"`editable = false`), the only kind a `wallix-bastion_apikey_v2` accepts. Null before API v3.12.",
+			},
 			"gui_features": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -219,6 +225,11 @@ func dataSourceProfileRead(
 func fillSourceProfile(d *schema.ResourceData, jsonData jsonProfile) {
 	if tfErr := d.Set("profile_name", jsonData.ProfileName); tfErr != nil {
 		panic(tfErr)
+	}
+	if jsonData.Editable != nil {
+		if tfErr := d.Set(skEditable, *jsonData.Editable); tfErr != nil {
+			panic(tfErr)
+		}
 	}
 	guiFeatures := []map[string]interface{}{{
 		"wab_audit":          jsonData.GuiFeatures.WabAudit,

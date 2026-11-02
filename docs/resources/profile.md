@@ -124,6 +124,7 @@ resource "wallix-bastion_profile" "operator_profile" {
 
 - `dashboards` (Set of String)
 - `description` (String)
+- `editable` (Boolean) Set to `false` to make the profile read-only, as the built-in ones: a `wallix-bastion_apikey_v2` only accepts a read-only profile, and the Bastion refuses any change to it, so a change replaces it. Requires API v3.12 or later.
 - `ip_limitation` (String)
 - `target_access` (Boolean)
 - `target_groups_limitation` (Block List, Max: 1) (see [below for nested schema](#nestedblock--target_groups_limitation))
@@ -226,6 +227,21 @@ Required:
 - **target_access**: Enable/disable access to targets
 - **ip_limitation**: Restrict access by IP address/subnet
 - **dashboards**: Available dashboard list
+
+### Read-only profiles
+
+`editable = false` makes the profile read-only, as the built-in profiles are. Read-only is about
+the profile itself, not its permissions: a profile with only `view` features is still editable,
+and a `wallix-bastion_apikey_v2` refuses it. A read-only profile is the only kind an API key (v2)
+accepts.
+
+The Bastion refuses any change to a read-only profile, `editable` back to `true` included, so the
+provider plans a replacement for every change; the Bastion refuses to delete a profile still
+associated with an API key (see `wallix-bastion_apikey_v2`). Setting `editable = false` on an
+existing profile is an in-place update.
+
+`editable` requires API `v3.12` or higher. Left unset, it reads the value of the Bastion (`true`
+for a profile created through the API).
 
 ### Group Limitations
 

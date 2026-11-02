@@ -35,10 +35,11 @@ that name exists on the Bastion.
 
 ### The `apikey` attribute
 
-The Bastion API never returns the raw API key value — the `apikey` attribute always reads back
-as a masked placeholder (`********`), whether read through this data source or the corresponding
-`wallix-bastion_apikey` resource. Use this data source to check metadata (name, IP limitation)
-about an existing key, not to retrieve its usable secret value.
+The Bastion API only returns the key in the response to its creation request: the `apikey`
+attribute of this data source always reads back as a masked placeholder (`********`). Use this
+data source to check metadata (name, IP limitation) about an existing key, not to retrieve its
+usable secret value; a key created by the `wallix-bastion_apikey` resource is in its `apikey`
+attribute.
 
 ### IP Limitation
 

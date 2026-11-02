@@ -43,6 +43,7 @@ const (
 	skDomainName                     = "domain_name"
 	skDomainPasswordChange           = "domain_password_change"
 	skDomainType                     = "domain_type"
+	skEditable                       = "editable"
 	skEmail                          = "email"
 	skEnableLock                     = "enable_lock"
 	skEnablePasswordChange           = "enable_password_change"

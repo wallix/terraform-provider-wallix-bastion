@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+BREAKING CHANGES:
+
+- **resource/wallix-bastion_apikey**, **resource/wallix-bastion_apikey_v2**: `apikey` is now sensitive, as it holds the key (see below); a configuration that references it in an `output` without `sensitive = true` fails at plan with `Output refers to sensitive values`, and one that builds a `for_each` from it fails with `Invalid for_each argument`; plans show it as `(sensitive value)`
+
+ENHANCEMENTS:
+
+- **resource/wallix-bastion_apikey**, **resource/wallix-bastion_apikey_v2**: `apikey` now holds the key, which the Bastion only returns in the `X-Auth-Key` header of the creation response (43 characters, it authenticates; GET then returns `********`, which the provider stored before), checked on a Bastion 12.4.3 with API v3.12 (`apikey` and `apikey_v2`) and v3.8 (`apikey`); the value stored at creation is kept on refresh. The key is in clear in the Terraform state: protect the state backend, and hand the key over through a secret store. An imported key has an empty `apikey`, and a key created by an earlier version keeps `********`: replace the key to store a usable one. A creation response without the header gives a warning
+- **resource/wallix-bastion_profile**: add `editable` (API v3.12); `editable = false` makes the profile read-only, the only kind of profile `wallix-bastion_apikey_v2` accepts (`409 The API key must be associated to a read-only profile`). Read-only is the `editable` flag of the profile, not its permissions: every built-in profile is accepted, `product_administrator` included, while a profile created through the API with only `view` features is refused until `editable` is set to `false` (checked on a Bastion 12.4.3). The Bastion refuses any change to a read-only profile (`409 ... is a read-only profile, it can not be edited`), `editable = true` included, so every change now plans a replacement; `editable = false` on an existing profile is an in-place update. Setting `editable` with an older API version fails before the request, which the API refused (`400 Additional properties are not allowed ('editable' was unexpected)`)
+- **data-source/wallix-bastion_profile**: add `editable` (null before API v3.12)
+- **resource/wallix-bastion_apikey_v2**: the `409` of a profile that isn't read-only now says which profiles are accepted; document the read-only profile constraint, and that the Bastion refuses to delete a profile still associated with an API key (`replace_triggered_by` on the key handles a replaced profile)
+
 ## 0.17.0 (October 30, 2026)
 
 BREAKING CHANGES:

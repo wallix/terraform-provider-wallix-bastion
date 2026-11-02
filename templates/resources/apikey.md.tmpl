@@ -10,19 +10,26 @@ description: |-
 
 Provides an API key resource.
 
+The Bastion API documents this resource as deprecated, and associates the `product_administrator`
+profile with the keys it creates. Prefer `wallix-bastion_apikey_v2` (API `v3.12` or higher), which
+binds the key to a profile.
+
+**Important**: the key is stored in clear in the Terraform state. Protect the state backend as
+you would protect the key (see the `apikey` attribute in the usage notes).
+
 ## Example Usage
 
 ```terraform
-# Basic API key, usable from any IP
-resource "wallix-bastion_apikey" "ci_pipeline" {
-  apikey_name = "ci_pipeline"
-}
-
 # API key restricted to specific source IPs
 resource "wallix-bastion_apikey" "monitoring" {
   apikey_name   = "monitoring"
   ip_limitation = "10.10.11.22,10.10.33.44"
 }
+
+# Hand the key to its consumer through a secret store, in the same configuration:
+# resource "<secret store resource>" "monitoring" {
+#   value = wallix-bastion_apikey.monitoring.apikey
+# }
 ```
 
 {{ .SchemaMarkdown | trimspace }}
@@ -31,10 +38,20 @@ resource "wallix-bastion_apikey" "monitoring" {
 
 ### The `apikey` attribute
 
-The Bastion API never returns the raw API key value, at creation or afterward — the `apikey`
-attribute always reads back as a masked placeholder (`********`). Terraform can manage the key's
-name and IP restriction, but retrieving the usable secret value requires the Bastion web UI (or
-another out-of-band process) at creation time.
+The Bastion returns the key once, in the response to the creation request; afterwards, the API
+only returns `********`. The provider stores the key in `apikey` at creation and keeps it on
+refresh, so it can be passed to another resource, for example a secret in a secret store, in the
+same configuration.
+
+`apikey` is sensitive: plans hide it, and an `output` that references it needs
+`sensitive = true`. It is still stored in clear in the Terraform state, so anyone who can read
+the state can use the key. Use a state backend with encryption at rest and restricted access,
+and prefer handing the key over through a secret store to reading it from the state.
+
+The key can't be recovered from the Bastion: an imported key has an empty `apikey`, and a key
+created by provider 0.17.0 or older keeps `********`. Replace the key
+(`terraform apply -replace=wallix-bastion_apikey.<name>`) to store a usable one; the old key
+stops working.
 
 ### IP Limitation
 
@@ -46,5 +63,7 @@ another out-of-band process) at creation time.
 API key can be imported using its `apikey_name`, e.g.
 
 ```shell
-terraform import wallix-bastion_apikey.ci_pipeline testacc_APIKey
+terraform import wallix-bastion_apikey.monitoring monitoring
 ```
+
+The imported `apikey` is empty: the Bastion never returns the key after its creation.
